@@ -1,0 +1,32 @@
+{
+  "name": "helius-sdk",
+  "version": "0.1.0",
+  "description": "SDK for the Helius API (https://helius.xyz)",
+  "main": "dist/index.ts",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc",
+    "prepare": "npm run build"
+  },
+  "keywords": [
+    "helius",
+    "solana",
+    "web3",
+    "crypto",
+    "api",
+    "sdk"
+  ],
+  "author": "Helius",
+  "license": "ISC",
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^3.9.0",
+    "@typescript-eslint/parser": "^3.9.0",
+    "eslint": "^7.6.0",
+    "eslint-config-airbnb-base": "^14.2.0",
+    "typescript": "^4.9.4"
+  },
+  "dependencies": {
+    "axios": "^1.2.3"
+  }
+}
