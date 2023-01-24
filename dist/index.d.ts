@@ -1,4 +1,5 @@
 import { Webhook, CreateWebhookRequest } from "./types";
+export * as Types from './types';
 export declare class Helius {
     private apiKey;
     constructor(apiKey: string);

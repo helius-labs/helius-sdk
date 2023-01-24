@@ -4,6 +4,7 @@ import { Webhook, CreateWebhookRequest } from "./types";
 const API_URL_V0: string = "https://api.helius.xyz/v0";
 const API_URL_V1: string = "https://api.heliuys.xyz/v1";
 
+export * as Types from './types';
 export class Helius {
     private apiKey: string;
 
@@ -66,5 +67,4 @@ export class Helius {
     }
 
 }
-
 
