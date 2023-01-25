@@ -4,11 +4,18 @@ export interface Webhook {
     webhookURL: string,
     transactionTypes: string[],
     accountAddresses: string[],
-    webhookType: string,
+    webhookType: WebhookType | null,
     authHeader: string
 }
 
 export type CreateWebhookRequest = Omit<Webhook, 'webhookID' & 'wallet'>;
+export type EditWebhookRequest = Omit<Webhook, 'webhookID' & 'wallet'>;
+
+export enum WebhookType {
+    ENHANCED = "enhanced",
+    RAW = "raw",
+    DISCORD = "discord"
+}
 
 export enum TransactionType {
     UNKNOWN = 'UNKNOWN',

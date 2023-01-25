@@ -44,7 +44,7 @@ class Helius {
     constructor(apiKey) {
         this.apiKey = apiKey;
     }
-    getWebhooks() {
+    getAllWebhooks() {
         var _a;
         return __awaiter(this, void 0, void 0, function* () {
             try {
@@ -108,6 +108,47 @@ class Helius {
                 }
                 else {
                     throw new Error(`error during deleteWebhook: ${err}`);
+                }
+            }
+        });
+    }
+    editWebhook(webhookID, editWebhookRequest) {
+        var _a;
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const webhook = yield this.getWebhookByID(webhookID);
+                const { data } = yield axios_1.default.put(`${API_URL_V0}/webhooks/${webhookID}?api-key=${this.apiKey}`, Object.assign(Object.assign({}, webhook), editWebhookRequest));
+                return data;
+            }
+            catch (err) {
+                if (axios_1.default.isAxiosError(err)) {
+                    throw new Error(`error during editWebhook: ${(_a = err.response) === null || _a === void 0 ? void 0 : _a.data.error}`);
+                }
+                else {
+                    throw new Error(`error during editWebhook: ${err}`);
+                }
+            }
+        });
+    }
+    appendAddressesToWebhook(webhookID, newAccountAddresses) {
+        var _a;
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const webhook = yield this.getWebhookByID(webhookID);
+                const accountAddresses = webhook.accountAddresses.concat(newAccountAddresses);
+                webhook.accountAddresses = accountAddresses;
+                if (accountAddresses.length > 10000) {
+                    throw new Error(`a single webhook cannot contain more than 10,000 addresses`);
+                }
+                const { data } = yield axios_1.default.put(`${API_URL_V0}/webhooks/${webhookID}?api-key=${this.apiKey}`, Object.assign({}, webhook));
+                return data;
+            }
+            catch (err) {
+                if (axios_1.default.isAxiosError(err)) {
+                    throw new Error(`error during appendAddressesToWebhook: ${(_a = err.response) === null || _a === void 0 ? void 0 : _a.data.error}`);
+                }
+                else {
+                    throw new Error(`error during appendAddressesToWebhook: ${err}`);
                 }
             }
         });

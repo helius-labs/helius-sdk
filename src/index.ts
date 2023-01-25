@@ -1,10 +1,11 @@
 import axios, { AxiosError } from "axios";
-import { Webhook, CreateWebhookRequest } from "./types";
+import { Webhook, CreateWebhookRequest, EditWebhookRequest } from "./types";
 
 const API_URL_V0: string = "https://api.helius.xyz/v0";
 const API_URL_V1: string = "https://api.heliuys.xyz/v1";
 
 export * as Types from './types';
+
 export class Helius {
     private apiKey: string;
 
@@ -12,7 +13,7 @@ export class Helius {
         this.apiKey = apiKey;
     }
 
-    async getWebhooks(): Promise<Webhook[]> {
+    async getAllWebhooks(): Promise<Webhook[]> {
         try {
             const { data } = await axios.get(
                 `${API_URL_V0}/webhooks?api-key=${this.apiKey}`
@@ -62,6 +63,40 @@ export class Helius {
                 throw new Error(`error during deleteWebhook: ${err.response?.data.error}`)
             } else {
                 throw new Error(`error during deleteWebhook: ${err}`)
+            }
+        }
+    }
+
+    async editWebhook(webhookID: string, editWebhookRequest: EditWebhookRequest): Promise<Webhook> {
+        try {
+            const webhook = await this.getWebhookByID(webhookID);
+            const { data } = await axios.put(`${API_URL_V0}/webhooks/${webhookID}?api-key=${this.apiKey}`, { ...webhook, ...editWebhookRequest })
+            return data;
+        } catch (err: any | AxiosError) {
+            if (axios.isAxiosError(err)) {
+                throw new Error(`error during editWebhook: ${err.response?.data.error}`)
+            } else {
+                throw new Error(`error during editWebhook: ${err}`)
+            }
+        }
+    }
+
+    async appendAddressesToWebhook(webhookID: string, newAccountAddresses: string[]): Promise<Webhook> {
+        try {
+            const webhook = await this.getWebhookByID(webhookID);
+            const accountAddresses = webhook.accountAddresses.concat(newAccountAddresses)
+            webhook.accountAddresses = accountAddresses;
+            if (accountAddresses.length > 10000) {
+                throw new Error(`a single webhook cannot contain more than 10,000 addresses`)
+            }
+
+            const { data } = await axios.put(`${API_URL_V0}/webhooks/${webhookID}?api-key=${this.apiKey}`, { ...webhook })
+            return data;
+        } catch (err: any | AxiosError) {
+            if (axios.isAxiosError(err)) {
+                throw new Error(`error during appendAddressesToWebhook: ${err.response?.data.error}`)
+            } else {
+                throw new Error(`error during appendAddressesToWebhook: ${err}`)
             }
         }
     }

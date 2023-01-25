@@ -1,6 +1,12 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.TokenStandard = exports.Address = exports.ProgramName = exports.Source = exports.TransactionContext = exports.NftEventTypes = exports.TransactionType = void 0;
+exports.TokenStandard = exports.Address = exports.ProgramName = exports.Source = exports.TransactionContext = exports.NftEventTypes = exports.TransactionType = exports.WebhookType = void 0;
+var WebhookType;
+(function (WebhookType) {
+    WebhookType["ENHANCED"] = "enhanced";
+    WebhookType["RAW"] = "raw";
+    WebhookType["DISCORD"] = "discord";
+})(WebhookType = exports.WebhookType || (exports.WebhookType = {}));
 var TransactionType;
 (function (TransactionType) {
     TransactionType["UNKNOWN"] = "UNKNOWN";
