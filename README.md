@@ -30,9 +30,9 @@ Our SDK is designed to give you a seamless experience when building on Solana. W
 
 Helius webhooks are the perfect way of building event driven systems on Solana.
 
-Simply select the transaction type(s) to detect, the accounts to watch, and the webhook handler. We take care of the rest.
+Simply select the transaction type(s) to detect, the accounts to watch, and the webhook handler.
 
-We've parsed over 100 transaction types (including NFT Sales, NFT Listings, and much more) from over 50 different dApps so you can get up and running ASAP.
+We've parsed over 100 transaction types (including NFT Sales, NFT Listings, and more) from over 50 different sources so you can get building ASAP.
 
 > **Note**: if you don't want Helius' unique abstractions and would rather work with Solana's native data types, just set `webhookType` to "raw".
 
