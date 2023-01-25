@@ -1,8 +1,8 @@
 {
   "name": "helius-sdk",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "SDK for the Helius API (https://helius.xyz)",
-  "main": "dist/index.ts",
+  "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
