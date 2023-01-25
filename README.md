@@ -20,6 +20,7 @@ const heliusAPI = new Helius("<your-api-key-here>"); // input your api key gener
 ```
 
 **IMPORTANT:** You must generate an API key at [dev.helius.xyz](dev.helius.xyz) and replace "\<your-api-key-here>" above with it. This will take no longer than 10 seconds as we auto-generate a key for you upon connecting your wallet.
+<br />
 
 ## Using Helius SDK
 
@@ -29,13 +30,14 @@ Our SDK is designed to give you a seamless experience when building on Solana. W
 
 Helius webhooks are the perfect way of building event driven systems on Solana.
 
-Simply select the transaction type(s) to detect, the accounts to watch, the webhook handler, and that's it. We take care of the rest.
+Simply select the transaction type(s) to detect, the accounts to watch, and the webhook handler. We take care of the rest.
 
-We've parsed over 100 transction types (including NFT Sales, NFT Listings, and much more) from over 50 different dApps so you can get up and running ASAP.
+We've parsed over 100 transaction types (including NFT Sales, NFT Listings, and much more) from over 50 different dApps so you can get up and running ASAP.
 
 > **Note**: if you don't want Helius' unique abstractions and would rather work with Solana's native data types, just set `webhookType` to "raw".
 
 For a quick demo video, please see the [Webhook docs.](https://docs.helius.xyz/webhooks/webhooks-summary)
+<br />
 
 ### **Create Webhook**
 
@@ -71,7 +73,7 @@ heliusAPI.createWebhook({
 });
 ```
 
-For Discord webhooks, simply use `Types.WebhookType.DISCORD`
+For Discord webhooks, simply use `Types.WebhookType.DISCORD`.
 
 ### **Edit Webhook**
 
@@ -90,7 +92,8 @@ heliusAPI.editWebhook(
 
 > **Very important**: The `editWebhook` method will completely overwrite the existing values for the field(s) that you inputted. Make sure to fetch the existing webhook and merge the values to avoid this.
 
-To make this experience more convenient for developers, we've added a method to let you simply append new addresses to an existing webhook:
+<br />
+For convenience, we've added a method to let you simply append new addresses to an existing webhook:
 
 ```ts
 import { Helius, Types } from "helius-sdk";
