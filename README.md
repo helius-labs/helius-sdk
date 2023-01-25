@@ -34,16 +34,14 @@ Simply select the transaction type(s) to detect, the accounts to watch, and the 
 
 We've parsed over 100 transaction types (including NFT Sales, NFT Listings, and more) from over 50 different sources so you can get building ASAP.
 
-> **Note**: if you don't want Helius' unique abstractions and would rather work with Solana's native data types, just set `webhookType` to "raw".
+> If you don't want Helius' unique abstractions and would rather work with Solana's native data types, set `webhookType` to "raw".
 
 For a quick demo video, please see the [Webhook docs.](https://docs.helius.xyz/webhooks/webhooks-summary)
 <br />
 
 ### **Create Webhook**
 
-Creates a new default Helius webhook. The webhook type is "enhanced" by default.
-
-> **Note**: You can use `Types.WebhookType` to specify between raw, discord, or enhanced webhooks!
+> **Note**: You can use `Types.WebhookType` to specify between raw, discord, or enhanced webhooks! The default type is "enhanced".
 
 ```ts
 import { Helius, Types } from "helius-sdk";
@@ -108,8 +106,6 @@ heliusAPI.appendAddressesToWebhook("your-webhook-id-here", [
 
 ### **Get All Webhooks**
 
-You can get all the webhooks created by an API key in a single call:
-
 ```ts
 import { Helius } from "helius-sdk";
 
@@ -120,8 +116,6 @@ heliusAPI.getAllWebhooks();
 
 ### **Get A Single Webhook**
 
-You can of course fetch a single webhook as well
-
 ```ts
 import { Helius } from "helius-sdk";
 
@@ -131,8 +125,6 @@ heliusAPI.getWebhookByID("<webhook-id-here>");
 ```
 
 ### **Delete a Webhook**
-
-Finally, you can delete webhooks as follows:
 
 ```ts
 import { Helius } from "helius-sdk";
