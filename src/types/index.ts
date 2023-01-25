@@ -19,6 +19,7 @@ export enum WebhookType {
 
 export enum TransactionType {
     UNKNOWN = 'UNKNOWN',
+    ANY = 'ANY',
     NFT_BID = 'NFT_BID',
     NFT_GLOBAL_BID = 'NFT_GLOBAL_BID',
     NFT_GLOBAL_BID_CANCELLED = 'NFT_GLOBAL_BID_CANCELLED',
