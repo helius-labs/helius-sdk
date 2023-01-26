@@ -1,5 +1,5 @@
 import axios, { AxiosError } from "axios";
-import { Webhook, CreateWebhookRequest, EditWebhookRequest, CreateCollectionWebhookRequest, GetMintlistRequest, GetMintlistResponse } from "./types";
+import { Webhook, CreateWebhookRequest, EditWebhookRequest, CreateCollectionWebhookRequest, GetMintlistRequest, GetMintlistResponse, MintlistObject } from "./types";
 
 const API_URL_V0: string = "https://api.helius.xyz/v0";
 const API_URL_V1: string = "https://api.helius.xyz/v1";
@@ -153,21 +153,63 @@ export class Helius {
         }
     }
 
-    // async createCollectionWebhook(request: CreateCollectionWebhookRequest): Promise<Webhook> {
-    //     const { firstVerifiedCreators, verifiedCollectionAddresses } = request;
-    //     if (firstVerifiedCreators != undefined && verifiedCollectionAddresses != undefined) {
-    //         throw new Error(`cannot provide both firstVerifiedCreators and verifiedCollectionAddresses. Please only provide one.`)
-    //     }
+    async createCollectionWebhook(request: CreateCollectionWebhookRequest): Promise<Webhook> {
+        if (request?.collectionQuery == undefined) {
+            throw new Error(`must provide collectionQuery object.`)
+        }
 
-    //     if (firstVerifiedCreators != undefined) {
+        const { firstVerifiedCreators, verifiedCollectionAddresses } = request.collectionQuery;
+        if (firstVerifiedCreators != undefined && verifiedCollectionAddresses != undefined) {
+            throw new Error(`cannot provide both firstVerifiedCreators and verifiedCollectionAddresses. Please only provide one.`)
+        }
 
-    //     }
+        let mintlist: MintlistObject[] = [];
+        let query = {};
 
-    //     if (verifiedCollectionAddresses != undefined) {
+        if (firstVerifiedCreators != undefined) {
+            query = { firstVerifiedCreators }
+        } else { // must have used verifiedCollectionAddresses
+            query = { verifiedCollectionAddresses }
+        }
 
-    //     }
+        try {
+            let mints = await this.getMintlist({
+                query,
+                options: {
+                    limit: 10000
+                }
+            })
+            mintlist.push(...mints.result)
 
-    // }
+            while (mints.paginationToken) {
+                mints = await this.getMintlist({
+                    query: {
+                        firstVerifiedCreators
+                    },
+                    options: {
+                        limit: 10000,
+                        paginationToken: mints.paginationToken
+                    }
+                })
+                mintlist.push(...mints.result)
+            }
+
+            const { webhookURL, transactionTypes, webhookType, authHeader } = request
+            return await this.createWebhook({
+                webhookURL,
+                transactionTypes,
+                webhookType,
+                authHeader,
+                accountAddresses: mintlist.map(x => x.mint),
+            })
+        } catch (err: any | AxiosError) {
+            if (axios.isAxiosError(err)) {
+                throw new Error(`error during createCollectionWebhook: ${err.response?.data.error || err}`)
+            } else {
+                throw new Error(`error during createCollectionWebhook: ${err}`)
+            }
+        }
+    }
 
     async getMintlist(request: GetMintlistRequest): Promise<GetMintlistResponse> {
         if (request?.query == undefined) {
