@@ -1,5 +1,5 @@
 import axios, { AxiosError } from "axios";
-import { Webhook, CreateWebhookRequest, EditWebhookRequest, CreateCollectionWebhookRequest, GetMintlistRequest } from "./types";
+import { Webhook, CreateWebhookRequest, EditWebhookRequest, CreateCollectionWebhookRequest, GetMintlistRequest, GetMintlistResponse } from "./types";
 
 const API_URL_V0: string = "https://api.helius.xyz/v0";
 const API_URL_V1: string = "https://api.helius.xyz/v1";
@@ -169,7 +169,7 @@ export class Helius {
 
     // }
 
-    async getMintlist(request: GetMintlistRequest): Promise<any> {
+    async getMintlist(request: GetMintlistRequest): Promise<GetMintlistResponse> {
         if (request?.query == undefined) {
             throw new Error(`must provide query object.`)
         }

@@ -12,13 +12,24 @@ export type CreateWebhookRequest = Omit<Webhook, 'webhookID' & 'wallet'>;
 export type EditWebhookRequest = Omit<Webhook, 'webhookID' & 'wallet'>;
 
 export interface CreateCollectionWebhookRequest {
-
     webhookURL: string,
     transactionTypes: string[],
     accountAddresses: string[],
     webhookType: WebhookType | null,
     authHeader: string
 }
+
+export interface GetMintlistResponse {
+    result: MintlistObject[],
+    paginationToken: string
+}
+
+export interface MintlistObject {
+    mint: string,
+    name: string,
+}
+
+
 
 export interface CollectionIdentifier {
     firstVerifiedCreators: string[],
