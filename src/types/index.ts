@@ -4,8 +4,8 @@ export interface Webhook {
     webhookURL: string,
     transactionTypes: string[],
     accountAddresses: string[],
-    webhookType?: WebhookType,
-    authHeader?: string
+    webhookType: WebhookType,
+    authHeader: string
 }
 
 export type CreateWebhookRequest = Omit<Webhook, 'webhookID' | 'wallet'>;
