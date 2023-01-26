@@ -1,8 +1,8 @@
 import axios, { AxiosError } from "axios";
-import { Webhook, CreateWebhookRequest, EditWebhookRequest } from "./types";
+import { Webhook, CreateWebhookRequest, EditWebhookRequest, CreateCollectionWebhookRequest, GetMintlistRequest } from "./types";
 
 const API_URL_V0: string = "https://api.helius.xyz/v0";
-const API_URL_V1: string = "https://api.heliuys.xyz/v1";
+const API_URL_V1: string = "https://api.helius.xyz/v1";
 
 export * as Types from './types';
 
@@ -40,7 +40,7 @@ export class Helius {
             return data;
         } catch (err: any | AxiosError) {
             if (axios.isAxiosError(err)) {
-                throw new Error(`error calling getWebhooks: ${err.response?.data.error}`)
+                throw new Error(`error calling getWebhooks: ${err.response?.data.error || err}`)
             } else {
                 throw new Error(`error calling getWebhooks: ${err}`)
             }
@@ -59,7 +59,7 @@ export class Helius {
             return data
         } catch (err: any | AxiosError) {
             if (axios.isAxiosError(err)) {
-                throw new Error(`error during getWebhookByID: ${err.response?.data.error}`)
+                throw new Error(`error during getWebhookByID: ${err.response?.data.error || err}`)
             } else {
                 throw new Error(`error during getWebhookByID: ${err}`)
             }
@@ -79,7 +79,7 @@ export class Helius {
             return data;
         } catch (err: any | AxiosError) {
             if (axios.isAxiosError(err)) {
-                throw new Error(`error during createWebhook: ${err.response?.data.error}`)
+                throw new Error(`error during createWebhook: ${err.response?.data.error || err}`)
             } else {
                 throw new Error(`error during createWebhook: ${err}`)
             }
@@ -98,7 +98,7 @@ export class Helius {
             return true
         } catch (err: any | AxiosError) {
             if (axios.isAxiosError(err)) {
-                throw new Error(`error during deleteWebhook: ${err.response?.data.error}`)
+                throw new Error(`error during deleteWebhook: ${err.response?.data.error || err}`)
             } else {
                 throw new Error(`error during deleteWebhook: ${err}`)
             }
@@ -119,7 +119,7 @@ export class Helius {
             return data;
         } catch (err: any | AxiosError) {
             if (axios.isAxiosError(err)) {
-                throw new Error(`error during editWebhook: ${err.response?.data.error}`)
+                throw new Error(`error during editWebhook: ${err.response?.data.error || err}`)
             } else {
                 throw new Error(`error during editWebhook: ${err}`)
             }
@@ -146,9 +146,47 @@ export class Helius {
             return data;
         } catch (err: any | AxiosError) {
             if (axios.isAxiosError(err)) {
-                throw new Error(`error during appendAddressesToWebhook: ${err.response?.data.error}`)
+                throw new Error(`error during appendAddressesToWebhook: ${err.response?.data.error || err}`)
             } else {
                 throw new Error(`error during appendAddressesToWebhook: ${err}`)
+            }
+        }
+    }
+
+    // async createCollectionWebhook(request: CreateCollectionWebhookRequest): Promise<Webhook> {
+    //     const { firstVerifiedCreators, verifiedCollectionAddresses } = request;
+    //     if (firstVerifiedCreators != undefined && verifiedCollectionAddresses != undefined) {
+    //         throw new Error(`cannot provide both firstVerifiedCreators and verifiedCollectionAddresses. Please only provide one.`)
+    //     }
+
+    //     if (firstVerifiedCreators != undefined) {
+
+    //     }
+
+    //     if (verifiedCollectionAddresses != undefined) {
+
+    //     }
+
+    // }
+
+    async getMintlist(request: GetMintlistRequest): Promise<any> {
+        if (request?.query == undefined) {
+            throw new Error(`must provide query object.`)
+        }
+
+        const { firstVerifiedCreators, verifiedCollectionAddresses } = request.query;
+        if (firstVerifiedCreators != undefined && verifiedCollectionAddresses != undefined) {
+            throw new Error(`cannot provide both firstVerifiedCreators and verifiedCollectionAddresses. Please only provide one.`)
+        }
+
+        try {
+            const { data } = await axios.post(`${API_URL_V1}/mintlist?api-key=${this.apiKey}`, { ...request });
+            return data;
+        } catch (err: any | AxiosError) {
+            if (axios.isAxiosError(err)) {
+                throw new Error(`error during getMintlist: ${err.response?.data.error || err}`)
+            } else {
+                throw new Error(`error during getMintlist: ${err}`)
             }
         }
     }

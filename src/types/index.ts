@@ -11,6 +11,31 @@ export interface Webhook {
 export type CreateWebhookRequest = Omit<Webhook, 'webhookID' & 'wallet'>;
 export type EditWebhookRequest = Omit<Webhook, 'webhookID' & 'wallet'>;
 
+export interface CreateCollectionWebhookRequest {
+
+    webhookURL: string,
+    transactionTypes: string[],
+    accountAddresses: string[],
+    webhookType: WebhookType | null,
+    authHeader: string
+}
+
+export interface CollectionIdentifier {
+    firstVerifiedCreators: string[],
+    verifiedCollectionAddresses: string[],
+}
+
+export interface GetMintlistRequest {
+    query: CollectionIdentifier,
+    options: HeliusOptions
+}
+
+
+export interface HeliusOptions {
+    limit: number,
+    paginationToken: string
+}
+
 export enum WebhookType {
     ENHANCED = "enhanced",
     RAW = "raw",
