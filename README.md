@@ -137,7 +137,7 @@ heliusAPI.deleteWebhook("<webhook-id-here>"); // returns a boolean
 ### **Collection Webhooks!**
 
 ```ts
-import { Helius } from "helius-sdk";
+import { Helius, Types } from "helius-sdk";
 
 const heliusAPI = new Helius("<your-api-key-her>");
 
