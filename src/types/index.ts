@@ -4,14 +4,14 @@ export interface Webhook {
     webhookURL: string,
     transactionTypes: string[],
     accountAddresses: string[],
-    webhookType: WebhookType,
-    authHeader: string
+    webhookType?: WebhookType,
+    authHeader?: string
 }
 
 export type CreateWebhookRequest = Omit<Webhook, 'webhookID' | 'wallet'>;
 export type EditWebhookRequest = Omit<Webhook, 'webhookID' | 'wallet'>;
 
-export interface CreateCollectionWebhookRequest {
+export type CreateCollectionWebhookRequest = {
     collectionQuery: CollectionIdentifier
     webhookURL: string,
     transactionTypes: string[],
@@ -187,6 +187,11 @@ export enum TransactionType {
     ADD_INSTRUCTION = 'ADD_INSTRUCTION',
     CREATE_MASTER_EDITION = 'CREATE_MASTER_EDITION',
     ATTACH_METADATA = 'ATTACH_METADATA',
+}
+
+// A list of common collections and their first verified creators' pubkey
+export enum Collections {
+    ABC = "GVkb5GuwGKydA4xXLT9PNpx63h7bhFNrDLQSxi6j5NuF"
 }
 
 export const NftEventTypes = [

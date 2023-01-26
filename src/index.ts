@@ -194,14 +194,15 @@ export class Helius {
                 mintlist.push(...mints.result)
             }
 
-            const { webhookURL, transactionTypes, webhookType, authHeader } = request
-            return await this.createWebhook({
-                webhookURL,
-                transactionTypes,
-                webhookType,
-                authHeader,
-                accountAddresses: mintlist.map(x => x.mint),
-            })
+            const { webhookURL, transactionTypes, authHeader, webhookType } = request;
+            const payload: CreateWebhookRequest = { webhookURL, accountAddresses: mintlist.map(x => x.mint), transactionTypes };
+            if (authHeader) { payload["authHeader"] = authHeader }
+            if (webhookType) { payload["webhookType"] = webhookType }
+
+
+
+            console.log({ payload })
+            return await this.createWebhook({ ...payload })
         } catch (err: any | AxiosError) {
             if (axios.isAxiosError(err)) {
                 throw new Error(`error during createCollectionWebhook: ${err.response?.data.error || err}`)
@@ -232,6 +233,4 @@ export class Helius {
             }
         }
     }
-
 }
-

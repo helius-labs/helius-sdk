@@ -133,3 +133,22 @@ const heliusAPI = new Helius("<your-api-key-here>");
 
 heliusAPI.deleteWebhook("<webhook-id-here>"); // returns a boolean
 ```
+
+### **Collection Webhooks!**
+
+```ts
+import { Helius } from "helius-sdk";
+
+const heliusAPI = new Helius("<your-api-key-her>");
+
+heliusAPI.createCollectionWebhook({
+  collectionQuery: {
+    firstVerifiedCreators: [Types.Collections.ABC],
+  },
+  transactionTypes: [Types.TransactionType.ANY],
+  webhookType: Types.WebhookType.DISCORD,
+  webhookURL: "https://discord.com/api/webhooks/your-discord-token-here",
+});
+```
+
+Note that the Collections.ABC enum references the firstVerifiedCreator address of this collection. It is just a convenience enum so that developers don't have to figure this address out. If you already know it for your collection, please make a PR :)
