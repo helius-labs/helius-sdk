@@ -199,9 +199,6 @@ export class Helius {
             if (authHeader) { payload["authHeader"] = authHeader }
             if (webhookType) { payload["webhookType"] = webhookType }
 
-
-
-            console.log({ payload })
             return await this.createWebhook({ ...payload })
         } catch (err: any | AxiosError) {
             if (axios.isAxiosError(err)) {

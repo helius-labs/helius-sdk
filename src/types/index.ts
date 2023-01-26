@@ -189,9 +189,9 @@ export enum TransactionType {
     ATTACH_METADATA = 'ATTACH_METADATA',
 }
 
-// A list of common collections and their first verified creators' pubkey
-export enum Collections {
-    ABC = "GVkb5GuwGKydA4xXLT9PNpx63h7bhFNrDLQSxi6j5NuF"
+// A list of common collections and their collection query
+export const Collections = {
+    ABC: { firstVerifiedCreators: ["GVkb5GuwGKydA4xXLT9PNpx63h7bhFNrDLQSxi6j5NuF"] }
 }
 
 export const NftEventTypes = [
