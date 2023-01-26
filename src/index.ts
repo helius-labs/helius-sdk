@@ -1,8 +1,8 @@
 import axios, { AxiosError } from "axios";
-import { Webhook, CreateWebhookRequest, EditWebhookRequest } from "./types";
+import { Webhook, CreateWebhookRequest, EditWebhookRequest, CreateCollectionWebhookRequest, GetMintlistRequest, GetMintlistResponse, MintlistObject } from "./types";
 
 const API_URL_V0: string = "https://api.helius.xyz/v0";
-const API_URL_V1: string = "https://api.heliuys.xyz/v1";
+const API_URL_V1: string = "https://api.helius.xyz/v1";
 
 export * as Types from './types';
 
@@ -40,7 +40,7 @@ export class Helius {
             return data;
         } catch (err: any | AxiosError) {
             if (axios.isAxiosError(err)) {
-                throw new Error(`error calling getWebhooks: ${err.response?.data.error}`)
+                throw new Error(`error calling getWebhooks: ${err.response?.data.error || err}`)
             } else {
                 throw new Error(`error calling getWebhooks: ${err}`)
             }
@@ -59,7 +59,7 @@ export class Helius {
             return data
         } catch (err: any | AxiosError) {
             if (axios.isAxiosError(err)) {
-                throw new Error(`error during getWebhookByID: ${err.response?.data.error}`)
+                throw new Error(`error during getWebhookByID: ${err.response?.data.error || err}`)
             } else {
                 throw new Error(`error during getWebhookByID: ${err}`)
             }
@@ -79,7 +79,7 @@ export class Helius {
             return data;
         } catch (err: any | AxiosError) {
             if (axios.isAxiosError(err)) {
-                throw new Error(`error during createWebhook: ${err.response?.data.error}`)
+                throw new Error(`error during createWebhook: ${err.response?.data.error || err}`)
             } else {
                 throw new Error(`error during createWebhook: ${err}`)
             }
@@ -98,7 +98,7 @@ export class Helius {
             return true
         } catch (err: any | AxiosError) {
             if (axios.isAxiosError(err)) {
-                throw new Error(`error during deleteWebhook: ${err.response?.data.error}`)
+                throw new Error(`error during deleteWebhook: ${err.response?.data.error || err}`)
             } else {
                 throw new Error(`error during deleteWebhook: ${err}`)
             }
@@ -119,7 +119,7 @@ export class Helius {
             return data;
         } catch (err: any | AxiosError) {
             if (axios.isAxiosError(err)) {
-                throw new Error(`error during editWebhook: ${err.response?.data.error}`)
+                throw new Error(`error during editWebhook: ${err.response?.data.error || err}`)
             } else {
                 throw new Error(`error during editWebhook: ${err}`)
             }
@@ -146,12 +146,91 @@ export class Helius {
             return data;
         } catch (err: any | AxiosError) {
             if (axios.isAxiosError(err)) {
-                throw new Error(`error during appendAddressesToWebhook: ${err.response?.data.error}`)
+                throw new Error(`error during appendAddressesToWebhook: ${err.response?.data.error || err}`)
             } else {
                 throw new Error(`error during appendAddressesToWebhook: ${err}`)
             }
         }
     }
 
-}
+    async createCollectionWebhook(request: CreateCollectionWebhookRequest): Promise<Webhook> {
+        if (request?.collectionQuery == undefined) {
+            throw new Error(`must provide collectionQuery object.`)
+        }
 
+        const { firstVerifiedCreators, verifiedCollectionAddresses } = request.collectionQuery;
+        if (firstVerifiedCreators != undefined && verifiedCollectionAddresses != undefined) {
+            throw new Error(`cannot provide both firstVerifiedCreators and verifiedCollectionAddresses. Please only provide one.`)
+        }
+
+        let mintlist: MintlistObject[] = [];
+        let query = {};
+
+        if (firstVerifiedCreators != undefined) {
+            query = { firstVerifiedCreators }
+        } else { // must have used verifiedCollectionAddresses
+            query = { verifiedCollectionAddresses }
+        }
+
+        try {
+            let mints = await this.getMintlist({
+                query,
+                options: {
+                    limit: 10000
+                }
+            })
+            mintlist.push(...mints.result)
+
+            while (mints.paginationToken) {
+                mints = await this.getMintlist({
+                    query: {
+                        firstVerifiedCreators
+                    },
+                    options: {
+                        limit: 10000,
+                        paginationToken: mints.paginationToken
+                    }
+                })
+                mintlist.push(...mints.result)
+            }
+
+            const { webhookURL, transactionTypes, authHeader, webhookType } = request;
+            const payload: CreateWebhookRequest = { webhookURL, accountAddresses: mintlist.map(x => x.mint), transactionTypes };
+            if (authHeader) { payload["authHeader"] = authHeader }
+            if (webhookType) { payload["webhookType"] = webhookType }
+
+
+
+            console.log({ payload })
+            return await this.createWebhook({ ...payload })
+        } catch (err: any | AxiosError) {
+            if (axios.isAxiosError(err)) {
+                throw new Error(`error during createCollectionWebhook: ${err.response?.data.error || err}`)
+            } else {
+                throw new Error(`error during createCollectionWebhook: ${err}`)
+            }
+        }
+    }
+
+    async getMintlist(request: GetMintlistRequest): Promise<GetMintlistResponse> {
+        if (request?.query == undefined) {
+            throw new Error(`must provide query object.`)
+        }
+
+        const { firstVerifiedCreators, verifiedCollectionAddresses } = request.query;
+        if (firstVerifiedCreators != undefined && verifiedCollectionAddresses != undefined) {
+            throw new Error(`cannot provide both firstVerifiedCreators and verifiedCollectionAddresses. Please only provide one.`)
+        }
+
+        try {
+            const { data } = await axios.post(`${API_URL_V1}/mintlist?api-key=${this.apiKey}`, { ...request });
+            return data;
+        } catch (err: any | AxiosError) {
+            if (axios.isAxiosError(err)) {
+                throw new Error(`error during getMintlist: ${err.response?.data.error || err}`)
+            } else {
+                throw new Error(`error during getMintlist: ${err}`)
+            }
+        }
+    }
+}

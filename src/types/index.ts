@@ -4,12 +4,46 @@ export interface Webhook {
     webhookURL: string,
     transactionTypes: string[],
     accountAddresses: string[],
-    webhookType: WebhookType | null,
-    authHeader: string
+    webhookType?: WebhookType,
+    authHeader?: string
 }
 
-export type CreateWebhookRequest = Omit<Webhook, 'webhookID' & 'wallet'>;
-export type EditWebhookRequest = Omit<Webhook, 'webhookID' & 'wallet'>;
+export type CreateWebhookRequest = Omit<Webhook, 'webhookID' | 'wallet'>;
+export type EditWebhookRequest = Omit<Webhook, 'webhookID' | 'wallet'>;
+
+export type CreateCollectionWebhookRequest = {
+    collectionQuery: CollectionIdentifier
+    webhookURL: string,
+    transactionTypes: string[],
+    webhookType?: WebhookType,
+    authHeader?: string
+}
+
+export interface GetMintlistResponse {
+    result: MintlistObject[],
+    paginationToken: string
+}
+
+export interface MintlistObject {
+    mint: string,
+    name: string,
+}
+
+export type CollectionIdentifier = {
+    firstVerifiedCreators?: string[],
+    verifiedCollectionAddresses?: string[],
+}
+
+export type GetMintlistRequest = {
+    query: CollectionIdentifier,
+    options: HeliusOptions
+}
+
+
+export type HeliusOptions = {
+    limit?: number,
+    paginationToken?: string
+}
 
 export enum WebhookType {
     ENHANCED = "enhanced",
@@ -153,6 +187,11 @@ export enum TransactionType {
     ADD_INSTRUCTION = 'ADD_INSTRUCTION',
     CREATE_MASTER_EDITION = 'CREATE_MASTER_EDITION',
     ATTACH_METADATA = 'ATTACH_METADATA',
+}
+
+// A list of common collections and their first verified creators' pubkey
+export enum Collections {
+    ABC = "GVkb5GuwGKydA4xXLT9PNpx63h7bhFNrDLQSxi6j5NuF"
 }
 
 export const NftEventTypes = [
