@@ -142,13 +142,11 @@ import { Helius, Types } from "helius-sdk";
 const heliusAPI = new Helius("<your-api-key-her>");
 
 heliusAPI.createCollectionWebhook({
-  collectionQuery: {
-    firstVerifiedCreators: [Types.Collections.ABC],
-  },
+  collectionQuery: Types.Collections.ABC,
   transactionTypes: [Types.TransactionType.ANY],
   webhookType: Types.WebhookType.DISCORD,
   webhookURL: "https://discord.com/api/webhooks/your-discord-token-here",
 });
 ```
 
-Note that the Collections.ABC enum references the firstVerifiedCreator address of this collection. It is just a convenience enum so that developers don't have to figure this address out. If you already know it for your collection, please make a PR :)
+Note that the Collections.ABC enum references the collection query for this collection. It is just a convenience enum so that developers don't have to figure out whether to use firstVerifiedCreator or the Metaplex Certified Collection address ([see more about this here](https://docs.helius.xyz/api-reference/nft-collections-on-solana)). If you already know it for your collection, please make a PR :)
