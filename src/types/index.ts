@@ -36,7 +36,7 @@ export type CollectionIdentifier = {
 
 export type GetMintlistRequest = {
     query: CollectionIdentifier,
-    options: HeliusOptions
+    options?: HeliusOptions
 }
 
 
