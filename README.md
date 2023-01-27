@@ -39,6 +39,12 @@ We've parsed over 100 transaction types (including NFT Sales, NFT Listings, and 
 For a quick demo video, please see the [Webhook docs.](https://docs.helius.xyz/webhooks/webhooks-summary)
 <br />
 
+### **Webhook prerequisites**
+
+> **Warning**: We can not detect your own local servers from just "localhost"
+
+To test webhooks we suggest creating a reverse proxy to your local machine on which the your localhost websever is running. We suggest using ngrok, which you can set up by following these [instructions](https://ngrok.com/docs/getting-started).
+
 ### **Create Webhook**
 
 > **Note**: You can use `Types.WebhookType` to specify between raw, discord, or enhanced webhooks! The default type is "enhanced".
