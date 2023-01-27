@@ -41,16 +41,23 @@ For a quick demo video, please see the [Webhook docs.](https://docs.helius.xyz/w
 
 ### **Create Webhook**
 
-> **Note**: You can use `Types.WebhookType` to specify between raw, discord, or enhanced webhooks! The default type is "enhanced".
+> **Note**: You can use enum `WebhookType` to specify between raw, discord, or enhanced webhooks! The default type is "enhanced".
 
 ```ts
-import { Helius, Types } from "helius-sdk";
+import {
+    // enums
+    Source,
+    TransactionType,
+    
+    // lib
+    Helius,
+} from "helius-sdk";
 
 const heliusAPI = new Helius("<your-api-key-here>");
 
 heliusAPI.createWebhook({
-  accountAddresses: [Types.Source.MAGIC_EDEN],
-  transactionTypes: [Types.TransactionType.NFT_LISTING],
+  accountAddresses: [Source.MAGIC_EDEN],
+  transactionTypes: [TransactionType.NFT_LISTING],
   webhookURL: "my-webhook-handler.com/handle",
 });
 ```
@@ -58,33 +65,40 @@ heliusAPI.createWebhook({
 If you'd like to work with the native Solana transaction format instead of Helius' abstraction, use the "raw" type instead (this will also have lower latency). Note we also add an auth-header for security purposes.
 
 ```ts
-import { Helius, Types } from "helius-sdk";
+import {
+  // enums
+  TransactionType,
+  WebhookType,
+  Source,
+
+  Helius
+} from "helius-sdk";
 
 const heliusAPI = new Helius("<your-api-key-here>");
 
 heliusAPI.createWebhook({
-  accountAddresses: [Types.Source.MAGIC_EDEN],
+  accountAddresses: [Source.MAGIC_EDEN],
   authHeader: "some auth header",
   webhookURL: "my-webhook-handler.com/handle",
-  webhookType: Types.WebhookType.RAW,
-  transactionTypes: [Types.TransactionType.ANY],
+  webhookType: WebhookType.RAW,
+  transactionTypes: [TransactionType.ANY],
 });
 ```
 
-For Discord webhooks, simply use `Types.WebhookType.DISCORD`.
+For Discord webhooks, simply use enum `WebhookType.DISCORD`.
 
 ### **Edit Webhook**
 
 You can also edit your webhooks. A common use case is dynamically adding/removing accounts to watch in a webhook:
 
 ```ts
-import { Helius, Types } from "helius-sdk";
+import { Helius, Source } from "helius-sdk";
 
 const heliusAPI = new Helius("<your-api-key-here>");
 
 heliusAPI.editWebhook(
   "your-webhook-id-here",
-  { accountAddresses: [Types.Source.SQUADS] } // This will ONLY update accountAddresses, not the other fields on the webhook object
+  { accountAddresses: [Source.SQUADS] } // This will ONLY update accountAddresses, not the other fields on the webhook object
 );
 ```
 
@@ -94,13 +108,13 @@ heliusAPI.editWebhook(
 For convenience, we've added a method to let you simply append new addresses to an existing webhook:
 
 ```ts
-import { Helius, Types } from "helius-sdk";
+import { Helius, Source } from "helius-sdk";
 
 const heliusAPI = new Helius("<your-api-key-here>");
 
 heliusAPI.appendAddressesToWebhook("your-webhook-id-here", [
-  Types.Source.SQUADS,
-  Types.Source.JUPITER,
+  Source.SQUADS,
+  Source.JUPITER,
 ]);
 ```
 
@@ -137,12 +151,17 @@ heliusAPI.deleteWebhook("<webhook-id-here>"); // returns a boolean
 ### **Collection Webhooks!**
 
 ```ts
-import { Helius, Types } from "helius-sdk";
+import {
+  // collections dict
+  Collections,
+
+  Helius,
+} from "helius-sdk";
 
 const heliusAPI = new Helius("<your-api-key-her>");
 
 heliusAPI.createCollectionWebhook({
-  collectionQuery: Types.Collections.ABC,
+  collectionQuery: Collections.ABC,
   transactionTypes: [Types.TransactionType.ANY],
   webhookType: Types.WebhookType.DISCORD,
   webhookURL: "https://discord.com/api/webhooks/your-discord-token-here",
