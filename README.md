@@ -26,7 +26,7 @@ const heliusAPI = new Helius("<your-api-key-here>"); // input your api key gener
 
 Our SDK is designed to give you a seamless experience when building on Solana. We've separated the core functionality into various segments.
 
-### **Webhooks**
+## **Webhooks**
 
 Helius webhooks are the perfect way of building event driven systems on Solana.
 
@@ -158,7 +158,7 @@ import {
   Helius,
 } from "helius-sdk";
 
-const heliusAPI = new Helius("<your-api-key-her>");
+const heliusAPI = new Helius("<your-api-key-here>");
 
 heliusAPI.createCollectionWebhook({
   collectionQuery: Collections.ABC,
@@ -169,3 +169,21 @@ heliusAPI.createCollectionWebhook({
 ```
 
 Note that the Collections.ABC enum references the collection query for this collection. It is just a convenience enum so that developers don't have to figure out whether to use firstVerifiedCreator or the Metaplex Certified Collection address ([see more about this here](https://docs.helius.xyz/api-reference/nft-collections-on-solana)). If you already know it for your collection, please make a PR :)
+
+## NFT API
+
+To read more about the most powerful NFT API on Solana, see [our docs](https://docs.helius.xyz/api-reference/nft-api).
+
+### **Indexed Mintlists**
+
+To get all the tokens for an NFT collection:
+
+```ts
+import { Helius, Types } from "helius-sdk";
+
+const heliusAPI = new Helius("<your-api-key-here>");
+
+const mints = heliusAPI.getMintlist({
+  query: Types.Collections.ABC,
+});
+```
