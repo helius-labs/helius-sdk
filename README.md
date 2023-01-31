@@ -46,7 +46,7 @@ For a quick demo video, please see the [Webhook docs.](https://docs.helius.xyz/w
 ```ts
 import {
     // enums
-    Source,
+    Address,
     TransactionType,
     
     // lib
@@ -56,7 +56,7 @@ import {
 const heliusAPI = new Helius("<your-api-key-here>");
 
 heliusAPI.createWebhook({
-  accountAddresses: [Source.MAGIC_EDEN],
+  accountAddresses: [Address.MAGIC_EDEN_V2],
   transactionTypes: [TransactionType.NFT_LISTING],
   webhookURL: "my-webhook-handler.com/handle",
 });
@@ -69,7 +69,7 @@ import {
   // enums
   TransactionType,
   WebhookType,
-  Source,
+  Address,
 
   Helius
 } from "helius-sdk";
@@ -77,7 +77,7 @@ import {
 const heliusAPI = new Helius("<your-api-key-here>");
 
 heliusAPI.createWebhook({
-  accountAddresses: [Source.MAGIC_EDEN],
+  accountAddresses: [Address.MAGIC_EDEN_V2],
   authHeader: "some auth header",
   webhookURL: "my-webhook-handler.com/handle",
   webhookType: WebhookType.RAW,
@@ -92,13 +92,13 @@ For Discord webhooks, simply use enum `WebhookType.DISCORD`.
 You can also edit your webhooks. A common use case is dynamically adding/removing accounts to watch in a webhook:
 
 ```ts
-import { Helius, Source } from "helius-sdk";
+import { Helius, Address } from "helius-sdk";
 
 const heliusAPI = new Helius("<your-api-key-here>");
 
 heliusAPI.editWebhook(
   "your-webhook-id-here",
-  { accountAddresses: [Source.SQUADS] } // This will ONLY update accountAddresses, not the other fields on the webhook object
+  { accountAddresses: [Address.SQUADS] } // This will ONLY update accountAddresses, not the other fields on the webhook object
 );
 ```
 
@@ -108,13 +108,13 @@ heliusAPI.editWebhook(
 For convenience, we've added a method to let you simply append new addresses to an existing webhook:
 
 ```ts
-import { Helius, Source } from "helius-sdk";
+import { Helius, Address } from "helius-sdk";
 
 const heliusAPI = new Helius("<your-api-key-here>");
 
 heliusAPI.appendAddressesToWebhook("your-webhook-id-here", [
-  Source.SQUADS,
-  Source.JUPITER,
+  Address.SQUADS,
+  Address.JUPITER_V3,
 ]);
 ```
 
