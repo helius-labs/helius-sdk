@@ -9,6 +9,7 @@ import type {
 } from "./types";
 
 import axios, { type AxiosError } from "axios";
+import { PublicKey } from "@solana/web3.js";
 
 const API_URL_V0: string = "https://api.helius.xyz/v0";
 const API_URL_V1: string = "https://api.helius.xyz/v1";
@@ -81,6 +82,11 @@ export class Helius {
     * @throws {Error} if there is an error calling the webhooks endpoint or if the response contains an error
     */
     async createWebhook(createWebhookRequest: CreateWebhookRequest): Promise<Webhook> {
+        const addressesOffCurve = createWebhookRequest.accountAddresses.filter((address) => !PublicKey.isOnCurve(address))
+        if (addressesOffCurve.length > 0) {
+            throw new Error(`bad 'accountAddresses' parameter, addresses [${addressesOffCurve.toString()}] are invalid`)
+        }
+
         try {
             const { data } = await axios.post(`${API_URL_V0}/webhooks?api-key=${this.apiKey}`, { ...createWebhookRequest })
             return data;
@@ -120,6 +126,11 @@ export class Helius {
     * @throws {Error} if there is an error calling the webhooks endpoint or if the response contains an error
     */
     async editWebhook(webhookID: string, editWebhookRequest: EditWebhookRequest): Promise<Webhook> {
+        const addressesOffCurve = editWebhookRequest.accountAddresses.filter((address) => !PublicKey.isOnCurve(address))
+        if (addressesOffCurve.length > 0) {
+            throw new Error(`bad 'accountAddresses' parameter, addresses [${addressesOffCurve.toString()}] are invalid`)
+        }
+
         try {
             const webhook = await this.getWebhookByID(webhookID);
             const { data } = await axios.put(`${API_URL_V0}/webhooks/${webhookID}?api-key=${this.apiKey}`, { ...webhook, ...editWebhookRequest })
