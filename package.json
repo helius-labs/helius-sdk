@@ -20,6 +20,7 @@
   "author": "Helius",
   "license": "ISC",
   "devDependencies": {
+    "@solana/web3.js": "^1.73.2",
     "@typescript-eslint/eslint-plugin": "^3.9.0",
     "@typescript-eslint/parser": "^3.9.0",
     "eslint": "^7.6.0",
@@ -28,7 +29,6 @@
     "typescript": "^4.9.4"
   },
   "dependencies": {
-    "@solana/web3.js": "^1.73.0",
     "axios": "^1.2.3"
   }
 }
