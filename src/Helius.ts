@@ -8,7 +8,7 @@ import type {
     MintlistObject
 } from "./types";
 
-import axios, { type AxiosError } from "axios";
+import axios, { AxiosError } from "axios";
 import { PublicKey } from "@solana/web3.js";
 
 const API_URL_V0: string = "https://api.helius.xyz/v0";
