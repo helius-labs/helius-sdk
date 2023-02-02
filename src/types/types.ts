@@ -7,15 +7,6 @@ import type {
     Source
 } from "./enums"
 
-export interface GetMintlistResponse {
-    result: MintlistObject[],
-    paginationToken: string
-}
-
-export type GetMintlistRequest = {
-    query: CollectionIdentifier,
-    options?: HeliusOptions
-}
 
 export type CreateCollectionWebhookRequest = {
     collectionQuery: CollectionIdentifier
@@ -38,14 +29,26 @@ export interface Webhook {
 export type CreateWebhookRequest = Omit<Webhook, 'webhookID' | 'wallet'>;
 export type EditWebhookRequest = Omit<Webhook, 'webhookID' | 'wallet'>;
 
-export interface MintlistObject {
-    mint: string,
-    name: string,
-}
 
 export type CollectionIdentifier = {
     firstVerifiedCreators?: string[],
     verifiedCollectionAddresses?: string[],
+}
+
+
+export interface MintlistResponse {
+    result: MintlistItem[],
+    paginationToken: string
+}
+
+export type MintlistRequest = {
+    query: CollectionIdentifier,
+    options?: HeliusOptions
+}
+
+export interface MintlistItem {
+    mint: string,
+    name: string,
 }
 
 export type HeliusOptions = {
@@ -94,11 +97,6 @@ export interface NativeTransfer {
 
 }
 
-export interface NativeBalanceChange {
-    account: string;
-    amount: string;
-}
-
 export type Instruction = {
     accounts: string[];
     data: string;
@@ -112,17 +110,17 @@ export type InnerInstruction = {
     programId: string;
 }
 
-export interface EnrichedTransactionResponseV2 {
-    type: TransactionType;
+export interface EnrichedTransaction {
     description: string;
+    type: TransactionType;
     source: Source;
     fee: number;
     feePayer: string;
     signature: string;
-    timestamp: number;
     slot: number;
-    tokenTransfers: TokenTransfer[] | null;
+    timestamp: number;
     nativeTransfers: NativeTransfer[] | null;
+    tokenTransfers: TokenTransfer[] | null;
     accountData: AccountData[];
     transactionError: TransactionError | null;
     instructions: Instruction[];
