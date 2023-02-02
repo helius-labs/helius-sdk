@@ -155,7 +155,7 @@ export class Helius {
             const webhook = await this.getWebhookByID(webhookID);
             const accountAddresses = webhook.accountAddresses.concat(newAccountAddresses)
             webhook.accountAddresses = accountAddresses;
-            if (accountAddresses.length > 100000) {
+            if (accountAddresses.length > 100_000) {
                 throw new Error(`a single webhook cannot contain more than 100,000 addresses`)
             }
 
