@@ -7,15 +7,6 @@ import type {
     Source
 } from "./enums"
 
-
-export type CreateCollectionWebhookRequest = {
-    collectionQuery: CollectionIdentifier
-    webhookURL: string,
-    transactionTypes: string[],
-    webhookType?: WebhookType,
-    authHeader?: string
-}
-
 export interface Webhook {
     webhookID: string,
     wallet: string,
@@ -26,15 +17,17 @@ export interface Webhook {
     authHeader?: string
 }
 
-export type CreateWebhookRequest = Omit<Webhook, 'webhookID' | 'wallet'>;
-export type EditWebhookRequest = Omit<Webhook, 'webhookID' | 'wallet'>;
-
-
 export type CollectionIdentifier = {
     firstVerifiedCreators?: string[],
     verifiedCollectionAddresses?: string[],
 }
 
+export type CreateWebhookRequest = Omit<Webhook, 'webhookID' | 'wallet'>;
+export type EditWebhookRequest = Omit<Webhook, 'webhookID' | 'wallet'>;
+
+export interface CreateCollectionWebhookRequest extends CreateWebhookRequest {
+    collectionQuery: CollectionIdentifier
+}
 
 export interface MintlistResponse {
     result: MintlistItem[],
