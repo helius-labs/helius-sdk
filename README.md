@@ -180,9 +180,8 @@ To get all the tokens for an NFT collection:
 
 ```ts
 import {
-  type Collections
-
   Helius
+  Collections,
 } from "helius-sdk";
 
 const heliusAPI = new Helius("<your-api-key-here>");
