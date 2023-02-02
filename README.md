@@ -179,11 +179,14 @@ To read more about the most powerful NFT API on Solana, see [our docs](https://d
 To get all the tokens for an NFT collection:
 
 ```ts
-import { Helius, Types } from "helius-sdk";
+import {
+  Helius
+  Collections,
+} from "helius-sdk";
 
 const heliusAPI = new Helius("<your-api-key-here>");
 
 const mints = heliusAPI.getMintlist({
-  query: Types.Collections.ABC,
+  query: Collections.ABC,
 });
 ```

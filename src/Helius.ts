@@ -3,9 +3,9 @@ import type {
     CreateWebhookRequest,
     EditWebhookRequest,
     CreateCollectionWebhookRequest,
-    GetMintlistRequest,
-    GetMintlistResponse,
-    MintlistObject
+    MintlistRequest,
+    MintlistResponse,
+    MintlistItem
 } from "./types";
 
 import axios, { type AxiosError } from "axios";
@@ -73,7 +73,6 @@ export class Helius {
             }
         }
     }
-
 
     /**
     * Creates a new webhook with the provided request
@@ -156,7 +155,7 @@ export class Helius {
             const webhook = await this.getWebhookByID(webhookID);
             const accountAddresses = webhook.accountAddresses.concat(newAccountAddresses)
             webhook.accountAddresses = accountAddresses;
-            if (accountAddresses.length > 100000) {
+            if (accountAddresses.length > 100_000) {
                 throw new Error(`a single webhook cannot contain more than 100,000 addresses`)
             }
 
@@ -181,7 +180,7 @@ export class Helius {
             throw new Error(`cannot provide both firstVerifiedCreators and verifiedCollectionAddresses. Please only provide one.`)
         }
 
-        let mintlist: MintlistObject[] = [];
+        let mintlist: MintlistItem[] = [];
         let query = {};
 
         if (firstVerifiedCreators != undefined) {
@@ -227,7 +226,7 @@ export class Helius {
         }
     }
 
-    async getMintlist(request: GetMintlistRequest): Promise<GetMintlistResponse> {
+    async getMintlist(request: MintlistRequest): Promise<MintlistResponse> {
         if (request?.query == undefined) {
             throw new Error(`must provide query object.`)
         }
