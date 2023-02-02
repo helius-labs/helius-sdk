@@ -156,8 +156,8 @@ export class Helius {
             const webhook = await this.getWebhookByID(webhookID);
             const accountAddresses = webhook.accountAddresses.concat(newAccountAddresses)
             webhook.accountAddresses = accountAddresses;
-            if (accountAddresses.length > 10000) {
-                throw new Error(`a single webhook cannot contain more than 10,000 addresses`)
+            if (accountAddresses.length > 100000) {
+                throw new Error(`a single webhook cannot contain more than 100,000 addresses`)
             }
 
             const { data } = await axios.put(`${API_URL_V0}/webhooks/${webhookID}?api-key=${this.apiKey}`, { ...webhook })
