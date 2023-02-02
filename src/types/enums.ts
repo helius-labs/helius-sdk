@@ -140,6 +140,9 @@ export enum TransactionType {
     ADD_INSTRUCTION = 'ADD_INSTRUCTION',
     CREATE_MASTER_EDITION = 'CREATE_MASTER_EDITION',
     ATTACH_METADATA = 'ATTACH_METADATA',
+    REQUEST_PNFT_MIGRATION = 'REQUEST_PNFT_MIGRATION',
+    START_PNFT_MIGRATION = 'START_PNFT_MIGRATION',
+    MIGRATE_TO_PNFT = 'MIGRATE_TO_PNFT',
 }
 
 // A list of common collections and their collection query
@@ -168,6 +171,9 @@ export const NftEventTypes = [
     TransactionType.NFT_RENT_ACTIVATE,
     TransactionType.NFT_RENT_END,
     TransactionType.ATTACH_METADATA,
+    TransactionType.REQUEST_PNFT_MIGRATION,
+    TransactionType.START_PNFT_MIGRATION,
+    TransactionType.MIGRATE_TO_PNFT,
 ];
 
 export enum TransactionContext {
