@@ -74,7 +74,7 @@ export interface TokenTransfer {
     toUserAccount: string | null;
     fromTokenAccount: string | null;
     toTokenAccount: string | null;
-    rawTokenAmount: number;
+    tokenAmount: number;
     decimals: number;
     tokenStandard: TokenStandard;
     mint: string;
