@@ -6,13 +6,13 @@ import type {
     TransactionType,
     Source,
     ProgramName,
-    TransactionContext
-} from "./enums"
+    TransactionContext,
+} from "./enums";
 
 export type HeliusOptions = {
     limit?: number;
     paginationToken?: string;
-}
+};
 
 export interface Webhook {
     webhookID: string;
@@ -27,10 +27,10 @@ export interface Webhook {
 export type CollectionIdentifier = {
     firstVerifiedCreators?: string[];
     verifiedCollectionAddresses?: string[];
-}
+};
 
-export type CreateWebhookRequest = Omit<Webhook, 'webhookID' | 'wallet'>;
-export type EditWebhookRequest = Omit<Webhook, 'webhookID' | 'wallet'>;
+export type CreateWebhookRequest = Omit<Webhook, "webhookID" | "wallet">;
+export type EditWebhookRequest = Partial<Omit<Webhook, "webhookID" | "wallet">>;
 
 export interface CreateCollectionWebhookRequest extends CreateWebhookRequest {
     collectionQuery: CollectionIdentifier;
@@ -44,7 +44,7 @@ export interface MintlistResponse {
 export type MintlistRequest = {
     query: CollectionIdentifier;
     options?: HeliusOptions;
-}
+};
 
 export interface MintlistItem {
     mint: string;
@@ -102,7 +102,7 @@ export type InnerInstruction = {
     accounts: string[];
     data: string;
     programId: string;
-}
+};
 
 export interface ProgramInfo {
     source: Source;
