@@ -6,9 +6,6 @@ import {
     MintlistRequest,
     MintlistResponse,
     MintlistItem,
-    Address,
-    TransactionType,
-    WebhookType,
 } from "./types";
 
 import axios, { type AxiosError } from "axios";
