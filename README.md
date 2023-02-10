@@ -190,3 +190,16 @@ const mints = heliusAPI.getMintlist({
   query: Collections.ABC,
 });
 ```
+
+
+## RPC Abstractions
+We provide a variety of helper methods to help make Solana RPCs easier to work with.
+
+### Solana Chain TPS
+```ts
+import { Helius } from "helius-sdk";
+
+const heliusAPI = new Helius("<your-api-key-here>");
+
+const tps = await heliusAPI.getCurrentTPS();
+```
