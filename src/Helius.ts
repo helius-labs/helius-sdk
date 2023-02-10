@@ -364,7 +364,7 @@ export class Helius {
             const samples = await this.rpcClient.getRecentPerformanceSamples(1)
             return samples[0].numTransactions / samples[0].samplePeriodSecs
         } catch (e) {
-            throw new Error("error calling getCurrentTPS: ", e)
+            throw new Error(`error calling getCurrentTPS: ${e}`)
         }
     }
 }
