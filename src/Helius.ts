@@ -9,7 +9,7 @@ import {
 } from "./types";
 
 import axios, { type AxiosError } from "axios";
-import { PublicKey } from "@solana/web3.js";
+import { PublicKey, Connection } from "@solana/web3.js";
 
 const API_URL_V0: string = "https://api.helius.xyz/v0";
 const API_URL_V1: string = "https://api.helius.xyz/v1";
@@ -24,14 +24,20 @@ export class Helius {
      * @private
      */
     private apiKey: string;
+    private rpcClient: Connection;
 
     /**
      * Initializes Helius API client with an API key
      * @constructor
      * @param apiKey - API key generated at dev.helius.xyz
      */
-    constructor(apiKey: string) {
+    constructor(apiKey: string, environment: string = "mainnet") {
         this.apiKey = apiKey;
+        if (environment == "devnet") {
+            this.rpcClient = new Connection(`https://rpc-devnet.helius.xyz/?api-key=${apiKey}`)
+        } else {
+            this.rpcClient = new Connection(`https://rpc.helius.xyz/?api-key=${apiKey}`)
+        }
     }
 
     /**
@@ -48,8 +54,7 @@ export class Helius {
         } catch (err: any | AxiosError) {
             if (axios.isAxiosError(err)) {
                 throw new Error(
-                    `error calling getWebhooks: ${
-                        err.response?.data.error || err
+                    `error calling getWebhooks: ${err.response?.data.error || err
                     }`
                 );
             } else {
@@ -73,8 +78,7 @@ export class Helius {
         } catch (err: any | AxiosError) {
             if (axios.isAxiosError(err)) {
                 throw new Error(
-                    `error during getWebhookByID: ${
-                        err.response?.data.error || err
+                    `error during getWebhookByID: ${err.response?.data.error || err
                     }`
                 );
             } else {
@@ -110,8 +114,7 @@ export class Helius {
         } catch (err: any | AxiosError) {
             if (axios.isAxiosError(err)) {
                 throw new Error(
-                    `error during createWebhook: ${
-                        err.response?.data.error || err
+                    `error during createWebhook: ${err.response?.data.error || err
                     }`
                 );
             } else {
@@ -135,8 +138,7 @@ export class Helius {
         } catch (err: any | AxiosError) {
             if (axios.isAxiosError(err)) {
                 throw new Error(
-                    `error during deleteWebhook: ${
-                        err.response?.data.error || err
+                    `error during deleteWebhook: ${err.response?.data.error || err
                     }`
                 );
             } else {
@@ -185,8 +187,7 @@ export class Helius {
         } catch (err: any | AxiosError) {
             if (axios.isAxiosError(err)) {
                 throw new Error(
-                    `error during editWebhook: ${
-                        err.response?.data.error || err
+                    `error during editWebhook: ${err.response?.data.error || err
                     }`
                 );
             } else {
@@ -230,8 +231,7 @@ export class Helius {
         } catch (err: any | AxiosError) {
             if (axios.isAxiosError(err)) {
                 throw new Error(
-                    `error during appendAddressesToWebhook: ${
-                        err.response?.data.error || err
+                    `error during appendAddressesToWebhook: ${err.response?.data.error || err
                     }`
                 );
             } else {
@@ -310,8 +310,7 @@ export class Helius {
         } catch (err: any | AxiosError) {
             if (axios.isAxiosError(err)) {
                 throw new Error(
-                    `error during createCollectionWebhook: ${
-                        err.response?.data.error || err
+                    `error during createCollectionWebhook: ${err.response?.data.error || err
                     }`
                 );
             } else {
@@ -345,13 +344,27 @@ export class Helius {
         } catch (err: any | AxiosError) {
             if (axios.isAxiosError(err)) {
                 throw new Error(
-                    `error during getMintlist: ${
-                        err.response?.data.error || err
+                    `error during getMintlist: ${err.response?.data.error || err
                     }`
                 );
             } else {
                 throw new Error(`error during getMintlist: ${err}`);
             }
+        }
+    }
+
+    /**
+    * Returns the current transactions per second (TPS) rate — including voting transactions.
+     *
+    * @returns {Promise<number>} A promise that resolves to the current TPS rate.
+    * @throws {Error} If there was an error calling the `getRecentPerformanceSamples` method.
+    */
+    async getCurrentTPS(): Promise<number> {
+        try {
+            const samples = await this.rpcClient.getRecentPerformanceSamples(1)
+            return samples[0]?.numTransactions / samples[0]?.samplePeriodSecs
+        } catch (e) {
+            throw new Error(`error calling getCurrentTPS: ${e}`)
         }
     }
 }
