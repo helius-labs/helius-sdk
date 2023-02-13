@@ -148,6 +148,11 @@ export interface NFTEvent {
     tokensInvolved: Token[];
 }
 
+export interface TransactionEvent {
+    nft: NFTEvent | null;
+    swap: SwapEvent | null;
+}
+
 export interface EnrichedTransaction {
     description: string;
     type: TransactionType;
@@ -162,5 +167,5 @@ export interface EnrichedTransaction {
     accountData: AccountData[];
     transactionError: TransactionError | null;
     instructions: Instruction[];
-    events: SwapEvent | NFTEvent;
+    events: TransactionEvent;
 }
