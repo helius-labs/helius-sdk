@@ -137,9 +137,11 @@ export interface Token {
 }
 
 export interface TokenMetadataResponse {
-    mint: string;
-    onChainData: OnChainMetadata;
-    offChainData: OffChainMetadata;
+    account: string;
+    onChainAccountInfo: OnChainAccountInfoResult;
+    onChainMetadata: OnChainMetadataResult;
+    offChainMetadata: OffChainMetadataResult;
+    legacyMetadata: LegacyMetadata;
 }
 
 interface OnChainCreators {
@@ -152,33 +154,63 @@ interface OffChainCreators {
     share: string;
 }
 
-export interface OnChainMetadata {
-    key: string;
-    mint: string;
-    updateAuthority: string;
-    data: {
-        name: string;
-        symbol: string;
-        uri: string;
-        sellerFeeBasisPoints: number;
-        creators: OnChainCreators[];
-    };
-    tokenStandard: string;
-    primarySaleHappened: boolean;
-    isMutable: boolean;
-    editionNonce: number;
-    collection: {
+export interface OnChainAccountInfoResult {
+    accountInfo: {
         key: string;
-        verified: boolean;
+        isSigner: boolean;
+        isWritable: boolean;
+        lamports: number;
+        data: {
+          parsed: {
+            info: {
+              decimals: number;
+              freezeAuthority: string;
+              isInitialized: boolean;
+              mintAuthority: string;
+              supply: string;            
+            };
+            type: string;
+          };
+          program: string;
+          space: number;
+        };
+        owner: string;
+        executable: boolean;
+        rentEpoch: number;
     };
-    collectionDetails: {
-        size: number;
-    };
-    uses: {
-        useMethod: string;
-        remaining: number;
-        total: number;
-    }
+    error: string;
+}
+
+export interface OnChainMetadataResult {
+    metadata: {
+        key: string;
+        mint: string;
+        updateAuthority: string;
+        data: {
+          name: string;
+          symbol: string;
+          uri: string;
+          sellerFeeBasisPoints: number;
+          creators: OnChainCreators[];
+        };
+        tokenStandard: string;
+        primarySaleHappened: boolean;
+        isMutable: boolean;
+        editionNonce: number;
+        collection: {
+          key: string;
+          verified: boolean;
+        };
+        collectionDetails: {
+          size: number;
+        };
+        uses: {
+          useMethod: string;
+          remaining: number;
+          total: number;
+        }
+      };
+    error: string;
 }
 
 interface TokenAttributes {
@@ -190,17 +222,32 @@ interface TokenFiles {
     uri: string;
     type: string;
 }
-export interface OffChainMetadata {
-    name: string;
-    symbol: string;
-    attributes: TokenAttributes[];
-    sellerFeeBasisPoints: number;
-    image: string;
-    properties: {
-        category: string;
-        files: TokenFiles[];
+export interface OffChainMetadataResult {
+    metadata: {
+        name: string;
+        symbol: string;
+        attributes: TokenAttributes[];
+        sellerFeeBasisPoints: number;
+        image: string;
+        properties: {
+            category: string;
+            files: TokenFiles[];
+            creators: OffChainCreators[];
+        };
     };
-    creators: OffChainCreators[];
+    uri : string;
+    error: string;
+}
+
+export interface LegacyMetadata {
+    chainId: number;
+    address: string;
+    symbol: string;
+    name: string;
+    decimals: number;
+    logoURI: string;
+    tags: string[];
+    extensions: {};
 }
 
 export interface NFTEvent {
