@@ -136,6 +136,73 @@ export interface Token {
     tokenStandard: TokenStandard;
 }
 
+export interface TokenMetadataResponse {
+    mint: string;
+    onChainData: OnChainMetadata;
+    offChainData: OffChainMetadata;
+}
+
+export interface OnChainCreators {
+    address: string;
+    share: string;
+    verified: boolean;
+}
+export interface OffChainCreators {
+    address: string;
+    share: string;
+}
+
+export interface OnChainMetadata {
+    key: string;
+    mint: string;
+    updateAuthority: string;
+    data: {
+        name: string;
+        symbol: string;
+        uri: string;
+        sellerFeeBasisPoints: number;
+        creators: OnChainCreators[];
+    };
+    tokenStandard: string;
+    primarySaleHappened: boolean;
+    isMutable: boolean;
+    editionNonce: number;
+    collection: {
+        key: string;
+        verified: boolean;
+    };
+    collectionDetails: {
+        size: number;
+    };
+    uses: {
+        useMethod: string;
+        remaining: number;
+        total: number;
+    }
+}
+
+export interface Attributes {
+    traitType: string;
+    value: string;
+}
+
+export interface Files {
+    uri: string;
+    type: string;
+}
+export interface OffChainMetadata {
+    name: string;
+    symbol: string;
+    attributes: Attributes[];
+    sellerFeeBasisPoints: number;
+    image: string;
+    properties: {
+        category: string;
+        files: Files[];
+    };
+    creators: OffChainCreators[];
+}
+
 export interface NFTEvent {
     seller: string;
     buyer: string;
