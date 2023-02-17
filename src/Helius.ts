@@ -9,7 +9,9 @@ import {
 } from "./types";
 
 import axios, { type AxiosError } from "axios";
-import { PublicKey, Connection } from "@solana/web3.js";
+import { PublicKey, Connection, Cluster } from "@solana/web3.js";
+import { heliusClusterApiUrl } from "./utils";
+import { RpcClient } from "./RpcClient";
 
 const API_URL_V0: string = "https://api.helius.xyz/v0";
 const API_URL_V1: string = "https://api.helius.xyz/v1";
@@ -24,20 +26,30 @@ export class Helius {
      * @private
      */
     private apiKey: string;
-    private rpcClient: Connection;
+
+    /** The cluster in which the connection endpoint belongs to */
+    public readonly cluster: Cluster;
+
+    /** URL to the fullnode JSON RPC endpoint */
+    public readonly endpoint: string;
+
+    /** The connection object from Solana's SDK */
+    public readonly connection: Connection;
+
+    /** The beefed up rpc client object from Helius SDK */
+    public readonly rpc: RpcClient;
 
     /**
      * Initializes Helius API client with an API key
      * @constructor
      * @param apiKey - API key generated at dev.helius.xyz
      */
-    constructor(apiKey: string, environment: string = "mainnet") {
+    constructor(apiKey: string, cluster: Cluster = "mainnet-beta") {
         this.apiKey = apiKey;
-        if (environment == "devnet") {
-            this.rpcClient = new Connection(`https://rpc-devnet.helius.xyz/?api-key=${apiKey}`)
-        } else {
-            this.rpcClient = new Connection(`https://rpc.helius.xyz/?api-key=${apiKey}`)
-        }
+        this.cluster = cluster;
+        this.endpoint = heliusClusterApiUrl(apiKey, cluster)
+        this.connection = new Connection(this.endpoint)
+        this.rpc = new RpcClient(this.connection)
     }
 
     /**
@@ -350,21 +362,6 @@ export class Helius {
             } else {
                 throw new Error(`error during getMintlist: ${err}`);
             }
-        }
-    }
-
-    /**
-    * Returns the current transactions per second (TPS) rate — including voting transactions.
-     *
-    * @returns {Promise<number>} A promise that resolves to the current TPS rate.
-    * @throws {Error} If there was an error calling the `getRecentPerformanceSamples` method.
-    */
-    async getCurrentTPS(): Promise<number> {
-        try {
-            const samples = await this.rpcClient.getRecentPerformanceSamples(1)
-            return samples[0]?.numTransactions / samples[0]?.samplePeriodSecs
-        } catch (e) {
-            throw new Error(`error calling getCurrentTPS: ${e}`)
         }
     }
 }
