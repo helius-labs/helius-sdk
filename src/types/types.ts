@@ -142,12 +142,12 @@ export interface TokenMetadataResponse {
     offChainData: OffChainMetadata;
 }
 
-export interface OnChainCreators {
+interface OnChainCreators {
     address: string;
     share: string;
     verified: boolean;
 }
-export interface OffChainCreators {
+interface OffChainCreators {
     address: string;
     share: string;
 }
@@ -181,24 +181,24 @@ export interface OnChainMetadata {
     }
 }
 
-export interface Attributes {
+interface TokenAttributes {
     traitType: string;
     value: string;
 }
 
-export interface Files {
+interface TokenFiles {
     uri: string;
     type: string;
 }
 export interface OffChainMetadata {
     name: string;
     symbol: string;
-    attributes: Attributes[];
+    attributes: TokenAttributes[];
     sellerFeeBasisPoints: number;
     image: string;
     properties: {
         category: string;
-        files: Files[];
+        files: TokenFiles[];
     };
     creators: OffChainCreators[];
 }
