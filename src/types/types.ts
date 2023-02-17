@@ -124,11 +124,11 @@ export interface TokenSwap {
 export interface SwapEvent {
     nativeInput: NativeBalanceChange;
     nativeOutput: NativeBalanceChange;
-    tokenInputs: TokenBalanceChange;
-    tokenOutputs: TokenBalanceChange;
-    tokenFees: TokenBalanceChange;
-    nativeFees: NativeBalanceChange;
-    innerSwaps: TokenSwap;
+    tokenInputs: TokenBalanceChange[];
+    tokenOutputs: TokenBalanceChange[];
+    tokenFees: TokenBalanceChange[];
+    nativeFees: NativeBalanceChange[];
+    innerSwaps: TokenSwap[];
 }
 
 export interface Token {
