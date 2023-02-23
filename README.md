@@ -16,7 +16,7 @@ After installing, you can simply import the SDK:
 ```ts
 import { Helius } from "helius-sdk";
 
-const heliusAPI = new Helius("<your-api-key-here>"); // input your api key generated from dev.helius.xyz here
+const helius = new Helius("<your-api-key-here>"); // input your api key generated from dev.helius.xyz here
 ```
 
 **IMPORTANT:** You must generate an API key at [dev.helius.xyz](dev.helius.xyz) and replace "\<your-api-key-here>" above with it. This will take no longer than 10 seconds as we auto-generate a key for you upon connecting your wallet.
@@ -53,9 +53,9 @@ import {
     Helius,
 } from "helius-sdk";
 
-const heliusAPI = new Helius("<your-api-key-here>");
+const helius = new Helius("<your-api-key-here>");
 
-heliusAPI.createWebhook({
+helius.createWebhook({
   accountAddresses: [Address.MAGIC_EDEN_V2],
   transactionTypes: [TransactionType.NFT_LISTING],
   webhookURL: "my-webhook-handler.com/handle",
@@ -74,9 +74,9 @@ import {
   Helius
 } from "helius-sdk";
 
-const heliusAPI = new Helius("<your-api-key-here>");
+const helius = new Helius("<your-api-key-here>");
 
-heliusAPI.createWebhook({
+helius.createWebhook({
   accountAddresses: [Address.MAGIC_EDEN_V2],
   authHeader: "some auth header",
   webhookURL: "my-webhook-handler.com/handle",
@@ -94,9 +94,9 @@ You can also edit your webhooks. A common use case is dynamically adding/removin
 ```ts
 import { Helius, Address } from "helius-sdk";
 
-const heliusAPI = new Helius("<your-api-key-here>");
+const helius = new Helius("<your-api-key-here>");
 
-heliusAPI.editWebhook(
+helius.editWebhook(
   "your-webhook-id-here",
   { accountAddresses: [Address.SQUADS] } // This will ONLY update accountAddresses, not the other fields on the webhook object
 );
@@ -110,9 +110,9 @@ For convenience, we've added a method to let you simply append new addresses to 
 ```ts
 import { Helius, Address } from "helius-sdk";
 
-const heliusAPI = new Helius("<your-api-key-here>");
+const helius = new Helius("<your-api-key-here>");
 
-heliusAPI.appendAddressesToWebhook("your-webhook-id-here", [
+helius.appendAddressesToWebhook("your-webhook-id-here", [
   Address.SQUADS,
   Address.JUPITER_V3,
 ]);
@@ -123,9 +123,9 @@ heliusAPI.appendAddressesToWebhook("your-webhook-id-here", [
 ```ts
 import { Helius } from "helius-sdk";
 
-const heliusAPI = new Helius("<your-api-key-here>");
+const helius = new Helius("<your-api-key-here>");
 
-heliusAPI.getAllWebhooks();
+helius.getAllWebhooks();
 ```
 
 ### **Get A Single Webhook**
@@ -133,9 +133,9 @@ heliusAPI.getAllWebhooks();
 ```ts
 import { Helius } from "helius-sdk";
 
-const heliusAPI = new Helius("<your-api-key-here>");
+const helius = new Helius("<your-api-key-here>");
 
-heliusAPI.getWebhookByID("<webhook-id-here>");
+helius.getWebhookByID("<webhook-id-here>");
 ```
 
 ### **Delete a Webhook**
@@ -143,9 +143,9 @@ heliusAPI.getWebhookByID("<webhook-id-here>");
 ```ts
 import { Helius } from "helius-sdk";
 
-const heliusAPI = new Helius("<your-api-key-here>");
+const helius = new Helius("<your-api-key-here>");
 
-heliusAPI.deleteWebhook("<webhook-id-here>"); // returns a boolean
+helius.deleteWebhook("<webhook-id-here>"); // returns a boolean
 ```
 
 ### **Collection Webhooks!**
@@ -158,9 +158,9 @@ import {
   Helius,
 } from "helius-sdk";
 
-const heliusAPI = new Helius("<your-api-key-here>");
+const helius = new Helius("<your-api-key-here>");
 
-heliusAPI.createCollectionWebhook({
+helius.createCollectionWebhook({
   collectionQuery: Collections.ABC,
   transactionTypes: [Types.TransactionType.ANY],
   webhookType: Types.WebhookType.DISCORD,
@@ -184,9 +184,9 @@ import {
   Collections,
 } from "helius-sdk";
 
-const heliusAPI = new Helius("<your-api-key-here>");
+const helius = new Helius("<your-api-key-here>");
 
-const mints = heliusAPI.getMintlist({
+const mints = helius.getMintlist({
   query: Collections.ABC,
 });
 ```
@@ -199,7 +199,16 @@ We provide a variety of helper methods to help make Solana RPCs easier to work w
 ```ts
 import { Helius } from "helius-sdk";
 
-const heliusAPI = new Helius("<your-api-key-here>");
+const helius = new Helius("<your-api-key-here>");
 
-const tps = await heliusAPI.getCurrentTPS();
+const tps = await helius.rpc.getCurrentTPS();
+```
+
+### Solana Airdrop
+```ts
+import { Helius } from "helius-sdk";
+
+const helius = new Helius("<your-api-key-here>");
+
+const response = await helius.rpc.airdrop(1000000000); // 1 sol
 ```
