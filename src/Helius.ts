@@ -286,9 +286,7 @@ export class Helius {
 
       while (mints.paginationToken) {
         mints = await this.getMintlist({
-          query: {
-            firstVerifiedCreators,
-          },
+          query,
           options: {
             limit: 10000,
             paginationToken: mints.paginationToken,
