@@ -150,6 +150,7 @@ export enum TransactionType {
     BORROW = 'BORROW',
     CLAIM = 'CLAIM',
     REBORROW = 'REBORROW',
+    UPDATE_OFFER = 'UPDATE_OFFER',
 }
 
 // A list of common collections and their collection query
