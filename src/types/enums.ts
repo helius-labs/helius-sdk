@@ -147,7 +147,8 @@ export enum TransactionType {
 
 // A list of common collections and their collection query
 export const Collections = {
-    ABC: { firstVerifiedCreators: ["GVkb5GuwGKydA4xXLT9PNpx63h7bhFNrDLQSxi6j5NuF"] }
+    ABC: { firstVerifiedCreators: ["GVkb5GuwGKydA4xXLT9PNpx63h7bhFNrDLQSxi6j5NuF"] },
+    DEGODS: { verifiedCollectionAddresses: ["6XxjKYFbcndh2gDcsUrmZgVEsoDxXMnfsaGY6fpTJzNr"] }
 }
 
 export const NftEventTypes = [
