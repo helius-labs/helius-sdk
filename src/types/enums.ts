@@ -1,7 +1,10 @@
 export enum WebhookType {
     ENHANCED = "enhanced",
+    ENHANCED_DEVNET = "enhancedDevnet",
     RAW = "raw",
-    DISCORD = "discord"
+    RAW_DEVNET = "rawDevnet",
+    DISCORD = "discord",
+    DISCORD_DEVNET = "discordDevnet"
 }
 
 export enum TransactionType {
