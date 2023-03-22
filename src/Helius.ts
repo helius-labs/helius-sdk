@@ -106,15 +106,6 @@ export class Helius {
   async createWebhook(
     createWebhookRequest: CreateWebhookRequest
   ): Promise<Webhook> {
-    const addressesOffCurve = createWebhookRequest.accountAddresses.filter(
-      (address) => !PublicKey.isOnCurve(address)
-    );
-    if (addressesOffCurve.length > 0) {
-      throw new Error(
-        `bad 'accountAddresses' parameter, addresses [${addressesOffCurve.toString()}] are invalid`
-      );
-    }
-
     try {
       const { data } = await axios.post(
         `${API_URL_V0}/webhooks?api-key=${this.apiKey}`,
@@ -166,17 +157,6 @@ export class Helius {
     webhookID: string,
     editWebhookRequest: EditWebhookRequest
   ): Promise<Webhook> {
-    if (editWebhookRequest.accountAddresses) {
-      const addressesOffCurve = editWebhookRequest.accountAddresses.filter(
-        (address) => !PublicKey.isOnCurve(address)
-      );
-      if (addressesOffCurve.length > 0) {
-        throw new Error(
-          `bad 'accountAddresses' parameter, addresses [${addressesOffCurve.toString()}] are invalid`
-        );
-      }
-    }
-
     try {
       const webhook = await this.getWebhookByID(webhookID);
       const editRequest: Partial<Webhook> = {
