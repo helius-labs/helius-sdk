@@ -140,12 +140,13 @@ export interface NFTEvent {
     seller: string;
     buyer: string;
     timestamp: number;
-    transactionAmount: number;
+    amount: number;
+    fee:number;
     signature: string;
     source: Source;
     type: TransactionType;
-    context?: TransactionContext;
-    tokensInvolved: Token[];
+    saleType?: TransactionContext;
+    nfts: Token[];
 }
 
 export interface TransactionEvent {
