@@ -435,6 +435,7 @@ export enum Address {
 }
 
 export enum TokenStandard {
+    PROGRAMMABLE_NON_FUNGIBLE = "ProgrammableNonFungible",
     NON_FUNGIBLE = 'NonFungible',
     FUNGIBLE = 'Fungible',
     FUNGIBLE_ASSET = 'FungibleAsset',
