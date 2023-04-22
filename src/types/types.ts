@@ -6,13 +6,13 @@ import type {
     TransactionType,
     Source,
     ProgramName,
-    TransactionContext
-} from "./enums"
+    TransactionContext,
+} from "./enums";
 
 export type HeliusOptions = {
     limit?: number;
     paginationToken?: string;
-}
+};
 
 export interface Webhook {
     webhookID: string;
@@ -27,10 +27,10 @@ export interface Webhook {
 export type CollectionIdentifier = {
     firstVerifiedCreators?: string[];
     verifiedCollectionAddresses?: string[];
-}
+};
 
-export type CreateWebhookRequest = Omit<Webhook, 'webhookID' | 'wallet'>;
-export type EditWebhookRequest = Omit<Webhook, 'webhookID' | 'wallet'>;
+export type CreateWebhookRequest = Omit<Webhook, "webhookID" | "wallet">;
+export type EditWebhookRequest = Partial<Omit<Webhook, "webhookID" | "wallet">>;
 
 export interface CreateCollectionWebhookRequest extends CreateWebhookRequest {
     collectionQuery: CollectionIdentifier;
@@ -44,7 +44,7 @@ export interface MintlistResponse {
 export type MintlistRequest = {
     query: CollectionIdentifier;
     options?: HeliusOptions;
-}
+};
 
 export interface MintlistItem {
     mint: string;
@@ -74,7 +74,7 @@ export interface TokenTransfer {
     toUserAccount: string | null;
     fromTokenAccount: string | null;
     toTokenAccount: string | null;
-    rawTokenAmount: number;
+    tokenAmount: number;
     decimals: number;
     tokenStandard: TokenStandard;
     mint: string;
@@ -102,7 +102,7 @@ export type InnerInstruction = {
     accounts: string[];
     data: string;
     programId: string;
-}
+};
 
 export interface ProgramInfo {
     source: Source;
@@ -124,11 +124,11 @@ export interface TokenSwap {
 export interface SwapEvent {
     nativeInput: NativeBalanceChange;
     nativeOutput: NativeBalanceChange;
-    tokenInputs: TokenBalanceChange;
-    tokenOutputs: TokenBalanceChange;
-    tokenFees: TokenBalanceChange;
-    nativeFees: NativeBalanceChange;
-    innerSwaps: TokenSwap;
+    tokenInputs: TokenBalanceChange[];
+    tokenOutputs: TokenBalanceChange[];
+    tokenFees: TokenBalanceChange[];
+    nativeFees: NativeBalanceChange[];
+    innerSwaps: TokenSwap[];
 }
 
 export interface Token {
@@ -140,12 +140,18 @@ export interface NFTEvent {
     seller: string;
     buyer: string;
     timestamp: number;
-    transactionAmount: number;
+    amount: number;
+    fee:number;
     signature: string;
     source: Source;
     type: TransactionType;
-    context?: TransactionContext;
-    tokensInvolved: Token[];
+    saleType?: TransactionContext;
+    nfts: Token[];
+}
+
+export interface TransactionEvent {
+    nft: NFTEvent | null;
+    swap: SwapEvent | null;
 }
 
 export interface EnrichedTransaction {
@@ -162,5 +168,5 @@ export interface EnrichedTransaction {
     accountData: AccountData[];
     transactionError: TransactionError | null;
     instructions: Instruction[];
-    events: SwapEvent | NFTEvent;
+    events: TransactionEvent;
 }

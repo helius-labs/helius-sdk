@@ -1,7 +1,10 @@
 export enum WebhookType {
     ENHANCED = "enhanced",
+    ENHANCED_DEVNET = "enhancedDevnet",
     RAW = "raw",
-    DISCORD = "discord"
+    RAW_DEVNET = "rawDevnet",
+    DISCORD = "discord",
+    DISCORD_DEVNET = "discordDevnet"
 }
 
 export enum TransactionType {
@@ -143,11 +146,20 @@ export enum TransactionType {
     REQUEST_PNFT_MIGRATION = 'REQUEST_PNFT_MIGRATION',
     START_PNFT_MIGRATION = 'START_PNFT_MIGRATION',
     MIGRATE_TO_PNFT = 'MIGRATE_TO_PNFT',
+    CANCEL_OFFER = 'CANCEL_OFFER',
+    LEND_FOR_NFT = 'LEND_FOR_NFT',
+    REQUEST_LOAN = 'REQUEST_LOAN',
+    CANCEL_LOAN_REQUEST = 'CANCEL_LOAN_REQUEST',
+    BORROW_SOL_FOR_NFT = 'BORROW_SOL_FOR_NFT',
+    CLAIM_NFT = 'CLAIM_NFT',
+    REBORROW_SOL_FOR_NFT = 'REBORROW_SOL_FOR_NFT',
+    UPDATE_OFFER = 'UPDATE_OFFER',
 }
 
 // A list of common collections and their collection query
 export const Collections = {
-    ABC: { firstVerifiedCreators: ["GVkb5GuwGKydA4xXLT9PNpx63h7bhFNrDLQSxi6j5NuF"] }
+    ABC: { firstVerifiedCreators: ["GVkb5GuwGKydA4xXLT9PNpx63h7bhFNrDLQSxi6j5NuF"] },
+    DEGODS: { verifiedCollectionAddresses: ["6XxjKYFbcndh2gDcsUrmZgVEsoDxXMnfsaGY6fpTJzNr"] }
 }
 
 export const NftEventTypes = [
@@ -243,6 +255,7 @@ export enum Source {
     FOXY_MARMALADE = 'FOXY_MARMALADE',
     FOXY_COINFLIP = 'FOXY_COINFLIP',
     FOXY_AUCTION = 'FOXY_AUCTION',
+    CITRUS = 'CITRUS',
     ZETA = 'ZETA',
     ELIXIR = 'ELIXIR',
     ELIXIR_LAUNCHPAD = 'ELIXIR_LAUNCHPAD',
@@ -308,6 +321,7 @@ export enum ProgramName {
     FOXY_MARMALADE = 'FOXY_MARMALADE',
     FOXY_COINFLIP = 'FOXY_COINFLIP',
     FOXY_AUCTION = 'FOXY_AUCTION',
+    CITRUS = 'CITRUS',
     HADE_SWAP = 'HADE_SWAP',
     ZETA = 'ZETA',
     CARDINAL_RENT = 'CARDINAL_RENT',
@@ -367,6 +381,7 @@ export enum Address {
     FOXY_MARMALADE = 'BbGozDEfDKJbqxkSDjcDLWdQfxeZnnoTgD5VhNXV7epn',
     FOXY_COINFLIP = '72D3En8GQycjtunxf9mgyR8onzYdPqYFsKp4myUzhaRZ',
     FOXY_AUCTION = 'FFAUags5SYJEioBUkPtKuArccNzcNgUubhssCH2jSbeH',
+    CITRUS = 'JCFRaPv7852ESRwJJGRy2mysUMydXZgVVhrMLmExvmVp',
     HADE_SWAP = 'hadeK9DLv9eA7ya5KCTqSvSvRZeJC3JgD5a9Y3CNbvu',
     ELIXIR = '2qGyiNeWyZxNdkvWHc2jT5qkCnYa1j1gDLSSUmyoWMh8',
     ELIXIR_LAUNCHPAD = '1NCHWmQ39XfQuRLgGihckNKXcm9LXbq5EnPVwPptLWy',
@@ -431,6 +446,7 @@ export enum Address {
 }
 
 export enum TokenStandard {
+    PROGRAMMABLE_NON_FUNGIBLE = "ProgrammableNonFungible",
     NON_FUNGIBLE = 'NonFungible',
     FUNGIBLE = 'Fungible',
     FUNGIBLE_ASSET = 'FungibleAsset',
