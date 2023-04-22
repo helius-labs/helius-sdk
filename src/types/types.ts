@@ -1,12 +1,12 @@
 import type { TransactionError } from "@solana/web3.js";
 
 import type {
-    WebhookType,
-    TokenStandard,
-    TransactionType,
-    Source,
     ProgramName,
+    Source,
+    TokenStandard,
     TransactionContext,
+    TransactionType,
+    WebhookType,
 } from "./enums";
 
 export type HeliusOptions = {
@@ -141,7 +141,7 @@ export interface NFTEvent {
     buyer: string;
     timestamp: number;
     amount: number;
-    fee:number;
+    fee: number;
     signature: string;
     source: Source;
     type: TransactionType;
@@ -149,9 +149,18 @@ export interface NFTEvent {
     nfts: Token[];
 }
 
+export interface SetAuthorityEvent {
+    account: string;
+    from: string;
+    to: string;
+    instructionIndex: number;
+    innerInstructionIndex: number;
+}
+
 export interface TransactionEvent {
     nft: NFTEvent | null;
     swap: SwapEvent | null;
+    setAuthority: SetAuthorityEvent | null;
 }
 
 export interface EnrichedTransaction {
