@@ -1,172 +1,190 @@
 import type { TransactionError } from "@solana/web3.js";
 
 import type {
-    WebhookType,
-    TokenStandard,
-    TransactionType,
-    Source,
-    ProgramName,
-    TransactionContext,
+  WebhookType,
+  TokenStandard,
+  TransactionType,
+  Source,
+  ProgramName,
+  TransactionContext,
+  TxnStatus,
+  AccountWebhookEncoding,
 } from "./enums";
 
 export type HeliusOptions = {
-    limit?: number;
-    paginationToken?: string;
+  limit?: number;
+  paginationToken?: string;
 };
 
 export interface Webhook {
-    webhookID: string;
-    wallet: string;
-    webhookURL: string;
-    transactionTypes: string[];
-    accountAddresses: string[];
-    webhookType?: WebhookType;
-    authHeader?: string;
+  webhookID: string;
+  wallet: string;
+  webhookURL: string;
+  transactionTypes: string[];
+  accountAddresses: string[];
+  accountAddressOwners?: string[];
+  webhookType?: WebhookType;
+  authHeader?: string;
+  txnStatus?: TxnStatus;
+  encoding?: AccountWebhookEncoding;
 }
 
 export type CollectionIdentifier = {
-    firstVerifiedCreators?: string[];
-    verifiedCollectionAddresses?: string[];
+  firstVerifiedCreators?: string[];
+  verifiedCollectionAddresses?: string[];
 };
 
 export type CreateWebhookRequest = Omit<Webhook, "webhookID" | "wallet">;
 export type EditWebhookRequest = Partial<Omit<Webhook, "webhookID" | "wallet">>;
 
 export interface CreateCollectionWebhookRequest extends CreateWebhookRequest {
-    collectionQuery: CollectionIdentifier;
+  collectionQuery: CollectionIdentifier;
 }
 
 export interface MintlistResponse {
-    result: MintlistItem[];
-    paginationToken: string;
+  result: MintlistItem[];
+  paginationToken: string;
 }
 
 export type MintlistRequest = {
-    query: CollectionIdentifier;
-    options?: HeliusOptions;
+  query: CollectionIdentifier;
+  options?: HeliusOptions;
 };
 
 export interface MintlistItem {
-    mint: string;
-    name: string;
+  mint: string;
+  name: string;
 }
 
 export interface RawTokenAmount {
-    tokenAmount: string;
-    decimals: number;
+  tokenAmount: string;
+  decimals: number;
 }
 
 export interface TokenBalanceChange {
-    userAccount: string;
-    tokenAccount: string;
-    rawTokenAmount: RawTokenAmount;
-    mint: string;
+  userAccount: string;
+  tokenAccount: string;
+  rawTokenAmount: RawTokenAmount;
+  mint: string;
 }
 
 export interface AccountData {
-    account: string;
-    nativeBalanceChange: number;
-    tokenBalanceChanges: TokenBalanceChange[] | null;
+  account: string;
+  nativeBalanceChange: number;
+  tokenBalanceChanges: TokenBalanceChange[] | null;
 }
 
 export interface TokenTransfer {
-    fromUserAccount: string | null;
-    toUserAccount: string | null;
-    fromTokenAccount: string | null;
-    toTokenAccount: string | null;
-    tokenAmount: number;
-    decimals: number;
-    tokenStandard: TokenStandard;
-    mint: string;
+  fromUserAccount: string | null;
+  toUserAccount: string | null;
+  fromTokenAccount: string | null;
+  toTokenAccount: string | null;
+  tokenAmount: number;
+  decimals: number;
+  tokenStandard: TokenStandard;
+  mint: string;
 }
 
 export interface NativeBalanceChange {
-    account: string;
-    amount: number;
+  account: string;
+  amount: number;
 }
 
 export interface NativeTransfer {
-    fromUserAccount: string | null;
-    toUserAccount: string | null;
-    amount: number;
+  fromUserAccount: string | null;
+  toUserAccount: string | null;
+  amount: number;
 }
 
 export type Instruction = {
-    accounts: string[];
-    data: string;
-    programId: string;
-    innerInstructions: InnerInstruction[];
+  accounts: string[];
+  data: string;
+  programId: string;
+  innerInstructions: InnerInstruction[];
 };
 
 export type InnerInstruction = {
-    accounts: string[];
-    data: string;
-    programId: string;
+  accounts: string[];
+  data: string;
+  programId: string;
 };
 
 export interface ProgramInfo {
-    source: Source;
-    account: string;
-    programName: ProgramName;
-    instructionName: string;
+  source: Source;
+  account: string;
+  programName: ProgramName;
+  instructionName: string;
 }
 
 export interface TokenSwap {
-    nativeInput: NativeTransfer | null;
-    nativeOutput: NativeTransfer | null;
-    tokenInputs: TokenTransfer[];
-    tokenOutputs: TokenTransfer[];
-    tokenFees: TokenTransfer[];
-    nativeFees: NativeTransfer[];
-    programInfo: ProgramInfo;
+  nativeInput: NativeTransfer | null;
+  nativeOutput: NativeTransfer | null;
+  tokenInputs: TokenTransfer[];
+  tokenOutputs: TokenTransfer[];
+  tokenFees: TokenTransfer[];
+  nativeFees: NativeTransfer[];
+  programInfo: ProgramInfo;
 }
 
 export interface SwapEvent {
-    nativeInput: NativeBalanceChange;
-    nativeOutput: NativeBalanceChange;
-    tokenInputs: TokenBalanceChange[];
-    tokenOutputs: TokenBalanceChange[];
-    tokenFees: TokenBalanceChange[];
-    nativeFees: NativeBalanceChange[];
-    innerSwaps: TokenSwap[];
+  nativeInput: NativeBalanceChange;
+  nativeOutput: NativeBalanceChange;
+  tokenInputs: TokenBalanceChange[];
+  tokenOutputs: TokenBalanceChange[];
+  tokenFees: TokenBalanceChange[];
+  nativeFees: NativeBalanceChange[];
+  innerSwaps: TokenSwap[];
+}
+
+export interface CompressedNftEvent {
+  type: TransactionType;
+  treeId: string;
+  leafIndex: number | null;
+  seq: number | null;
+  assetId: string | null;
+  instructionIndex: number | null;
+  innerInstructionIndex: number | null;
+  newLeafOwner: string | null;
+  oldLeafOwner: string | null;
 }
 
 export interface Token {
-    mint: string;
-    tokenStandard: TokenStandard;
+  mint: string;
+  tokenStandard: TokenStandard;
 }
 
 export interface NFTEvent {
-    seller: string;
-    buyer: string;
-    timestamp: number;
-    amount: number;
-    fee:number;
-    signature: string;
-    source: Source;
-    type: TransactionType;
-    saleType?: TransactionContext;
-    nfts: Token[];
+  seller: string;
+  buyer: string;
+  timestamp: number;
+  amount: number;
+  fee: number;
+  signature: string;
+  source: Source;
+  type: TransactionType;
+  saleType?: TransactionContext;
+  nfts: Token[];
 }
 
 export interface TransactionEvent {
-    nft: NFTEvent | null;
-    swap: SwapEvent | null;
+  nft: NFTEvent | null;
+  swap: SwapEvent | null;
+  compressed: CompressedNftEvent | null;
 }
 
 export interface EnrichedTransaction {
-    description: string;
-    type: TransactionType;
-    source: Source;
-    fee: number;
-    feePayer: string;
-    signature: string;
-    slot: number;
-    timestamp: number;
-    nativeTransfers: NativeTransfer[] | null;
-    tokenTransfers: TokenTransfer[] | null;
-    accountData: AccountData[];
-    transactionError: TransactionError | null;
-    instructions: Instruction[];
-    events: TransactionEvent;
+  description: string;
+  type: TransactionType;
+  source: Source;
+  fee: number;
+  feePayer: string;
+  signature: string;
+  slot: number;
+  timestamp: number;
+  nativeTransfers: NativeTransfer[] | null;
+  tokenTransfers: TokenTransfer[] | null;
+  accountData: AccountData[];
+  transactionError: TransactionError | null;
+  instructions: Instruction[];
+  events: TransactionEvent;
 }
