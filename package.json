@@ -1,6 +1,6 @@
 {
   "name": "helius-sdk",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "SDK for the Helius API (https://helius.xyz)",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -21,6 +21,7 @@
   "license": "ISC",
   "devDependencies": {
     "@solana/web3.js": "^1.73.2",
+    "@types/axios": "^0.14.0",
     "@typescript-eslint/eslint-plugin": "^3.9.0",
     "@typescript-eslint/parser": "^3.9.0",
     "eslint": "^7.6.0",
