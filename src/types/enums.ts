@@ -19,6 +19,7 @@ export enum AccountWebhookEncoding {
 }
 
 export enum TransactionType {
+  ANY = "ANY",
   UNKNOWN = "UNKNOWN",
   NFT_BID = "NFT_BID",
   NFT_GLOBAL_BID = "NFT_GLOBAL_BID",
