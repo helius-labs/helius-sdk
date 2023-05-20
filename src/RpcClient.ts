@@ -18,7 +18,7 @@ export type SendAndConfirmTransactionResponse = {
 };
 
 export class RpcClient {
-  constructor(protected readonly connection: Connection) {}
+  constructor(protected readonly connection: Connection) { }
 
   /**
    * Request an allocation of lamports to the specified address
@@ -65,6 +65,34 @@ export class RpcClient {
       return samples[0]?.numTransactions / samples[0]?.samplePeriodSecs;
     } catch (e) {
       throw new Error(`error calling getCurrentTPS: ${e}`);
+    }
+  }
+
+  /**
+   * Returns all the stake accounts for a given public key
+   *  
+   * @returns {Promise<number>} A promise that resolves to the current TPS rate.
+   * @throws {Error} If there was an error calling the `getRecentPerformanceSamples` method.
+   */
+  async getStakeAccounts(wallet: string): Promise<any> {
+    try {
+      return this.connection.getParsedProgramAccounts(
+        new PublicKey('Stake11111111111111111111111111111111111111'), {
+        filters: [
+          {
+            dataSize: 200
+          },
+          {
+            memcmp: {
+              offset: 44,
+              bytes: wallet
+            },
+          },
+        ],
+      }
+      );
+    } catch (e) {
+      throw new Error(`error calling getStakeAccounts: ${e}`);
     }
   }
 }

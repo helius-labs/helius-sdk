@@ -212,3 +212,12 @@ const helius = new Helius("<your-api-key-here>");
 
 const response = await helius.rpc.airdrop(new PublicKey("<wallet address>"), 1000000000); // 1 sol
 ```
+
+### Get Solana Stake Accounts
+```ts
+import { Helius } from "helius-sdk";
+
+const helius = new Helius("<your-api-key-here>");
+
+const response = await helius.rpc.getStakeAccounts("<wallet address>");
+```
