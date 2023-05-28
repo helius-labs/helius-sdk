@@ -146,6 +146,9 @@ export interface CompressedNftEvent {
   innerInstructionIndex: number | null;
   newLeafOwner: string | null;
   oldLeafOwner: string | null;
+  newLeafDelegate: string | null;
+  oldLeafDelegate: string | null;
+  treeDelegate: string | null;
 }
 
 export interface Token {
