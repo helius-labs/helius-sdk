@@ -221,3 +221,11 @@ const helius = new Helius("<your-api-key-here>");
 
 const response = await helius.rpc.getStakeAccounts("<wallet address>");
 ```
+### Get Holders for SPL Tokens
+```ts
+import { Helius } from "helius-sdk";
+
+const helius = new Helius("<your-api-key-here>");
+
+const response = await helius.rpc.getTokenHolders("<token mint address>");
+```

@@ -3,11 +3,13 @@ import {
   TransactionSignature,
   Commitment,
   PublicKey,
+  AccountInfo,
   GetLatestBlockhashConfig,
   RpcResponseAndContext,
   SignatureResult,
   Blockhash,
   Connection,
+  ParsedAccountData,
 } from "@solana/web3.js";
 
 export type SendAndConfirmTransactionResponse = {
@@ -72,7 +74,7 @@ export class RpcClient {
    * Returns all the stake accounts for a given public key
    *  
    * @returns {Promise<number>} A promise that resolves to the current TPS rate.
-   * @throws {Error} If there was an error calling the `getRecentPerformanceSamples` method.
+   * @throws {Error} If there was an error calling the `getStakeAccounts` method.
    */
   async getStakeAccounts(wallet: string): Promise<any> {
     try {
@@ -93,6 +95,35 @@ export class RpcClient {
       );
     } catch (e) {
       throw new Error(`error calling getStakeAccounts: ${e}`);
+    }
+  }
+
+  /**
+     * Returns all the token accounts for a given mint address (ONLY FOR SPL TOKENS)
+     *  
+     * @returns {Promise<{pubkey: PublicKey; account: AccountInfo<ParsedAccountData | Buffer}[]>} A promise that resolves to an array of accountInfo
+     * @throws {Error} If there was an error calling the `getTokenHolders` method.
+     */
+  getTokenHolders(mintAddress: string): Promise<{
+    pubkey: PublicKey;
+    account: AccountInfo<ParsedAccountData | Buffer>;
+  }[]> {
+    try {
+      return this.connection.getParsedProgramAccounts(new PublicKey("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"), {
+        filters: [
+          {
+            dataSize: 165
+          },
+          {
+            memcmp: {
+              offset: 0,
+              bytes: mintAddress
+            }
+          }
+        ]
+      })
+    } catch (e) {
+      throw new Error(`error calling getTokenHolders: ${e}`)
     }
   }
 }
