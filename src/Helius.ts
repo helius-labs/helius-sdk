@@ -158,19 +158,8 @@ export class Helius {
     editWebhookRequest: EditWebhookRequest
   ): Promise<Webhook> {
     try {
-      const webhook = await this.getWebhookByID(webhookID);
-      const editRequest: Partial<Webhook> = {
-        ...webhook,
-        ...editWebhookRequest,
-      };
-      delete editRequest["webhookID"];
-      delete editRequest["wallet"];
-
-      const { data } = await axios.put(
-        `${API_URL_V0}/webhooks/${webhookID}?api-key=${this.apiKey}`,
-        editRequest
-      );
-      return data;
+      const existing = await this.getWebhookByID(webhookID);
+      return this._editWebhook(webhookID, existing, editWebhookRequest);
     } catch (err: any | AxiosError) {
       if (axios.isAxiosError(err)) {
         throw new Error(
@@ -181,6 +170,8 @@ export class Helius {
       }
     }
   }
+
+
 
   /**
    * Appends an array of addresses to an existing webhook by its ID
@@ -195,25 +186,14 @@ export class Helius {
   ): Promise<Webhook> {
     try {
       const webhook = await this.getWebhookByID(webhookID);
-      const accountAddresses =
-        webhook.accountAddresses.concat(newAccountAddresses);
-      webhook.accountAddresses = accountAddresses;
+      const accountAddresses = webhook.accountAddresses.concat(newAccountAddresses);
       if (accountAddresses.length > 100_000) {
         throw new Error(
           `a single webhook cannot contain more than 100,000 addresses`
         );
       }
-      const editRequest: Partial<Webhook> = {
-        ...webhook,
-      };
-      delete editRequest["webhookID"];
-      delete editRequest["wallet"];
-
-      const { data } = await axios.put(
-        `${API_URL_V0}/webhooks/${webhookID}?api-key=${this.apiKey}`,
-        editRequest
-      );
-      return data;
+      const editRequest: EditWebhookRequest = { accountAddresses };
+      return this._editWebhook(webhookID, webhook, editRequest);
     } catch (err: any | AxiosError) {
       if (axios.isAxiosError(err)) {
         throw new Error(
@@ -333,5 +313,28 @@ export class Helius {
         throw new Error(`error during getMintlist: ${err}`);
       }
     }
+  }
+
+  private async _editWebhook(
+    webhookID: string,
+    existingWebhook: Webhook,
+    editWebhookRequest: EditWebhookRequest,
+  ): Promise<Webhook> {
+    const editRequest: EditWebhookRequest = {
+      webhookURL: editWebhookRequest.webhookURL ?? existingWebhook.webhookURL,
+      transactionTypes: editWebhookRequest.transactionTypes ?? existingWebhook.transactionTypes,
+      accountAddresses: editWebhookRequest.accountAddresses ?? existingWebhook.accountAddresses,
+      accountAddressOwners: editWebhookRequest.accountAddressOwners ?? existingWebhook.accountAddressOwners,
+      webhookType: editWebhookRequest.webhookType ?? existingWebhook.webhookType,
+      authHeader: editWebhookRequest.authHeader ?? existingWebhook.authHeader,
+      txnStatus: editWebhookRequest.txnStatus ?? existingWebhook.txnStatus,
+      encoding: editWebhookRequest.encoding ?? existingWebhook.encoding,
+    };
+
+    const { data } = await axios.put(
+      `${API_URL_V0}/webhooks/${webhookID}?api-key=${this.apiKey}`,
+      editRequest
+    );
+    return data;
   }
 }
