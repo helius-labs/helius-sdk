@@ -19,6 +19,7 @@ export type HeliusOptions = {
 export interface Webhook {
   webhookID: string;
   wallet: string;
+  project: string;
   webhookURL: string;
   transactionTypes: string[];
   accountAddresses: string[];
@@ -34,8 +35,8 @@ export type CollectionIdentifier = {
   verifiedCollectionAddresses?: string[];
 };
 
-export type CreateWebhookRequest = Omit<Webhook, "webhookID" | "wallet">;
-export type EditWebhookRequest = Partial<Omit<Webhook, "webhookID" | "wallet">>;
+export type CreateWebhookRequest = Omit<Webhook, "webhookID" | "wallet" | "project">;
+export type EditWebhookRequest = Partial<Omit<Webhook, "webhookID" | "wallet" | "project">>;
 
 export interface CreateCollectionWebhookRequest extends CreateWebhookRequest {
   collectionQuery: CollectionIdentifier;
