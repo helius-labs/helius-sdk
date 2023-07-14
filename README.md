@@ -172,8 +172,6 @@ Note that the Collections.ABC enum references the collection query for this coll
 ## DAS API
 Read more about the DAS API from our docs, [here]("https://docs.helius.xyz/solana-compression/digital-asset-standard-das-api"). 
 
-You will need to import the `DASClient` to interact with the DAS API. You need to specify the network (`mainnet` or `devnet`), and your Helius API key.  
-
 
 ### **getAsset**
 Get an asset by its ID.
