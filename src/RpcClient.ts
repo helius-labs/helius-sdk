@@ -11,7 +11,7 @@ import {
   Connection,
   ParsedAccountData,
 } from "@solana/web3.js";
-
+import { AssetsByAuthority, AssetsByCreator, AssetsByGroup, AssetsByOwner, GetAsset, GetAssetProof, GetSignaturesForAsset, SearchAssets, getAssetProofResponse, getAssetResponse, getAssetResponseList, getSignatureResponse } from "./types/das-types";
 export type SendAndConfirmTransactionResponse = {
   signature: TransactionSignature;
   confirmResponse: RpcResponseAndContext<SignatureResult>;
@@ -125,5 +125,182 @@ export class RpcClient {
     } catch (e) {
       throw new Error(`error calling getTokenHolders: ${e}`)
     }
+  }
+    /**
+   * Request asset details for the given ID. 
+   * @returns {Promise<getAssetResponse>}
+   */
+    async getAsset(params: GetAsset): Promise<getAssetResponse> {
+      const url = `${this.connection.rpcEndpoint}`;
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          jsonrpc: "2.0",
+          id: "my-id",
+          method: "getAsset",
+          params: params,
+        }),
+      });
+      const data = await response.json();
+      return data.result;
+    }
+      /**
+   * Request an asset proof for a compressed asset. 
+   * @returns {Promise<getAssetProofResponse>}
+   */
+  async getAssetProof(params: GetAssetProof): Promise<getAssetProofResponse> {
+    const url = `${this.connection.rpcEndpoint}`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        jsonrpc: "2.0",
+        id: "my-id",
+        method: "getAssetProof",
+        params: params,
+      }),
+    });
+    const data = await response.json();
+    return data.result;
+  }
+   /**
+   * Request a collections asset list given the collection ID. 
+   * @returns {Promise<getAssetResponseList>}
+   */
+   async getAssetsByGroup(params: AssetsByGroup): Promise<getAssetResponseList> {
+    const url = `${this.connection.rpcEndpoint}`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        jsonrpc: "2.0",
+        id: "my-id",
+        method: "getAssetsByGroup",
+        params: params,
+      }),
+    });
+    console.log(params);
+    const data = await response.json();
+    return data.result;
+  }
+   /**
+   * Request assets belonging to an owner address. 
+   * @returns {Promise<getAssetResponseList>}
+   */
+   async getAssetsByOwner(params: AssetsByOwner): Promise<getAssetResponseList> {
+    const url = `${this.connection.rpcEndpoint}`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        jsonrpc: "2.0",
+        id: "my-id",
+        method: "getAssetsByOwner",
+        params: params,
+      }),
+    });
+    const data = await response.json();
+    return data.result;
+  }
+  /**
+   * Request assets by a creator. 
+   * @returns {Promise<getAssetResponseList>}
+   */
+  async getAssetsByCreator(
+    params: AssetsByCreator
+  ): Promise<getAssetResponseList> {
+    const url = `${this.connection.rpcEndpoint}`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        jsonrpc: "2.0",
+        id: "my-id",
+        method: "getAssetsByCreator",
+        params: params,
+      }),
+    });
+    const data = await response.json();
+    return data.result;
+  }
+    /**
+   * Request assets belonging to an authority. 
+   * @returns {Promise<getAssetResponseList>}
+   */
+
+    async getAssetsByAuthority(
+      params: AssetsByAuthority
+    ): Promise<getAssetResponseList> {
+      const url = `${this.connection.rpcEndpoint}`;
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          jsonrpc: "2.0",
+          id: "my-id",
+          method: "getAssetsByAuthority",
+          params: params,
+        }),
+      });
+      const data = await response.json();
+      return data.result;
+    }
+     /**
+   * Request assets using a custom search. 
+   * @returns {Promise<getAssetResponseList>}
+   */
+  async searchAssets(params: SearchAssets): Promise<getAssetResponseList> {
+    const url = `${this.connection.rpcEndpoint}`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        jsonrpc: "2.0",
+        id: "my-id",
+        method: "searchAssets",
+        params: params,
+      }),
+    });
+    const data = await response.json();
+    return data.result;
+  }
+   /**
+   * Request signatures belonging to an address.
+   * @returns {Promise<getSignatureResponse>}
+   */
+
+   async getSignaturesForAsset(
+    params: GetSignaturesForAsset
+  ): Promise<getSignatureResponse> {
+    const url = `${this.connection.rpcEndpoint}`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        jsonrpc: "2.0",
+        id: "my-id",
+        method: "getSignaturesForAsset",
+        params: params,
+      }),
+    });
+    const data = await response.json();
+    return data.result;
   }
 }
