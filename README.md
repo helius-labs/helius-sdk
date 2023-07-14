@@ -178,14 +178,11 @@ You will need to import the `DASClient` to interact with the DAS API. You need t
 ### **getAsset**
 Get an asset by its ID.
 ```ts
-import { DASClient } from 'helius-sdk';
+import { Helius } from 'helius-sdk';
 
 async function run() {
-    const das = new DASClient({
-        endpoint: "mainnet", // or devnet
-        apiKey: "HELIUS_API_KEY",
-    });
-    const response = await das.getAsset({
+    const helius = new Helius("HELIUS_API_KEY");
+    const response = await helius.rpc.getAsset({
         id: "FNt6A9Mfnqbwc1tY7uwAguKQ1JcpBrxmhczDgbdJy5AC",
     })
     console.log(response);
@@ -197,14 +194,11 @@ run();
 ### **getSignaturesForAsset**
 Get a list of transaction signatures related to a compressed asset.
 ```ts
-import { DASClient } from 'helius-sdk';
+import { Helius } from 'helius-sdk';
 
 async function run() {
-    const das = new DASClient({
-        endpoint: "mainnet", // or devnet
-        apiKey: "HELIUS_API_KEY",
-    });
-    const response = await das.getSignaturesForAsset({
+    const helius = new Helius("HELIUS_API_KEY");
+    const response = await helius.rpc.getSignaturesForAsset({
         id: "Bu1DEKeawy7txbnCEJE4BU3BKLXaNAKCYcHR4XhndGss",
         page: 1,
     })
@@ -217,15 +211,11 @@ run();
 Search for assets by a variety of parameters. Very useful for token-gating!
 ```ts 
 
-import { DASClient } from "helius-sdk";
+import { Helius } from 'helius-sdk';
 
 async function run() {
-  const das = new DASClient({
-    endpoint: "mainnet", // or devnet
-    apiKey: "HELIUS_API_KEY",
-  });
-
-  const response = await das.searchAssets({ 
+    const helius = new Helius("HELIUS_API_KEY");
+    const response = await helius.rpc.searchAssets({ 
     ownerAddress: "2k5AXX4guW9XwRQ1AKCpAuUqgWDpQpwFfpVFh3hnm2Ha",
     compressed: true,
     page: 1,
@@ -238,14 +228,11 @@ run();
 ### **getAssetProof**
 Get a merkle proof for a compressed asset by its ID.
 ```ts
-import { DASClient } from 'helius-sdk';
+import { Helius } from 'helius-sdk';
 
 async function run() {
-    const das = new DASClient({
-        endpoint: "mainnet",
-        apiKey: "HELIUS_API_KEY",
-    });
-    const response = await das.getAssetProof({
+    const helius = new Helius("HELIUS_API_KEY");
+    const response = await helius.rpc.getAssetProof({
         id: "Bu1DEKeawy7txbnCEJE4BU3BKLXaNAKCYcHR4XhndGss",
     })
     console.log(response); 
@@ -256,14 +243,11 @@ run();
 ### **getAssetsByOwner**
 Get a list of assets owned by an address. This is the fastest way to get all the NFTs owned by a wallet on Solana.
 ```ts 
-import { DASClient } from 'helius-sdk';
+import { Helius } from 'helius-sdk';
 
 async function run() {
-    const das = new DASClient({
-        endpoint: "mainnet", // or devnet
-        apiKey: "HELIUS_API_KEY",
-    });
-    const response = await das.getAssetsByOwner({
+    const helius = new Helius("HELIUS_API_KEY");
+    const response = await helius.rpc.getAssetsByOwner({
         ownerAddress: "86xCnPeV69n6t3DnyGvkKobf9FdN2H9oiVDdaMpo2MMY",
         page: 1,
     })
@@ -276,14 +260,11 @@ run();
 ### **getAssetsByGroup**
 Get a list of assets by a group key and value. This endpoint is very useful for getting the mintlist for NFT Collections.
 ```ts
-import { DASClient } from 'helius-sdk';
+import { Helius } from 'helius-sdk';
 
 async function run() {
-    const das = new DASClient({
-        endpoint: "mainnet", // or devnet
-        apiKey: "HELIUS_API_KEY",
-    });
-    const response = await das.getAssetsByGroup({
+      const helius = new Helius("HELIUS_API_KEY");
+      const response = await helius.rpc.getAssetsByGroup({
         groupKey: "collection",
         groupValue: "J1S9H3QjnRtBbbuD4HjPV6RpRhwuk4zKbxsnCHuTgh9w",
         page: 1,
@@ -297,14 +278,11 @@ run();
 ### **getAssetsByCreator**
 Get a list of assets created by an address.
 ```ts
-import { DASClient } from 'helius-sdk';
+import { Helius } from 'helius-sdk';
 
 async function run() {
-    const das = new DASClient({
-        endpoint: "mainnet", // or devnet
-        apiKey: "HELIUS_API_KEY",
-    });
-    const response = await das.getAssetsByCreator({
+    const helius = new Helius("HELIUS_API_KEY");
+    const response = await helius.rpc.getAssetsByCreator({
         creatorAddress: "D3XrkNZz6wx6cofot7Zohsf2KSsu2ArngNk8VqU9cTY3",
         onlyVerified: true,
         page: 1,
@@ -317,14 +295,11 @@ run();
 ### **getAssetsByAuthority**
 Get a list of assets with a specific authority.
 ```ts
-import { DASClient } from 'helius-sdk';
+import { Helius } from 'helius-sdk';
 
 async function run() {
-    const das = new DASClient({
-        endpoint: "mainnet", // or devnet
-        apiKey: "HELIUS_API_KEY",
-    });
-    const response = await das.getAssetsByAuthority({
+    const helius = new Helius("HELIUS_API_KEY");
+    const response = await helius.rpc.getAssetsByAuthority({
         authorityAddress: "2RtGg6fsFiiF1EQzHqbd66AhW7R5bWeQGpTbv2UMkCdW",
         page: 1,
     })
