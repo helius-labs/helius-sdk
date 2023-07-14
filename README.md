@@ -70,7 +70,6 @@ import {
   TransactionType,
   WebhookType,
   Address,
-
   Helius
 } from "helius-sdk";
 
@@ -169,6 +168,172 @@ helius.createCollectionWebhook({
 ```
 
 Note that the Collections.ABC enum references the collection query for this collection. It is just a convenience enum so that developers don't have to figure out whether to use firstVerifiedCreator or the Metaplex Certified Collection address ([see more about this here](https://docs.helius.xyz/api-reference/nft-collections-on-solana)). If you already know it for your collection, please make a PR :)
+
+## DAS API
+Read more about the DAS API from our docs, [here]("https://docs.helius.xyz/solana-compression/digital-asset-standard-das-api"). 
+
+You will need to import the `DASClient` to interact with the DAS API. You need to specify the network (`mainnet` or `devnet`), and your Helius API key.  
+
+
+### **getAsset**
+Get an asset by its ID.
+```ts
+import { DASClient } from 'helius-sdk';
+
+async function run() {
+    const das = new DASClient({
+        endpoint: "mainnet", // or devnet
+        apiKey: "HELIUS_API_KEY",
+    });
+    const response = await das.getAsset({
+        id: "FNt6A9Mfnqbwc1tY7uwAguKQ1JcpBrxmhczDgbdJy5AC",
+    })
+    console.log(response);
+}
+
+run();
+```
+
+### **getSignaturesForAsset**
+Get a list of transaction signatures related to a compressed asset.
+```ts
+import { DASClient } from 'helius-sdk';
+
+async function run() {
+    const das = new DASClient({
+        endpoint: "mainnet", // or devnet
+        apiKey: "HELIUS_API_KEY",
+    });
+    const response = await das.getSignaturesForAsset({
+        id: "Bu1DEKeawy7txbnCEJE4BU3BKLXaNAKCYcHR4XhndGss",
+        page: 1,
+    })
+    console.log(response.items);
+}
+
+run();
+```
+### searchAssets
+Search for assets by a variety of parameters. Very useful for token-gating!
+```ts 
+
+import { DASClient } from "helius-sdk";
+
+async function run() {
+  const das = new DASClient({
+    endpoint: "mainnet", // or devnet
+    apiKey: "HELIUS_API_KEY",
+  });
+
+  const response = await das.searchAssets({ 
+    ownerAddress: "2k5AXX4guW9XwRQ1AKCpAuUqgWDpQpwFfpVFh3hnm2Ha",
+    compressed: true,
+    page: 1,
+  });
+  console.log(response.items)
+}
+run();
+
+```
+### **getAssetProof**
+Get a merkle proof for a compressed asset by its ID.
+```ts
+import { DASClient } from 'helius-sdk';
+
+async function run() {
+    const das = new DASClient({
+        endpoint: "mainnet",
+        apiKey: "HELIUS_API_KEY",
+    });
+    const response = await das.getAssetProof({
+        id: "Bu1DEKeawy7txbnCEJE4BU3BKLXaNAKCYcHR4XhndGss",
+    })
+    console.log(response); 
+}
+
+run();
+```
+### **getAssetsByOwner**
+Get a list of assets owned by an address. This is the fastest way to get all the NFTs owned by a wallet on Solana.
+```ts 
+import { DASClient } from 'helius-sdk';
+
+async function run() {
+    const das = new DASClient({
+        endpoint: "mainnet", // or devnet
+        apiKey: "HELIUS_API_KEY",
+    });
+    const response = await das.getAssetsByOwner({
+        ownerAddress: "86xCnPeV69n6t3DnyGvkKobf9FdN2H9oiVDdaMpo2MMY",
+        page: 1,
+    })
+    console.log(response.items);
+}
+
+run();
+
+```
+### **getAssetsByGroup**
+Get a list of assets by a group key and value. This endpoint is very useful for getting the mintlist for NFT Collections.
+```ts
+import { DASClient } from 'helius-sdk';
+
+async function run() {
+    const das = new DASClient({
+        endpoint: "mainnet", // or devnet
+        apiKey: "HELIUS_API_KEY",
+    });
+    const response = await das.getAssetsByGroup({
+        groupKey: "collection",
+        groupValue: "J1S9H3QjnRtBbbuD4HjPV6RpRhwuk4zKbxsnCHuTgh9w",
+        page: 1,
+    })
+    console.log(response.items);
+}
+
+run();
+```
+
+### **getAssetsByCreator**
+Get a list of assets created by an address.
+```ts
+import { DASClient } from 'helius-sdk';
+
+async function run() {
+    const das = new DASClient({
+        endpoint: "mainnet", // or devnet
+        apiKey: "HELIUS_API_KEY",
+    });
+    const response = await das.getAssetsByCreator({
+        creatorAddress: "D3XrkNZz6wx6cofot7Zohsf2KSsu2ArngNk8VqU9cTY3",
+        onlyVerified: true,
+        page: 1,
+    })
+    console.log(response.items);
+}
+
+run();
+```
+### **getAssetsByAuthority**
+Get a list of assets with a specific authority.
+```ts
+import { DASClient } from 'helius-sdk';
+
+async function run() {
+    const das = new DASClient({
+        endpoint: "mainnet", // or devnet
+        apiKey: "HELIUS_API_KEY",
+    });
+    const response = await das.getAssetsByAuthority({
+        authorityAddress: "2RtGg6fsFiiF1EQzHqbd66AhW7R5bWeQGpTbv2UMkCdW",
+        page: 1,
+    })
+    console.log(response.items);
+}
+
+run();
+```
+
 
 ## NFT API
 
