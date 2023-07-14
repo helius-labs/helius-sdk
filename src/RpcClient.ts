@@ -33,7 +33,7 @@ export type SendAndConfirmTransactionResponse = {
 };
 
 export class RpcClient {
-  constructor(protected readonly connection: Connection) {}
+  constructor(protected readonly connection: Connection) { }
 
   /**
    * Request an allocation of lamports to the specified address
@@ -146,7 +146,7 @@ export class RpcClient {
     }
   }
   /**
-   * Request an allocation of lamports to the specified address
+   * Get single asset. (Note: Helius enhances these responses with a CDN for better performance)
    * @returns {Promise<getAssetResponse>}
    */
   async getAsset(params: GetAsset): Promise<getAssetResponse> {
@@ -167,7 +167,7 @@ export class RpcClient {
     return data.result;
   }
   /**
-   * Request an allocation of lamports to the specified address
+   * Get Asset proof.
    * @returns {Promise<getAssetProofResponse>}
    */
   async getAssetProof(params: GetAssetProof): Promise<getAssetProofResponse> {
@@ -188,7 +188,7 @@ export class RpcClient {
     return data.result;
   }
   /**
-   * Request an allocation of lamports to the specified address
+   * Get Assets By group.
    * @returns {Promise<getAssetResponseList>}
    */
   async getAssetsByGroup(params: AssetsByGroup): Promise<getAssetResponseList> {
@@ -210,7 +210,7 @@ export class RpcClient {
     return data.result;
   }
   /**
-   * Request an allocation of lamports to the specified address
+   * Get all assets (compressed and regular) for a public key.
    * @returns {Promise<getAssetResponseList>}
    */
   async getAssetsByOwner(params: AssetsByOwner): Promise<getAssetResponseList> {
@@ -231,7 +231,7 @@ export class RpcClient {
     return data.result;
   }
   /**
-   * Request an allocation of lamports to the specified address
+   * Get Assets by creator.
    * @returns {Promise<getAssetResponseList>}
    */
   async getAssetsByCreator(
@@ -254,7 +254,7 @@ export class RpcClient {
     return data.result;
   }
   /**
-   * Request an allocation of lamports to the specified address
+   *G Get assets by authority.
    * @returns {Promise<getAssetResponseList>}
    */
 
@@ -278,7 +278,7 @@ export class RpcClient {
     return data.result;
   }
   /**
-   * Request an allocation of lamports to the specified address
+   * Search Assets
    * @returns {Promise<getAssetResponseList>}
    */
   async searchAssets(params: SearchAssets): Promise<getAssetResponseList> {
@@ -299,7 +299,7 @@ export class RpcClient {
     return data.result;
   }
   /**
-   * Request an allocation of lamports to the specified address
+   * Get transaction history for the asset.
    * @returns {Promise<getSignatureResponse>}
    */
 
