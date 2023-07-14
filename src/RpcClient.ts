@@ -1,3 +1,4 @@
+import axios from "axios";
 import {
   BlockhashWithExpiryBlockHeight,
   TransactionSignature,
@@ -25,6 +26,7 @@ import {
   getAssetResponseList,
   getSignatureResponse,
 } from "./types/das-types";
+
 export type SendAndConfirmTransactionResponse = {
   signature: TransactionSignature;
   confirmResponse: RpcResponseAndContext<SignatureResult>;
@@ -145,181 +147,186 @@ export class RpcClient {
       throw new Error(`error calling getTokenHolders: ${e}`);
     }
   }
+
   /**
-   * Request an allocation of lamports to the specified address
+   * Get single asset. (Note: Helius enhances these responses with a CDN for better performance)
    * @returns {Promise<getAssetResponse>}
+   * @throws {Error}
    */
   async getAsset(params: GetAsset): Promise<getAssetResponse> {
-    const url = `${this.connection.rpcEndpoint}`;
-    const response = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
+    try {
+      const url = `${this.connection.rpcEndpoint}`;
+      const response = await axios.post(url, {
         jsonrpc: "2.0",
         id: "my-id",
         method: "getAsset",
         params: params,
-      }),
-    });
-    const data = await response.json();
-    return data.result;
+      });
+
+      const data = response.data;
+      return data.result as getAssetResponse;
+    } catch (error) {
+      throw new Error(`Error in getAsset: ${error}`);
+    }
   }
+
   /**
-   * Request an allocation of lamports to the specified address
+   * Get Asset proof.
    * @returns {Promise<getAssetProofResponse>}
+   * @throws {Error}
    */
   async getAssetProof(params: GetAssetProof): Promise<getAssetProofResponse> {
-    const url = `${this.connection.rpcEndpoint}`;
-    const response = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
+    try {
+      const url = `${this.connection.rpcEndpoint}`;
+      const response = await axios.post(url, {
         jsonrpc: "2.0",
         id: "my-id",
         method: "getAssetProof",
         params: params,
-      }),
-    });
-    const data = await response.json();
-    return data.result;
+      });
+
+      const data = response.data;
+      return data.result as getAssetProofResponse;
+    } catch (error) {
+      throw new Error(`Error in getAssetProof: ${error}`);
+    }
   }
+
   /**
-   * Request an allocation of lamports to the specified address
+   * Get Assets By group.
    * @returns {Promise<getAssetResponseList>}
+   * @throws { Error }
    */
   async getAssetsByGroup(params: AssetsByGroup): Promise<getAssetResponseList> {
-    const url = `${this.connection.rpcEndpoint}`;
-    const response = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
+    try {
+      const url = `${this.connection.rpcEndpoint}`;
+      const response = await axios.post(url, {
         jsonrpc: "2.0",
         id: "my-id",
         method: "getAssetsByGroup",
         params: params,
-      }),
-    });
-    console.log(params);
-    const data = await response.json();
-    return data.result;
+      });
+
+      const data = response.data;
+      return data.result as getAssetResponseList;
+    } catch (error) {
+      throw new Error(`Error in getAssetsByGroup: ${error}`);
+    }
   }
+
   /**
-   * Request an allocation of lamports to the specified address
+   * Get all assets (compressed and regular) for a public key.
    * @returns {Promise<getAssetResponseList>}
+   * @throws {Error}
    */
   async getAssetsByOwner(params: AssetsByOwner): Promise<getAssetResponseList> {
-    const url = `${this.connection.rpcEndpoint}`;
-    const response = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
+    try {
+      const url = `${this.connection.rpcEndpoint}`;
+      const response = await axios.post(url, {
         jsonrpc: "2.0",
         id: "my-id",
         method: "getAssetsByOwner",
         params: params,
-      }),
-    });
-    const data = await response.json();
-    return data.result;
+      });
+
+      const data = response.data;
+      return data.result as getAssetResponseList;
+    } catch (error) {
+      throw new Error(`Error in getAssetsByOwner: ${error}`);
+    }
   }
+
   /**
-   * Request an allocation of lamports to the specified address
+   * Request assets for a given creator.
    * @returns {Promise<getAssetResponseList>}
+   * @throws {Error}
    */
   async getAssetsByCreator(
     params: AssetsByCreator
   ): Promise<getAssetResponseList> {
-    const url = `${this.connection.rpcEndpoint}`;
-    const response = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
+    try {
+      const url = `${this.connection.rpcEndpoint}`;
+      const response = await axios.post(url, {
         jsonrpc: "2.0",
         id: "my-id",
         method: "getAssetsByCreator",
         params: params,
-      }),
-    });
-    const data = await response.json();
-    return data.result;
-  }
-  /**
-   * Request an allocation of lamports to the specified address
-   * @returns {Promise<getAssetResponseList>}
-   */
+      });
 
+      const data = response.data;
+      return data.result as getAssetResponseList;
+    } catch (error) {
+      throw new Error(`Error in getAssetsByCreator: ${error}`);
+    }
+  }
+
+  /**
+   * Get assets by authority.
+   * @returns {Promise<getAssetResponseList>}
+   * @throws {Error}
+   */
   async getAssetsByAuthority(
     params: AssetsByAuthority
   ): Promise<getAssetResponseList> {
-    const url = `${this.connection.rpcEndpoint}`;
-    const response = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
+    try {
+      const url = `${this.connection.rpcEndpoint}`;
+      const response = await axios.post(url, {
         jsonrpc: "2.0",
         id: "my-id",
         method: "getAssetsByAuthority",
         params: params,
-      }),
-    });
-    const data = await response.json();
-    return data.result;
+      });
+
+      const data = response.data;
+      return data.result as getAssetResponseList;
+    } catch (error) {
+      throw new Error(`Error in getAssetsByAuthority: ${error}`);
+    }
   }
+
   /**
-   * Request an allocation of lamports to the specified address
+   * Search Assets
    * @returns {Promise<getAssetResponseList>}
+   * @throws {Error}
    */
   async searchAssets(params: SearchAssets): Promise<getAssetResponseList> {
-    const url = `${this.connection.rpcEndpoint}`;
-    const response = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
+    try {
+      const url = `${this.connection.rpcEndpoint}`;
+      const response = await axios.post(url, {
         jsonrpc: "2.0",
         id: "my-id",
         method: "searchAssets",
         params: params,
-      }),
-    });
-    const data = await response.json();
-    return data.result;
-  }
-  /**
-   * Request an allocation of lamports to the specified address
-   * @returns {Promise<getSignatureResponse>}
-   */
+      });
 
+      const data = response.data;
+      return data.result as getAssetResponseList;
+    } catch (error) {
+      throw new Error(`Error in searchAssets: ${error}`);
+    }
+  }
+
+  /**
+   * Get transaction history for the asset.
+   * @returns {Promise<getSignatureResponse>}
+   * @throws {Error}
+   */
   async getSignaturesForAsset(
     params: GetSignaturesForAsset
   ): Promise<getSignatureResponse> {
-    const url = `${this.connection.rpcEndpoint}`;
-    const response = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
+    try {
+      const url = `${this.connection.rpcEndpoint}`;
+      const response = await axios.post(url, {
         jsonrpc: "2.0",
         id: "my-id",
         method: "getSignaturesForAsset",
         params: params,
-      }),
-    });
-    const data = await response.json();
-    return data.result;
+      });
+
+      const data = response.data;
+      return data.result as getSignatureResponse;
+    } catch (error) {
+      throw new Error(`Error in getSignaturesForAsset: ${error}`);
+    }
   }
 }
