@@ -1,3 +1,6 @@
+const fetch = require("node-fetch")
+
+
 import {
   BlockhashWithExpiryBlockHeight,
   TransactionSignature,
