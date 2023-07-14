@@ -497,3 +497,67 @@ export enum TokenStandard {
   NON_FUNGIBLE_EDITION = "NonFungibleEdition",
   UNKNOWN_STANDARD = "UnknownStandard",
 }
+
+export enum DASInterface { 
+  V1NFT = "V1_NFT", 
+  CUSTOM = "Custom",
+  V1PRINT = "V1_PRINT",
+  LEGACYNFT = "Legacy_NFT",
+  V2NFT = "V2_NFT",
+  FUNGIBLE_ASSET = "FungibleAsset",
+  IDENTITY = "Identity",
+  EXECUTABLE = "Executable",
+  PROGRAMMABLENFT = "ProgrammableNFT",
+}
+
+export enum OwnershipModel { 
+    SINGLE = "single",
+    TOKEN = "token"
+}
+
+export enum RoyaltyModel { 
+    CREATORS = "creators",
+    FANOUT = "fanout",
+    SINGLE = "single",
+
+}
+
+export enum DASScope { 
+    FULL = "full",
+    ROYALTY = "royalty",
+    METADATA = "metadata",
+    EXTENSION = "extension",
+}
+
+export enum UseMethods { 
+    BURN = "Burn",
+    SINGLE = "Single",
+    MULTIPLE = "Multiple",
+}
+export enum DasContext { 
+    WalletDefault = "wallet-default",
+    WebDesktop = "web-desktop",
+    WebMobile = "web-mobile",
+    AppMobile = "app-mobile",
+    AppDesktop = "app-desktop",
+    App = "app",
+    Vr = "vr",
+}
+
+export enum AssetSortBy {
+    Created = "created",
+    Updated = "updated",
+    RecentAction = "recent_action",
+}
+export enum AssetSortDirection {
+    Asc = "asc",
+    Desc = "desc",
+}
+export enum SearchConditionType {
+    All = "all",
+    Any = "any",
+}
+
+export enum DASGroup { 
+    COLLECTION = "collection",
+}
