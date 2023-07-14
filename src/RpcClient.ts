@@ -1,4 +1,5 @@
 import axios from "axios";
+
 import {
   BlockhashWithExpiryBlockHeight,
   TransactionSignature,
@@ -35,7 +36,7 @@ export type SendAndConfirmTransactionResponse = {
 };
 
 export class RpcClient {
-  constructor(protected readonly connection: Connection) {}
+  constructor(protected readonly connection: Connection) { }
 
   /**
    * Request an allocation of lamports to the specified address
@@ -237,7 +238,8 @@ export class RpcClient {
   }
 
   /**
-   * Request assets for a given creator.
+
+   * Get Assets by creator.
    * @returns {Promise<getAssetResponseList>}
    * @throws {Error}
    */
@@ -262,6 +264,7 @@ export class RpcClient {
 
   /**
    * Get assets by authority.
+
    * @returns {Promise<getAssetResponseList>}
    * @throws {Error}
    */

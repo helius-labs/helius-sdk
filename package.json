@@ -1,9 +1,9 @@
 {
   "name": "helius-sdk",
-  "version": "1.0.10",
+  "version": "1.1.1",
   "description": "SDK for the Helius API (https://helius.xyz)",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc",
@@ -30,6 +30,8 @@
     "typescript": "^4.9.4"
   },
   "dependencies": {
-    "axios": "^1.2.3"
+    "axios": "^1.2.3",
+    "fetch": "^1.1.0",
+    "node-fetch": "^3.3.1"
   }
 }
