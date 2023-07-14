@@ -11,7 +11,20 @@ import {
   Connection,
   ParsedAccountData,
 } from "@solana/web3.js";
-import { AssetsByAuthority, AssetsByCreator, AssetsByGroup, AssetsByOwner, GetAsset, GetAssetProof, GetSignaturesForAsset, SearchAssets, getAssetProofResponse, getAssetResponse, getAssetResponseList, getSignatureResponse } from "./types/das-types";
+import {
+  AssetsByAuthority,
+  AssetsByCreator,
+  AssetsByGroup,
+  AssetsByOwner,
+  GetAsset,
+  GetAssetProof,
+  GetSignaturesForAsset,
+  SearchAssets,
+  getAssetProofResponse,
+  getAssetResponse,
+  getAssetResponseList,
+  getSignatureResponse,
+} from "./types/das-types";
 export type SendAndConfirmTransactionResponse = {
   signature: TransactionSignature;
   confirmResponse: RpcResponseAndContext<SignatureResult>;
@@ -20,7 +33,7 @@ export type SendAndConfirmTransactionResponse = {
 };
 
 export class RpcClient {
-  constructor(protected readonly connection: Connection) { }
+  constructor(protected readonly connection: Connection) {}
 
   /**
    * Request an allocation of lamports to the specified address
@@ -72,26 +85,27 @@ export class RpcClient {
 
   /**
    * Returns all the stake accounts for a given public key
-   *  
+   *
    * @returns {Promise<number>} A promise that resolves to the current TPS rate.
    * @throws {Error} If there was an error calling the `getStakeAccounts` method.
    */
   async getStakeAccounts(wallet: string): Promise<any> {
     try {
       return this.connection.getParsedProgramAccounts(
-        new PublicKey('Stake11111111111111111111111111111111111111'), {
-        filters: [
-          {
-            dataSize: 200
-          },
-          {
-            memcmp: {
-              offset: 44,
-              bytes: wallet
+        new PublicKey("Stake11111111111111111111111111111111111111"),
+        {
+          filters: [
+            {
+              dataSize: 200,
             },
-          },
-        ],
-      }
+            {
+              memcmp: {
+                offset: 44,
+                bytes: wallet,
+              },
+            },
+          ],
+        }
       );
     } catch (e) {
       throw new Error(`error calling getStakeAccounts: ${e}`);
@@ -99,56 +113,61 @@ export class RpcClient {
   }
 
   /**
-     * Returns all the token accounts for a given mint address (ONLY FOR SPL TOKENS)
-     *  
-     * @returns {Promise<{pubkey: PublicKey; account: AccountInfo<ParsedAccountData | Buffer}[]>} A promise that resolves to an array of accountInfo
-     * @throws {Error} If there was an error calling the `getTokenHolders` method.
-     */
-  getTokenHolders(mintAddress: string): Promise<{
-    pubkey: PublicKey;
-    account: AccountInfo<ParsedAccountData | Buffer>;
-  }[]> {
+   * Returns all the token accounts for a given mint address (ONLY FOR SPL TOKENS)
+   *
+   * @returns {Promise<{pubkey: PublicKey; account: AccountInfo<ParsedAccountData | Buffer}[]>} A promise that resolves to an array of accountInfo
+   * @throws {Error} If there was an error calling the `getTokenHolders` method.
+   */
+  getTokenHolders(mintAddress: string): Promise<
+    {
+      pubkey: PublicKey;
+      account: AccountInfo<ParsedAccountData | Buffer>;
+    }[]
+  > {
     try {
-      return this.connection.getParsedProgramAccounts(new PublicKey("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"), {
-        filters: [
-          {
-            dataSize: 165
-          },
-          {
-            memcmp: {
-              offset: 0,
-              bytes: mintAddress
-            }
-          }
-        ]
-      })
+      return this.connection.getParsedProgramAccounts(
+        new PublicKey("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"),
+        {
+          filters: [
+            {
+              dataSize: 165,
+            },
+            {
+              memcmp: {
+                offset: 0,
+                bytes: mintAddress,
+              },
+            },
+          ],
+        }
+      );
     } catch (e) {
-      throw new Error(`error calling getTokenHolders: ${e}`)
+      throw new Error(`error calling getTokenHolders: ${e}`);
     }
   }
-    /**
-   * Request asset details for the given ID. 
+  /**
+   * Request an allocation of lamports to the specified address
    * @returns {Promise<getAssetResponse>}
    */
-    async getAsset(params: GetAsset): Promise<getAssetResponse> {
-      const url = `${this.connection.rpcEndpoint}`;
-      const response = await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          jsonrpc: "2.0",
-          id: "my-id",
-          method: "getAsset",
-          params: params,
-        }),
-      });
-      const data = await response.json();
-      return data.result;
-    }
-      /**
-   * Request an asset proof for a compressed asset. 
+  async getAsset(params: GetAsset): Promise<getAssetResponse> {
+    const url = `${this.connection.rpcEndpoint}`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        jsonrpc: "2.0",
+        id: "my-id",
+        method: "getAsset",
+        params: params,
+      }),
+    });
+    const data = await response.json();
+    return data.result;
+  }
+  /**
+   * Request an allocation of lamports to the specified address
    * @returns {Promise<getAssetProofResponse>}
    */
   async getAssetProof(params: GetAssetProof): Promise<getAssetProofResponse> {
@@ -168,11 +187,11 @@ export class RpcClient {
     const data = await response.json();
     return data.result;
   }
-   /**
-   * Request a collections asset list given the collection ID. 
+  /**
+   * Request an allocation of lamports to the specified address
    * @returns {Promise<getAssetResponseList>}
    */
-   async getAssetsByGroup(params: AssetsByGroup): Promise<getAssetResponseList> {
+  async getAssetsByGroup(params: AssetsByGroup): Promise<getAssetResponseList> {
     const url = `${this.connection.rpcEndpoint}`;
     const response = await fetch(url, {
       method: "POST",
@@ -190,11 +209,11 @@ export class RpcClient {
     const data = await response.json();
     return data.result;
   }
-   /**
-   * Request assets belonging to an owner address. 
+  /**
+   * Request an allocation of lamports to the specified address
    * @returns {Promise<getAssetResponseList>}
    */
-   async getAssetsByOwner(params: AssetsByOwner): Promise<getAssetResponseList> {
+  async getAssetsByOwner(params: AssetsByOwner): Promise<getAssetResponseList> {
     const url = `${this.connection.rpcEndpoint}`;
     const response = await fetch(url, {
       method: "POST",
@@ -212,7 +231,7 @@ export class RpcClient {
     return data.result;
   }
   /**
-   * Request assets by a creator. 
+   * Request an allocation of lamports to the specified address
    * @returns {Promise<getAssetResponseList>}
    */
   async getAssetsByCreator(
@@ -234,32 +253,32 @@ export class RpcClient {
     const data = await response.json();
     return data.result;
   }
-    /**
-   * Request assets belonging to an authority. 
+  /**
+   * Request an allocation of lamports to the specified address
    * @returns {Promise<getAssetResponseList>}
    */
 
-    async getAssetsByAuthority(
-      params: AssetsByAuthority
-    ): Promise<getAssetResponseList> {
-      const url = `${this.connection.rpcEndpoint}`;
-      const response = await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          jsonrpc: "2.0",
-          id: "my-id",
-          method: "getAssetsByAuthority",
-          params: params,
-        }),
-      });
-      const data = await response.json();
-      return data.result;
-    }
-     /**
-   * Request assets using a custom search. 
+  async getAssetsByAuthority(
+    params: AssetsByAuthority
+  ): Promise<getAssetResponseList> {
+    const url = `${this.connection.rpcEndpoint}`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        jsonrpc: "2.0",
+        id: "my-id",
+        method: "getAssetsByAuthority",
+        params: params,
+      }),
+    });
+    const data = await response.json();
+    return data.result;
+  }
+  /**
+   * Request an allocation of lamports to the specified address
    * @returns {Promise<getAssetResponseList>}
    */
   async searchAssets(params: SearchAssets): Promise<getAssetResponseList> {
@@ -279,12 +298,12 @@ export class RpcClient {
     const data = await response.json();
     return data.result;
   }
-   /**
-   * Request signatures belonging to an address.
+  /**
+   * Request an allocation of lamports to the specified address
    * @returns {Promise<getSignatureResponse>}
    */
 
-   async getSignaturesForAsset(
+  async getSignaturesForAsset(
     params: GetSignaturesForAsset
   ): Promise<getSignatureResponse> {
     const url = `${this.connection.rpcEndpoint}`;
