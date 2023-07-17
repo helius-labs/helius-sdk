@@ -498,7 +498,7 @@ export enum TokenStandard {
   UNKNOWN_STANDARD = "UnknownStandard",
 }
 
-export enum DASInterface { 
+export enum Interface { 
   V1NFT = "V1_NFT", 
   CUSTOM = "Custom",
   V1PRINT = "V1_PRINT",
@@ -522,7 +522,7 @@ export enum RoyaltyModel {
 
 }
 
-export enum DASScope { 
+export enum Scope { 
     FULL = "full",
     ROYALTY = "royalty",
     METADATA = "metadata",
@@ -534,7 +534,7 @@ export enum UseMethods {
     SINGLE = "Single",
     MULTIPLE = "Multiple",
 }
-export enum DasContext { 
+export enum Context { 
     WalletDefault = "wallet-default",
     WebDesktop = "web-desktop",
     WebMobile = "web-mobile",
@@ -558,6 +558,6 @@ export enum SearchConditionType {
     Any = "any",
 }
 
-export enum DASGroup { 
+export enum Group { 
     COLLECTION = "collection",
 }
