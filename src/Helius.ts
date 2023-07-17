@@ -39,19 +39,20 @@ export class Helius {
   /** The beefed up rpc client object from Helius SDK */
   public readonly rpc: RpcClient;
 
+
   /**
    * Initializes Helius API client with an API key
    * @constructor
    * @param apiKey - API key generated at dev.helius.xyz
    */
-  constructor(apiKey: string, cluster: Cluster = "mainnet-beta") {
+  constructor(apiKey: string, cluster: Cluster = "mainnet-beta", id: string = "helius-sdk") {
     this.apiKey = apiKey;
     this.cluster = cluster;
     this.endpoint = heliusClusterApiUrl(apiKey, cluster);
     this.connection = new Connection(this.endpoint);
-    this.rpc = new RpcClient(this.connection);
-  }
-
+    this.rpc = new RpcClient(this.connection, id);
+   
+}
   /**
    * Retrieves a list of all webhooks associated with the current API key
    * @returns {Promise<Webhook[]>} a promise that resolves to an array of webhook objects
