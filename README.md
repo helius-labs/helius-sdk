@@ -170,7 +170,7 @@ helius.createCollectionWebhook({
 Note that the Collections.ABC enum references the collection query for this collection. It is just a convenience enum so that developers don't have to figure out whether to use firstVerifiedCreator or the Metaplex Certified Collection address ([see more about this here](https://docs.helius.xyz/api-reference/nft-collections-on-solana)). If you already know it for your collection, please make a PR :)
 
 ## DAS API
-Read more about the DAS API from our docs, [here]("https://docs.helius.xyz/solana-compression/digital-asset-standard-das-api"). 
+Read more about the DAS API from our docs, [here](https://docs.helius.xyz/solana-compression/digital-asset-standard-das-api). 
 
 
 ### **getAsset**
@@ -180,13 +180,19 @@ import { Helius } from 'helius-sdk';
 
 async function run() {
     const helius = new Helius("HELIUS_API_KEY");
-    const response = await helius.rpc.getAsset({
-        id: "FNt6A9Mfnqbwc1tY7uwAguKQ1JcpBrxmhczDgbdJy5AC",
-    })
+    const response = await helius.rpc.getAsset("FNt6A9Mfnqbwc1tY7uwAguKQ1JcpBrxmhczDgbdJy5AC")
     console.log(response);
 }
 
 run();
+```
+getAsset batch calls.
+```ts
+    const ids = ["F9Lw3ki3hJ7PF9HQXsBzoY8GyE6sPoEZZdXJBsTTD2rk", "F9Lw3ki3hJ7PF9HQXsBzoY8GyE6sPoEZZdXJBsTTD2rk"]
+    const res = await helius.rpc.getAsset(ids)
+
+    const contents = res.map((item: any) => item.result?.content);
+    console.log("Contents:", contents);
 ```
 
 ### **getSignaturesForAsset**
