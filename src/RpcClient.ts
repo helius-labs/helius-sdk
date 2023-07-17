@@ -1,6 +1,3 @@
-const fetch = require("node-fetch")
-
-
 import {
   BlockhashWithExpiryBlockHeight,
   TransactionSignature,
@@ -14,29 +11,21 @@ import {
   Connection,
   ParsedAccountData,
 } from "@solana/web3.js";
-import {
-  AssetsByAuthority,
-  AssetsByCreator,
-  AssetsByGroup,
-  AssetsByOwner,
-  GetAsset,
-  GetAssetProof,
-  GetSignaturesForAsset,
-  SearchAssets,
-  getAssetProofResponse,
-  getAssetResponse,
-  getAssetResponseList,
-  getSignatureResponse,
-} from "./types/das-types";
+import { DAS } from "./types/das-types";
+
 export type SendAndConfirmTransactionResponse = {
   signature: TransactionSignature;
   confirmResponse: RpcResponseAndContext<SignatureResult>;
   blockhash: Blockhash;
   lastValidBlockHeight: number;
 };
+import axios from "axios";
 
 export class RpcClient {
-  constructor(protected readonly connection: Connection) { }
+  constructor(
+    protected readonly connection: Connection,
+    protected readonly id?: string
+  ) {}
 
   /**
    * Request an allocation of lamports to the specified address
@@ -148,181 +137,224 @@ export class RpcClient {
       throw new Error(`error calling getTokenHolders: ${e}`);
     }
   }
+
   /**
    * Get single asset. (Note: Helius enhances these responses with a CDN for better performance)
-   * @returns {Promise<getAssetResponse>}
+   * @param {DAS.GetAssetRequest | DAS.GetAssetRequest[]} id - Asset ID or an array of Asset IDs
+   * @returns {Promise<DAS.GetAssetResponse | DAS.GetAssetResponse[]>}
+   * @throws {Error}
    */
-  async getAsset(params: GetAsset): Promise<getAssetResponse> {
-    const url = `${this.connection.rpcEndpoint}`;
-    const response = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        jsonrpc: "2.0",
-        id: "my-id",
-        method: "getAsset",
-        params: params,
-      }),
-    });
-    const data = await response.json();
-    return data.result;
+  async getAsset(
+    id?: DAS.GetAssetRequest | string | string[]
+  ): Promise<DAS.GetAssetResponse[]> {
+    try {
+      const url = `${this.connection.rpcEndpoint}`;
+
+      let batch;
+      if (Array.isArray(id)) {
+        batch = id.map((e, i) => ({
+          jsonrpc: "2.0",
+          id: `${this.id}-${i}`,
+          method: "getAsset",
+          params: {
+            id: e,
+          },
+        }));
+      } else if (typeof id === "string") {
+        batch = [
+          {
+            jsonrpc: "2.0",
+            id: this.id,
+            method: "getAsset",
+            params: {
+              id: id,
+            },
+          },
+        ];
+      } else {
+        throw new Error("Invalid input. Expected string or array of strings.");
+      }
+
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(batch),
+      });
+
+      const result = await response.json();
+      return result as DAS.GetAssetResponse[];
+    } catch (error) {
+      throw new Error(`Error in getAsset: ${error}`);
+    }
   }
+
   /**
    * Get Asset proof.
-   * @returns {Promise<getAssetProofResponse>}
+   * @returns {Promise<DAS.GetAssetProofResponse>}
+   * @throws {Error}
    */
-  async getAssetProof(params: GetAssetProof): Promise<getAssetProofResponse> {
-    const url = `${this.connection.rpcEndpoint}`;
-    const response = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
+  async getAssetProof(
+    params: DAS.GetAssetProofRequest
+  ): Promise<DAS.GetAssetProofResponse> {
+    try {
+      const url = `${this.connection.rpcEndpoint}`;
+      const response = await axios.post(url, {
         jsonrpc: "2.0",
-        id: "my-id",
+        id: this.id,
         method: "getAssetProof",
         params: params,
-      }),
-    });
-    const data = await response.json();
-    return data.result;
+      });
+
+      const data = response.data;
+      return data.result as DAS.GetAssetProofResponse;
+    } catch (error) {
+      throw new Error(`Error in getAssetProof: ${error}`);
+    }
   }
+
   /**
    * Get Assets By group.
-   * @returns {Promise<getAssetResponseList>}
+   * @returns {Promise<DAS.GetAssetResponseList>}
+   * @throws { Error }
    */
-  async getAssetsByGroup(params: AssetsByGroup): Promise<getAssetResponseList> {
-    const url = `${this.connection.rpcEndpoint}`;
-    const response = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
+  async getAssetsByGroup(
+    params: DAS.AssetsByGroupRequest
+  ): Promise<DAS.GetAssetResponseList> {
+    try {
+      const url = `${this.connection.rpcEndpoint}`;
+      const response = await axios.post(url, {
         jsonrpc: "2.0",
-        id: "my-id",
+        id: this.id,
         method: "getAssetsByGroup",
         params: params,
-      }),
-    });
-    console.log(params);
-    const data = await response.json();
-    return data.result;
+      });
+
+      const data = response.data;
+      return data.result as DAS.GetAssetResponseList;
+    } catch (error) {
+      throw new Error(`Error in getAssetsByGroup: ${error}`);
+    }
   }
+
   /**
    * Get all assets (compressed and regular) for a public key.
-   * @returns {Promise<getAssetResponseList>}
+   * @returns {Promise<DAS.GetAssetResponseList>}
+   * @throws {Error}
    */
-  async getAssetsByOwner(params: AssetsByOwner): Promise<getAssetResponseList> {
-    const url = `${this.connection.rpcEndpoint}`;
-    const response = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
+  async getAssetsByOwner(
+    params: DAS.AssetsByOwnerRequest
+  ): Promise<DAS.GetAssetResponseList> {
+    try {
+      const url = `${this.connection.rpcEndpoint}`;
+      const response = await axios.post(url, {
         jsonrpc: "2.0",
-        id: "my-id",
+        id: this.id,
         method: "getAssetsByOwner",
         params: params,
-      }),
-    });
-    const data = await response.json();
-    return data.result;
+      });
+
+      const data = response.data;
+      return data.result as DAS.GetAssetResponseList;
+    } catch (error) {
+      throw new Error(`Error in getAssetsByOwner: ${error}`);
+    }
   }
+
   /**
-   * Get Assets by creator.
-   * @returns {Promise<getAssetResponseList>}
+   * Request assets for a given creator.
+   * @returns {Promise<DAS.GetAssetResponseList>}
+   * @throws {Error}
    */
   async getAssetsByCreator(
-    params: AssetsByCreator
-  ): Promise<getAssetResponseList> {
-    const url = `${this.connection.rpcEndpoint}`;
-    const response = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
+    params: DAS.AssetsByCreatorRequest
+  ): Promise<DAS.GetAssetResponseList> {
+    try {
+      const url = `${this.connection.rpcEndpoint}`;
+      const response = await axios.post(url, {
         jsonrpc: "2.0",
-        id: "my-id",
+        id: this.id,
         method: "getAssetsByCreator",
         params: params,
-      }),
-    });
-    const data = await response.json();
-    return data.result;
-  }
-  /**
-   *G Get assets by authority.
-   * @returns {Promise<getAssetResponseList>}
-   */
+      });
 
+      const data = response.data;
+      return data.result as DAS.GetAssetResponseList;
+    } catch (error) {
+      throw new Error(`Error in getAssetsByCreator: ${error}`);
+    }
+  }
+
+  /**
+   * Get assets by authority.
+   * @returns {Promise<DAS.GetAssetResponseList>}
+   * @throws {Error}
+   */
   async getAssetsByAuthority(
-    params: AssetsByAuthority
-  ): Promise<getAssetResponseList> {
-    const url = `${this.connection.rpcEndpoint}`;
-    const response = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
+    params: DAS.AssetsByAuthorityRequest
+  ): Promise<DAS.GetAssetResponseList> {
+    try {
+      const url = `${this.connection.rpcEndpoint}`;
+      const response = await axios.post(url, {
         jsonrpc: "2.0",
-        id: "my-id",
+        id: this.id,
         method: "getAssetsByAuthority",
         params: params,
-      }),
-    });
-    const data = await response.json();
-    return data.result;
+      });
+
+      const data = response.data;
+      return data.result as DAS.GetAssetResponseList;
+    } catch (error) {
+      throw new Error(`Error in getAssetsByAuthority: ${error}`);
+    }
   }
+
   /**
    * Search Assets
-   * @returns {Promise<getAssetResponseList>}
+   * @returns {Promise<DAS.GetAssetResponseList>}
+   * @throws {Error}
    */
-  async searchAssets(params: SearchAssets): Promise<getAssetResponseList> {
-    const url = `${this.connection.rpcEndpoint}`;
-    const response = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
+  async searchAssets(
+    params: DAS.SearchAssetsRequest
+  ): Promise<DAS.GetAssetResponseList> {
+    try {
+      const url = `${this.connection.rpcEndpoint}`;
+      const response = await axios.post(url, {
         jsonrpc: "2.0",
-        id: "my-id",
+        id: this.id,
         method: "searchAssets",
         params: params,
-      }),
-    });
-    const data = await response.json();
-    return data.result;
+      });
+
+      const data = response.data;
+      return data.result as DAS.GetAssetResponseList;
+    } catch (error) {
+      throw new Error(`Error in searchAssets: ${error}`);
+    }
   }
+
   /**
    * Get transaction history for the asset.
-   * @returns {Promise<getSignatureResponse>}
+   * @returns {Promise<GetSignatureForAssetResponse>}
+   * @throws {Error}
    */
-
   async getSignaturesForAsset(
-    params: GetSignaturesForAsset
-  ): Promise<getSignatureResponse> {
-    const url = `${this.connection.rpcEndpoint}`;
-    const response = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
+    params: DAS.GetSignaturesForAssetRequest
+  ): Promise<DAS.GetSignaturesForAssetResponse> {
+    try {
+      const url = `${this.connection.rpcEndpoint}`;
+      const response = await axios.post(url, {
         jsonrpc: "2.0",
-        id: "my-id",
+        id: this.id,
         method: "getSignaturesForAsset",
         params: params,
-      }),
-    });
-    const data = await response.json();
-    return data.result;
+      });
+
+      const data = response.data;
+      return data.result as DAS.GetSignaturesForAssetResponse;
+    } catch (error) {
+      throw new Error(`Error in getSignaturesForAsset: ${error}`);
+    }
   }
 }
