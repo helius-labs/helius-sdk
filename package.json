@@ -31,7 +31,5 @@
   },
   "dependencies": {
     "axios": "^1.2.3",
-    "fetch": "^1.1.0",
-    "node-fetch": "^3.3.1"
   }
 }
