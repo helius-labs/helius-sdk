@@ -140,26 +140,56 @@ export class RpcClient {
 
   /**
    * Get single asset. (Note: Helius enhances these responses with a CDN for better performance)
-   * @returns {Promise<DAS.GetAssetResponse>}
+   * @param {DAS.GetAssetRequest | DAS.GetAssetRequest[]} id - Asset ID or an array of Asset IDs
+   * @returns {Promise<DAS.GetAssetResponse | DAS.GetAssetResponse[]>}
    * @throws {Error}
    */
-  async getAsset(params: DAS.GetAssetRequest): Promise<DAS.GetAssetResponse> {
+  async getAsset(
+    id?: DAS.GetAssetRequest | string | string[]
+  ): Promise<DAS.GetAssetResponse[]> {
     try {
       const url = `${this.connection.rpcEndpoint}`;
-      const response = await axios.post(url, {
-        jsonrpc: "2.0",
-        id: this.id,
-        method: "getAsset",
-        params: params,
+
+      let batch;
+      if (Array.isArray(id)) {
+        batch = id.map((e, i) => ({
+          jsonrpc: "2.0",
+          id: `${this.id}-${i}`,
+          method: "getAsset",
+          params: {
+            id: e,
+          },
+        }));
+      } else if (typeof id === "string") {
+        batch = [
+          {
+            jsonrpc: "2.0",
+            id: this.id,
+            method: "getAsset",
+            params: {
+              id: id,
+            },
+          },
+        ];
+      } else {
+        throw new Error("Invalid input. Expected string or array of strings.");
+      }
+
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(batch),
       });
-      console.log(this.id);
-      const data = response.data;
-      return data.result as DAS.GetAssetResponse;
+
+      const result = await response.json();
+      return result as DAS.GetAssetResponse[];
     } catch (error) {
       throw new Error(`Error in getAsset: ${error}`);
     }
   }
-  
+
   /**
    * Get Asset proof.
    * @returns {Promise<DAS.GetAssetProofResponse>}
