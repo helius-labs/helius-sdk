@@ -143,48 +143,23 @@ export class RpcClient {
    * @returns {Promise<DAS.GetAssetResponse>}
    * @throws {Error}
    */
-  async getAsset(params: DAS.GetAssetRequest): Promise<DAS.GetAssetResponse | DAS.GetAssetResponse[]> {
-    const url = `${this.connection.rpcEndpoint}`;
-  
-    // Check if params.id is an array or not
-    if (Array.isArray(params.id)) {
-      // Process as an array of IDs
-      let batch = params.id.map((e, i) => ({
-        jsonrpc: '2.0',
-        id: `my-id-${i}`,
-        method: 'getAsset',
-        params: {
-          id: e
-        }
-      }));
-  
-      try {
-        const response = await axios.post(url, batch);
-        const data = response.data;
-        // assuming data is an array of results
-        // map each result to its corresponding DAS.GetAssetResponse
-        return data.map((result: any) => result.result as DAS.GetAssetResponse);
-      } catch (error) {
-        throw new Error(`Error in getAsset (Batch): ${error}`);
-      }
-  
-    } else {
-      // Process as a single ID
-      try {
-        const response = await axios.post(url, {
-          jsonrpc: "2.0",
-          id: this.id,
-          method: "getAsset",
-          params: params,
-        });
-        const data = response.data;
-        return data.result as DAS.GetAssetResponse;
-      } catch (error) {
-        throw new Error(`Error in getAsset (Single): ${error}`);
-      }
+  async getAsset(params: DAS.GetAssetRequest): Promise<DAS.GetAssetResponse> {
+    try {
+      const url = `${this.connection.rpcEndpoint}`;
+      const response = await axios.post(url, {
+        jsonrpc: "2.0",
+        id: this.id,
+        method: "getAsset",
+        params: params,
+      });
+      console.log(this.id);
+      const data = response.data;
+      return data.result as DAS.GetAssetResponse;
+    } catch (error) {
+      throw new Error(`Error in getAsset: ${error}`);
     }
   }
-
+  
   /**
    * Get Asset proof.
    * @returns {Promise<DAS.GetAssetProofResponse>}
