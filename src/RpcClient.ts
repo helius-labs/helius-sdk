@@ -149,41 +149,39 @@ export class RpcClient {
   ): Promise<DAS.GetAssetResponse[]> {
     try {
       const url = `${this.connection.rpcEndpoint}`;
-
+  
       let batch;
       if (Array.isArray(id)) {
         batch = id.map((e, i) => ({
-          jsonrpc: "2.0",
+          jsonrpc: '2.0',
           id: `${this.id}-${i}`,
-          method: "getAsset",
+          method: 'getAsset',
           params: {
             id: e,
           },
         }));
-      } else if (typeof id === "string") {
+      } else if (typeof id === 'string') {
         batch = [
           {
-            jsonrpc: "2.0",
+            jsonrpc: '2.0',
             id: this.id,
-            method: "getAsset",
+            method: 'getAsset',
             params: {
               id: id,
             },
           },
         ];
       } else {
-        throw new Error("Invalid input. Expected string or array of strings.");
+        throw new Error('Invalid input. Expected string or array of strings.');
       }
-
-      const response = await fetch(url, {
-        method: "POST",
+  
+      const response = await axios.post(url, batch, {
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
-        body: JSON.stringify(batch),
       });
-
-      const result = await response.json();
+  
+      const result = response.data;
       return result as DAS.GetAssetResponse[];
     } catch (error) {
       throw new Error(`Error in getAsset: ${error}`);
