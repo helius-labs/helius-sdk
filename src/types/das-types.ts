@@ -1,51 +1,52 @@
-// Types for DAS
-
+// Types for DAS //
 import {
   AssetSortBy,
   AssetSortDirection,
-  DASInterface,
-  DASScope,
-  DasContext,
+  Interface,
+  Scope,
+  Context,
   OwnershipModel,
   RoyaltyModel,
   UseMethods,
 } from "./enums";
 
-export type DASOption<T> = T | null;
-
+export namespace DAS { 
 // getAssetsByOwner //
-export interface AssetsByOwner {
+export interface AssetsByOwnerRequest {
   ownerAddress: string;
   page: number;
   limit?: number;
   before?: string;
   after?: string;
-  sortBy?: DASAssetSortingRequest;
+  sortBy?: AssetSortingRequest;
 }
 
 // getAssetsByCreator //
-export type AssetsByCreator = {
+export type AssetsByCreatorRequest = {
   creatorAddress: string;
   page: number;
   onlyVerified?: boolean;
   limit?: number;
   before?: string;
   after?: string;
-  sortBy?: DASAssetSortingRequest;
+  sortBy?: AssetSortingRequest;
 };
 // getAssetsByGroup //
-export type AssetsByGroup = {
+export type AssetsByGroupRequest = {
   groupValue: string;
   groupKey: string;
   page: number;
   limit?: number;
   before?: string;
   after?: string;
-  sortBy?: DASAssetSortingRequest;
+  sortBy?: AssetSortingRequest;
+};
+export type GetAssetsBatchRequest = {
+  ids: string[];
 };
 
 // searchAssets
-export interface SearchAssets {
+export interface SearchAssetsRequest {
   page: number; // starts at 1
   limit?: number;
   before?: string;
@@ -55,7 +56,7 @@ export interface SearchAssets {
   jsonUri?: string;
   grouping?: string;
   burnt?: boolean;
-  sortBy?: DASAssetSortingRequest;
+  sortBy?: AssetSortingRequest;
   frozen?: boolean;
   supplyMint?: string;
   supply?: number;
@@ -70,24 +71,24 @@ export interface SearchAssets {
 }
 
 // getAssetsByAuthority
-export type AssetsByAuthority = {
+export type AssetsByAuthorityRequest = {
   authorityAddress: string;
   page: number;
   limit?: number;
   before?: string;
   after?: string;
-  sortBy?: DASAssetSortingRequest;
+  sortBy?: AssetSortingRequest;
 };
 // getAsset
-export type GetAsset = {
-  id: string;
+export type GetAssetRequest = {
+  id: string | string[];
 };
 // getAssetProof
-export type GetAssetProof = {
+export type GetAssetProofRequest = {
   id: string;
 };
 // getSignaturesForAsset
-export type GetSignaturesForAsset = {
+export type GetSignaturesForAssetRequest = {
   id: string;
   page: number;
   limit?: number;
@@ -96,85 +97,85 @@ export type GetSignaturesForAsset = {
 };
 
 // Sorting on response
-export interface DASAssetSorting {
+export interface AssetSorting {
   sort_by: AssetSortBy;
   sort_direction: AssetSortDirection;
 }
 // Sorting on request (camelCase)
-export type DASAssetSortingRequest = {
+export type AssetSortingRequest = {
   sortBy: AssetSortBy;
   sortDirection: AssetSortDirection;
 };
 // Asset Response
-export type getAssetResponse = {
-  interface: DASInterface; // enum
+export type GetAssetResponse = {
+  interface: Interface; // enum
   id: string;
-  content: DASOption<DASContent>;
-  authorities: DASOption<DASAuthorities>;
-  compression: DASOption<DASCompression>;
-  grouping: DASOption<DASGrouping>;
-  royalty: DASOption<DASRoyalty>;
-  ownership: DASOwnership;
-  creators: DASOption<Array<DASCreators>>;
-  uses: DASOption<DASUses>;
-  supply: DASOption<DASSupply>;
+  content?: Content;
+  authorities?: Authorities;
+  compression?: Compression;
+  grouping?: Grouping;
+  royalty?: Royalty;
+  ownership: Ownership;
+  creators?: Array<Creators>;
+  uses?: Uses;
+  supply?: Supply;
   mutable: boolean;
   burnt: boolean;
 };
 
-export type getAssetResponseList = {
+export type GetAssetResponseList = {
   total: number;
   limit: number;
   page: number;
-  items: getAssetResponse[];
+  items: GetAssetResponse[];
 };
-export interface getAssetProofResponse {
+export interface GetAssetProofResponse {
   root: string;
   proof: Array<string>;
   node_index: number;
   leaf: string;
   tree_id: string;
 }
-export interface getSignatureResponse {
+export interface GetSignaturesForAssetResponse {
   total: number;
   limit: number;
-  page: DASOption<number>;
-  before: DASOption<string>;
-  after: DASOption<string>;
+  page?: number;
+  before?: string;
+  after?: string;
   items: Array<Array<string>>;
 }
 
 // Ownership --
-export interface DASOwnership {
+export interface Ownership {
   frozen: boolean;
   delegated: boolean;
-  delegate: DASOption<string>;
+  delegate?: string;
   ownership_model: OwnershipModel; // enum
   owner: string;
 }
 // Supply --
-export interface DASSupply {
+export interface Supply {
   print_max_supply: number;
   print_current_supply: number;
-  edition_nonce: DASOption<number>;
+  edition_nonce?: number;
 }
 // Uses --
-export interface DASUses {
+export interface Uses {
   use_method: UseMethods; // enum
   remaining: number;
   total: number;
 }
 
 // Creators --
-export interface DASCreators {
+export interface Creators {
   address: string;
   share: number;
   verified: boolean;
 }
 // Royalty --
-export interface DASRoyalty {
+export interface Royalty {
   royalty_model: RoyaltyModel;
-  target: DASOption<string>;
+  target?: string;
   percent: number;
   basis_points: number;
   primary_sale_happened: boolean;
@@ -182,63 +183,63 @@ export interface DASRoyalty {
 }
 
 // Grouping --
-export interface DASGrouping {
+export interface Grouping {
   group_key: string;
   group_value: string;
-  [Symbol.iterator](): Iterator<DASGrouping>;
+  [Symbol.iterator](): Iterator<Grouping>;
 }
 // Authorities --
-export interface DASAuthorities {
+export interface Authorities {
   address: string;
-  scopes: Array<DASScope>;
-  [Symbol.iterator](): Iterator<DASAuthorities>;
+  scopes: Array<Scope>;
+  [Symbol.iterator](): Iterator<Authorities>;
 }
 
 //Links
-export type DASLinks = {
-  external_url: DASOption<string>;
-  image: DASOption<string>;
-  animation_url: DASOption<string>;
-  [Symbol.iterator](): Iterator<DASLinks>;
+export type Links = {
+  external_url?: string;
+  image?: string;
+  animation_url?: string;
+  [Symbol.iterator](): Iterator<Links>;
 };
 
 // Content --
-export interface DASContent {
+export interface Content {
   $schema: string;
   json_uri: string;
-  files: DASOption<DASFiles>;
-  metadata: DASMetadata;
-  links: DASOption<DASLinks>;
+  files?: Files;
+  metadata: Metadata;
+  links?: Links;
 }
 
 // FILE --
-export interface DASFile {
-  uri: DASOption<string>;
-  mime: DASOption<string>;
-  quality: DASOption<DASFileQuality>;
-  contexts: DASOption<DasContext[]>;
-  [Symbol.iterator](): Iterator<DASFile>;
+export interface File {
+  uri?: string;
+  mime?: string;
+  quality?: FileQuality;
+  contexts?: Context[];
+  [Symbol.iterator](): Iterator<File>;
 }
 // FILES --
-export type DASFiles = DASOption<DASFile>;
+export type Files = File;
 // Quality/ File --
-export interface DASFileQuality {
+export interface FileQuality {
   schema: string;
 }
 // Metadata/ Content --
-export interface DASMetadata {
-  attributes?: DASAttribute[];
+export interface Metadata {
+  attributes?: Attribute[];
   description: string;
   name: string;
   symbol: string;
 }
 // Attributes
-export interface DASAttribute {
+export interface Attribute {
   value: string;
   trait_type: string;
 }
 // Compression
-export interface DASCompression {
+export interface Compression {
   eligible: boolean;
   compressed: boolean;
   data_hash: string;
@@ -249,3 +250,4 @@ export interface DASCompression {
   leaf_id: number;
 }
 // End of DAS
+}
