@@ -1,5 +1,3 @@
-import axios from "axios";
-
 import {
   BlockhashWithExpiryBlockHeight,
   TransactionSignature,
@@ -13,20 +11,7 @@ import {
   Connection,
   ParsedAccountData,
 } from "@solana/web3.js";
-import {
-  AssetsByAuthority,
-  AssetsByCreator,
-  AssetsByGroup,
-  AssetsByOwner,
-  GetAsset,
-  GetAssetProof,
-  GetSignaturesForAsset,
-  SearchAssets,
-  getAssetProofResponse,
-  getAssetResponse,
-  getAssetResponseList,
-  getSignatureResponse,
-} from "./types/das-types";
+import { DAS } from "./types/das-types";
 
 export type SendAndConfirmTransactionResponse = {
   signature: TransactionSignature;
@@ -34,9 +19,13 @@ export type SendAndConfirmTransactionResponse = {
   blockhash: Blockhash;
   lastValidBlockHeight: number;
 };
+import axios from "axios";
 
 export class RpcClient {
-  constructor(protected readonly connection: Connection) { }
+  constructor(
+    protected readonly connection: Connection,
+    protected readonly id?: string
+  ) {}
 
   /**
    * Request an allocation of lamports to the specified address
@@ -151,43 +140,76 @@ export class RpcClient {
 
   /**
    * Get single asset. (Note: Helius enhances these responses with a CDN for better performance)
-   * @returns {Promise<getAssetResponse>}
+   * @returns {Promise<DAS.GetAssetResponse>}
    * @throws {Error}
    */
-  async getAsset(params: GetAsset): Promise<getAssetResponse> {
+  async getAsset(params: DAS.GetAssetRequest): Promise<DAS.GetAssetResponse> {
     try {
       const url = `${this.connection.rpcEndpoint}`;
       const response = await axios.post(url, {
         jsonrpc: "2.0",
-        id: "my-id",
+        id: this.id,
         method: "getAsset",
         params: params,
       });
-
+      console.log(this.id);
       const data = response.data;
-      return data.result as getAssetResponse;
+      return data.result as DAS.GetAssetResponse;
     } catch (error) {
       throw new Error(`Error in getAsset: ${error}`);
+    }
+  }
+  /**
+   * Get single asset. (Note: Helius enhances these responses with a CDN for better performance)
+   * @returns {Promise<DAS.GetAssetResponse>}
+   * @throws {Error}
+   */
+  async getAssetsBatch(
+    params: DAS.GetAssetsBatchRequest
+  ): Promise<DAS.GetAssetResponse[]> {
+    try {
+      const url = `${this.connection.rpcEndpoint}`;
+
+      let batch = params.ids.map((e, i) => ({
+        jsonrpc: "2.0",
+        id: `my-id-${i}`,
+        method: "getAsset",
+        params: {
+          id: e,
+        },
+      }));
+
+      const response = await axios.post(url, batch);
+
+      const data = response.data;
+
+      // assuming data is an array of results
+      // map each result to its corresponding DAS.GetAssetResponse
+      return data.map((result: any) => result.result as DAS.GetAssetResponse[]);
+    } catch (error) {
+      throw new Error(`Error in getAssetsBatch: ${error}`);
     }
   }
 
   /**
    * Get Asset proof.
-   * @returns {Promise<getAssetProofResponse>}
+   * @returns {Promise<DAS.GetAssetProofResponse>}
    * @throws {Error}
    */
-  async getAssetProof(params: GetAssetProof): Promise<getAssetProofResponse> {
+  async getAssetProof(
+    params: DAS.GetAssetProofRequest
+  ): Promise<DAS.GetAssetProofResponse> {
     try {
       const url = `${this.connection.rpcEndpoint}`;
       const response = await axios.post(url, {
         jsonrpc: "2.0",
-        id: "my-id",
+        id: this.id,
         method: "getAssetProof",
         params: params,
       });
 
       const data = response.data;
-      return data.result as getAssetProofResponse;
+      return data.result as DAS.GetAssetProofResponse;
     } catch (error) {
       throw new Error(`Error in getAssetProof: ${error}`);
     }
@@ -195,21 +217,23 @@ export class RpcClient {
 
   /**
    * Get Assets By group.
-   * @returns {Promise<getAssetResponseList>}
+   * @returns {Promise<DAS.GetAssetResponseList>}
    * @throws { Error }
    */
-  async getAssetsByGroup(params: AssetsByGroup): Promise<getAssetResponseList> {
+  async getAssetsByGroup(
+    params: DAS.AssetsByGroupRequest
+  ): Promise<DAS.GetAssetResponseList> {
     try {
       const url = `${this.connection.rpcEndpoint}`;
       const response = await axios.post(url, {
         jsonrpc: "2.0",
-        id: "my-id",
+        id: this.id,
         method: "getAssetsByGroup",
         params: params,
       });
 
       const data = response.data;
-      return data.result as getAssetResponseList;
+      return data.result as DAS.GetAssetResponseList;
     } catch (error) {
       throw new Error(`Error in getAssetsByGroup: ${error}`);
     }
@@ -217,46 +241,47 @@ export class RpcClient {
 
   /**
    * Get all assets (compressed and regular) for a public key.
-   * @returns {Promise<getAssetResponseList>}
+   * @returns {Promise<DAS.GetAssetResponseList>}
    * @throws {Error}
    */
-  async getAssetsByOwner(params: AssetsByOwner): Promise<getAssetResponseList> {
+  async getAssetsByOwner(
+    params: DAS.AssetsByOwnerRequest
+  ): Promise<DAS.GetAssetResponseList> {
     try {
       const url = `${this.connection.rpcEndpoint}`;
       const response = await axios.post(url, {
         jsonrpc: "2.0",
-        id: "my-id",
+        id: this.id,
         method: "getAssetsByOwner",
         params: params,
       });
 
       const data = response.data;
-      return data.result as getAssetResponseList;
+      return data.result as DAS.GetAssetResponseList;
     } catch (error) {
       throw new Error(`Error in getAssetsByOwner: ${error}`);
     }
   }
 
   /**
-
-   * Get Assets by creator.
-   * @returns {Promise<getAssetResponseList>}
+   * Request assets for a given creator.
+   * @returns {Promise<DAS.GetAssetResponseList>}
    * @throws {Error}
    */
   async getAssetsByCreator(
-    params: AssetsByCreator
-  ): Promise<getAssetResponseList> {
+    params: DAS.AssetsByCreatorRequest
+  ): Promise<DAS.GetAssetResponseList> {
     try {
       const url = `${this.connection.rpcEndpoint}`;
       const response = await axios.post(url, {
         jsonrpc: "2.0",
-        id: "my-id",
+        id: this.id,
         method: "getAssetsByCreator",
         params: params,
       });
 
       const data = response.data;
-      return data.result as getAssetResponseList;
+      return data.result as DAS.GetAssetResponseList;
     } catch (error) {
       throw new Error(`Error in getAssetsByCreator: ${error}`);
     }
@@ -264,24 +289,23 @@ export class RpcClient {
 
   /**
    * Get assets by authority.
-
-   * @returns {Promise<getAssetResponseList>}
+   * @returns {Promise<DAS.GetAssetResponseList>}
    * @throws {Error}
    */
   async getAssetsByAuthority(
-    params: AssetsByAuthority
-  ): Promise<getAssetResponseList> {
+    params: DAS.AssetsByAuthorityRequest
+  ): Promise<DAS.GetAssetResponseList> {
     try {
       const url = `${this.connection.rpcEndpoint}`;
       const response = await axios.post(url, {
         jsonrpc: "2.0",
-        id: "my-id",
+        id: this.id,
         method: "getAssetsByAuthority",
         params: params,
       });
 
       const data = response.data;
-      return data.result as getAssetResponseList;
+      return data.result as DAS.GetAssetResponseList;
     } catch (error) {
       throw new Error(`Error in getAssetsByAuthority: ${error}`);
     }
@@ -289,21 +313,23 @@ export class RpcClient {
 
   /**
    * Search Assets
-   * @returns {Promise<getAssetResponseList>}
+   * @returns {Promise<DAS.GetAssetResponseList>}
    * @throws {Error}
    */
-  async searchAssets(params: SearchAssets): Promise<getAssetResponseList> {
+  async searchAssets(
+    params: DAS.SearchAssetsRequest
+  ): Promise<DAS.GetAssetResponseList> {
     try {
       const url = `${this.connection.rpcEndpoint}`;
       const response = await axios.post(url, {
         jsonrpc: "2.0",
-        id: "my-id",
+        id: this.id,
         method: "searchAssets",
         params: params,
       });
 
       const data = response.data;
-      return data.result as getAssetResponseList;
+      return data.result as DAS.GetAssetResponseList;
     } catch (error) {
       throw new Error(`Error in searchAssets: ${error}`);
     }
@@ -311,23 +337,23 @@ export class RpcClient {
 
   /**
    * Get transaction history for the asset.
-   * @returns {Promise<getSignatureResponse>}
+   * @returns {Promise<GetSignatureForAssetResponse>}
    * @throws {Error}
    */
   async getSignaturesForAsset(
-    params: GetSignaturesForAsset
-  ): Promise<getSignatureResponse> {
+    params: DAS.GetSignaturesForAssetRequest
+  ): Promise<DAS.GetSignaturesForAssetResponse> {
     try {
       const url = `${this.connection.rpcEndpoint}`;
       const response = await axios.post(url, {
         jsonrpc: "2.0",
-        id: "my-id",
+        id: this.id,
         method: "getSignaturesForAsset",
         params: params,
       });
 
       const data = response.data;
-      return data.result as getSignatureResponse;
+      return data.result as DAS.GetSignaturesForAssetResponse;
     } catch (error) {
       throw new Error(`Error in getSignaturesForAsset: ${error}`);
     }
