@@ -144,9 +144,9 @@ export class RpcClient {
    * @returns {Promise<DAS.GetAssetResponse | DAS.GetAssetResponse[]>}
    * @throws {Error}
    */
-  async getAsset(
-    id?: DAS.GetAssetRequest | string | string[]
-  ): Promise<DAS.GetAssetResponse[]> {
+ async getAsset<T extends DAS.GetAssetRequest | string | string[]>(
+  id: T
+): Promise<T extends string[] ? DAS.GetAssetResponse[] : DAS.GetAssetResponse>  {
     try {
       const url = `${this.connection.rpcEndpoint}`;
   
@@ -163,12 +163,12 @@ export class RpcClient {
       } else if (typeof id === 'string') {
         batch = [
           {
-            jsonrpc: '2.0',
-            id: this.id,
-            method: 'getAsset',
-            params: {
-              id: id,
-            },
+              jsonrpc: '2.0',
+              id: this.id,
+              method: 'getAsset',
+              params: {
+                id: id,
+              },
           },
         ];
       } else {
@@ -181,13 +181,12 @@ export class RpcClient {
         },
       });
   
-      const result = response.data;
-      return result as DAS.GetAssetResponse[];
+      const result = response.data[0].result;
+      return result as T extends string[] ? DAS.GetAssetResponse[] : DAS.GetAssetResponse;
     } catch (error) {
       throw new Error(`Error in getAsset: ${error}`);
     }
   }
-
   /**
    * Get Asset proof.
    * @returns {Promise<DAS.GetAssetProofResponse>}

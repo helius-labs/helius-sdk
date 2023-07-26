@@ -111,12 +111,12 @@ export type GetAssetResponse = {
   interface: Interface; // enum
   id: string;
   content?: Content;
-  authorities?: Authorities;
+  authorities?: Authorities[];
   compression?: Compression;
-  grouping?: Grouping;
+  grouping?: Grouping[];
   royalty?: Royalty;
   ownership: Ownership;
-  creators?: Array<Creators>;
+  creators?: Creators[];
   uses?: Uses;
   supply?: Supply;
   mutable: boolean;
@@ -165,7 +165,6 @@ export interface Uses {
   remaining: number;
   total: number;
 }
-
 // Creators --
 export interface Creators {
   address: string;
@@ -181,7 +180,6 @@ export interface Royalty {
   primary_sale_happened: boolean;
   locked: boolean;
 }
-
 // Grouping --
 export interface Grouping {
   group_key: string;
@@ -221,7 +219,7 @@ export interface File {
   [Symbol.iterator](): Iterator<File>;
 }
 // FILES --
-export type Files = File;
+export type Files = File[];
 // Quality/ File --
 export interface FileQuality {
   schema: string;
