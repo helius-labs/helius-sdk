@@ -29,6 +29,80 @@ export interface Webhook {
   txnStatus?: TxnStatus;
   encoding?: AccountWebhookEncoding;
 }
+// Enhanced and Account webhook response
+export interface EnhancedWebhookResponse {
+  accountData: AccountData[];
+  description: string;
+  events: Event;
+  fee: number;
+  feePayer: string;
+  instructions: Instruction[];
+  nativeTransfers: NativeTransfer[] | null;
+  signature: string;
+  slot: number;
+  source: string;
+  timestamp: number;
+  tokenTransfers: TokenTransfer[];
+  transactionError: TransactionError | null;
+  type: string;
+}
+export interface RawWebhookResponse {
+  blockTime: number;
+  indexWithinBlock: number;
+  meta: {
+    err: null | string;
+    fee: number;
+    innerInstructions: {
+      index: number;
+      instructions: {
+        accounts: number[];
+        data: string;
+        programIdIndex: number;
+      }[];
+    }[];
+    loadedAddresses: {
+      readonly: string[];
+      writable: string[];
+    };
+    logMessages: string[];
+    postBalances: number[];
+    postTokenBalances: {
+      accountIndex: number;
+      mint: string;
+      owner: string;
+      programId: string;
+      uiTokenAmount: {
+        amount: string;
+        decimals: number;
+        uiAmount: number;
+        uiAmountString: string;
+      };
+    }[];
+    preBalances: number[];
+    preTokenBalances: any[];
+    rewards: any[]; 
+  };
+  slot: number;
+  transaction: {
+    message: {
+      accountKeys: string[];
+      addressTableLookups: null | any;
+      header: {
+        numReadonlySignedAccounts: number;
+        numReadonlyUnsignedAccounts: number;
+        numRequiredSignatures: number;
+      };
+      instructions: {
+        accounts: number[];
+        data: string;
+        programIdIndex: number;
+      }[];
+      recentBlockhash: string;
+    };
+    signatures: string[];
+  };
+  version: string;
+}
 
 export type CollectionIdentifier = {
   firstVerifiedCreators?: string[];
@@ -37,6 +111,7 @@ export type CollectionIdentifier = {
 
 export type CreateWebhookRequest = Omit<Webhook, "webhookID" | "wallet" | "project">;
 export type EditWebhookRequest = Partial<Omit<Webhook, "webhookID" | "wallet" | "project">>;
+
 
 export interface CreateCollectionWebhookRequest extends CreateWebhookRequest {
   collectionQuery: CollectionIdentifier;
