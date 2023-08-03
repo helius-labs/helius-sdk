@@ -46,7 +46,8 @@ export interface EnhancedWebhookResponse {
   transactionError: TransactionError | null;
   type: string;
 }
-export interface RawWebhookResponse {
+// Raw Webhook Response. 
+export interface RawWebhookRespone {
   blockTime: number;
   indexWithinBlock: number;
   meta: {
