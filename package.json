@@ -1,6 +1,6 @@
 {
   "name": "helius-sdk",
-  "version": "1.0.12",
+  "version": "1.0.13",
   "description": "SDK for the Helius API (https://helius.xyz)",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
