@@ -47,7 +47,7 @@ export interface EnhancedWebhookResponse {
   type: string;
 }
 // Raw Webhook Response. 
-export interface RawWebhookRespone {
+export interface RawWebhookResponse {
   blockTime: number;
   indexWithinBlock: number;
   meta: {
