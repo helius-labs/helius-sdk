@@ -109,7 +109,9 @@ export type CollectionIdentifier = {
   firstVerifiedCreators?: string[];
   verifiedCollectionAddresses?: string[];
 };
-
+export interface MintCNFTResponse { 
+  signature: string;
+}
 export type CreateWebhookRequest = Omit<Webhook, "webhookID" | "wallet" | "project">;
 export type EditWebhookRequest = Partial<Omit<Webhook, "webhookID" | "wallet" | "project">>;
 
@@ -267,4 +269,32 @@ export interface EnrichedTransaction {
   transactionError: TransactionError | null;
   instructions: Instruction[];
   events: TransactionEvent;
+}
+
+// Compressed Types for Mint
+export type RequiredMetadataArgs = { 
+  name: string;
+  symbol: string;
+  uri: string;
+  sellerFeeBasisPoints?: number | null;
+  creators?: [] | null;
+  collection?: [] | null;
+}
+export type MetadataArgs = {
+  primarySaleHappened: boolean;
+  isMutable: boolean;
+  editionNonce: number;
+  tokenStandard: null;
+  uses: null;
+  tokenProgramVersion: null;
+};
+export interface MintCNFTResponse {
+  creator: string;
+  collectionName: string;
+  collectionUri: string;
+  collectionSymbol: string;
+  collectionMint: string;
+  treeId: string;
+  treeKeypair: any,
+  signature: string;
 }

@@ -2,7 +2,6 @@ import {
   BlockhashWithExpiryBlockHeight,
   TransactionSignature,
   Commitment,
-  PublicKey,
   AccountInfo,
   GetLatestBlockhashConfig,
   RpcResponseAndContext,
@@ -10,8 +9,23 @@ import {
   Blockhash,
   Connection,
   ParsedAccountData,
+  Keypair,
+  PublicKey,
 } from "@solana/web3.js";
 import { DAS } from "./types/das-types";
+import { 
+  MetadataArgs, 
+  MintCNFTResponse, 
+  RequiredMetadataArgs
+} from "./types";
+import axios from "axios";
+import {
+  existingCollection,
+  initCollection,
+  initTree,
+  loadWallet,
+  mintCompressedNft,
+} from "./utils/compression";
 
 export type SendAndConfirmTransactionResponse = {
   signature: TransactionSignature;
@@ -19,7 +33,13 @@ export type SendAndConfirmTransactionResponse = {
   blockhash: Blockhash;
   lastValidBlockHeight: number;
 };
-import axios from "axios";
+export type MintCNFTRequest = {
+  metadataArgs: RequiredMetadataArgs;
+  ownerKeypair: string;
+  treeKeypair?: string;
+  collectionMint?: PublicKey;
+  transferWallet?: PublicKey;
+};
 
 export class RpcClient {
   constructor(
@@ -144,45 +164,49 @@ export class RpcClient {
    * @returns {Promise<DAS.GetAssetResponse | DAS.GetAssetResponse[]>}
    * @throws {Error}
    */
- async getAsset<T extends DAS.GetAssetRequest | string | string[]>(
-  id: T
-): Promise<T extends string[] ? DAS.GetAssetResponse[] : DAS.GetAssetResponse>  {
+  async getAsset<T extends DAS.GetAssetRequest | string | string[]>(
+    id: T
+  ): Promise<
+    T extends string[] ? DAS.GetAssetResponse[] : DAS.GetAssetResponse
+  > {
     try {
       const url = `${this.connection.rpcEndpoint}`;
-  
+
       let batch;
       if (Array.isArray(id)) {
         batch = id.map((e, i) => ({
-          jsonrpc: '2.0',
+          jsonrpc: "2.0",
           id: `${this.id}-${i}`,
-          method: 'getAsset',
+          method: "getAsset",
           params: {
             id: e,
           },
         }));
-      } else if (typeof id === 'string') {
+      } else if (typeof id === "string") {
         batch = [
           {
-              jsonrpc: '2.0',
-              id: this.id,
-              method: 'getAsset',
-              params: {
-                id: id,
-              },
+            jsonrpc: "2.0",
+            id: this.id,
+            method: "getAsset",
+            params: {
+              id: id,
+            },
           },
         ];
       } else {
-        throw new Error('Invalid input. Expected string or array of strings.');
+        throw new Error("Invalid input. Expected string or array of strings.");
       }
-  
+
       const response = await axios.post(url, batch, {
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
       });
-  
+
       const result = response.data[0].result;
-      return result as T extends string[] ? DAS.GetAssetResponse[] : DAS.GetAssetResponse;
+      return result as T extends string[]
+        ? DAS.GetAssetResponse[]
+        : DAS.GetAssetResponse;
     } catch (error) {
       throw new Error(`Error in getAsset: ${error}`);
     }
@@ -352,6 +376,96 @@ export class RpcClient {
       return data.result as DAS.GetSignaturesForAssetResponse;
     } catch (error) {
       throw new Error(`Error in getSignaturesForAsset: ${error}`);
+    }
+  }
+  /**
+   * Mint a compressed NFT.
+   * @returns {Promise<MintCNFTResponse>}
+   * @throws {Error}
+   */
+  async mintCNFT(
+    request: MintCNFTRequest
+  ): Promise<MintCNFTResponse | undefined> {
+    try {
+      let ownerKeypair = loadWallet(request.ownerKeypair);
+      let defaultMetadataArgs: MetadataArgs = {
+        ...request.metadataArgs,
+        primarySaleHappened: false,
+        isMutable: false,
+        editionNonce: 0,
+        tokenStandard: null,
+        uses: null,
+        tokenProgramVersion: null,
+      };
+      let treeWallet: Keypair;
+      if (!request.treeKeypair) {
+        treeWallet = Keypair.generate();
+        await initTree(this.connection, ownerKeypair, treeWallet);
+        console.log("New Merkle Tree Private Key: ", treeWallet.secretKey);
+      } else {
+        treeWallet = loadWallet(request.treeKeypair);
+      }
+      let collectionMint: PublicKey;
+      if (!request.collectionMint) {
+        const {
+          collectionMint,
+          collectionMetadataAccount,
+          collectionMasterEditionAccount,
+        } = await initCollection(
+          this.connection,
+          ownerKeypair,
+          request.metadataArgs.name,
+          request.metadataArgs.symbol,
+          request.metadataArgs.uri
+        );
+        const signature = await mintCompressedNft(
+          this.connection,
+          defaultMetadataArgs,
+          request.ownerKeypair,
+          treeWallet,
+          collectionMint,
+          collectionMetadataAccount,
+          collectionMasterEditionAccount,
+        );
+        const response: MintCNFTResponse = {
+          creator: request.ownerKeypair,
+          collectionName: request.metadataArgs.name,
+          collectionSymbol: request.metadataArgs.symbol,
+          collectionUri: request.metadataArgs.uri,
+          collectionMint: collectionMint.toString(),
+          treeId: treeWallet.publicKey.toString(),
+          treeKeypair: treeWallet.secretKey,
+          signature: signature,
+        };
+        return response as MintCNFTResponse;
+      } else {
+        collectionMint = request.collectionMint;
+        const { collectionMetadataAccount, collectionMasterEditionAccount } =
+          await existingCollection(collectionMint);
+        const signature = await mintCompressedNft(
+          this.connection,
+          defaultMetadataArgs,
+          request.ownerKeypair,
+          treeWallet,
+          collectionMint,
+          collectionMetadataAccount,
+          collectionMasterEditionAccount,
+        );
+
+        const response: MintCNFTResponse = {
+          creator: request.ownerKeypair,
+          collectionName: request.metadataArgs.name,
+          collectionUri: request.metadataArgs.uri,
+          collectionSymbol: request.metadataArgs.symbol,
+          collectionMint: collectionMint.toString(),
+          treeId: treeWallet.publicKey.toString(),
+          treeKeypair: treeWallet.secretKey,
+          signature: signature,
+        };
+        return response as MintCNFTResponse;
+      }
+    } catch (e) {
+      throw new Error(`Error in minting cNFT: ${e}`);
     }
   }
 }

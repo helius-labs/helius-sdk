@@ -30,6 +30,9 @@
     "typescript": "^4.9.4"
   },
   "dependencies": {
+    "@metaplex-foundation/mpl-bubblegum": "^0.7.0",
+    "@solana/spl-account-compression": "^0.1.10",
+    "@solana/spl-token": "^0.3.8",
     "axios": "^1.2.3"
   }
 }
