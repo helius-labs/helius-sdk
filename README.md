@@ -313,6 +313,47 @@ async function run() {
 run();
 ```
 
+## Mint Compressed NFT
+```ts
+import { Helius } from 'helius-sdk';
+// define your mint parameters
+async function run() {
+    const helius = new Helius("api-key");
+    const response = await helius.rpc.mintCNFT({
+        metadataArgs: {
+            name: "Compression Test",
+            symbol: "COMP",
+            uri: "https://arweave.net/gfO_TkYttQls70pTmhrdMDz9pfMUXX8hZkaoIivQjGs",
+          },
+        ownerKeypair: 'wallet.json'
+      })
+    console.log(response.signature)
+}
+run();
+```
+## Mint Compressed NFT with Existing Merkle Tree and Collection
+```ts
+import { PublicKey } from '@solana/web3.js';
+import { Helius } from '../src/index';
+// define your mint parameters
+async function run() {
+    const helius = new Helius("f402f930-275d-4474-8f44-d6ba3b37d537", "devnet");
+    const response = await helius.rpc.mintCNFT({
+        metadataArgs: {
+            name: "Compression Test",
+            symbol: "COMP",
+            uri: "https://arweave.net/gfO_TkYttQls70pTmhrdMDz9pfMUXX8hZkaoIivQjGs",
+          },
+        ownerKeypair: 'wallet.json',
+        treeKeypair: 'treeWallet.json',
+        collectionMint: new PublicKey("EFnVyzXECRvbmtgjrUEG2TY5FtHBQ9LYrMpGirQJf3wZ")
+      })
+    console.log(response)
+}
+run();
+
+```
+
 
 ## NFT API
 
