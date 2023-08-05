@@ -334,7 +334,7 @@ run();
 ## Mint Compressed NFT with Existing Merkle Tree and Collection
 ```ts
 import { PublicKey } from '@solana/web3.js';
-import { Helius } from '../src/index';
+import { Helius } from 'helius-sdk';
 // define your mint parameters
 async function run() {
     const helius = new Helius("f402f930-275d-4474-8f44-d6ba3b37d537", "devnet");
