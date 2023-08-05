@@ -13,7 +13,6 @@
     "@types/node": "^18.11.18"
   },
   "dependencies": {
-    "@solana/spl-token": "^0.3.7",
     "k6": "^0.0.0"
   }
 }
