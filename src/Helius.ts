@@ -12,6 +12,7 @@ import axios, { type AxiosError } from "axios";
 import { PublicKey, Connection, Cluster } from "@solana/web3.js";
 import { heliusClusterApiUrl } from "./utils";
 import { RpcClient } from "./RpcClient";
+import { parseWebhook } from "./utils/webhook_utils";
 
 const API_URL_V0: string = "https://api.helius.xyz/v0";
 const API_URL_V1: string = "https://api.helius.xyz/v1";
@@ -39,20 +40,22 @@ export class Helius {
   /** The beefed up rpc client object from Helius SDK */
   public readonly rpc: RpcClient;
 
-
   /**
    * Initializes Helius API client with an API key
    * @constructor
    * @param apiKey - API key generated at dev.helius.xyz
    */
-  constructor(apiKey: string, cluster: Cluster = "mainnet-beta", id: string = "helius-sdk") {
+  constructor(
+    apiKey: string,
+    cluster: Cluster = "mainnet-beta",
+    id: string = "helius-sdk"
+  ) {
     this.apiKey = apiKey;
     this.cluster = cluster;
     this.endpoint = heliusClusterApiUrl(apiKey, cluster);
     this.connection = new Connection(this.endpoint);
     this.rpc = new RpcClient(this.connection, id);
-   
-}
+  }
   /**
    * Retrieves a list of all webhooks associated with the current API key
    * @returns {Promise<Webhook[]>} a promise that resolves to an array of webhook objects
@@ -63,7 +66,9 @@ export class Helius {
       const { data } = await axios.get(
         `${API_URL_V0}/webhooks?api-key=${this.apiKey}`
       );
-      return data;
+      return data && data.length
+        ? data.map((d: Webhook) => parseWebhook(d))
+        : [];
     } catch (err: any | AxiosError) {
       if (axios.isAxiosError(err)) {
         throw new Error(
@@ -86,7 +91,7 @@ export class Helius {
       const { data } = await axios.get(
         `${API_URL_V0}/webhooks/${webhookID}?api-key=${this.apiKey}`
       );
-      return data;
+      return parseWebhook(data);
     } catch (err: any | AxiosError) {
       if (axios.isAxiosError(err)) {
         throw new Error(
@@ -112,7 +117,7 @@ export class Helius {
         `${API_URL_V0}/webhooks?api-key=${this.apiKey}`,
         { ...createWebhookRequest }
       );
-      return data;
+      return parseWebhook(data);
     } catch (err: any | AxiosError) {
       if (axios.isAxiosError(err)) {
         throw new Error(
@@ -172,8 +177,6 @@ export class Helius {
     }
   }
 
-
-
   /**
    * Appends an array of addresses to an existing webhook by its ID
    * @param {string} webhookID - the ID of the webhook to edit
@@ -187,7 +190,8 @@ export class Helius {
   ): Promise<Webhook> {
     try {
       const webhook = await this.getWebhookByID(webhookID);
-      const accountAddresses = webhook.accountAddresses.concat(newAccountAddresses);
+      const accountAddresses =
+        webhook.accountAddresses.concat(newAccountAddresses);
       if (accountAddresses.length > 100_000) {
         throw new Error(
           `a single webhook cannot contain more than 100,000 addresses`
@@ -319,14 +323,19 @@ export class Helius {
   private async _editWebhook(
     webhookID: string,
     existingWebhook: Webhook,
-    editWebhookRequest: EditWebhookRequest,
+    editWebhookRequest: EditWebhookRequest
   ): Promise<Webhook> {
     const editRequest: EditWebhookRequest = {
       webhookURL: editWebhookRequest.webhookURL ?? existingWebhook.webhookURL,
-      transactionTypes: editWebhookRequest.transactionTypes ?? existingWebhook.transactionTypes,
-      accountAddresses: editWebhookRequest.accountAddresses ?? existingWebhook.accountAddresses,
-      accountAddressOwners: editWebhookRequest.accountAddressOwners ?? existingWebhook.accountAddressOwners,
-      webhookType: editWebhookRequest.webhookType ?? existingWebhook.webhookType,
+      transactionTypes:
+        editWebhookRequest.transactionTypes ?? existingWebhook.transactionTypes,
+      accountAddresses:
+        editWebhookRequest.accountAddresses ?? existingWebhook.accountAddresses,
+      accountAddressOwners:
+        editWebhookRequest.accountAddressOwners ??
+        existingWebhook.accountAddressOwners,
+      webhookType:
+        editWebhookRequest.webhookType ?? existingWebhook.webhookType,
       authHeader: editWebhookRequest.authHeader ?? existingWebhook.authHeader,
       txnStatus: editWebhookRequest.txnStatus ?? existingWebhook.txnStatus,
       encoding: editWebhookRequest.encoding ?? existingWebhook.encoding,
@@ -336,6 +345,6 @@ export class Helius {
       `${API_URL_V0}/webhooks/${webhookID}?api-key=${this.apiKey}`,
       editRequest
     );
-    return data;
+    return parseWebhook(data);
   }
 }
