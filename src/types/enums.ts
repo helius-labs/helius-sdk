@@ -181,6 +181,10 @@ export enum TransactionType {
   DECOMPRESS_NFT = "DECOMPRESS_NFT",
   COMPRESS_NFT = "COMPRESS_NFT",
   COMPRESSED_NFT_DELEGATE = "COMPRESSED_NFT_DELEGATE",
+  CREATE_POOL = "CREATE_POOL",
+  DISTRIBUTE_COMPRESSION_REWARDS = "DISTRIBUTE_COMPRESSION_REWARDS",
+  CHANGE_COMIC_STATE = "CHANGE_COMIC_STATE",
+  UPDATE_RECORD_AUTHORITY_DATA = "UPDATE_RECORD_AUTHORITY_DATA",
 }
 
 // A list of common collections and their collection query
@@ -498,8 +502,8 @@ export enum TokenStandard {
   UNKNOWN_STANDARD = "UnknownStandard",
 }
 
-export enum Interface { 
-  V1NFT = "V1_NFT", 
+export enum Interface {
+  V1NFT = "V1_NFT",
   CUSTOM = "Custom",
   V1PRINT = "V1_PRINT",
   LEGACYNFT = "Legacy_NFT",
@@ -510,54 +514,53 @@ export enum Interface {
   PROGRAMMABLENFT = "ProgrammableNFT",
 }
 
-export enum OwnershipModel { 
-    SINGLE = "single",
-    TOKEN = "token"
+export enum OwnershipModel {
+  SINGLE = "single",
+  TOKEN = "token",
 }
 
-export enum RoyaltyModel { 
-    CREATORS = "creators",
-    FANOUT = "fanout",
-    SINGLE = "single",
-
+export enum RoyaltyModel {
+  CREATORS = "creators",
+  FANOUT = "fanout",
+  SINGLE = "single",
 }
 
-export enum Scope { 
-    FULL = "full",
-    ROYALTY = "royalty",
-    METADATA = "metadata",
-    EXTENSION = "extension",
+export enum Scope {
+  FULL = "full",
+  ROYALTY = "royalty",
+  METADATA = "metadata",
+  EXTENSION = "extension",
 }
 
-export enum UseMethods { 
-    BURN = "Burn",
-    SINGLE = "Single",
-    MULTIPLE = "Multiple",
+export enum UseMethods {
+  BURN = "Burn",
+  SINGLE = "Single",
+  MULTIPLE = "Multiple",
 }
-export enum Context { 
-    WalletDefault = "wallet-default",
-    WebDesktop = "web-desktop",
-    WebMobile = "web-mobile",
-    AppMobile = "app-mobile",
-    AppDesktop = "app-desktop",
-    App = "app",
-    Vr = "vr",
+export enum Context {
+  WalletDefault = "wallet-default",
+  WebDesktop = "web-desktop",
+  WebMobile = "web-mobile",
+  AppMobile = "app-mobile",
+  AppDesktop = "app-desktop",
+  App = "app",
+  Vr = "vr",
 }
 
 export enum AssetSortBy {
-    Created = "created",
-    Updated = "updated",
-    RecentAction = "recent_action",
+  Created = "created",
+  Updated = "updated",
+  RecentAction = "recent_action",
 }
 export enum AssetSortDirection {
-    Asc = "asc",
-    Desc = "desc",
+  Asc = "asc",
+  Desc = "desc",
 }
 export enum SearchConditionType {
-    All = "all",
-    Any = "any",
+  All = "all",
+  Any = "any",
 }
 
-export enum Group { 
-    COLLECTION = "collection",
+export enum Group {
+  COLLECTION = "collection",
 }
