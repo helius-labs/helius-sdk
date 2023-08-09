@@ -1,5 +1,7 @@
 import {
+  ConcurrentMerkleTreeAccount,
   getConcurrentMerkleTreeAccountSize,
+  PROGRAM_ID,
   SPL_ACCOUNT_COMPRESSION_PROGRAM_ID,
   SPL_NOOP_PROGRAM_ID,
 } from "@solana/spl-account-compression";
@@ -16,6 +18,7 @@ import {
   createMintToCollectionV1Instruction,
   PROGRAM_ID as BUBBLEGUM_PROGRAM_ID,
   TokenProgramVersion,
+  createMintV1Instruction,
 } from "@metaplex-foundation/mpl-bubblegum";
 import {
   PROGRAM_ID as TOKEN_METADATA_PROGRAM_ID,
@@ -23,6 +26,7 @@ import {
   createCreateMasterEditionV3Instruction,
   createSetCollectionSizeInstruction,
 } from "@metaplex-foundation/mpl-token-metadata";
+import { BN } from "@project-serum/anchor";
 import {
   createAccount,
   mintTo,
@@ -31,12 +35,11 @@ import {
 } from "@solana/spl-token";
 import { MetadataArgs } from "../types";
 
-
 // Creates a new merkle tree for compression.
 export const initTree = async (
   connection: Connection,
   payerKeypair: Keypair,
-  treeKeypair: Keypair,
+  treeKeypair: any,
   maxDepth: number = 14,
   maxBufferSize: number = 64
 ) => {
@@ -81,9 +84,6 @@ export const initTree = async (
         skipPreflight: true,
       }
     );
-    console.log(
-      "Successfull created merkle tree for account: " + treeKeypair.publicKey
-    );
   } catch (e) {
     console.error("Failed to create merkle tree: ", e);
     throw e;
@@ -96,7 +96,7 @@ export const initCollection = async (
   ownerKeypair: Keypair,
   collectionName: string,
   collectionSymbol: string,
-  collectionUri: string,
+  collectionUri: string
 ) => {
   const cmintKey = Keypair.generate();
   const collectionMint = await createMint(
@@ -217,7 +217,7 @@ export const initCollection = async (
   }
 };
 
-export const existingCollection = async(collectionMint: PublicKey) => {
+export const existingCollection = async (collectionMint: PublicKey) => {
   // Then, before calling mintCompressedNft:
   const [collectionMetadataAccount, _b] = PublicKey.findProgramAddressSync(
     [
@@ -228,17 +228,17 @@ export const existingCollection = async(collectionMint: PublicKey) => {
     TOKEN_METADATA_PROGRAM_ID
   );
   const [collectionMasterEditionAccount, _b2] =
-PublicKey.findProgramAddressSync(
-  [
-    Buffer.from("metadata", "utf8"),
-    TOKEN_METADATA_PROGRAM_ID.toBuffer(),
-    collectionMint.toBuffer(),
-    Buffer.from("edition", "utf8"),
-  ],
-  TOKEN_METADATA_PROGRAM_ID
-);
-return { collectionMasterEditionAccount, collectionMetadataAccount}
-}
+    PublicKey.findProgramAddressSync(
+      [
+        Buffer.from("metadata", "utf8"),
+        TOKEN_METADATA_PROGRAM_ID.toBuffer(),
+        collectionMint.toBuffer(),
+        Buffer.from("edition", "utf8"),
+      ],
+      TOKEN_METADATA_PROGRAM_ID
+    );
+  return { collectionMasterEditionAccount, collectionMetadataAccount };
+};
 export function loadWallet(kFile: string): Keypair {
   const fs = require("fs");
   return Keypair.fromSecretKey(
@@ -246,14 +246,15 @@ export function loadWallet(kFile: string): Keypair {
   );
 }
 
-export const mintCompressedNft = async (
+// Minting with collection
+export const mintCollectionCompressedNft = async (
   connection: Connection,
   nftArgs: MetadataArgs,
   ownerKeypairFile: string,
-  treeKeypair: Keypair,
+  treeKeypair: any,
   collectionMint: PublicKey,
   collectionMetadata: PublicKey,
-  collectionMasterEditionAccount: PublicKey,
+  collectionMasterEditionAccount: PublicKey
 ) => {
   const [treeAuthority, _bump] = PublicKey.findProgramAddressSync(
     [treeKeypair.publicKey.toBuffer()],
@@ -316,4 +317,87 @@ export const mintCompressedNft = async (
     console.error("Failed to mint compressed NFT", e);
     throw e;
   }
+};
+
+// Minting without collection
+export const mintCompressedNFT = async (
+  connection: Connection,
+  nftArgs: MetadataArgs,
+  ownerKeypairFile: string,
+  treeKeypair: Keypair
+) => {
+  const [treeAuthority, _bump] = PublicKey.findProgramAddressSync(
+    [treeKeypair.publicKey.toBuffer()],
+    BUBBLEGUM_PROGRAM_ID
+  );
+  let ownerKeypair = loadWallet(ownerKeypairFile);
+  const defaultMetadataArgs = {
+    creators: [],
+    editionNonce: 0,
+    tokenProgramVersion: TokenProgramVersion.Original,
+    tokenStandard: null,
+    uses: null,
+    collection: null,
+    primarySaleHappened: false,
+    sellerFeeBasisPoints: 0,
+    isMutable: false,
+  };
+  const mintIx = createMintV1Instruction(
+    {
+      merkleTree: treeKeypair.publicKey,
+      treeAuthority,
+      treeDelegate: ownerKeypair.publicKey,
+      payer: ownerKeypair.publicKey,
+      leafDelegate: ownerKeypair.publicKey,
+      leafOwner: ownerKeypair.publicKey,
+      compressionProgram: SPL_ACCOUNT_COMPRESSION_PROGRAM_ID,
+      logWrapper: SPL_NOOP_PROGRAM_ID,
+    },
+    {
+      message: Object.assign({}, nftArgs, defaultMetadataArgs, {
+        collection: null,
+      }),
+    }
+  );
+  const tx = new Transaction().add(mintIx);
+  tx.feePayer = ownerKeypair.publicKey;
+  try {
+    const sig = await sendAndConfirmTransaction(
+      connection,
+      tx,
+      [ownerKeypair],
+      {
+        commitment: "confirmed",
+        skipPreflight: true,
+      }
+    );
+    return sig;
+  } catch (e) {
+    return e;
+  }
+};
+
+export const getAssetID = async (connection: string, address: PublicKey) => {
+  const wallet = new PublicKey(address);
+  const conn = new Connection(connection, "confirmed");
+  const cmt = await ConcurrentMerkleTreeAccount.fromAccountAddress(
+    conn,
+    wallet
+  );
+  const activeIndex = cmt.tree.activeIndex.toNumber() - 1; // Index for NFT just minted.
+  const node = new BN.BN(activeIndex);
+  // Return asset ID for asset just minted.
+  const [assetId] = PublicKey.findProgramAddressSync(
+    [
+      Buffer.from("asset", "utf8"),
+      wallet.toBuffer(),
+      Uint8Array.from(node.toArray("le", 8)),
+    ],
+    BUBBLEGUM_PROGRAM_ID
+  );
+  const id = assetId.toBase58();
+
+  return {
+    id,
+  };
 };

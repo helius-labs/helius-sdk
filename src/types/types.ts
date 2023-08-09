@@ -10,6 +10,7 @@ import type {
   TxnStatus,
   AccountWebhookEncoding,
 } from "./enums";
+import { DAS } from "./das-types";
 
 export type HeliusOptions = {
   limit?: number;
@@ -109,9 +110,7 @@ export type CollectionIdentifier = {
   firstVerifiedCreators?: string[];
   verifiedCollectionAddresses?: string[];
 };
-export interface MintCNFTResponse { 
-  signature: string;
-}
+
 export type CreateWebhookRequest = Omit<Webhook, "webhookID" | "wallet" | "project">;
 export type EditWebhookRequest = Partial<Omit<Webhook, "webhookID" | "wallet" | "project">>;
 
@@ -289,12 +288,17 @@ export type MetadataArgs = {
   tokenProgramVersion: null;
 };
 export interface MintCNFTResponse {
+  assetId: string,
   creator: string;
-  collectionName: string;
-  collectionUri: string;
-  collectionSymbol: string;
-  collectionMint: string;
+  collectionName?: string;
+  collectionUri?: string;
+  collectionSymbol?: string;
+  collectionMint?: string;
   treeId: string;
   treeKeypair: any,
-  signature: string;
+  signature: string | unknown;
 }
+export type MintCNFTResult = {
+  response: MintCNFTResponse;
+  DAS?: DAS.GetAssetResponse;  // Define the actual type of DAS if you know it.
+};
