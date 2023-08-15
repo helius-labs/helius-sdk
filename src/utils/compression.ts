@@ -44,7 +44,6 @@ export const initTree = async (
   maxDepth: number = 14,
   maxBufferSize: number = 64
 ) => {
-  
   const payer = payerKeypair.publicKey;
   const space = getConcurrentMerkleTreeAccountSize(maxDepth, maxBufferSize);
   const [treeAuthority, _bump] = PublicKey.findProgramAddressSync(

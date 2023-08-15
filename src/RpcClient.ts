@@ -382,7 +382,7 @@ export class RpcClient {
   ): Promise<MintCNFTResponse | undefined> {
     try {
       const ownerKeypair = request.ownerKeypair;
-      // User can override defaulted values. 
+      // User can override defaulted values.
       const defaultMetadataArgs: RequiredMetadataArgs = {
         primarySaleHappened: false,
         isMutable: false,
@@ -393,15 +393,15 @@ export class RpcClient {
         ...request.metadataArgs,
       };
       let assetId = "";
-      
-      let treeWallet = request.treeKeypair ?? Keypair.generate()
+
+      let treeWallet = request.treeKeypair ?? Keypair.generate();
       if (!request.treeKeypair) {
         await initTree(this.connection, ownerKeypair, treeWallet);
       }
       let response: any;
       let collection = request.collection ?? false;
 
-      // User set collection to false, or it was not dictated. 
+      // User set collection to false, or it was not dictated.
       if (collection == false && treeWallet) {
         const signature = await mintCompressedNFT(
           this.connection,
@@ -425,7 +425,7 @@ export class RpcClient {
         // User wants a collection
       } else if (collection == true) {
         let collectionMint = request.collectionMint;
-        // User did not supply a public key for exisiting collection 
+        // User did not supply a public key for exisiting collection
         if (!collectionMint) {
           const collectionInfo = await initCollection(
             this.connection,
@@ -435,35 +435,35 @@ export class RpcClient {
             request.metadataArgs.uri
           );
           collectionMint = collectionInfo.collectionMint;
-          // User did supply a collection mint Public key. 
-        } else if (collectionMint) { 
-        const { collectionMetadataAccount, collectionMasterEditionAccount } =
-          await existingCollection(collectionMint);
-        const signature = await mintCollectionCompressedNft(
-          this.connection,
-          defaultMetadataArgs,
-          request.ownerKeypair,
-          treeWallet,
-          collectionMint,
-          collectionMetadataAccount,
-          collectionMasterEditionAccount
-        );
-        // Get Merkle tree data + Asset ID after minting the NFT
-        const { id } = await getAssetID(
-          this.connection.rpcEndpoint,
-          treeWallet.publicKey,
-          signature
-        );
-        assetId = id;
-        response = {
-          assetId: id,
-          creator: request.ownerKeypair.publicKey.toBase58(),
-          treeId: treeWallet.publicKey.toBase58(),
-          treeKeypair: treeWallet.secretKey,
-          signature: signature,
-        };
+          // User did supply a collection mint Public key.
+        } else if (collectionMint) {
+          const { collectionMetadataAccount, collectionMasterEditionAccount } =
+            await existingCollection(collectionMint);
+          const signature = await mintCollectionCompressedNft(
+            this.connection,
+            defaultMetadataArgs,
+            request.ownerKeypair,
+            treeWallet,
+            collectionMint,
+            collectionMetadataAccount,
+            collectionMasterEditionAccount
+          );
+          // Get Merkle tree data + Asset ID after minting the NFT
+          const { id } = await getAssetID(
+            this.connection.rpcEndpoint,
+            treeWallet.publicKey,
+            signature
+          );
+          assetId = id;
+          response = {
+            assetId: id,
+            creator: request.ownerKeypair.publicKey.toBase58(),
+            treeId: treeWallet.publicKey.toBase58(),
+            treeKeypair: treeWallet.secretKey,
+            signature: signature,
+          };
+        }
       }
-    }
       let DAS;
       let confirm = request.confirmMint ?? true;
       if (confirm == true) {
