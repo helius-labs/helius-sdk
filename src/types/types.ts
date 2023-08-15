@@ -1,4 +1,4 @@
-import type { TransactionError } from "@solana/web3.js";
+import type { Keypair, PublicKey, TransactionError } from "@solana/web3.js";
 
 import type {
   WebhookType,
@@ -47,7 +47,7 @@ export interface EnhancedWebhookResponse {
   transactionError: TransactionError | null;
   type: string;
 }
-// Raw Webhook Response. 
+// Raw Webhook Response.
 export interface RawWebhookResponse {
   blockTime: number;
   indexWithinBlock: number;
@@ -82,7 +82,7 @@ export interface RawWebhookResponse {
     }[];
     preBalances: number[];
     preTokenBalances: any[];
-    rewards: any[]; 
+    rewards: any[];
   };
   slot: number;
   transaction: {
@@ -111,9 +111,13 @@ export type CollectionIdentifier = {
   verifiedCollectionAddresses?: string[];
 };
 
-export type CreateWebhookRequest = Omit<Webhook, "webhookID" | "wallet" | "project">;
-export type EditWebhookRequest = Partial<Omit<Webhook, "webhookID" | "wallet" | "project">>;
-
+export type CreateWebhookRequest = Omit<
+  Webhook,
+  "webhookID" | "wallet" | "project"
+>;
+export type EditWebhookRequest = Partial<
+  Omit<Webhook, "webhookID" | "wallet" | "project">
+>;
 
 export interface CreateCollectionWebhookRequest extends CreateWebhookRequest {
   collectionQuery: CollectionIdentifier;
@@ -271,34 +275,63 @@ export interface EnrichedTransaction {
 }
 
 // Compressed Types for Mint
-export type RequiredMetadataArgs = { 
+export type RequiredMetadataArgs = {
   name: string;
   symbol: string;
   uri: string;
-  sellerFeeBasisPoints?: number | null;
-  creators?: [] | null;
-  collection?: [] | null;
-}
-export type MetadataArgs = {
-  primarySaleHappened: boolean;
-  isMutable: boolean;
-  editionNonce: number;
-  tokenStandard: null;
-  uses: null;
-  tokenProgramVersion: null;
+  sellerFeeBasisPoints?: number;
+  creators?: [];
+  collection?: [];
+  primarySaleHappened?: boolean;
+  isMutable?: boolean;
+  editionNonce?: number;
+  tokenStandard?: null;
+  uses?: null;
+  tokenProgramVersion?: null;
 };
+
 export interface MintCNFTResponse {
-  assetId: string,
+  assetId: string;
   creator: string;
   collectionName?: string;
   collectionUri?: string;
   collectionSymbol?: string;
   collectionMint?: string;
   treeId: string;
-  treeKeypair: any,
-  signature: string | unknown;
+  treeKeypair: any;
+  signature: string;
+  confirmMint: boolean;
 }
 export type MintCNFTResult = {
   response: MintCNFTResponse;
-  DAS?: DAS.GetAssetResponse;  // Define the actual type of DAS if you know it.
+};
+
+/**
+ * Type for Mint cNFT request
+ */
+export type MintCNFTRequest = {
+  /**
+   * Arguments required for metadata.
+   */
+  metadataArgs: RequiredMetadataArgs;
+  /**
+   * Owner keypair. This will be used as payer as well.
+   */
+  ownerKeypair: Keypair;
+  /**
+   * True/False on whether to mint with a collection.
+   */
+  collection?: boolean;
+  /**
+   * Public key of existing tree keypair.
+   */
+  treeKeypair?: Keypair;
+  /**
+   * Public key of existing collection mint.
+   */
+  collectionMint?: PublicKey;
+  /**
+   * Confirm that the NFT was minted by repeatedly polling DAS.
+   */
+  confirmMint?: boolean;
 };

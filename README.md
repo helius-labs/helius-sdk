@@ -314,6 +314,13 @@ run();
 ```
 
 ## Mint Compressed NFT
+Mint a compressed NFT to a new or existing merkle tree and collection. It will create a collection if one does not exist or defined. You can optionally pass in set values to mint to an existing tree and collection. 
+
+**Options:**
+- **collection** *(boolean)* - Whether you want to mint with a collection or not. 
+- **collectionMint** *(PublicKey)* - An existing collection public key to mint assets under. 
+- **treeKeypair** *(Keypair)* - An existing merkle tree keypair to mint assets to. 
+- **confirmMint** *(boolean)* - Whether or not this should poll DAS to ensure this was minted. 
 ```ts
 import { Helius } from 'helius-sdk';
 // define your mint parameters
@@ -325,7 +332,7 @@ async function run() {
             symbol: "COMP",
             uri: "https://arweave.net/gfO_TkYttQls70pTmhrdMDz9pfMUXX8hZkaoIivQjGs",
           },
-        ownerKeypair: 'wallet.json'
+        ownerKeypair: Keypair.fromSecretKey(Uint8Array.from([])),
       })
     console.log(response.signature)
 }
