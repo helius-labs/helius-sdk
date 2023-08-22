@@ -141,48 +141,54 @@ export class RpcClient {
   /**
    * Get single asset. (Note: Helius enhances these responses with a CDN for better performance)
    * @param {DAS.GetAssetRequest | DAS.GetAssetRequest[]} id - Asset ID or an array of Asset IDs
-   * @returns {Promise<DAS.GetAssetResponse | DAS.GetAssetResponse[]>}
+   * @returns {Promise<DAS.GetAssetResponse | DAS.GetAssetResponseList>}
    * @throws {Error}
    */
- async getAsset<T extends DAS.GetAssetRequest | string | string[]>(
-  id: T
-): Promise<T extends string[] ? DAS.GetAssetResponse[] : DAS.GetAssetResponse>  {
+  async getAsset<T extends DAS.GetAssetRequest | string | string[]>(
+    id: T
+  ): Promise<
+    T extends string[] ? DAS.GetAssetResponse : DAS.GetAssetResponse[]
+  > {
     try {
       const url = `${this.connection.rpcEndpoint}`;
-  
+
       let batch;
       if (Array.isArray(id)) {
         batch = id.map((e, i) => ({
-          jsonrpc: '2.0',
+          jsonrpc: "2.0",
           id: `${this.id}-${i}`,
-          method: 'getAsset',
+          method: "getAsset",
           params: {
             id: e,
           },
         }));
-      } else if (typeof id === 'string') {
+      } else if (typeof id === "string") {
         batch = [
           {
-              jsonrpc: '2.0',
-              id: this.id,
-              method: 'getAsset',
-              params: {
-                id: id,
-              },
+            jsonrpc: "2.0",
+            id: this.id,
+            method: "getAsset",
+            params: {
+              id: id,
+            },
           },
         ];
       } else {
-        throw new Error('Invalid input. Expected string or array of strings.');
+        throw new Error("Invalid input. Expected string or array of strings.");
       }
-  
+
       const response = await axios.post(url, batch, {
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
       });
-  
-      const result = response.data[0].result;
-      return result as T extends string[] ? DAS.GetAssetResponse[] : DAS.GetAssetResponse;
+
+      const results = response.data.map(
+        (entry: { result: DAS.GetAssetResponse }) => entry.result
+      );
+      return results as T extends string[]
+        ? DAS.GetAssetResponse
+        : DAS.GetAssetResponse[];
     } catch (error) {
       throw new Error(`Error in getAsset: ${error}`);
     }
