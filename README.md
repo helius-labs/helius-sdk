@@ -186,13 +186,13 @@ async function run() {
 
 run();
 ```
-getAsset batch calls.
+### getAssetBatch 
+Get multiple assets by ID (up to 1k).
 ```ts
-    const ids = ["F9Lw3ki3hJ7PF9HQXsBzoY8GyE6sPoEZZdXJBsTTD2rk", "F9Lw3ki3hJ7PF9HQXsBzoY8GyE6sPoEZZdXJBsTTD2rk"]
-    const res = await helius.rpc.getAsset(ids)
-
-    const contents = res.map((item: any) => item.result?.content);
-    console.log("Contents:", contents);
+const ids = ["F9Lw3ki3hJ7PF9HQXsBzoY8GyE6sPoEZZdXJBsTTD2rk", "F9Lw3ki3hJ7PF9HQXsBzoY8GyE6sPoEZZdXJBsTTD2rk"]
+const helius = new Helius("HELIUS_API_KEY");
+const result = await helius.rpc.getAssetBatch(assetIds)
+console.log(result.map(x => x.id)) // Print each asset ID.
 ```
 
 ### **getSignaturesForAsset**

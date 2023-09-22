@@ -54,7 +54,7 @@ export interface SearchAssetsRequest {
   creatorAddress?: string;
   ownerAddress?: string;
   jsonUri?: string;
-  grouping?: string;
+  grouping?: string[];
   burnt?: boolean;
   sortBy?: AssetSortingRequest;
   frozen?: boolean;
