@@ -138,45 +138,35 @@ export class RpcClient {
     }
   }
 
-  /**
-   * Get single asset. (Note: Helius enhances these responses with a CDN for better performance)
-   * @param {DAS.GetAssetRequest | string} id - Asset ID
-   * @returns {Promise<DAS.GetAssetResponse>}
-   * @throws {Error}
-   */
-  async getAsset(
-    id: DAS.GetAssetRequest | string
-  ): Promise<DAS.GetAssetResponse> {
-    try {
-      const url = `${this.connection.rpcEndpoint}`;
+/**
+ * Get a single asset by ID. (Note: Helius enhances these responses with a CDN for better performance)
+ * @param {DAS.GetAssetRequest | string} id - Asset ID
+ * @returns {Promise<DAS.GetAssetResponse>}
+ * @throws {Error}
+ */
+async getAsset(id: DAS.GetAssetRequest | string): Promise<DAS.GetAssetResponse> {
+  try {
+    const url = `${this.connection.rpcEndpoint}`;
+    
+    const response = await axios.post(url, {
+      jsonrpc: '2.0',
+      id: this.id,
+      method: 'getAsset',
+      params: {
+        id: typeof id === 'string' ? id : undefined,
+      },
+    }, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
 
-      const batch =
-        typeof id === "string"
-          ? [
-              {
-                jsonrpc: "2.0",
-                id: this.id,
-                method: "getAsset",
-                params: {
-                  id: id,
-                },
-              },
-            ]
-          : [];
-
-      const response = await axios.post(url, batch, {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-
-      const result = response.data[0].result;
-      return result as DAS.GetAssetResponse;
-    } catch (error) {
-      throw new Error(`Error in getAsset: ${error}`);
-    }
+    const result = response.data.result;
+    return result as DAS.GetAssetResponse;
+  } catch (error) {
+    throw new Error(`Error in getAsset: ${error}`);
   }
-
+}
   /**
    * Get multiple assets as a batch. (Note: Helius enhances these responses with a CDN for better performance)
    * @param {DAS.GetAssetRequest[]} ids - Array of Asset IDs
