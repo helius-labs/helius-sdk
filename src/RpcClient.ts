@@ -177,26 +177,20 @@ async getAsset(id: DAS.GetAssetRequest | string): Promise<DAS.GetAssetResponse> 
     try {
       const url = `${this.connection.rpcEndpoint}`;
 
-      const batch = ids.map((id, i) => ({
-        jsonrpc: "2.0",
-        id: `${this.id}-${i}`,
-        method: "getAssetBatch",
-        params: {
-          ids: [id],
-        },
-      }));
-
-      const response = await axios.post(url, batch, {
+      const response = await axios.post(url, {
         headers: {
           "Content-Type": "application/json",
         },
+        jsonrpc: "2.0",
+        id: `${this.id}`,
+        method: "getAssetBatch",
+        params: {
+          ids: ids,
+        },
       });
 
-      // Flatten the nested arrays into a single array of GetAssetResponse
-      const results = response.data.flatMap(
-        (entry: { result: DAS.GetAssetResponse[] }) => entry.result
-      );
-      return results;
+      return response.data.result;
+
     } catch (error) {
       throw new Error(`Error in getAssetBatch: ${error}`);
     }

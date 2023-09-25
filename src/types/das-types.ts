@@ -18,6 +18,7 @@ export interface AssetsByOwnerRequest {
   limit?: number;
   before?: string;
   after?: string;
+  displayOptions?: DisplayOptions;
   sortBy?: AssetSortingRequest;
 }
 
@@ -29,8 +30,10 @@ export type AssetsByCreatorRequest = {
   limit?: number;
   before?: string;
   after?: string;
+  displayOptions?: DisplayOptions;
   sortBy?: AssetSortingRequest;
 };
+
 // getAssetsByGroup //
 export type AssetsByGroupRequest = {
   groupValue: string;
@@ -39,6 +42,7 @@ export type AssetsByGroupRequest = {
   limit?: number;
   before?: string;
   after?: string;
+  displayOptions?: DisplayOptions;
   sortBy?: AssetSortingRequest;
 };
 export type GetAssetsBatchRequest = {
@@ -77,6 +81,7 @@ export type AssetsByAuthorityRequest = {
   limit?: number;
   before?: string;
   after?: string;
+  displayOptions?: DisplayOptions;
   sortBy?: AssetSortingRequest;
 };
 // getAsset
@@ -124,6 +129,7 @@ export type GetAssetResponse = {
 };
 
 export type GetAssetResponseList = {
+  grand_total?: boolean;
   total: number;
   limit: number;
   page: number;
@@ -143,6 +149,13 @@ export interface GetSignaturesForAssetResponse {
   before?: string;
   after?: string;
   items: Array<Array<string>>;
+}
+// DisplayOptions
+
+export type DisplayOptions = {
+  showUnverifiedCollections?: boolean,
+  showCollectionMetadata?: boolean,
+  showGrandTotal?: boolean
 }
 
 // Ownership --
@@ -214,6 +227,7 @@ export interface Content {
 export interface File {
   uri?: string;
   mime?: string;
+  cdn_uri?: string;
   quality?: FileQuality;
   contexts?: Context[];
   [Symbol.iterator](): Iterator<File>;
