@@ -197,13 +197,22 @@ export interface Royalty {
 export interface Grouping {
   group_key: string;
   group_value: string;
-  [Symbol.iterator](): Iterator<Grouping>;
+  verified?: boolean;
+  collection_metadata?: CollectionMetadata;
+
+}
+export interface CollectionMetadata { 
+  name?: string;
+  symbol?: string;
+  image?: string;
+  description?: string;
+  external_url?: string;
+
 }
 // Authorities --
 export interface Authorities {
   address: string;
   scopes: Array<Scope>;
-  [Symbol.iterator](): Iterator<Authorities>;
 }
 
 //Links
