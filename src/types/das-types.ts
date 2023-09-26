@@ -34,6 +34,11 @@ export type AssetsByCreatorRequest = {
   sortBy?: AssetSortingRequest;
 };
 
+export type GetAssetBatchRequest = { 
+  ids: Array<string>;
+  displayOptions?: GetAssetDisplayOptions;
+}
+
 // getAssetsByGroup //
 export type AssetsByGroupRequest = {
   groupValue: string;
@@ -86,7 +91,9 @@ export type AssetsByAuthorityRequest = {
 };
 // getAsset
 export type GetAssetRequest = {
-  id: string | string[];
+  id: string;
+  displayOptions?: GetAssetDisplayOptions;
+
 };
 // getAssetProof
 export type GetAssetProofRequest = {
@@ -156,6 +163,12 @@ export type DisplayOptions = {
   showUnverifiedCollections?: boolean,
   showCollectionMetadata?: boolean,
   showGrandTotal?: boolean
+}
+
+// Display options for getAssetBatch do not include grand_total.
+export type GetAssetDisplayOptions = { 
+  showUnverifiedCollections?: boolean,
+  showCollectionMetadata?: boolean,
 }
 
 // Ownership --

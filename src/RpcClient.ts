@@ -144,7 +144,7 @@ export class RpcClient {
  * @returns {Promise<DAS.GetAssetResponse>}
  * @throws {Error}
  */
-async getAsset(id: DAS.GetAssetRequest | string): Promise<DAS.GetAssetResponse> {
+async getAsset(params: DAS.GetAssetRequest | string): Promise<DAS.GetAssetResponse> {
   try {
     const url = `${this.connection.rpcEndpoint}`;
     
@@ -152,9 +152,7 @@ async getAsset(id: DAS.GetAssetRequest | string): Promise<DAS.GetAssetResponse> 
       jsonrpc: '2.0',
       id: this.id,
       method: 'getAsset',
-      params: {
-        id: typeof id === 'string' ? id : undefined,
-      },
+      params,
     }, {
       headers: {
         'Content-Type': 'application/json',
@@ -167,26 +165,20 @@ async getAsset(id: DAS.GetAssetRequest | string): Promise<DAS.GetAssetResponse> 
     throw new Error(`Error in getAsset: ${error}`);
   }
 }
-  /**
+   /**
    * Get multiple assets as a batch. (Note: Helius enhances these responses with a CDN for better performance)
-   * @param {DAS.GetAssetRequest[]} ids - Array of Asset IDs
    * @returns {Promise<DAS.GetAssetResponse[]>}
    * @throws {Error}
    */
-  async getAssetBatch(ids: string[]): Promise<DAS.GetAssetResponse[]> {
+   async getAssetBatch(params: DAS.GetAssetBatchRequest): Promise<DAS.GetAssetResponse[]> {
     try {
       const url = `${this.connection.rpcEndpoint}`;
 
       const response = await axios.post(url, {
-        headers: {
-          "Content-Type": "application/json",
-        },
         jsonrpc: "2.0",
-        id: `${this.id}`,
+        id: this.id,
         method: "getAssetBatch",
-        params: {
-          ids: ids,
-        },
+        params, // <-- Here we directly pass the params
       });
 
       return response.data.result;
@@ -195,7 +187,6 @@ async getAsset(id: DAS.GetAssetRequest | string): Promise<DAS.GetAssetResponse> 
       throw new Error(`Error in getAssetBatch: ${error}`);
     }
   }
-
   /**
    * Get Asset proof.
    * @returns {Promise<DAS.GetAssetProofResponse>}

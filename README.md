@@ -180,8 +180,13 @@ import { Helius } from 'helius-sdk';
 
 async function run() {
     const helius = new Helius("HELIUS_API_KEY");
-    const response = await helius.rpc.getAsset("FNt6A9Mfnqbwc1tY7uwAguKQ1JcpBrxmhczDgbdJy5AC")
-    console.log(response);
+    const response = await helius.rpc.getAsset({
+        id: "F9Lw3ki3hJ7PF9HQXsBzoY8GyE6sPoEZZdXJBsTTD2rk",
+        displayOptions: { 
+            showCollectionMetadata: true
+        }
+    });
+    console.log(response.grouping?.map(g => g.collection_metadata?.name));
 }
 
 run();
@@ -189,10 +194,21 @@ run();
 ### getAssetBatch 
 Get multiple assets by ID (up to 1k).
 ```ts
-const ids = ["F9Lw3ki3hJ7PF9HQXsBzoY8GyE6sPoEZZdXJBsTTD2rk", "F9Lw3ki3hJ7PF9HQXsBzoY8GyE6sPoEZZdXJBsTTD2rk"]
-const helius = new Helius("HELIUS_API_KEY");
-const result = await helius.rpc.getAssetBatch(assetIds)
-console.log(result.map(x => x.id)) // Print each asset ID.
+import { Helius } from 'helius-sdk';
+
+async function run() {
+ const ids = ["F9Lw3ki3hJ7PF9HQXsBzoY8GyE6sPoEZZdXJBsTTD2rk", "F9Lw3ki3hJ7PF9HQXsBzoY8GyE6sPoEZZdXJBsTTD2rk"]
+    const helius = new Helius("your-api-key");
+    const response = await helius.rpc.getAssetBatch({
+        ids: ids,
+        displayOptions: { 
+            showCollectionMetadata: true
+        }
+    });
+    console.log(response.map(x => x.id))
+}
+
+run()
 ```
 
 ### **getSignaturesForAsset**
