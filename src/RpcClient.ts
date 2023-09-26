@@ -181,7 +181,7 @@ async getAsset(params: DAS.GetAssetRequest | string): Promise<DAS.GetAssetRespon
         params, // <-- Here we directly pass the params
       });
 
-      return response.data.result;
+      return response.data.result as DAS.GetAssetResponse[];
 
     } catch (error) {
       throw new Error(`Error in getAssetBatch: ${error}`);
