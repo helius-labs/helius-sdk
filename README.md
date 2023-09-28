@@ -200,10 +200,7 @@ async function run() {
  const ids = ["F9Lw3ki3hJ7PF9HQXsBzoY8GyE6sPoEZZdXJBsTTD2rk", "F9Lw3ki3hJ7PF9HQXsBzoY8GyE6sPoEZZdXJBsTTD2rk"]
     const helius = new Helius("your-api-key");
     const response = await helius.rpc.getAssetBatch({
-        ids: ids,
-        displayOptions: { 
-            showCollectionMetadata: true
-        }
+        ids: ids
     });
     console.log(response.map(x => x.id))
 }

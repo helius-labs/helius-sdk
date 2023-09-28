@@ -139,7 +139,7 @@ export class RpcClient {
   }
 
 /**
- * Get a single asset by ID. (Note: Helius enhances these responses with a CDN for better performance)
+ * Get a single asset by ID.
  * @param {DAS.GetAssetRequest | string} id - Asset ID
  * @returns {Promise<DAS.GetAssetResponse>}
  * @throws {Error}
@@ -166,7 +166,7 @@ async getAsset(params: DAS.GetAssetRequest | string): Promise<DAS.GetAssetRespon
   }
 }
    /**
-   * Get multiple assets as a batch. (Note: Helius enhances these responses with a CDN for better performance)
+   * Get multiple assets.
    * @returns {Promise<DAS.GetAssetResponse[]>}
    * @throws {Error}
    */
