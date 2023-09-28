@@ -138,53 +138,53 @@ export class RpcClient {
     }
   }
 
-  /**
-   * Get single asset. (Note: Helius enhances these responses with a CDN for better performance)
-   * @param {DAS.GetAssetRequest | DAS.GetAssetRequest[]} id - Asset ID or an array of Asset IDs
-   * @returns {Promise<DAS.GetAssetResponse | DAS.GetAssetResponse[]>}
+/**
+ * Get a single asset by ID.
+ * @param {DAS.GetAssetRequest | string} id - Asset ID
+ * @returns {Promise<DAS.GetAssetResponse>}
+ * @throws {Error}
+ */
+async getAsset(params: DAS.GetAssetRequest | string): Promise<DAS.GetAssetResponse> {
+  try {
+    const url = `${this.connection.rpcEndpoint}`;
+    
+    const response = await axios.post(url, {
+      jsonrpc: '2.0',
+      id: this.id,
+      method: 'getAsset',
+      params,
+    }, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    const result = response.data.result;
+    return result as DAS.GetAssetResponse;
+  } catch (error) {
+    throw new Error(`Error in getAsset: ${error}`);
+  }
+}
+   /**
+   * Get multiple assets.
+   * @returns {Promise<DAS.GetAssetResponse[]>}
    * @throws {Error}
    */
- async getAsset<T extends DAS.GetAssetRequest | string | string[]>(
-  id: T
-): Promise<T extends string[] ? DAS.GetAssetResponse[] : DAS.GetAssetResponse>  {
+   async getAssetBatch(params: DAS.GetAssetBatchRequest): Promise<DAS.GetAssetResponse[]> {
     try {
       const url = `${this.connection.rpcEndpoint}`;
-  
-      let batch;
-      if (Array.isArray(id)) {
-        batch = id.map((e, i) => ({
-          jsonrpc: '2.0',
-          id: `${this.id}-${i}`,
-          method: 'getAsset',
-          params: {
-            id: e,
-          },
-        }));
-      } else if (typeof id === 'string') {
-        batch = [
-          {
-              jsonrpc: '2.0',
-              id: this.id,
-              method: 'getAsset',
-              params: {
-                id: id,
-              },
-          },
-        ];
-      } else {
-        throw new Error('Invalid input. Expected string or array of strings.');
-      }
-  
-      const response = await axios.post(url, batch, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
+
+      const response = await axios.post(url, {
+        jsonrpc: "2.0",
+        id: this.id,
+        method: "getAssetBatch",
+        params, // <-- Here we directly pass the params
       });
-  
-      const result = response.data[0].result;
-      return result as T extends string[] ? DAS.GetAssetResponse[] : DAS.GetAssetResponse;
+
+      return response.data.result as DAS.GetAssetResponse[];
+
     } catch (error) {
-      throw new Error(`Error in getAsset: ${error}`);
+      throw new Error(`Error in getAssetBatch: ${error}`);
     }
   }
   /**

@@ -18,6 +18,7 @@ export interface AssetsByOwnerRequest {
   limit?: number;
   before?: string;
   after?: string;
+  displayOptions?: DisplayOptions;
   sortBy?: AssetSortingRequest;
 }
 
@@ -29,8 +30,15 @@ export type AssetsByCreatorRequest = {
   limit?: number;
   before?: string;
   after?: string;
+  displayOptions?: DisplayOptions;
   sortBy?: AssetSortingRequest;
 };
+
+export type GetAssetBatchRequest = { 
+  ids: Array<string>;
+  displayOptions?: GetAssetDisplayOptions;
+}
+
 // getAssetsByGroup //
 export type AssetsByGroupRequest = {
   groupValue: string;
@@ -39,6 +47,7 @@ export type AssetsByGroupRequest = {
   limit?: number;
   before?: string;
   after?: string;
+  displayOptions?: DisplayOptions;
   sortBy?: AssetSortingRequest;
 };
 export type GetAssetsBatchRequest = {
@@ -54,7 +63,7 @@ export interface SearchAssetsRequest {
   creatorAddress?: string;
   ownerAddress?: string;
   jsonUri?: string;
-  grouping?: string;
+  grouping?: string[];
   burnt?: boolean;
   sortBy?: AssetSortingRequest;
   frozen?: boolean;
@@ -77,11 +86,14 @@ export type AssetsByAuthorityRequest = {
   limit?: number;
   before?: string;
   after?: string;
+  displayOptions?: DisplayOptions;
   sortBy?: AssetSortingRequest;
 };
 // getAsset
 export type GetAssetRequest = {
-  id: string | string[];
+  id: string;
+  displayOptions?: GetAssetDisplayOptions;
+
 };
 // getAssetProof
 export type GetAssetProofRequest = {
@@ -124,6 +136,7 @@ export type GetAssetResponse = {
 };
 
 export type GetAssetResponseList = {
+  grand_total?: boolean;
   total: number;
   limit: number;
   page: number;
@@ -143,6 +156,19 @@ export interface GetSignaturesForAssetResponse {
   before?: string;
   after?: string;
   items: Array<Array<string>>;
+}
+// DisplayOptions
+
+export type DisplayOptions = {
+  showUnverifiedCollections?: boolean,
+  showCollectionMetadata?: boolean,
+  showGrandTotal?: boolean
+}
+
+// Display options for getAssetBatch do not include grand_total.
+export type GetAssetDisplayOptions = { 
+  showUnverifiedCollections?: boolean,
+  showCollectionMetadata?: boolean,
 }
 
 // Ownership --
@@ -184,13 +210,22 @@ export interface Royalty {
 export interface Grouping {
   group_key: string;
   group_value: string;
-  [Symbol.iterator](): Iterator<Grouping>;
+  verified?: boolean;
+  collection_metadata?: CollectionMetadata;
+
+}
+export interface CollectionMetadata { 
+  name?: string;
+  symbol?: string;
+  image?: string;
+  description?: string;
+  external_url?: string;
+
 }
 // Authorities --
 export interface Authorities {
   address: string;
   scopes: Array<Scope>;
-  [Symbol.iterator](): Iterator<Authorities>;
 }
 
 //Links
@@ -214,6 +249,7 @@ export interface Content {
 export interface File {
   uri?: string;
   mime?: string;
+  cdn_uri?: string;
   quality?: FileQuality;
   contexts?: Context[];
   [Symbol.iterator](): Iterator<File>;
