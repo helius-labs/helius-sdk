@@ -218,3 +218,13 @@ export interface MintApiRequest {
     value: string;
   }[];
 }
+
+export interface MintApiResponse {
+  jsonrpc: string;
+  id: string;
+  result: {
+    signature: string;
+    minted: boolean;
+    assetId: string;
+  };
+}

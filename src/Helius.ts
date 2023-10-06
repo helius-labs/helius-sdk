@@ -7,6 +7,7 @@ import {
   MintlistResponse,
   MintlistItem,
   MintApiRequest,
+  MintApiResponse,
 } from "./types";
 
 import axios, { type AxiosError } from "axios";
@@ -320,9 +321,12 @@ export class Helius {
 
   /**
    * Mints a cNFT via Helius Mint API
-   * @param mintApiRequest - the request object containing the mint information
+   * @param {MintApiRequest} mintApiRequest - the request object containing the mint information
+   * @returns {Promise<MintApiResponse>} a promise that resolves to the mint response object
    */
-  async mintCompressedNft(mintApiRequest: MintApiRequest) {
+  async mintCompressedNft(
+    mintApiRequest: MintApiRequest
+  ): Promise<MintApiResponse> {
     try {
       const { data } = await axios.post(this.endpoint, {
         jsonrpc: "2.0",
