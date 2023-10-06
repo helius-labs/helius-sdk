@@ -334,7 +334,9 @@ export class Helius {
     } catch (err: any | AxiosError) {
       if (axios.isAxiosError(err)) {
         throw new Error(
-          `error during mintCompressedNft: ${err.response?.data.error || err}`
+          `error during mintCompressedNft: ${
+            err.response?.data.error.message || err
+          }`
         );
       } else {
         throw new Error(`error during mintCompressedNft: ${err}`);
