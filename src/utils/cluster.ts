@@ -5,7 +5,7 @@ import { Cluster } from "@solana/web3.js";
  */
 export function heliusClusterApiUrl(
   apiKey: string,
-  cluster: Cluster = "devnet"
+  cluster: Cluster = "mainnet-beta"
 ): string {
   switch (cluster) {
     case "devnet":

@@ -35,8 +35,13 @@ export type CollectionIdentifier = {
   verifiedCollectionAddresses?: string[];
 };
 
-export type CreateWebhookRequest = Omit<Webhook, "webhookID" | "wallet" | "project">;
-export type EditWebhookRequest = Partial<Omit<Webhook, "webhookID" | "wallet" | "project">>;
+export type CreateWebhookRequest = Omit<
+  Webhook,
+  "webhookID" | "wallet" | "project"
+>;
+export type EditWebhookRequest = Partial<
+  Omit<Webhook, "webhookID" | "wallet" | "project">
+>;
 
 export interface CreateCollectionWebhookRequest extends CreateWebhookRequest {
   collectionQuery: CollectionIdentifier;
@@ -191,4 +196,35 @@ export interface EnrichedTransaction {
   transactionError: TransactionError | null;
   instructions: Instruction[];
   events: TransactionEvent;
+}
+
+export interface MintApiRequest {
+  name: string;
+  symbol: string;
+  description?: string;
+  owner: string;
+  delegate?: string;
+  collection?: string;
+  creators?: {
+    address: string;
+    share: number;
+  }[];
+  uri?: string;
+  sellerFeeBasisPoints?: number;
+  imageUrl?: string;
+  externalUrl?: string;
+  attributes?: {
+    trait_type: string;
+    value: string;
+  }[];
+}
+
+export interface MintApiResponse {
+  jsonrpc: string;
+  id: string;
+  result: {
+    signature: string;
+    minted: boolean;
+    assetId: string;
+  };
 }

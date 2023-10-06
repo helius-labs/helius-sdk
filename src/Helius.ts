@@ -6,10 +6,12 @@ import {
   MintlistRequest,
   MintlistResponse,
   MintlistItem,
+  MintApiRequest,
+  MintApiResponse,
 } from "./types";
 
 import axios, { type AxiosError } from "axios";
-import { PublicKey, Connection, Cluster } from "@solana/web3.js";
+import { Connection, Cluster } from "@solana/web3.js";
 import { heliusClusterApiUrl } from "./utils";
 import { RpcClient } from "./RpcClient";
 
@@ -36,23 +38,25 @@ export class Helius {
   /** The connection object from Solana's SDK */
   public readonly connection: Connection;
 
-  /** The beefed up rpc client object from Helius SDK */
+  /** The beefed up RPC client object from Helius SDK */
   public readonly rpc: RpcClient;
-
 
   /**
    * Initializes Helius API client with an API key
    * @constructor
    * @param apiKey - API key generated at dev.helius.xyz
    */
-  constructor(apiKey: string, cluster: Cluster = "mainnet-beta", id: string = "helius-sdk") {
+  constructor(
+    apiKey: string,
+    cluster: Cluster = "mainnet-beta",
+    id: string = "helius-sdk"
+  ) {
     this.apiKey = apiKey;
     this.cluster = cluster;
     this.endpoint = heliusClusterApiUrl(apiKey, cluster);
     this.connection = new Connection(this.endpoint);
     this.rpc = new RpcClient(this.connection, id);
-   
-}
+  }
   /**
    * Retrieves a list of all webhooks associated with the current API key
    * @returns {Promise<Webhook[]>} a promise that resolves to an array of webhook objects
@@ -172,8 +176,6 @@ export class Helius {
     }
   }
 
-
-
   /**
    * Appends an array of addresses to an existing webhook by its ID
    * @param {string} webhookID - the ID of the webhook to edit
@@ -187,7 +189,8 @@ export class Helius {
   ): Promise<Webhook> {
     try {
       const webhook = await this.getWebhookByID(webhookID);
-      const accountAddresses = webhook.accountAddresses.concat(newAccountAddresses);
+      const accountAddresses =
+        webhook.accountAddresses.concat(newAccountAddresses);
       if (accountAddresses.length > 100_000) {
         throw new Error(
           `a single webhook cannot contain more than 100,000 addresses`
@@ -316,17 +319,51 @@ export class Helius {
     }
   }
 
+  /**
+   * Mints a cNFT via Helius Mint API
+   * @param {MintApiRequest} mintApiRequest - the request object containing the mint information
+   * @returns {Promise<MintApiResponse>} a promise that resolves to the mint response object
+   */
+  async mintCompressedNft(
+    mintApiRequest: MintApiRequest
+  ): Promise<MintApiResponse> {
+    try {
+      const { data } = await axios.post(this.endpoint, {
+        jsonrpc: "2.0",
+        id: "helius-test",
+        method: "mintCompressedNft",
+        params: { ...mintApiRequest },
+      });
+      return data;
+    } catch (err: any | AxiosError) {
+      if (axios.isAxiosError(err)) {
+        throw new Error(
+          `error during mintCompressedNft: ${
+            err.response?.data.error.message || err
+          }`
+        );
+      } else {
+        throw new Error(`error during mintCompressedNft: ${err}`);
+      }
+    }
+  }
+
   private async _editWebhook(
     webhookID: string,
     existingWebhook: Webhook,
-    editWebhookRequest: EditWebhookRequest,
+    editWebhookRequest: EditWebhookRequest
   ): Promise<Webhook> {
     const editRequest: EditWebhookRequest = {
       webhookURL: editWebhookRequest.webhookURL ?? existingWebhook.webhookURL,
-      transactionTypes: editWebhookRequest.transactionTypes ?? existingWebhook.transactionTypes,
-      accountAddresses: editWebhookRequest.accountAddresses ?? existingWebhook.accountAddresses,
-      accountAddressOwners: editWebhookRequest.accountAddressOwners ?? existingWebhook.accountAddressOwners,
-      webhookType: editWebhookRequest.webhookType ?? existingWebhook.webhookType,
+      transactionTypes:
+        editWebhookRequest.transactionTypes ?? existingWebhook.transactionTypes,
+      accountAddresses:
+        editWebhookRequest.accountAddresses ?? existingWebhook.accountAddresses,
+      accountAddressOwners:
+        editWebhookRequest.accountAddressOwners ??
+        existingWebhook.accountAddressOwners,
+      webhookType:
+        editWebhookRequest.webhookType ?? existingWebhook.webhookType,
       authHeader: editWebhookRequest.authHeader ?? existingWebhook.authHeader,
       txnStatus: editWebhookRequest.txnStatus ?? existingWebhook.txnStatus,
       encoding: editWebhookRequest.encoding ?? existingWebhook.encoding,
