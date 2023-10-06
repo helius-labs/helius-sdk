@@ -45,12 +45,12 @@ For a quick demo video, please see the [Webhook docs.](https://docs.helius.xyz/w
 
 ```ts
 import {
-    // enums
-    Address,
-    TransactionType,
-    
-    // lib
-    Helius,
+  // enums
+  Address,
+  TransactionType,
+
+  // lib
+  Helius,
 } from "helius-sdk";
 
 const helius = new Helius("<your-api-key-here>");
@@ -70,7 +70,7 @@ import {
   TransactionType,
   WebhookType,
   Address,
-  Helius
+  Helius,
 } from "helius-sdk";
 
 const helius = new Helius("<your-api-key-here>");
@@ -153,7 +153,6 @@ helius.deleteWebhook("<webhook-id-here>"); // returns a boolean
 import {
   // collections dict
   Collections,
-
   Helius,
 } from "helius-sdk";
 
@@ -170,162 +169,231 @@ helius.createCollectionWebhook({
 Note that the Collections.ABC enum references the collection query for this collection. It is just a convenience enum so that developers don't have to figure out whether to use firstVerifiedCreator or the Metaplex Certified Collection address ([see more about this here](https://docs.helius.xyz/api-reference/nft-collections-on-solana)). If you already know it for your collection, please make a PR :)
 
 ## DAS API
-Read more about the DAS API from our docs, [here](https://docs.helius.xyz/solana-compression/digital-asset-standard-das-api). 
 
+Read more about the DAS API from our docs, [here](https://docs.helius.xyz/solana-compression/digital-asset-standard-das-api).
 
 ### **getAsset**
+
 Get an asset by its ID.
+
 ```ts
-import { Helius } from 'helius-sdk';
+import { Helius } from "helius-sdk";
 
 async function run() {
-    const helius = new Helius("HELIUS_API_KEY");
-    const response = await helius.rpc.getAsset({
-        id: "F9Lw3ki3hJ7PF9HQXsBzoY8GyE6sPoEZZdXJBsTTD2rk",
-        displayOptions: { 
-            showCollectionMetadata: true
-        }
-    });
-    console.log(response.grouping?.map(g => g.collection_metadata?.name));
+  const helius = new Helius("HELIUS_API_KEY");
+  const response = await helius.rpc.getAsset({
+    id: "F9Lw3ki3hJ7PF9HQXsBzoY8GyE6sPoEZZdXJBsTTD2rk",
+    displayOptions: {
+      showCollectionMetadata: true,
+    },
+  });
+  console.log(response.grouping?.map((g) => g.collection_metadata?.name));
 }
 
 run();
 ```
-### getAssetBatch 
+
+### getAssetBatch
+
 Get multiple assets by ID (up to 1k).
+
 ```ts
-import { Helius } from 'helius-sdk';
+import { Helius } from "helius-sdk";
 
 async function run() {
- const ids = ["F9Lw3ki3hJ7PF9HQXsBzoY8GyE6sPoEZZdXJBsTTD2rk", "F9Lw3ki3hJ7PF9HQXsBzoY8GyE6sPoEZZdXJBsTTD2rk"]
-    const helius = new Helius("your-api-key");
-    const response = await helius.rpc.getAssetBatch({
-        ids: ids
-    });
-    console.log(response.map(x => x.id))
+  const ids = [
+    "F9Lw3ki3hJ7PF9HQXsBzoY8GyE6sPoEZZdXJBsTTD2rk",
+    "F9Lw3ki3hJ7PF9HQXsBzoY8GyE6sPoEZZdXJBsTTD2rk",
+  ];
+  const helius = new Helius("your-api-key");
+  const response = await helius.rpc.getAssetBatch({
+    ids: ids,
+  });
+  console.log(response.map((x) => x.id));
 }
 
-run()
+run();
 ```
 
 ### **getSignaturesForAsset**
+
 Get a list of transaction signatures related to a compressed asset.
+
 ```ts
-import { Helius } from 'helius-sdk';
+import { Helius } from "helius-sdk";
 
 async function run() {
-    const helius = new Helius("HELIUS_API_KEY");
-    const response = await helius.rpc.getSignaturesForAsset({
-        id: "Bu1DEKeawy7txbnCEJE4BU3BKLXaNAKCYcHR4XhndGss",
-        page: 1,
-    })
-    console.log(response.items);
+  const helius = new Helius("HELIUS_API_KEY");
+  const response = await helius.rpc.getSignaturesForAsset({
+    id: "Bu1DEKeawy7txbnCEJE4BU3BKLXaNAKCYcHR4XhndGss",
+    page: 1,
+  });
+  console.log(response.items);
 }
 
 run();
 ```
-### searchAssets
-Search for assets by a variety of parameters. Very useful for token-gating!
-```ts 
 
-import { Helius } from 'helius-sdk';
+### searchAssets
+
+Search for assets by a variety of parameters. Very useful for token-gating!
+
+```ts
+import { Helius } from "helius-sdk";
 
 async function run() {
-    const helius = new Helius("HELIUS_API_KEY");
-    const response = await helius.rpc.searchAssets({ 
+  const helius = new Helius("HELIUS_API_KEY");
+  const response = await helius.rpc.searchAssets({
     ownerAddress: "2k5AXX4guW9XwRQ1AKCpAuUqgWDpQpwFfpVFh3hnm2Ha",
     compressed: true,
     page: 1,
   });
-  console.log(response.items)
+  console.log(response.items);
 }
 run();
-
 ```
+
 ### **getAssetProof**
+
 Get a merkle proof for a compressed asset by its ID.
+
 ```ts
-import { Helius } from 'helius-sdk';
+import { Helius } from "helius-sdk";
 
 async function run() {
-    const helius = new Helius("HELIUS_API_KEY");
-    const response = await helius.rpc.getAssetProof({
-        id: "Bu1DEKeawy7txbnCEJE4BU3BKLXaNAKCYcHR4XhndGss",
-    })
-    console.log(response); 
+  const helius = new Helius("HELIUS_API_KEY");
+  const response = await helius.rpc.getAssetProof({
+    id: "Bu1DEKeawy7txbnCEJE4BU3BKLXaNAKCYcHR4XhndGss",
+  });
+  console.log(response);
 }
 
 run();
 ```
+
 ### **getAssetsByOwner**
+
 Get a list of assets owned by an address. This is the fastest way to get all the NFTs owned by a wallet on Solana.
-```ts 
-import { Helius } from 'helius-sdk';
+
+```ts
+import { Helius } from "helius-sdk";
 
 async function run() {
-    const helius = new Helius("HELIUS_API_KEY");
-    const response = await helius.rpc.getAssetsByOwner({
-        ownerAddress: "86xCnPeV69n6t3DnyGvkKobf9FdN2H9oiVDdaMpo2MMY",
-        page: 1,
-    })
-    console.log(response.items);
+  const helius = new Helius("HELIUS_API_KEY");
+  const response = await helius.rpc.getAssetsByOwner({
+    ownerAddress: "86xCnPeV69n6t3DnyGvkKobf9FdN2H9oiVDdaMpo2MMY",
+    page: 1,
+  });
+  console.log(response.items);
 }
 
 run();
-
 ```
+
 ### **getAssetsByGroup**
+
 Get a list of assets by a group key and value. This endpoint is very useful for getting the mintlist for NFT Collections.
+
 ```ts
-import { Helius } from 'helius-sdk';
+import { Helius } from "helius-sdk";
 
 async function run() {
-      const helius = new Helius("HELIUS_API_KEY");
-      const response = await helius.rpc.getAssetsByGroup({
-        groupKey: "collection",
-        groupValue: "J1S9H3QjnRtBbbuD4HjPV6RpRhwuk4zKbxsnCHuTgh9w",
-        page: 1,
-    })
-    console.log(response.items);
+  const helius = new Helius("HELIUS_API_KEY");
+  const response = await helius.rpc.getAssetsByGroup({
+    groupKey: "collection",
+    groupValue: "J1S9H3QjnRtBbbuD4HjPV6RpRhwuk4zKbxsnCHuTgh9w",
+    page: 1,
+  });
+  console.log(response.items);
 }
 
 run();
 ```
 
 ### **getAssetsByCreator**
+
 Get a list of assets created by an address.
+
 ```ts
-import { Helius } from 'helius-sdk';
+import { Helius } from "helius-sdk";
 
 async function run() {
-    const helius = new Helius("HELIUS_API_KEY");
-    const response = await helius.rpc.getAssetsByCreator({
-        creatorAddress: "D3XrkNZz6wx6cofot7Zohsf2KSsu2ArngNk8VqU9cTY3",
-        onlyVerified: true,
-        page: 1,
-    })
-    console.log(response.items);
+  const helius = new Helius("HELIUS_API_KEY");
+  const response = await helius.rpc.getAssetsByCreator({
+    creatorAddress: "D3XrkNZz6wx6cofot7Zohsf2KSsu2ArngNk8VqU9cTY3",
+    onlyVerified: true,
+    page: 1,
+  });
+  console.log(response.items);
 }
 
 run();
 ```
+
 ### **getAssetsByAuthority**
+
 Get a list of assets with a specific authority.
+
 ```ts
-import { Helius } from 'helius-sdk';
+import { Helius } from "helius-sdk";
 
 async function run() {
-    const helius = new Helius("HELIUS_API_KEY");
-    const response = await helius.rpc.getAssetsByAuthority({
-        authorityAddress: "2RtGg6fsFiiF1EQzHqbd66AhW7R5bWeQGpTbv2UMkCdW",
-        page: 1,
-    })
-    console.log(response.items);
+  const helius = new Helius("HELIUS_API_KEY");
+  const response = await helius.rpc.getAssetsByAuthority({
+    authorityAddress: "2RtGg6fsFiiF1EQzHqbd66AhW7R5bWeQGpTbv2UMkCdW",
+    page: 1,
+  });
+  console.log(response.items);
 }
 
 run();
 ```
 
+## Mint API
+
+To read more about the easiest way to mint cNFTs on Solana, see [our docs](https://docs.helius.dev/compression-and-das-api/mint-api).
+
+To mint a compressed NFT, simply call the `mintCompressedNft` method and pass in your NFT data. [This](https://xray.helius.xyz/token/UJA7Dguu6VeG3W73AyaDYQiPR9Jw9vx3XXi6CYrN224?network=mainnet) is what the mint will look like in the explorer.
+
+```ts
+import { Helius } from "helius-sdk";
+
+async function run() {
+  const helius = new Helius("HELIUS_API_KEY");
+  const response = await helius.mintCompressedNft({
+    name: "Exodia the Forbidden One",
+    symbol: "ETFO",
+    owner: "OWNER_WALLET_ADDRESS",
+    description:
+      "Exodia the Forbidden One is a powerful, legendary creature composed of five parts: the Right Leg, Left Leg, Right Arm, Left Arm, and the Head. When all five parts are assembled, Exodia becomes an unstoppable force.",
+    attributes: [
+      {
+        trait_type: "Type",
+        value: "Legendary",
+      },
+      {
+        trait_type: "Power",
+        value: "Infinite",
+      },
+      {
+        trait_type: "Element",
+        value: "Dark",
+      },
+      {
+        trait_type: "Rarity",
+        value: "Mythical",
+      },
+    ],
+    imageUrl:
+      "https://cdna.artstation.com/p/assets/images/images/052/118/830/large/julie-almoneda-03.jpg?1658992401",
+    externalUrl: "https://www.yugioh-card.com/en/",
+    sellerFeeBasisPoints: 6900,
+  });
+  console.log(response.result);
+}
+
+run();
+```
 
 ## NFT API
 
@@ -348,11 +416,12 @@ const mints = helius.getMintlist({
 });
 ```
 
-
 ## RPC Abstractions
+
 We provide a variety of helper methods to help make Solana RPCs easier to work with.
 
 ### Solana Chain TPS
+
 ```ts
 import { Helius } from "helius-sdk";
 
@@ -362,15 +431,20 @@ const tps = await helius.rpc.getCurrentTPS();
 ```
 
 ### Solana Airdrop
+
 ```ts
 import { Helius } from "helius-sdk";
 
 const helius = new Helius("<your-api-key-here>");
 
-const response = await helius.rpc.airdrop(new PublicKey("<wallet address>"), 1000000000); // 1 sol
+const response = await helius.rpc.airdrop(
+  new PublicKey("<wallet address>"),
+  1000000000
+); // 1 sol
 ```
 
 ### Get Solana Stake Accounts
+
 ```ts
 import { Helius } from "helius-sdk";
 
@@ -378,7 +452,9 @@ const helius = new Helius("<your-api-key-here>");
 
 const response = await helius.rpc.getStakeAccounts("<wallet address>");
 ```
+
 ### Get Holders for SPL Tokens
+
 ```ts
 import { Helius } from "helius-sdk";
 
