@@ -11,6 +11,7 @@ import {
   Connection,
   ParsedAccountData,
 } from "@solana/web3.js";
+import axios from "axios";
 import { DAS } from "./types/das-types";
 
 export type SendAndConfirmTransactionResponse = {
@@ -19,8 +20,10 @@ export type SendAndConfirmTransactionResponse = {
   blockhash: Blockhash;
   lastValidBlockHeight: number;
 };
-import axios from "axios";
 
+/**
+ * The beefed up RPC client from Helius SDK
+ */
 export class RpcClient {
   constructor(
     protected readonly connection: Connection,
@@ -138,39 +141,47 @@ export class RpcClient {
     }
   }
 
-/**
- * Get a single asset by ID.
- * @param {DAS.GetAssetRequest | string} id - Asset ID
- * @returns {Promise<DAS.GetAssetResponse>}
- * @throws {Error}
- */
-async getAsset(params: DAS.GetAssetRequest | string): Promise<DAS.GetAssetResponse> {
-  try {
-    const url = `${this.connection.rpcEndpoint}`;
-    
-    const response = await axios.post(url, {
-      jsonrpc: '2.0',
-      id: this.id,
-      method: 'getAsset',
-      params,
-    }, {
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
+  /**
+   * Get a single asset by ID.
+   * @param {DAS.GetAssetRequest | string} id - Asset ID
+   * @returns {Promise<DAS.GetAssetResponse>}
+   * @throws {Error}
+   */
+  async getAsset(
+    params: DAS.GetAssetRequest | string
+  ): Promise<DAS.GetAssetResponse> {
+    try {
+      const url = `${this.connection.rpcEndpoint}`;
 
-    const result = response.data.result;
-    return result as DAS.GetAssetResponse;
-  } catch (error) {
-    throw new Error(`Error in getAsset: ${error}`);
+      const response = await axios.post(
+        url,
+        {
+          jsonrpc: "2.0",
+          id: this.id,
+          method: "getAsset",
+          params,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      const result = response.data.result;
+      return result as DAS.GetAssetResponse;
+    } catch (error) {
+      throw new Error(`Error in getAsset: ${error}`);
+    }
   }
-}
-   /**
+  /**
    * Get multiple assets.
    * @returns {Promise<DAS.GetAssetResponse[]>}
    * @throws {Error}
    */
-   async getAssetBatch(params: DAS.GetAssetBatchRequest): Promise<DAS.GetAssetResponse[]> {
+  async getAssetBatch(
+    params: DAS.GetAssetBatchRequest
+  ): Promise<DAS.GetAssetResponse[]> {
     try {
       const url = `${this.connection.rpcEndpoint}`;
 
@@ -182,7 +193,6 @@ async getAsset(params: DAS.GetAssetRequest | string): Promise<DAS.GetAssetRespon
       });
 
       return response.data.result as DAS.GetAssetResponse[];
-
     } catch (error) {
       throw new Error(`Error in getAssetBatch: ${error}`);
     }
