@@ -353,7 +353,7 @@ run();
 
 To read more about the easiest way to mint cNFTs on Solana, see [our docs](https://docs.helius.dev/compression-and-das-api/mint-api).
 
-To mint a compressed NFT, simply call the `mintCompressedNft` method and pass in your NFT data.
+To mint a compressed NFT, simply call the `mintCompressedNft` method and pass in your NFT data. [This](https://xray.helius.xyz/token/UJA7Dguu6VeG3W73AyaDYQiPR9Jw9vx3XXi6CYrN224?network=mainnet) is what the mint will look like in the explorer.
 
 ```ts
 import { Helius } from "helius-sdk";
@@ -394,8 +394,6 @@ async function run() {
 
 run();
 ```
-
-[This](https://xray.helius.xyz/token/UJA7Dguu6VeG3W73AyaDYQiPR9Jw9vx3XXi6CYrN224?network=mainnet) is what the above mint will look like in the explorer.
 
 ## NFT API
 
