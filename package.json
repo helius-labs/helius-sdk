@@ -30,6 +30,7 @@
     "typescript": "^4.9.4"
   },
   "dependencies": {
+    "@irys/sdk": "^0.0.3",
     "axios": "^1.2.3"
   }
 }

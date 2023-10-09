@@ -217,6 +217,8 @@ export interface MintApiRequest {
     trait_type: string;
     value: string;
   }[];
+  imagePath?: string;
+  privateKey?: string;
 }
 
 export interface MintApiResponse {
