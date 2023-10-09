@@ -419,7 +419,7 @@ export class Helius {
     if (this.cluster === "devnet" || fileSizeInKB >= 200) {
       // Uploads on node2 (mainnet) are free for files under 200KB
       const price = await irys.getPrice(fileSizeInBytes);
-      await irys.fund(price);
+      await irys.fund(price, 1.1);
     }
 
     try {
