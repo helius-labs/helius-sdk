@@ -218,7 +218,7 @@ export interface MintApiRequest {
     value: string;
   }[];
   imagePath?: string;
-  privateKey?: string;
+  walletPrivateKey?: string;
 }
 
 export interface MintApiResponse {

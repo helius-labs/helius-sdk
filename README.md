@@ -395,6 +395,38 @@ async function run() {
 run();
 ```
 
+If you want the SDK to handle the image upload, you can do so by passing in the `imagePath` and `walletPrivatekey` fields. `imagePath` is the relative path to the image, and `walletPrivatekey` is the private key of the wallet that'll pay for the image upload to Arweave.
+
+```ts
+import { Helius } from "helius-sdk";
+
+async function run() {
+  const helius = new Helius("HELIUS_API_KEY");
+  const response = await helius.mintCompressedNft({
+    name: "Aggron",
+    symbol: "AGNFT",
+    owner: "OWNER_WALLET_ADDRESS",
+    description:
+      "Aggron is a powerful Steel/Rock-type Pokémon known for its iron defense.",
+    attributes: [
+      {
+        trait_type: "Type",
+        value: "Steel/Rock",
+      },
+      {
+        trait_type: "Power",
+        value: "High",
+      },
+    ],
+    externalUrl: "https://www.pokemon.com/us/pokedex/aggron",
+    imagePath: "../images/aagron.png",
+    walletPrivatekey: "YOUR_WALLET_PRIVATE_KEY",
+  });
+}
+
+run();
+```
+
 ## NFT API
 
 To read more about the most powerful NFT API on Solana, see [our docs](https://docs.helius.xyz/api-reference/nft-api).

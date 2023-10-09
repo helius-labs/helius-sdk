@@ -386,18 +386,18 @@ export class Helius {
       );
     }
 
-    if (mintApiRequest.imagePath && !mintApiRequest.privateKey) {
+    if (mintApiRequest.imagePath && !mintApiRequest.walletPrivateKey) {
       throw new Error("Must provide wallet privateKey if providing imagePath.");
     }
 
-    if (mintApiRequest.imagePath && mintApiRequest.privateKey) {
+    if (mintApiRequest.imagePath && mintApiRequest.walletPrivateKey) {
       mintApiRequest.imageUrl = await this.uploadImageToArweave(
         mintApiRequest.imagePath,
-        mintApiRequest.privateKey
+        mintApiRequest.walletPrivateKey
       );
     }
     delete mintApiRequest.imagePath;
-    delete mintApiRequest.privateKey;
+    delete mintApiRequest.walletPrivateKey;
   }
 
   private async uploadImageToArweave(imagePath: string, privateKey: string) {
