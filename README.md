@@ -429,47 +429,48 @@ run();
 
 If you want to mint your cNFT to a collection:
 
-- Delegate Helius as a collection authority (using `DelegateCollectionAuthority` method), so that Helius can mint on your behalf.
+- Delegate Helius as a collection authority (using `DelegateCollectionAuthority` method), so that Helius can mint to that collection on your behalf.
 - Pass in the collection mint address in the `collection` field.
 - (Optional) Revoke collection authority (using `RevokeCollectionAuthority` method).
 
 ```ts
-async function run() {
-  const helius = new Helius("HELIUS_API_KEY");
-  // 1. Delegate Helius as a collection authority
-  await delegateCollectionAuthority({
-    collectionMint: "COLLECTION_MINT_ADDRESS",
-    updateAuthorityKeypair: updateAuthorityKeypair,
-  });
+import { Helius } from "helius-sdk";
 
-  // 2. Mint your cNFT to the collection
-  const response = await helius.mintCompressedNft({
-    name: "Feitan Portor",
-    symbol: "FEITAN",
-    owner: "OWNER_WALLET_ADDRESS",
-    collection: "COLLECTION_MINT_ADDRESS",
-    description: "Feitan Portor is a member of the notorious Phantom Troupe.",
-    attributes: [
-      {
-        trait_type: "Affiliation",
-        value: "Phantom Troupe",
-      },
-      {
-        trait_type: "Nen Ability",
-        value: "Pain Packer",
-      },
-    ],
-    externalUrl: "https://hunterxhunter.fandom.com/wiki/Feitan_Portor",
-    imagePath: "../images/feitan.png",
-    walletPrivatekey: "YOUR_WALLET_PRIVATE_KEY",
-  });
+const helius = new Helius("HELIUS_API_KEY");
 
-  // 3. Revoke collection authority (optional)
-  await revokeCollectionAuthority({
-    collectionMint: "COLLECTION_MINT_ADDRESS",
-    revokeAuthorityKeypair: revokeAuthorityKeypair,
-  });
-}
+// 1. Delegate Helius as a collection authority
+await delegateCollectionAuthority({
+  collectionMint: "COLLECTION_MINT_ADDRESS",
+  updateAuthorityKeypair: updateAuthorityKeypair,
+});
+
+// 2. Mint your cNFT to the collection
+const response = await helius.mintCompressedNft({
+  name: "Feitan Portor",
+  symbol: "FEITAN",
+  owner: "OWNER_WALLET_ADDRESS",
+  collection: "COLLECTION_MINT_ADDRESS",
+  description: "Feitan Portor is a member of the notorious Phantom Troupe.",
+  attributes: [
+    {
+      trait_type: "Affiliation",
+      value: "Phantom Troupe",
+    },
+    {
+      trait_type: "Nen Ability",
+      value: "Pain Packer",
+    },
+  ],
+  externalUrl: "https://hunterxhunter.fandom.com/wiki/Feitan_Portor",
+  imagePath: "../images/feitan.png",
+  walletPrivatekey: "YOUR_WALLET_PRIVATE_KEY",
+});
+
+// 3. Revoke collection authority (optional)
+await revokeCollectionAuthority({
+  collectionMint: "COLLECTION_MINT_ADDRESS",
+  revokeAuthorityKeypair: revokeAuthorityKeypair,
+});
 ```
 
 ## NFT API
