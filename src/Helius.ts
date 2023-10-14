@@ -8,14 +8,31 @@ import {
   MintlistItem,
   MintApiRequest,
   MintApiResponse,
+  MintApiAuthority,
+  DelegateCollectionAuthorityRequest,
+  RevokeCollectionAuthorityRequest,
 } from "./types";
 
 import axios, { type AxiosError } from "axios";
-import { Connection, Cluster, Keypair } from "@solana/web3.js";
+import {
+  Connection,
+  Cluster,
+  PublicKey,
+  Transaction,
+  sendAndConfirmTransaction,
+} from "@solana/web3.js";
 import Irys from "@irys/sdk";
 import * as fs from "fs";
 import { heliusClusterApiUrl } from "./utils";
 import { RpcClient } from "./RpcClient";
+import {
+  ApproveCollectionAuthorityInstructionAccounts,
+  RevokeCollectionAuthorityInstructionAccounts,
+  PROGRAM_ID as TOKEN_METADATA_PROGRAM_ID,
+  createApproveCollectionAuthorityInstruction,
+  createRevokeCollectionAuthorityInstruction,
+} from "@metaplex-foundation/mpl-token-metadata";
+import { mintApiAuthority } from "./utils/mintApi";
 
 const API_URL_V0: string = "https://api.helius.xyz/v0";
 const API_URL_V1: string = "https://api.helius.xyz/v1";
@@ -43,6 +60,9 @@ export class Helius {
   /** The beefed up RPC client object from Helius SDK */
   public readonly rpc: RpcClient;
 
+  /** The Helius Mint API authority for the cluster */
+  public readonly mintApiAuthority: MintApiAuthority;
+
   /**
    * Initializes Helius API client with an API key
    * @constructor
@@ -58,6 +78,7 @@ export class Helius {
     this.endpoint = heliusClusterApiUrl(apiKey, cluster);
     this.connection = new Connection(this.endpoint);
     this.rpc = new RpcClient(this.connection, id);
+    this.mintApiAuthority = mintApiAuthority(cluster);
   }
   /**
    * Retrieves a list of all webhooks associated with the current API key
@@ -351,6 +372,124 @@ export class Helius {
     }
   }
 
+  /**
+   * Delegates collection authority to a new address.
+   * @param {DelegateCollectionAuthorityRequest} request - The request object containing the following fields:
+   * @param {string} request.collectionMint - The address of the collection mint.
+   * @param {string} [request.newCollectionAuthority] - The new collection authority (optional). Defaults to Helius Mint API authority if none is provided.
+   * @param {Keypair} request.updateAuthorityKeypair - The keypair for the update authority for the collection.
+   * @param {Keypair} [request.payerKeypair] - The keypair for the payer (optional). Defaults to the update authority keypair if none is provided.
+   * @returns {Promise<string>} A promise that resolves to the transaction signature.
+   */
+  async delegateCollectionAuthority(
+    request: DelegateCollectionAuthorityRequest
+  ): Promise<string> {
+    try {
+      let {
+        collectionMint,
+        updateAuthorityKeypair,
+        newCollectionAuthority,
+        payerKeypair,
+      } = request;
+
+      payerKeypair = payerKeypair ?? updateAuthorityKeypair;
+      newCollectionAuthority = newCollectionAuthority ?? this.mintApiAuthority;
+
+      const collectionMintPubkey = new PublicKey(collectionMint);
+      const collectionMetadata =
+        this.getCollectionMetadataAccount(collectionMintPubkey);
+      const newCollectionAuthorityPubkey = new PublicKey(
+        newCollectionAuthority
+      );
+      const collectionAuthorityRecord = this.getCollectionAuthorityRecord(
+        collectionMintPubkey,
+        newCollectionAuthorityPubkey
+      );
+      const accounts: ApproveCollectionAuthorityInstructionAccounts = {
+        collectionAuthorityRecord,
+        newCollectionAuthority: newCollectionAuthorityPubkey,
+        updateAuthority: updateAuthorityKeypair.publicKey,
+        payer: payerKeypair.publicKey,
+        metadata: collectionMetadata,
+        mint: collectionMintPubkey,
+      };
+      const inx = createApproveCollectionAuthorityInstruction(accounts);
+      const tx = new Transaction().add(inx);
+      tx.feePayer = payerKeypair.publicKey;
+      const sig = await sendAndConfirmTransaction(
+        this.connection,
+        tx,
+        [payerKeypair, updateAuthorityKeypair],
+        {
+          commitment: "confirmed",
+          skipPreflight: true,
+        }
+      );
+      return sig;
+    } catch (e) {
+      console.error("Failed to delegate collection authority: ", e);
+      throw e;
+    }
+  }
+
+  /**
+   * Revokes collection authority from an address.
+   * @param {RevokeCollectionAuthorityRequest} request - The request object containing the following fields:
+   * @param {string} request.collectionMint - The address of the collection mint.
+   * @param {string} [request.delegatedCollectionAuthority] - The address of the delegated collection authority (optional). Defaults to Helius Mint API authority if none is provided.
+   * @param {Keypair} request.revokeAuthorityKeypair - The keypair for the authority that revokes collection access.
+   * @param {Keypair} [request.payerKeypair] - The keypair for the payer (optional). Defaults to the revoke authority keypair if none is provided.
+   * @returns {Promise<string>} A promise that resolves to the transaction signature.
+   */
+  async revokeCollectionAuthority(
+    request: RevokeCollectionAuthorityRequest
+  ): Promise<string> {
+    try {
+      let {
+        collectionMint,
+        revokeAuthorityKeypair,
+        delegatedCollectionAuthority,
+        payerKeypair,
+      } = request;
+
+      payerKeypair = payerKeypair ?? revokeAuthorityKeypair;
+      delegatedCollectionAuthority =
+        delegatedCollectionAuthority ?? this.mintApiAuthority;
+
+      const collectionMintPubkey = new PublicKey(collectionMint);
+      const collectionAuthority = new PublicKey(delegatedCollectionAuthority);
+      const collectionMetadata =
+        this.getCollectionMetadataAccount(collectionMintPubkey);
+      const collectionAuthorityRecord = this.getCollectionAuthorityRecord(
+        collectionMintPubkey,
+        collectionAuthority
+      );
+      const accounts: RevokeCollectionAuthorityInstructionAccounts = {
+        collectionAuthorityRecord,
+        delegateAuthority: collectionAuthority,
+        revokeAuthority: revokeAuthorityKeypair.publicKey,
+        metadata: collectionMetadata,
+        mint: collectionMintPubkey,
+      };
+      const inx = createRevokeCollectionAuthorityInstruction(accounts);
+      const tx = new Transaction().add(inx);
+      tx.feePayer = payerKeypair.publicKey;
+      const sig = await sendAndConfirmTransaction(
+        this.connection,
+        tx,
+        [revokeAuthorityKeypair],
+        {
+          commitment: "confirmed",
+          skipPreflight: true,
+        }
+      );
+      return sig;
+    } catch (e) {
+      console.error("Failed to revoke collection authority: ", e);
+      throw e;
+    }
+  }
+
   private async _editWebhook(
     webhookID: string,
     existingWebhook: Webhook,
@@ -429,5 +568,33 @@ export class Helius {
     } catch (e) {
       throw new Error(`error uploading image to Arweave: ${e}`);
     }
+  }
+  private getCollectionAuthorityRecord(
+    collectionMint: PublicKey,
+    collectionAuthority: PublicKey
+  ) {
+    const [collectionAuthRecordPda] = PublicKey.findProgramAddressSync(
+      [
+        Buffer.from("metadata"),
+        TOKEN_METADATA_PROGRAM_ID.toBuffer(),
+        collectionMint.toBuffer(),
+        Buffer.from("collection_authority"),
+        collectionAuthority.toBuffer(),
+      ],
+      TOKEN_METADATA_PROGRAM_ID
+    );
+    return collectionAuthRecordPda;
+  }
+
+  private getCollectionMetadataAccount(collectionMint: PublicKey) {
+    const [collectionMetadataAccount] = PublicKey.findProgramAddressSync(
+      [
+        Buffer.from("metadata", "utf8"),
+        TOKEN_METADATA_PROGRAM_ID.toBuffer(),
+        collectionMint.toBuffer(),
+      ],
+      TOKEN_METADATA_PROGRAM_ID
+    );
+    return collectionMetadataAccount;
   }
 }

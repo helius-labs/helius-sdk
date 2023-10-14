@@ -1,4 +1,4 @@
-import type { TransactionError } from "@solana/web3.js";
+import type { Keypair, TransactionError } from "@solana/web3.js";
 
 import type {
   WebhookType,
@@ -229,4 +229,18 @@ export interface MintApiResponse {
     minted: boolean;
     assetId: string;
   };
+}
+
+export interface DelegateCollectionAuthorityRequest {
+  collectionMint: string;
+  newCollectionAuthority?: string;
+  updateAuthorityKeypair: Keypair;
+  payerKeypair?: Keypair;
+}
+
+export interface RevokeCollectionAuthorityRequest {
+  collectionMint: string;
+  delegatedCollectionAuthority?: string;
+  revokeAuthorityKeypair: Keypair;
+  payerKeypair?: Keypair;
 }

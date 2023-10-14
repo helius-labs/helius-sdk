@@ -179,18 +179,14 @@ Get an asset by its ID.
 ```ts
 import { Helius } from "helius-sdk";
 
-async function run() {
-  const helius = new Helius("HELIUS_API_KEY");
-  const response = await helius.rpc.getAsset({
-    id: "F9Lw3ki3hJ7PF9HQXsBzoY8GyE6sPoEZZdXJBsTTD2rk",
-    displayOptions: {
-      showCollectionMetadata: true,
-    },
-  });
-  console.log(response.grouping?.map((g) => g.collection_metadata?.name));
-}
-
-run();
+const helius = new Helius("HELIUS_API_KEY");
+const response = await helius.rpc.getAsset({
+  id: "F9Lw3ki3hJ7PF9HQXsBzoY8GyE6sPoEZZdXJBsTTD2rk",
+  displayOptions: {
+    showCollectionMetadata: true,
+  },
+});
+console.log(response.grouping?.map((g) => g.collection_metadata?.name));
 ```
 
 ### getAssetBatch
@@ -200,19 +196,15 @@ Get multiple assets by ID (up to 1k).
 ```ts
 import { Helius } from "helius-sdk";
 
-async function run() {
-  const ids = [
-    "F9Lw3ki3hJ7PF9HQXsBzoY8GyE6sPoEZZdXJBsTTD2rk",
-    "F9Lw3ki3hJ7PF9HQXsBzoY8GyE6sPoEZZdXJBsTTD2rk",
-  ];
-  const helius = new Helius("your-api-key");
-  const response = await helius.rpc.getAssetBatch({
-    ids: ids,
-  });
-  console.log(response.map((x) => x.id));
-}
-
-run();
+const ids = [
+  "F9Lw3ki3hJ7PF9HQXsBzoY8GyE6sPoEZZdXJBsTTD2rk",
+  "F9Lw3ki3hJ7PF9HQXsBzoY8GyE6sPoEZZdXJBsTTD2rk",
+];
+const helius = new Helius("your-api-key");
+const response = await helius.rpc.getAssetBatch({
+  ids: ids,
+});
+console.log(response.map((x) => x.id));
 ```
 
 ### **getSignaturesForAsset**
@@ -222,16 +214,12 @@ Get a list of transaction signatures related to a compressed asset.
 ```ts
 import { Helius } from "helius-sdk";
 
-async function run() {
-  const helius = new Helius("HELIUS_API_KEY");
-  const response = await helius.rpc.getSignaturesForAsset({
-    id: "Bu1DEKeawy7txbnCEJE4BU3BKLXaNAKCYcHR4XhndGss",
-    page: 1,
-  });
-  console.log(response.items);
-}
-
-run();
+const helius = new Helius("HELIUS_API_KEY");
+const response = await helius.rpc.getSignaturesForAsset({
+  id: "Bu1DEKeawy7txbnCEJE4BU3BKLXaNAKCYcHR4XhndGss",
+  page: 1,
+});
+console.log(response.items);
 ```
 
 ### searchAssets
@@ -241,16 +229,13 @@ Search for assets by a variety of parameters. Very useful for token-gating!
 ```ts
 import { Helius } from "helius-sdk";
 
-async function run() {
-  const helius = new Helius("HELIUS_API_KEY");
-  const response = await helius.rpc.searchAssets({
-    ownerAddress: "2k5AXX4guW9XwRQ1AKCpAuUqgWDpQpwFfpVFh3hnm2Ha",
-    compressed: true,
-    page: 1,
-  });
-  console.log(response.items);
-}
-run();
+const helius = new Helius("HELIUS_API_KEY");
+const response = await helius.rpc.searchAssets({
+  ownerAddress: "2k5AXX4guW9XwRQ1AKCpAuUqgWDpQpwFfpVFh3hnm2Ha",
+  compressed: true,
+  page: 1,
+});
+console.log(response.items);
 ```
 
 ### **getAssetProof**
@@ -260,15 +245,11 @@ Get a merkle proof for a compressed asset by its ID.
 ```ts
 import { Helius } from "helius-sdk";
 
-async function run() {
-  const helius = new Helius("HELIUS_API_KEY");
-  const response = await helius.rpc.getAssetProof({
-    id: "Bu1DEKeawy7txbnCEJE4BU3BKLXaNAKCYcHR4XhndGss",
-  });
-  console.log(response);
-}
-
-run();
+const helius = new Helius("HELIUS_API_KEY");
+const response = await helius.rpc.getAssetProof({
+  id: "Bu1DEKeawy7txbnCEJE4BU3BKLXaNAKCYcHR4XhndGss",
+});
+console.log(response);
 ```
 
 ### **getAssetsByOwner**
@@ -278,16 +259,12 @@ Get a list of assets owned by an address. This is the fastest way to get all the
 ```ts
 import { Helius } from "helius-sdk";
 
-async function run() {
-  const helius = new Helius("HELIUS_API_KEY");
-  const response = await helius.rpc.getAssetsByOwner({
-    ownerAddress: "86xCnPeV69n6t3DnyGvkKobf9FdN2H9oiVDdaMpo2MMY",
-    page: 1,
-  });
-  console.log(response.items);
-}
-
-run();
+const helius = new Helius("HELIUS_API_KEY");
+const response = await helius.rpc.getAssetsByOwner({
+  ownerAddress: "86xCnPeV69n6t3DnyGvkKobf9FdN2H9oiVDdaMpo2MMY",
+  page: 1,
+});
+console.log(response.items);
 ```
 
 ### **getAssetsByGroup**
@@ -297,17 +274,13 @@ Get a list of assets by a group key and value. This endpoint is very useful for 
 ```ts
 import { Helius } from "helius-sdk";
 
-async function run() {
-  const helius = new Helius("HELIUS_API_KEY");
-  const response = await helius.rpc.getAssetsByGroup({
-    groupKey: "collection",
-    groupValue: "J1S9H3QjnRtBbbuD4HjPV6RpRhwuk4zKbxsnCHuTgh9w",
-    page: 1,
-  });
-  console.log(response.items);
-}
-
-run();
+const helius = new Helius("HELIUS_API_KEY");
+const response = await helius.rpc.getAssetsByGroup({
+  groupKey: "collection",
+  groupValue: "J1S9H3QjnRtBbbuD4HjPV6RpRhwuk4zKbxsnCHuTgh9w",
+  page: 1,
+});
+console.log(response.items);
 ```
 
 ### **getAssetsByCreator**
@@ -317,17 +290,13 @@ Get a list of assets created by an address.
 ```ts
 import { Helius } from "helius-sdk";
 
-async function run() {
-  const helius = new Helius("HELIUS_API_KEY");
-  const response = await helius.rpc.getAssetsByCreator({
-    creatorAddress: "D3XrkNZz6wx6cofot7Zohsf2KSsu2ArngNk8VqU9cTY3",
-    onlyVerified: true,
-    page: 1,
-  });
-  console.log(response.items);
-}
-
-run();
+const helius = new Helius("HELIUS_API_KEY");
+const response = await helius.rpc.getAssetsByCreator({
+  creatorAddress: "D3XrkNZz6wx6cofot7Zohsf2KSsu2ArngNk8VqU9cTY3",
+  onlyVerified: true,
+  page: 1,
+});
+console.log(response.items);
 ```
 
 ### **getAssetsByAuthority**
@@ -337,16 +306,12 @@ Get a list of assets with a specific authority.
 ```ts
 import { Helius } from "helius-sdk";
 
-async function run() {
-  const helius = new Helius("HELIUS_API_KEY");
-  const response = await helius.rpc.getAssetsByAuthority({
-    authorityAddress: "2RtGg6fsFiiF1EQzHqbd66AhW7R5bWeQGpTbv2UMkCdW",
-    page: 1,
-  });
-  console.log(response.items);
-}
-
-run();
+const helius = new Helius("HELIUS_API_KEY");
+const response = await helius.rpc.getAssetsByAuthority({
+  authorityAddress: "2RtGg6fsFiiF1EQzHqbd66AhW7R5bWeQGpTbv2UMkCdW",
+  page: 1,
+});
+console.log(response.items);
 ```
 
 ## Mint API
@@ -358,41 +323,37 @@ To mint a compressed NFT, simply call the `mintCompressedNft` method and pass in
 ```ts
 import { Helius } from "helius-sdk";
 
-async function run() {
-  const helius = new Helius("HELIUS_API_KEY");
-  const response = await helius.mintCompressedNft({
-    name: "Exodia the Forbidden One",
-    symbol: "ETFO",
-    owner: "OWNER_WALLET_ADDRESS",
-    description:
-      "Exodia the Forbidden One is a powerful, legendary creature composed of five parts: the Right Leg, Left Leg, Right Arm, Left Arm, and the Head. When all five parts are assembled, Exodia becomes an unstoppable force.",
-    attributes: [
-      {
-        trait_type: "Type",
-        value: "Legendary",
-      },
-      {
-        trait_type: "Power",
-        value: "Infinite",
-      },
-      {
-        trait_type: "Element",
-        value: "Dark",
-      },
-      {
-        trait_type: "Rarity",
-        value: "Mythical",
-      },
-    ],
-    imageUrl:
-      "https://cdna.artstation.com/p/assets/images/images/052/118/830/large/julie-almoneda-03.jpg?1658992401",
-    externalUrl: "https://www.yugioh-card.com/en/",
-    sellerFeeBasisPoints: 6900,
-  });
-  console.log(response.result);
-}
-
-run();
+const helius = new Helius("HELIUS_API_KEY");
+const response = await helius.mintCompressedNft({
+  name: "Exodia the Forbidden One",
+  symbol: "ETFO",
+  owner: "OWNER_WALLET_ADDRESS",
+  description:
+    "Exodia the Forbidden One is a powerful, legendary creature composed of five parts: the Right Leg, Left Leg, Right Arm, Left Arm, and the Head. When all five parts are assembled, Exodia becomes an unstoppable force.",
+  attributes: [
+    {
+      trait_type: "Type",
+      value: "Legendary",
+    },
+    {
+      trait_type: "Power",
+      value: "Infinite",
+    },
+    {
+      trait_type: "Element",
+      value: "Dark",
+    },
+    {
+      trait_type: "Rarity",
+      value: "Mythical",
+    },
+  ],
+  imageUrl:
+    "https://cdna.artstation.com/p/assets/images/images/052/118/830/large/julie-almoneda-03.jpg?1658992401",
+  externalUrl: "https://www.yugioh-card.com/en/",
+  sellerFeeBasisPoints: 6900,
+});
+console.log(response.result);
 ```
 
 If you want the SDK to handle the image upload, you can do so by passing in the `imagePath` and `walletPrivatekey` fields. `imagePath` is the relative path to the image, and `walletPrivatekey` is the private key of the wallet that'll pay for the image upload to Arweave.
@@ -400,31 +361,73 @@ If you want the SDK to handle the image upload, you can do so by passing in the 
 ```ts
 import { Helius } from "helius-sdk";
 
-async function run() {
-  const helius = new Helius("HELIUS_API_KEY");
-  const response = await helius.mintCompressedNft({
-    name: "Aggron",
-    symbol: "AGNFT",
-    owner: "OWNER_WALLET_ADDRESS",
-    description:
-      "Aggron is a powerful Steel/Rock-type Pokémon known for its iron defense.",
-    attributes: [
-      {
-        trait_type: "Type",
-        value: "Steel/Rock",
-      },
-      {
-        trait_type: "Power",
-        value: "High",
-      },
-    ],
-    externalUrl: "https://www.pokemon.com/us/pokedex/aggron",
-    imagePath: "../images/aagron.png",
-    walletPrivatekey: "YOUR_WALLET_PRIVATE_KEY",
-  });
-}
+const helius = new Helius("HELIUS_API_KEY");
+const response = await helius.mintCompressedNft({
+  name: "Aggron",
+  symbol: "AGNFT",
+  owner: "OWNER_WALLET_ADDRESS",
+  description:
+    "Aggron is a powerful Steel/Rock-type Pokémon known for its iron defense.",
+  attributes: [
+    {
+      trait_type: "Type",
+      value: "Steel/Rock",
+    },
+    {
+      trait_type: "Power",
+      value: "High",
+    },
+  ],
+  externalUrl: "https://www.pokemon.com/us/pokedex/aggron",
+  imagePath: "../images/aagron.png",
+  walletPrivatekey: "YOUR_WALLET_PRIVATE_KEY",
+});
+```
 
-run();
+If you want to mint your cNFT to a collection:
+
+- Delegate Helius as a collection authority (using `DelegateCollectionAuthority` method), so that Helius can mint to that collection on your behalf.
+- Pass in the collection mint address in the `collection` field.
+- (Optional) Revoke collection authority (using `RevokeCollectionAuthority` method).
+
+```ts
+import { Helius } from "helius-sdk";
+
+const helius = new Helius("HELIUS_API_KEY");
+
+// 1. Delegate Helius as a collection authority
+await helius.delegateCollectionAuthority({
+  collectionMint: "COLLECTION_MINT_ADDRESS",
+  updateAuthorityKeypair: updateAuthorityKeypair,
+});
+
+// 2. Mint your cNFT to the collection
+const response = await helius.mintCompressedNft({
+  name: "Feitan Portor",
+  symbol: "FEITAN",
+  owner: "OWNER_WALLET_ADDRESS",
+  collection: "COLLECTION_MINT_ADDRESS",
+  description: "Feitan Portor is a member of the notorious Phantom Troupe.",
+  attributes: [
+    {
+      trait_type: "Affiliation",
+      value: "Phantom Troupe",
+    },
+    {
+      trait_type: "Nen Ability",
+      value: "Pain Packer",
+    },
+  ],
+  externalUrl: "https://hunterxhunter.fandom.com/wiki/Feitan_Portor",
+  imagePath: "../images/feitan.png",
+  walletPrivatekey: "YOUR_WALLET_PRIVATE_KEY",
+});
+
+// 3. Revoke collection authority (optional)
+await helius.revokeCollectionAuthority({
+  collectionMint: "COLLECTION_MINT_ADDRESS",
+  revokeAuthorityKeypair: revokeAuthorityKeypair,
+});
 ```
 
 ## NFT API
