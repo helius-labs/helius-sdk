@@ -564,3 +564,8 @@ export enum SearchConditionType {
 export enum Group {
   COLLECTION = "collection",
 }
+
+export enum MintApiAuthority {
+  MAINNET = "HnT5KVAywGgQDhmh6Usk4bxRg4RwKxCK4jmECyaDth5R",
+  DEVNET = "2LbAtCJSaHqTnP9M5QSjvAMXk79RNLusFspFN5Ew67TC",
+}
