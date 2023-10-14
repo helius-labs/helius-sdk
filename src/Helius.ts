@@ -376,9 +376,9 @@ export class Helius {
    * Delegates collection authority to a new address.
    * @param {DelegateCollectionAuthorityRequest} request - The request object containing the following fields:
    * @param {string} request.collectionMint - The address of the collection mint.
-   * @param {string} [request.newCollectionAuthority] - The new collection authority (optional). Defaults to Helius Mint API authority if none provided.
+   * @param {string} [request.newCollectionAuthority] - The new collection authority (optional). Defaults to Helius Mint API authority if none is provided.
    * @param {Keypair} request.updateAuthorityKeypair - The keypair for the update authority for the collection.
-   * @param {Keypair} [request.payerKeypair] - The keypair for the payer (optional). Defaults to the update authority keypair if none provided.
+   * @param {Keypair} [request.payerKeypair] - The keypair for the payer (optional). Defaults to the update authority keypair if none is provided.
    * @returns {Promise<string>} A promise that resolves to the transaction signature.
    */
   async delegateCollectionAuthority(
@@ -436,9 +436,9 @@ export class Helius {
    * Revokes collection authority from an address.
    * @param {RevokeCollectionAuthorityRequest} request - The request object containing the following fields:
    * @param {string} request.collectionMint - The address of the collection mint.
-   * @param {string} [request.delegatedCollectionAuthority] - The address of the delegated collection authority (optional). Defaults to Helius Mint API authority if none provided.
+   * @param {string} [request.delegatedCollectionAuthority] - The address of the delegated collection authority (optional). Defaults to Helius Mint API authority if none is provided.
    * @param {Keypair} request.revokeAuthorityKeypair - The keypair for the authority that revokes collection access.
-   * @param {Keypair} [request.payerKeypair] - The keypair for the payer (optional). Defaults to the revoke authority keypair if none provided.
+   * @param {Keypair} [request.payerKeypair] - The keypair for the payer (optional). Defaults to the revoke authority keypair if none is provided.
    * @returns {Promise<string>} A promise that resolves to the transaction signature.
    */
   async revokeCollectionAuthority(
