@@ -396,7 +396,7 @@ import { Helius } from "helius-sdk";
 const helius = new Helius("HELIUS_API_KEY");
 
 // 1. Delegate Helius as a collection authority
-await delegateCollectionAuthority({
+await helius.delegateCollectionAuthority({
   collectionMint: "COLLECTION_MINT_ADDRESS",
   updateAuthorityKeypair: updateAuthorityKeypair,
 });
@@ -424,7 +424,7 @@ const response = await helius.mintCompressedNft({
 });
 
 // 3. Revoke collection authority (optional)
-await revokeCollectionAuthority({
+await helius.revokeCollectionAuthority({
   collectionMint: "COLLECTION_MINT_ADDRESS",
   revokeAuthorityKeypair: revokeAuthorityKeypair,
 });
