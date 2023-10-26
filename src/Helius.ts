@@ -11,19 +11,20 @@ import {
   MintApiAuthority,
   DelegateCollectionAuthorityRequest,
   RevokeCollectionAuthorityRequest,
+  HeliusCluster,
+  HeliusEndpoints,
 } from "./types";
 
 import axios, { type AxiosError } from "axios";
 import {
   Connection,
-  Cluster,
   PublicKey,
   Transaction,
   sendAndConfirmTransaction,
 } from "@solana/web3.js";
 import Irys from "@irys/sdk";
 import * as fs from "fs";
-import { heliusClusterApiUrl } from "./utils";
+import { getHeliusEndpoints } from "./utils";
 import { RpcClient } from "./RpcClient";
 import {
   ApproveCollectionAuthorityInstructionAccounts,
@@ -33,9 +34,6 @@ import {
   createRevokeCollectionAuthorityInstruction,
 } from "@metaplex-foundation/mpl-token-metadata";
 import { mintApiAuthority } from "./utils/mintApi";
-
-const API_URL_V0: string = "https://api.helius.xyz/v0";
-const API_URL_V1: string = "https://api.helius.xyz/v1";
 
 /**
  * This is the base level class for interfacing with all Helius API methods.
@@ -49,10 +47,13 @@ export class Helius {
   private apiKey: string;
 
   /** The cluster in which the connection endpoint belongs to */
-  public readonly cluster: Cluster;
+  public readonly cluster: HeliusCluster;
 
   /** URL to the fullnode JSON RPC endpoint */
   public readonly endpoint: string;
+
+  /** URL to the API and RPC endpoints */
+  public readonly endpoints: HeliusEndpoints;
 
   /** The connection object from Solana's SDK */
   public readonly connection: Connection;
@@ -70,13 +71,14 @@ export class Helius {
    */
   constructor(
     apiKey: string,
-    cluster: Cluster = "mainnet-beta",
+    cluster: HeliusCluster = "mainnet-beta",
     id: string = "helius-sdk"
   ) {
     this.apiKey = apiKey;
     this.cluster = cluster;
-    this.endpoint = heliusClusterApiUrl(apiKey, cluster);
-    this.connection = new Connection(this.endpoint);
+    this.endpoints = getHeliusEndpoints(cluster);
+    this.connection = new Connection(`${this.endpoints.rpc}?api-key=${this.apiKey}`);
+    this.endpoint = this.connection.rpcEndpoint;
     this.rpc = new RpcClient(this.connection, id);
     this.mintApiAuthority = mintApiAuthority(cluster);
   }
@@ -88,7 +90,7 @@ export class Helius {
   async getAllWebhooks(): Promise<Webhook[]> {
     try {
       const { data } = await axios.get(
-        `${API_URL_V0}/webhooks?api-key=${this.apiKey}`
+        this.getApiEndpoint(`/v0/webhooks`)
       );
       return data;
     } catch (err: any | AxiosError) {
@@ -111,7 +113,7 @@ export class Helius {
   async getWebhookByID(webhookID: string): Promise<Webhook> {
     try {
       const { data } = await axios.get(
-        `${API_URL_V0}/webhooks/${webhookID}?api-key=${this.apiKey}`
+        this.getApiEndpoint(`/v0/webhooks/${webhookID}`)
       );
       return data;
     } catch (err: any | AxiosError) {
@@ -136,7 +138,7 @@ export class Helius {
   ): Promise<Webhook> {
     try {
       const { data } = await axios.post(
-        `${API_URL_V0}/webhooks?api-key=${this.apiKey}`,
+        this.getApiEndpoint(`/v0/webhooks`),
         { ...createWebhookRequest }
       );
       return data;
@@ -160,7 +162,7 @@ export class Helius {
   async deleteWebhook(webhookID: string): Promise<boolean> {
     try {
       await axios.delete(
-        `${API_URL_V0}/webhooks/${webhookID}?api-key=${this.apiKey}`
+        this.getApiEndpoint(`/v0/webhooks/${webhookID}`)
       );
       return true;
     } catch (err: any | AxiosError) {
@@ -327,7 +329,7 @@ export class Helius {
 
     try {
       const { data } = await axios.post(
-        `${API_URL_V1}/mintlist?api-key=${this.apiKey}`,
+        this.getApiEndpoint(`/v1/mintlist`),
         { ...request }
       );
       return data;
@@ -490,6 +492,14 @@ export class Helius {
     }
   }
 
+  /** Get the API endpoint for the specified path */
+  getApiEndpoint(path: string): string {
+    if (!path.startsWith('/v0') || !path.startsWith('/v1')) {
+      throw new Error(`invalid API path: ${path}`)
+    }
+    return `${this.endpoints.api}${path}?api-key=${this.apiKey}`
+  }
+
   private async _editWebhook(
     webhookID: string,
     existingWebhook: Webhook,
@@ -512,7 +522,7 @@ export class Helius {
     };
 
     const { data } = await axios.put(
-      `${API_URL_V0}/webhooks/${webhookID}?api-key=${this.apiKey}`,
+      this.getApiEndpoint(`/v0/webhooks/${webhookID}`),
       editRequest
     );
     return data;
