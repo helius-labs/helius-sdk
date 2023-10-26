@@ -1,1 +1,1 @@
-export * from "./cluster";
+export * from "./get-helius-endpoints";

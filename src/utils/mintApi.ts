@@ -1,7 +1,6 @@
-import { Cluster } from "@solana/web3.js";
-import { MintApiAuthority } from "../types";
+import { HeliusCluster, MintApiAuthority } from '../types'
 
-export function mintApiAuthority(cluster: Cluster) {
+export function mintApiAuthority(cluster: HeliusCluster) {
   switch (cluster) {
     case "devnet":
       return MintApiAuthority.DEVNET;
