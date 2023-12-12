@@ -1,4 +1,4 @@
-import type { Cluster, Keypair, TransactionError } from '@solana/web3.js'
+import type { Cluster, Keypair, TransactionError } from "@solana/web3.js";
 
 import type {
   WebhookType,
@@ -11,7 +11,7 @@ import type {
   AccountWebhookEncoding,
 } from "./enums";
 
-export type HeliusCluster = Omit<Cluster, 'testnet'>
+export type HeliusCluster = Omit<Cluster, "testnet">;
 
 export interface HeliusEndpoints {
   api: string;
@@ -42,13 +42,8 @@ export type CollectionIdentifier = {
   verifiedCollectionAddresses?: string[];
 };
 
-export type CreateWebhookRequest = Omit<
-  Webhook,
-  "webhookID" | "wallet" | "project"
->;
-export type EditWebhookRequest = Partial<
-  Omit<Webhook, "webhookID" | "wallet" | "project">
->;
+export type CreateWebhookRequest = Omit<Webhook, "webhookID" | "wallet" | "project">;
+export type EditWebhookRequest = Partial<Omit<Webhook, "webhookID" | "wallet" | "project">>;
 
 export interface CreateCollectionWebhookRequest extends CreateWebhookRequest {
   collectionQuery: CollectionIdentifier;
@@ -251,3 +246,9 @@ export interface RevokeCollectionAuthorityRequest {
   revokeAuthorityKeypair: Keypair;
   payerKeypair?: Keypair;
 }
+
+export type configOptions = {
+  maxRetries?: number;
+  preflightCommitment?: "processed" | "confirmed" | "finalized";
+  skipPreflight?: boolean;
+};

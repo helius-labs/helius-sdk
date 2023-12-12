@@ -1,8 +1,12 @@
 import {
   BlockhashWithExpiryBlockHeight,
+  Transaction,
   TransactionSignature,
   Commitment,
   PublicKey,
+  Keypair,
+  ComputeBudgetProgram,
+  sendAndConfirmTransaction,
   AccountInfo,
   GetLatestBlockhashConfig,
   RpcResponseAndContext,
@@ -13,6 +17,7 @@ import {
 } from "@solana/web3.js";
 import axios from "axios";
 import { DAS } from "./types/das-types";
+import { configOptions } from "./types";
 
 export type SendAndConfirmTransactionResponse = {
   signature: TransactionSignature;
@@ -25,10 +30,7 @@ export type SendAndConfirmTransactionResponse = {
  * The beefed up RPC client from Helius SDK
  */
 export class RpcClient {
-  constructor(
-    protected readonly connection: Connection,
-    protected readonly id?: string
-  ) {}
+  constructor(protected readonly connection: Connection, protected readonly id?: string) {}
 
   /**
    * Request an allocation of lamports to the specified address
@@ -86,22 +88,19 @@ export class RpcClient {
    */
   async getStakeAccounts(wallet: string): Promise<any> {
     try {
-      return this.connection.getParsedProgramAccounts(
-        new PublicKey("Stake11111111111111111111111111111111111111"),
-        {
-          filters: [
-            {
-              dataSize: 200,
+      return this.connection.getParsedProgramAccounts(new PublicKey("Stake11111111111111111111111111111111111111"), {
+        filters: [
+          {
+            dataSize: 200,
+          },
+          {
+            memcmp: {
+              offset: 44,
+              bytes: wallet,
             },
-            {
-              memcmp: {
-                offset: 44,
-                bytes: wallet,
-              },
-            },
-          ],
-        }
-      );
+          },
+        ],
+      });
     } catch (e) {
       throw new Error(`error calling getStakeAccounts: ${e}`);
     }
@@ -120,22 +119,19 @@ export class RpcClient {
     }[]
   > {
     try {
-      return this.connection.getParsedProgramAccounts(
-        new PublicKey("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"),
-        {
-          filters: [
-            {
-              dataSize: 165,
+      return this.connection.getParsedProgramAccounts(new PublicKey("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"), {
+        filters: [
+          {
+            dataSize: 165,
+          },
+          {
+            memcmp: {
+              offset: 0,
+              bytes: mintAddress,
             },
-            {
-              memcmp: {
-                offset: 0,
-                bytes: mintAddress,
-              },
-            },
-          ],
-        }
-      );
+          },
+        ],
+      });
     } catch (e) {
       throw new Error(`error calling getTokenHolders: ${e}`);
     }
@@ -147,9 +143,7 @@ export class RpcClient {
    * @returns {Promise<DAS.GetAssetResponse>}
    * @throws {Error}
    */
-  async getAsset(
-    params: DAS.GetAssetRequest | string
-  ): Promise<DAS.GetAssetResponse> {
+  async getAsset(params: DAS.GetAssetRequest | string): Promise<DAS.GetAssetResponse> {
     try {
       const url = `${this.connection.rpcEndpoint}`;
 
@@ -179,9 +173,7 @@ export class RpcClient {
    * @returns {Promise<DAS.GetAssetResponse[]>}
    * @throws {Error}
    */
-  async getAssetBatch(
-    params: DAS.GetAssetBatchRequest
-  ): Promise<DAS.GetAssetResponse[]> {
+  async getAssetBatch(params: DAS.GetAssetBatchRequest): Promise<DAS.GetAssetResponse[]> {
     try {
       const url = `${this.connection.rpcEndpoint}`;
 
@@ -202,9 +194,7 @@ export class RpcClient {
    * @returns {Promise<DAS.GetAssetProofResponse>}
    * @throws {Error}
    */
-  async getAssetProof(
-    params: DAS.GetAssetProofRequest
-  ): Promise<DAS.GetAssetProofResponse> {
+  async getAssetProof(params: DAS.GetAssetProofRequest): Promise<DAS.GetAssetProofResponse> {
     try {
       const url = `${this.connection.rpcEndpoint}`;
       const response = await axios.post(url, {
@@ -226,9 +216,7 @@ export class RpcClient {
    * @returns {Promise<DAS.GetAssetResponseList>}
    * @throws { Error }
    */
-  async getAssetsByGroup(
-    params: DAS.AssetsByGroupRequest
-  ): Promise<DAS.GetAssetResponseList> {
+  async getAssetsByGroup(params: DAS.AssetsByGroupRequest): Promise<DAS.GetAssetResponseList> {
     try {
       const url = `${this.connection.rpcEndpoint}`;
       const response = await axios.post(url, {
@@ -250,9 +238,7 @@ export class RpcClient {
    * @returns {Promise<DAS.GetAssetResponseList>}
    * @throws {Error}
    */
-  async getAssetsByOwner(
-    params: DAS.AssetsByOwnerRequest
-  ): Promise<DAS.GetAssetResponseList> {
+  async getAssetsByOwner(params: DAS.AssetsByOwnerRequest): Promise<DAS.GetAssetResponseList> {
     try {
       const url = `${this.connection.rpcEndpoint}`;
       const response = await axios.post(url, {
@@ -274,9 +260,7 @@ export class RpcClient {
    * @returns {Promise<DAS.GetAssetResponseList>}
    * @throws {Error}
    */
-  async getAssetsByCreator(
-    params: DAS.AssetsByCreatorRequest
-  ): Promise<DAS.GetAssetResponseList> {
+  async getAssetsByCreator(params: DAS.AssetsByCreatorRequest): Promise<DAS.GetAssetResponseList> {
     try {
       const url = `${this.connection.rpcEndpoint}`;
       const response = await axios.post(url, {
@@ -298,9 +282,7 @@ export class RpcClient {
    * @returns {Promise<DAS.GetAssetResponseList>}
    * @throws {Error}
    */
-  async getAssetsByAuthority(
-    params: DAS.AssetsByAuthorityRequest
-  ): Promise<DAS.GetAssetResponseList> {
+  async getAssetsByAuthority(params: DAS.AssetsByAuthorityRequest): Promise<DAS.GetAssetResponseList> {
     try {
       const url = `${this.connection.rpcEndpoint}`;
       const response = await axios.post(url, {
@@ -322,9 +304,7 @@ export class RpcClient {
    * @returns {Promise<DAS.GetAssetResponseList>}
    * @throws {Error}
    */
-  async searchAssets(
-    params: DAS.SearchAssetsRequest
-  ): Promise<DAS.GetAssetResponseList> {
+  async searchAssets(params: DAS.SearchAssetsRequest): Promise<DAS.GetAssetResponseList> {
     try {
       const url = `${this.connection.rpcEndpoint}`;
       const response = await axios.post(url, {
@@ -346,9 +326,7 @@ export class RpcClient {
    * @returns {Promise<GetSignatureForAssetResponse>}
    * @throws {Error}
    */
-  async getSignaturesForAsset(
-    params: DAS.GetSignaturesForAssetRequest
-  ): Promise<DAS.GetSignaturesForAssetResponse> {
+  async getSignaturesForAsset(params: DAS.GetSignaturesForAssetRequest): Promise<DAS.GetSignaturesForAssetResponse> {
     try {
       const url = `${this.connection.rpcEndpoint}`;
       const response = await axios.post(url, {
@@ -363,5 +341,51 @@ export class RpcClient {
     } catch (error) {
       throw new Error(`Error in getSignaturesForAsset: ${error}`);
     }
+  }
+
+  /**
+   * Subtmits a transaction with an an additional priority fee
+   *
+   * @param {Transaction} transaction - the transaction to send
+   * @param {Keypair[]} signers - the array of signers for the transaction
+   * @param {number} priorityFee - the priority fee in micro-lamports
+   * @param {Object} configOptions - additional configuration options (i.e., number of retries, preflight commitment, skip preflight)
+   * @returns {Promise<string>} - a promise that resolves to the transaction ID
+   * @throws {Error} - throws an error if the transaction is not sent successfully after the max number of retries
+   */
+  async sendTransactionWithPriorityFees(
+    transaction: Transaction,
+    signers: Keypair[],
+    priorityFee: number,
+    computeLimit: number = 200000,
+    configOptions: configOptions
+  ): Promise<string> {
+    const { maxRetries = 5, preflightCommitment = "finalized", skipPreflight = false } = configOptions;
+
+    const computePriceIx = ComputeBudgetProgram.setComputeUnitPrice({ microLamports: priorityFee });
+    const computeLimitIx = ComputeBudgetProgram.setComputeUnitLimit({ units: computeLimit });
+
+    transaction.add(computePriceIx, computeLimitIx);
+
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        const latestBlockhashInfo: BlockhashWithExpiryBlockHeight = await this.getLatestBlockhash(preflightCommitment);
+
+        transaction.recentBlockhash = latestBlockhashInfo.blockhash;
+        transaction.sign(...signers);
+
+        const txid = await sendAndConfirmTransaction(this.connection, transaction, signers, {
+          commitment: preflightCommitment,
+          skipPreflight,
+        });
+
+        return txid;
+      } catch (error) {
+        if (attempt === maxRetries) {
+          throw new Error(`Failed to send transaction after ${maxRetries} attempts: ${error}`);
+        }
+      }
+    }
+    throw new Error("Failed to send transaction");
   }
 }
