@@ -111,10 +111,7 @@ import { Helius, Address } from "helius-sdk";
 
 const helius = new Helius("<your-api-key-here>");
 
-helius.appendAddressesToWebhook("your-webhook-id-here", [
-  Address.SQUADS,
-  Address.JUPITER_V3,
-]);
+helius.appendAddressesToWebhook("your-webhook-id-here", [Address.SQUADS, Address.JUPITER_V3]);
 ```
 
 ### **Get All Webhooks**
@@ -196,10 +193,7 @@ Get multiple assets by ID (up to 1k).
 ```ts
 import { Helius } from "helius-sdk";
 
-const ids = [
-  "F9Lw3ki3hJ7PF9HQXsBzoY8GyE6sPoEZZdXJBsTTD2rk",
-  "F9Lw3ki3hJ7PF9HQXsBzoY8GyE6sPoEZZdXJBsTTD2rk",
-];
+const ids = ["F9Lw3ki3hJ7PF9HQXsBzoY8GyE6sPoEZZdXJBsTTD2rk", "F9Lw3ki3hJ7PF9HQXsBzoY8GyE6sPoEZZdXJBsTTD2rk"];
 const helius = new Helius("your-api-key");
 const response = await helius.rpc.getAssetBatch({
   ids: ids,
@@ -348,8 +342,7 @@ const response = await helius.mintCompressedNft({
       value: "Mythical",
     },
   ],
-  imageUrl:
-    "https://cdna.artstation.com/p/assets/images/images/052/118/830/large/julie-almoneda-03.jpg?1658992401",
+  imageUrl: "https://cdna.artstation.com/p/assets/images/images/052/118/830/large/julie-almoneda-03.jpg?1658992401",
   externalUrl: "https://www.yugioh-card.com/en/",
   sellerFeeBasisPoints: 6900,
 });
@@ -366,8 +359,7 @@ const response = await helius.mintCompressedNft({
   name: "Aggron",
   symbol: "AGNFT",
   owner: "OWNER_WALLET_ADDRESS",
-  description:
-    "Aggron is a powerful Steel/Rock-type Pokémon known for its iron defense.",
+  description: "Aggron is a powerful Steel/Rock-type Pokémon known for its iron defense.",
   attributes: [
     {
       trait_type: "Type",
@@ -472,10 +464,7 @@ import { Helius } from "helius-sdk";
 
 const helius = new Helius("<your-api-key-here>");
 
-const response = await helius.rpc.airdrop(
-  new PublicKey("<wallet address>"),
-  1000000000
-); // 1 sol
+const response = await helius.rpc.airdrop(new PublicKey("<wallet address>"), 1000000000); // 1 sol
 ```
 
 ### Get Solana Stake Accounts
@@ -496,4 +485,31 @@ import { Helius } from "helius-sdk";
 const helius = new Helius("<your-api-key-here>");
 
 const response = await helius.rpc.getTokenHolders("<token mint address>");
+```
+
+## Priority Fees
+
+We provide the `sendTransactionWithPriorityFees` to allow users to send a transaction with a specified priority fee. For example, if you wanted to transfer 5 SOL from one account to another using the SDK, it would look like the following:
+
+```ts
+import { Helius } from "helius-sdk";
+
+const helius = new Helius("<your-api-key-here>");
+
+// Create the transfer instruction
+const transferIx = SystemProgram.transfer({
+  fromPubkey: fromKeypair.publicKey,
+  toPubkey: toPubkey,
+  lamports: 5 * LAMPORTS_PER_SOL,
+});
+
+// Create a new transaction
+const transaction = new Transaction().add(transferIx);
+
+const response = await helius.rpc.sendTransactionWithPriorityFees(
+  transaction,
+  [fromKeypair],
+  3, // Compute Unit Price in micro-lamports
+  500_000 // Compute Unit Limit
+);
 ```
