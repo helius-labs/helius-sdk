@@ -374,18 +374,19 @@ export class RpcClient {
     const computePriceIx = ComputeBudgetProgram.setComputeUnitPrice({ microLamports: priorityFee });
     const computeLimitIx = ComputeBudgetProgram.setComputeUnitLimit({ units: computeLimit });
 
-    transaction.add(computePriceIx, computeLimitIx);
-
-    transaction.feePayer = signers[0].publicKey;
+    const newTransaction = new Transaction();
+    newTransaction.add(computePriceIx, computeLimitIx);
+    newTransaction.add(...transaction.instructions);
+    newTransaction.feePayer = transaction.feePayer || signers[0].publicKey;
 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
         let latestBlockhashInfo: BlockhashWithExpiryBlockHeight = await this.getLatestBlockhash();
 
-        transaction.recentBlockhash = latestBlockhashInfo.blockhash;
-        transaction.sign(...signers);
+        newTransaction.recentBlockhash = latestBlockhashInfo.blockhash;
+        newTransaction.sign(...signers);
 
-        const txid = await sendAndConfirmTransaction(this.connection, transaction, signers);
+        const txid = await sendAndConfirmTransaction(this.connection, newTransaction, signers);
         return txid;
       } catch (error) {
         if (attempt === maxRetries) {
