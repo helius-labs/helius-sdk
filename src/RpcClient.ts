@@ -7,6 +7,7 @@ import {
   Keypair,
   ComputeBudgetProgram,
   sendAndConfirmTransaction,
+  ConfirmOptions,
   AccountInfo,
   GetLatestBlockhashConfig,
   RpcResponseAndContext,
@@ -17,7 +18,6 @@ import {
 } from "@solana/web3.js";
 import axios from "axios";
 import { DAS } from "./types/das-types";
-import { configOptions } from "./types";
 
 export type SendAndConfirmTransactionResponse = {
   signature: TransactionSignature;
@@ -349,7 +349,8 @@ export class RpcClient {
    * @param {Transaction} transaction - the transaction to send
    * @param {Keypair[]} signers - the array of signers for the transaction
    * @param {number} priorityFee - the priority fee in micro-lamports
-   * @param {Object} configOptions - additional configuration options (i.e., number of retries, preflight commitment, skip preflight)
+   * @param {number} computeLimit - the compute limit for the transaction
+   * @param {ConfirmOptions} configOptions - additional configuration options (i.e., number of retries, preflight commitment, skip preflight)
    * @returns {Promise<string>} - a promise that resolves to the transaction ID
    * @throws {Error} - throws an error if the transaction is not sent successfully after the max number of retries
    */
@@ -357,28 +358,34 @@ export class RpcClient {
     transaction: Transaction,
     signers: Keypair[],
     priorityFee: number,
-    computeLimit: number = 200000,
-    configOptions: configOptions
+    computeLimit: number = 200_000,
+    configOptions: ConfirmOptions
   ): Promise<string> {
-    const { maxRetries = 5, preflightCommitment = "finalized", skipPreflight = false } = configOptions;
+    const defaultOptions: ConfirmOptions = {
+      maxRetries: 5,
+      skipPreflight: false,
+      preflightCommitment: "finalized",
+      commitment: "finalized",
+    };
+
+    const options: ConfirmOptions = { ...defaultOptions, ...configOptions };
+    const maxRetries = options.maxRetries!;
 
     const computePriceIx = ComputeBudgetProgram.setComputeUnitPrice({ microLamports: priorityFee });
     const computeLimitIx = ComputeBudgetProgram.setComputeUnitLimit({ units: computeLimit });
 
     transaction.add(computePriceIx, computeLimitIx);
 
+    transaction.feePayer = signers[0].publicKey;
+
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
-        const latestBlockhashInfo: BlockhashWithExpiryBlockHeight = await this.getLatestBlockhash(preflightCommitment);
+        let latestBlockhashInfo: BlockhashWithExpiryBlockHeight = await this.getLatestBlockhash();
 
         transaction.recentBlockhash = latestBlockhashInfo.blockhash;
         transaction.sign(...signers);
 
-        const txid = await sendAndConfirmTransaction(this.connection, transaction, signers, {
-          commitment: preflightCommitment,
-          skipPreflight,
-        });
-
+        const txid = await sendAndConfirmTransaction(this.connection, transaction, signers);
         return txid;
       } catch (error) {
         if (attempt === maxRetries) {

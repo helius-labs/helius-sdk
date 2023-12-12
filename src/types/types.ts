@@ -246,9 +246,3 @@ export interface RevokeCollectionAuthorityRequest {
   revokeAuthorityKeypair: Keypair;
   payerKeypair?: Keypair;
 }
-
-export type configOptions = {
-  maxRetries?: number;
-  preflightCommitment?: "processed" | "confirmed" | "finalized";
-  skipPreflight?: boolean;
-};
