@@ -349,7 +349,6 @@ export class RpcClient {
    * @param {Transaction} transaction - the transaction to send
    * @param {Keypair[]} signers - the array of signers for the transaction
    * @param {number} priorityFee - the priority fee in micro-lamports
-   * @param {number} computeLimit - the compute limit for the transaction
    * @param {ConfirmOptions} configOptions - additional configuration options (i.e., number of retries, preflight commitment, skip preflight)
    * @returns {Promise<string>} - a promise that resolves to the transaction ID
    * @throws {Error} - throws an error if the transaction is not sent successfully after the max number of retries
@@ -358,7 +357,6 @@ export class RpcClient {
     transaction: Transaction,
     signers: Keypair[],
     priorityFee: number,
-    computeLimit: number = 200_000,
     configOptions: ConfirmOptions
   ): Promise<string> {
     const defaultOptions: ConfirmOptions = {
@@ -372,10 +370,9 @@ export class RpcClient {
     const maxRetries = options.maxRetries!;
 
     const computePriceIx = ComputeBudgetProgram.setComputeUnitPrice({ microLamports: priorityFee });
-    const computeLimitIx = ComputeBudgetProgram.setComputeUnitLimit({ units: computeLimit });
 
     const newTransaction = new Transaction();
-    newTransaction.add(computePriceIx, computeLimitIx);
+    newTransaction.add(computePriceIx);
     newTransaction.add(...transaction.instructions);
     newTransaction.feePayer = transaction.feePayer || signers[0].publicKey;
 

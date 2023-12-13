@@ -509,7 +509,6 @@ const transaction = new Transaction().add(transferIx);
 const response = await helius.rpc.sendTransactionWithPriorityFees(
   transaction,
   [fromKeypair],
-  3, // Compute Unit Price in micro-lamports
-  500_000 // Compute Unit Limit
+  3 // Compute Unit Price in micro-lamports
 );
 ```
