@@ -492,7 +492,7 @@ const response = await helius.rpc.getTokenHolders("<token mint address>");
 We provide the `sendTransactionWithPriorityFees` to allow users to send a transaction with a specified priority fee. For example, if you wanted to transfer 5 SOL from one account to another using the SDK, it would look like the following:
 
 ```ts
-import { Helius } from "helius-sdk";
+import { Helius, PriorityFee } from "helius-sdk";
 
 const helius = new Helius("<your-api-key-here>");
 
@@ -506,9 +506,5 @@ const transferIx = SystemProgram.transfer({
 // Create a new transaction
 const transaction = new Transaction().add(transferIx);
 
-const response = await helius.rpc.sendTransactionWithPriorityFees(
-  transaction,
-  [fromKeypair],
-  3 // Compute Unit Price in micro-lamports
-);
+const response = await helius.rpc.sendTransactionWithPriorityFees(transaction, [fromKeypair], PriorityFee.High);
 ```
