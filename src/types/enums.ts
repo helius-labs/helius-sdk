@@ -193,9 +193,7 @@ export const Collections = {
     firstVerifiedCreators: ["GVkb5GuwGKydA4xXLT9PNpx63h7bhFNrDLQSxi6j5NuF"],
   },
   DEGODS: {
-    verifiedCollectionAddresses: [
-      "6XxjKYFbcndh2gDcsUrmZgVEsoDxXMnfsaGY6fpTJzNr",
-    ],
+    verifiedCollectionAddresses: ["6XxjKYFbcndh2gDcsUrmZgVEsoDxXMnfsaGY6fpTJzNr"],
   },
 };
 
@@ -568,4 +566,11 @@ export enum Group {
 export enum MintApiAuthority {
   MAINNET = "HnT5KVAywGgQDhmh6Usk4bxRg4RwKxCK4jmECyaDth5R",
   DEVNET = "2LbAtCJSaHqTnP9M5QSjvAMXk79RNLusFspFN5Ew67TC",
+}
+
+export enum PriorityFee {
+  None = 0,
+  Normal = 5,
+  High = 25,
+  Turbo = 50,
 }

@@ -18,6 +18,7 @@ import {
 } from "@solana/web3.js";
 import axios from "axios";
 import { DAS } from "./types/das-types";
+import { PriorityFee } from "./types";
 
 export type SendAndConfirmTransactionResponse = {
   signature: TransactionSignature;
@@ -348,7 +349,7 @@ export class RpcClient {
    *
    * @param {Transaction} transaction - the transaction to send
    * @param {Keypair[]} signers - the array of signers for the transaction
-   * @param {number} priorityFee - the priority fee in micro-lamports
+   * @param {PriorityFee} priorityLevel - the priority fee in micro-lamports
    * @param {ConfirmOptions} configOptions - additional configuration options (i.e., number of retries, preflight commitment, skip preflight)
    * @returns {Promise<string>} - a promise that resolves to the transaction ID
    * @throws {Error} - throws an error if the transaction is not sent successfully after the max number of retries
@@ -356,7 +357,7 @@ export class RpcClient {
   async sendTransactionWithPriorityFees(
     transaction: Transaction,
     signers: Keypair[],
-    priorityFee: number,
+    priorityLevel: PriorityFee,
     configOptions: ConfirmOptions
   ): Promise<string> {
     const defaultOptions: ConfirmOptions = {
@@ -365,6 +366,8 @@ export class RpcClient {
       preflightCommitment: "finalized",
       commitment: "finalized",
     };
+
+    const priorityFee = Number(PriorityFee[priorityLevel]);
 
     const options: ConfirmOptions = { ...defaultOptions, ...configOptions };
     const maxRetries = options.maxRetries!;
