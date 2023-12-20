@@ -77,6 +77,7 @@ export interface SearchAssetsRequest {
   royaltyTargetType?: RoyaltyModel;
   compressible?: boolean;
   compressed?: boolean;
+  tokenType?: string;
 }
 
 // getAssetsByAuthority
