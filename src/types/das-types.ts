@@ -77,7 +77,7 @@ export interface SearchAssetsRequest {
   royaltyTargetType?: RoyaltyModel;
   compressible?: boolean;
   compressed?: boolean;
-  tokenType?: string;
+  tokenType?: "fungible" | "nonFungible" | "regularNFT" | "compressedNFT" | "all" | (string & {});
 }
 
 // getAssetsByAuthority
