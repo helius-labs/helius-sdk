@@ -598,7 +598,7 @@ const response = await helius.rpc.getTokenHolders("<token mint address>");
 ## helius.connection
 
 > [!WARNING]   
-> This uses Solan-Web3.js version 1.73.2
+> This uses Solana-Web3.js version 1.73.2
 
 Incorporates all commonly-used methods from Solana-Web3.js Provider using your Helius RPC. Ideal for managing connections and performing standard Solana blockchain operations. For a list of all the Methods see: https://docs.solana.com/api/http
 
