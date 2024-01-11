@@ -88,8 +88,8 @@ Comprehensive and performant API for tokens, NFTs, and compressed NFTs on Solana
   - [`getAssetProof()`](#getAssetProof): Get a Merkle proof for a compressed asset by its ID.
   - [`getAssetsByOwner()`](#getAssetsByOwner): Get a list of assets owned by an address. This is the fastest way to get all the NFTs and fungible tokens that are owned by a wallet on Solana.
   - [`getAssetsByGroup()`](#getAssetsByGroup): Get a list of assets by a group key and value. This endpoint is very useful for getting the mint list for NFT Collections.
-  - [`getAssetsByCreator()`](#getAssetsByCreator): Get a list of assets with a specific authority.
-  - [`getAssetsByAuthority()`](#getAssetsByAuthority): Get a list of assets created by an address.
+  - [`getAssetsByCreator()`](#getAssetsByCreator): Get a list of assets created by an address.
+  - [`getAssetsByAuthority()`](#getAssetsByAuthority): Get a list of assets with a specific authority.
 
 [**Mint API**](#mint-api)
 
