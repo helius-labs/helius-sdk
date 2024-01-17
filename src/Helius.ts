@@ -492,12 +492,20 @@ export class Helius {
     }
   }
 
-  /** Get the API endpoint for the specified path */
+  /**
+   * Get the API endpoint for the specified path.
+   * @param path - The API path to append to the base endpoint.
+   * @returns The full URL to the API endpoint including the API key.
+   * @throws Error if the path is not valid.
+   */
   getApiEndpoint(path: string): string {
-    if (!path.startsWith('/v0') || !path.startsWith('/v1')) {
-      throw new Error(`invalid API path: ${path}`)
+    // Check if the path starts with '/v0' or '/v1'
+    if (!path.startsWith('/v0') && !path.startsWith('/v1')) {
+        throw new Error(`Invalid API path provided: ${path}. Path must start with '/v0' or '/v1'.`);
     }
-    return `${this.endpoints.api}${path}?api-key=${this.apiKey}`
+
+    // Construct and return the full API endpoint URL
+    return `${this.endpoints.api}${path}?api-key=${this.apiKey}`;
   }
 
   private async _editWebhook(
