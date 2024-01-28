@@ -512,6 +512,7 @@ export enum Interface {
   IDENTITY = "Identity",
   EXECUTABLE = "Executable",
   PROGRAMMABLENFT = "ProgrammableNFT",
+  FUNGIBLE_TOKEN = "FungibleToken",
 }
 
 export enum OwnershipModel {
