@@ -107,6 +107,7 @@ Provides methods for setting up, editing, and managing webhooks, crucial for lis
 - [`createWebhook()`](#createWebhook): Creates a new webhook with the provided request.
 - [`editWebhook()`](#editWebhook): Edits an existing webhook by its ID with the provided request.
 - [`appendAddressesToWebhook()`](#appendAddressesToWebhook): Append new addresses to an existing webhook.
+- [`removeAddressesFromWebhook()`](#removeAddressesFromWebhook): Remove addresses from an existing webhook.
 - [`deleteWebhook()`](#deleteWebhook): Deletes a webhook by its ID.
 - [`getWebhookByID()`](#getWebhookByID): Retrieves a single webhook by its ID.
 - [`getAllWebhooks()`](#getAllWebhooks): Retrieves a list of all webhooks.
@@ -492,6 +493,21 @@ import { Helius, Address } from "helius-sdk";
 const helius = new Helius("YOUR_API_KEY");
 
 helius.appendAddressesToWebhook("your-webhook-id-here", [
+  Address.SQUADS,
+  Address.JUPITER_V3,
+]);
+```
+
+### removeAddressesFromWebhook()
+
+For convenience, we've added a method to let you simply remove addresses from an existing webhook:
+
+```ts
+import { Helius, Address } from "helius-sdk";
+
+const helius = new Helius("YOUR_API_KEY");
+
+helius.removeAddressesFromWebhook("your-webhook-id-here", [
   Address.SQUADS,
   Address.JUPITER_V3,
 ]);

@@ -236,6 +236,38 @@ export class Helius {
     }
   }
 
+  /**
+   * Removes an array of addresses from an existing webhook by its ID
+   * @param {string} webhookID - the ID of the webhook to edit
+   * @param {string[]} addressesToRemove - the array of addresses to be removed from the webhook
+   * @returns {Promise<Webhook>} a promise that resolves to the edited webhook object
+   * @throws {Error} if there is an error calling the webhooks endpoint, if the response contains an error
+   */
+  async removeAddressesFromWebhook(
+    webhookID: string,
+    addressesToRemove: string[]
+  ): Promise<Webhook> {
+    try {
+      const webhook = await this.getWebhookByID(webhookID);
+      // Filter out the addresses to be removed
+      const accountAddresses = webhook.accountAddresses.filter(
+        address => !addressesToRemove.includes(address)
+      );
+      const editRequest: EditWebhookRequest = { accountAddresses };
+      return this._editWebhook(webhookID, webhook, editRequest);
+    } catch (err: any | AxiosError) {
+      if (axios.isAxiosError(err)) {
+        throw new Error(
+          `error during removeAddressesFromWebhook: ${
+            err.response?.data.error || err
+          }`
+        );
+      } else {
+        throw new Error(`error during removeAddressesFromWebhook: ${err}`);
+      }
+    }
+  }
+
   async createCollectionWebhook(
     request: CreateCollectionWebhookRequest
   ): Promise<Webhook> {
