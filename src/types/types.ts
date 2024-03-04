@@ -185,7 +185,7 @@ export interface NFTEvent {
 export interface TransactionEvent {
   nft: NFTEvent | null;
   swap: SwapEvent | null;
-  compressed: CompressedNftEvent | null;
+  compressed: CompressedNftEvent[] | null;
 }
 
 export interface EnrichedTransaction {
