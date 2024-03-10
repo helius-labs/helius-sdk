@@ -1,4 +1,4 @@
-import type { Cluster, Keypair, TransactionError } from '@solana/web3.js'
+import type { Cluster, Keypair, TransactionError } from "@solana/web3.js";
 
 import type {
   WebhookType,
@@ -11,7 +11,7 @@ import type {
   AccountWebhookEncoding,
 } from "./enums";
 
-export type HeliusCluster = Omit<Cluster, 'testnet'>
+export type HeliusCluster = Omit<Cluster, "testnet">;
 
 export interface HeliusEndpoints {
   api: string;
@@ -149,6 +149,28 @@ export interface SwapEvent {
   innerSwaps: TokenSwap[];
 }
 
+export interface CompressedNftCreator {
+  address: string;
+  share: number;
+  verified: boolean;
+}
+
+export interface CompressedNftMetadata {
+  collection: {
+    key: string;
+    verified: boolean;
+  };
+  creators: CompressedNftCreator[];
+  isMutable: boolean;
+  name: string;
+  primarySaleHappened: boolean;
+  sellerFeeBasisPoints: number;
+  symbol: string;
+  tokenProgramVersion: string;
+  tokenStandard: TokenStandard;
+  uri: string;
+}
+
 export interface CompressedNftEvent {
   type: TransactionType;
   treeId: string;
@@ -162,6 +184,7 @@ export interface CompressedNftEvent {
   newLeafDelegate: string | null;
   oldLeafDelegate: string | null;
   treeDelegate: string | null;
+  metadata: CompressedNftMetadata | null;
 }
 
 export interface Token {
