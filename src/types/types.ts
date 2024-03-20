@@ -311,7 +311,7 @@ interface PolicyEngine {
   closed: boolean;
 }
 
-export interface FullAccount {
+export interface FullRwaAccount {
   asset_controller?: AssetControllerAccount;
   data_registry?: DataRegistryAccount;
   identity_registry?: IdentityRegistryAccount;
