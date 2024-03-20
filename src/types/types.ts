@@ -274,3 +274,46 @@ export interface RevokeCollectionAuthorityRequest {
   revokeAuthorityKeypair: Keypair;
   payerKeypair?: Keypair;
 }
+
+// RWA Asset Types
+interface AssetControllerAccount {
+  address: string;
+  mint: string;
+  authority: string;
+  delegate: string;
+  version: number;
+  closed: boolean;
+}
+
+interface DataRegistryAccount {
+  address: string;
+  mint: string;
+  version: number;
+  closed: boolean;
+}
+
+interface IdentityRegistryAccount {
+  address: string;
+  mint: string;
+  authority: string;
+  delegate: string;
+  version: number;
+  closed: boolean;
+}
+
+interface PolicyEngine {
+  address: string;
+  mint: string;
+  authority: string;
+  delegate: string;
+  policies: string[];
+  version: number;
+  closed: boolean;
+}
+
+export interface FullRwaAccount {
+  asset_controller?: AssetControllerAccount;
+  data_registry?: DataRegistryAccount;
+  identity_registry?: IdentityRegistryAccount;
+  policy_engine?: PolicyEngine;
+}

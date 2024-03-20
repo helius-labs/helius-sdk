@@ -28,7 +28,7 @@ export class RpcClient {
   constructor(
     protected readonly connection: Connection,
     protected readonly id?: string
-  ) {}
+  ) { }
 
   /**
    * Request an allocation of lamports to the specified address
@@ -174,6 +174,40 @@ export class RpcClient {
       throw new Error(`Error in getAsset: ${error}`);
     }
   }
+
+  /**
+   * Get RWA Asset by mint.
+   * @param {DAS.GetRwaAssetRequest} - RWA Asset ID
+   * @returns {Promise<DAS.GetRwaAssetResponse>}
+   * @throws {Error}
+   */
+  async getRwaAsset(
+    params: DAS.GetRwaAssetRequest
+  ): Promise<DAS.GetRwaAssetResponse> {
+    try {
+      const url = `${this.connection.rpcEndpoint}`;
+      const response = await axios.post(
+        url,
+        {
+          jsonrpc: "2.0",
+          id: this.id,
+          method: "getRwaAccountsByMint",
+          params,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      const result = response.data.result;
+      return result as DAS.GetRwaAssetResponse;
+    } catch (error) {
+      throw new Error(`Error in getRwaAsset: ${error}`);
+    }
+  }
+
   /**
    * Get multiple assets.
    * @returns {Promise<DAS.GetAssetResponse[]>}
