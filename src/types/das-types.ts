@@ -9,7 +9,7 @@ import {
   RoyaltyModel,
   UseMethods,
 } from "./enums";
-import { FullAccount } from "./types";
+import { FullRwaAccount } from "./types";
 
 export namespace DAS {
   // getAssetsByOwner //
@@ -141,7 +141,7 @@ export namespace DAS {
   };
   // RWA Asset Response
   export type GetRwaAssetResponse = {
-    items: FullAccount
+    items: FullRwaAccount
   };
   export type GetAssetResponseList = {
     grand_total?: boolean;
