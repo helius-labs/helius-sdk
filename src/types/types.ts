@@ -1,4 +1,4 @@
-import type { Cluster, Keypair, TransactionError } from '@solana/web3.js'
+import type { Cluster, Keypair, TransactionError } from "@solana/web3.js";
 
 import type {
   WebhookType,
@@ -11,7 +11,7 @@ import type {
   AccountWebhookEncoding,
 } from "./enums";
 
-export type HeliusCluster = Omit<Cluster, 'testnet'>
+export type HeliusCluster = Omit<Cluster, "testnet">;
 
 export interface HeliusEndpoints {
   api: string;
@@ -149,6 +149,28 @@ export interface SwapEvent {
   innerSwaps: TokenSwap[];
 }
 
+export interface CompressedNftCreator {
+  address: string;
+  share: number;
+  verified: boolean;
+}
+
+export interface CompressedNftMetadata {
+  collection: {
+    key: string;
+    verified: boolean;
+  };
+  creators: CompressedNftCreator[];
+  isMutable: boolean;
+  name: string;
+  primarySaleHappened: boolean;
+  sellerFeeBasisPoints: number;
+  symbol: string;
+  tokenProgramVersion: string;
+  tokenStandard: TokenStandard;
+  uri: string;
+}
+
 export interface CompressedNftEvent {
   type: TransactionType;
   treeId: string;
@@ -162,6 +184,7 @@ export interface CompressedNftEvent {
   newLeafDelegate: string | null;
   oldLeafDelegate: string | null;
   treeDelegate: string | null;
+  metadata: CompressedNftMetadata | null;
 }
 
 export interface Token {
@@ -185,7 +208,7 @@ export interface NFTEvent {
 export interface TransactionEvent {
   nft: NFTEvent | null;
   swap: SwapEvent | null;
-  compressed: CompressedNftEvent | null;
+  compressed: CompressedNftEvent[] | null;
 }
 
 export interface EnrichedTransaction {
@@ -250,4 +273,47 @@ export interface RevokeCollectionAuthorityRequest {
   delegatedCollectionAuthority?: string;
   revokeAuthorityKeypair: Keypair;
   payerKeypair?: Keypair;
+}
+
+// RWA Asset Types
+interface AssetControllerAccount {
+  address: string;
+  mint: string;
+  authority: string;
+  delegate: string;
+  version: number;
+  closed: boolean;
+}
+
+interface DataRegistryAccount {
+  address: string;
+  mint: string;
+  version: number;
+  closed: boolean;
+}
+
+interface IdentityRegistryAccount {
+  address: string;
+  mint: string;
+  authority: string;
+  delegate: string;
+  version: number;
+  closed: boolean;
+}
+
+interface PolicyEngine {
+  address: string;
+  mint: string;
+  authority: string;
+  delegate: string;
+  policies: string[];
+  version: number;
+  closed: boolean;
+}
+
+export interface FullRwaAccount {
+  asset_controller?: AssetControllerAccount;
+  data_registry?: DataRegistryAccount;
+  identity_registry?: IdentityRegistryAccount;
+  policy_engine?: PolicyEngine;
 }
