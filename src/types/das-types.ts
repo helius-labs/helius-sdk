@@ -71,7 +71,7 @@ export namespace DAS {
     supplyMint?: string;
     supply?: number;
     interface?: string;
-    delegate?: number;
+    delegate?: string;
     ownerType?: OwnershipModel;
     royaltyAmount?: number;
     royaltyTarget?: string;
