@@ -570,3 +570,21 @@ export enum MintApiAuthority {
   MAINNET = "HnT5KVAywGgQDhmh6Usk4bxRg4RwKxCK4jmECyaDth5R",
   DEVNET = "2LbAtCJSaHqTnP9M5QSjvAMXk79RNLusFspFN5Ew67TC",
 }
+
+export enum PriorityLevel {
+  NONE = "NONE",
+  LOW = "LOW",
+  MEDIUM = "MEDIUM",
+  HIGH = "HIGH",
+  VERY_HIGH = "VERY_HIGH",
+  UNSAFE_MAX = "UNSAFE_MAX",
+  DEFAULT = "DEFAULT",
+}
+
+export enum UiTransactionEncoding {
+  Binary = "Binary",
+  Base64 = "Base64",
+  Base58 = "Base58",
+  Json = "Json",
+  JsonParsed = "JsonParsed",
+}
