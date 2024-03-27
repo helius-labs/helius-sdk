@@ -398,4 +398,29 @@ export class RpcClient {
       throw new Error(`Error in getSignaturesForAsset: ${error}`);
     }
   }
+
+  /**
+   * Get information about all token accounts for a specific mint or a specific owner
+   * @returns {Promise<DAS.GetTokenAccountsResponse>}
+   * @throws {Error}
+   */
+  async getTokenAccounts(
+    params: DAS.GetTokenAccountsRequest
+  ): Promise<DAS.GetTokenAccountsResponse> {
+    try {
+      const url = `${this.connection.rpcEndpoint}`;
+      const response = await axios.post(url, {
+        jsonrpc: "2.0",
+        id: this.id,
+        method: "getTokenAccounts",
+        params: params,
+      }, {
+        headers: { "Content-Type": "application/json" },
+      });
+
+      return response.data.result as DAS.GetTokenAccountsResponse;
+    } catch (error) {
+      throw new Error(`Error in getTokenAccounts: ${error}`)
+    }
+  }
 }
