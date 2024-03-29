@@ -55,30 +55,31 @@ export namespace DAS {
     ids: string[];
   };
 
-  // searchAssets
-  export interface SearchAssetsRequest {
-    page: number; // starts at 1
-    limit?: number;
-    before?: string;
-    after?: string;
-    creatorAddress?: string;
-    ownerAddress?: string;
-    jsonUri?: string;
-    grouping?: string[];
-    burnt?: boolean;
-    sortBy?: AssetSortingRequest;
-    frozen?: boolean;
-    supplyMint?: string;
-    supply?: number;
-    interface?: string;
-    delegate?: number;
-    ownerType?: OwnershipModel;
-    royaltyAmount?: number;
-    royaltyTarget?: string;
-    royaltyTargetType?: RoyaltyModel;
-    compressible?: boolean;
-    compressed?: boolean;
-  }
+// searchAssets
+export interface SearchAssetsRequest {
+  page: number; // starts at 1
+  limit?: number;
+  before?: string;
+  after?: string;
+  creatorAddress?: string;
+  ownerAddress?: string;
+  jsonUri?: string;
+  grouping?: string[];
+  burnt?: boolean;
+  sortBy?: AssetSortingRequest;
+  frozen?: boolean;
+  supplyMint?: string;
+  supply?: number;
+  interface?: string;
+  delegate?: number;
+  ownerType?: OwnershipModel;
+  royaltyAmount?: number;
+  royaltyTarget?: string;
+  royaltyTargetType?: RoyaltyModel;
+  compressible?: boolean;
+  compressed?: boolean;
+  tokenType?: "fungible" | "nonFungible" | "regularNFT" | "compressedNFT" | "all" | (string & {});
+}
 
   // getAssetsByAuthority
   export type AssetsByAuthorityRequest = {
