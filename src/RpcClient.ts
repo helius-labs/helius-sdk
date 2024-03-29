@@ -398,4 +398,29 @@ export class RpcClient {
       throw new Error(`Error in getSignaturesForAsset: ${error}`);
     }
   }
+
+  /**
+   * Get information about all the edition NFTs for a specific master NFT
+   * @returns {Promise<DAS.GetNftEditionsResponse>}
+   * @throws {Error}
+   */
+  async getNftEditions(
+    params: DAS.GetNftEditionsRequest
+  ): Promise<DAS.GetNftEditionsResponse> {
+    try {
+      const url = `${this.connection.rpcEndpoint}`;
+      const response = await axios.post(url, {
+        jsonrpc:"2.0",
+        id: this.id,
+        method: "getNftEditions",
+        params: params,
+      }, {
+        headers: { "Content-Type": "application/json" },
+      });
+
+      return response.data.result as DAS.GetNftEditionsResponse;
+    } catch (error) {
+      throw new Error(`Error in getNftEditions: ${error}`);
+    }
+  }
 }
