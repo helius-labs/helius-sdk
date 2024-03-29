@@ -9,7 +9,7 @@ import {
   RoyaltyModel,
   UseMethods,
 } from "./enums";
-import { FullAccount } from "./types";
+import { FullRwaAccount } from "./types";
 
 export namespace DAS {
   // getAssetsByOwner //
@@ -55,30 +55,31 @@ export namespace DAS {
     ids: string[];
   };
 
-  // searchAssets
-  export interface SearchAssetsRequest {
-    page: number; // starts at 1
-    limit?: number;
-    before?: string;
-    after?: string;
-    creatorAddress?: string;
-    ownerAddress?: string;
-    jsonUri?: string;
-    grouping?: string[];
-    burnt?: boolean;
-    sortBy?: AssetSortingRequest;
-    frozen?: boolean;
-    supplyMint?: string;
-    supply?: number;
-    interface?: string;
-    delegate?: string;
-    ownerType?: OwnershipModel;
-    royaltyAmount?: number;
-    royaltyTarget?: string;
-    royaltyTargetType?: RoyaltyModel;
-    compressible?: boolean;
-    compressed?: boolean;
-  }
+// searchAssets
+export interface SearchAssetsRequest {
+  page: number; // starts at 1
+  limit?: number;
+  before?: string;
+  after?: string;
+  creatorAddress?: string;
+  ownerAddress?: string;
+  jsonUri?: string;
+  grouping?: string[];
+  burnt?: boolean;
+  sortBy?: AssetSortingRequest;
+  frozen?: boolean;
+  supplyMint?: string;
+  supply?: number;
+  interface?: string;
+  delegate?: string;
+  ownerType?: OwnershipModel;
+  royaltyAmount?: number;
+  royaltyTarget?: string;
+  royaltyTargetType?: RoyaltyModel;
+  compressible?: boolean;
+  compressed?: boolean;
+  tokenType?: "fungible" | "nonFungible" | "regularNFT" | "compressedNFT" | "all" | (string & {});
+}
 
   // getAssetsByAuthority
   export type AssetsByAuthorityRequest = {
@@ -141,7 +142,7 @@ export namespace DAS {
   };
   // RWA Asset Response
   export type GetRwaAssetResponse = {
-    items: FullAccount
+    items: FullRwaAccount
   };
   export type GetAssetResponseList = {
     grand_total?: boolean;
