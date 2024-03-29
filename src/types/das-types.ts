@@ -292,5 +292,36 @@ export interface SearchAssetsRequest {
     seq: number;
     leaf_id: number;
   }
+
+  // Get Token Accounts
+  export interface TokenAccounts {
+    address?: string;
+    mint?: string;
+    owner?: string;
+    amount?: number;
+    delegated_amount?: number;
+    frozen?: boolean;
+  }
+
+  export interface GetTokenAccountsRequest {
+    mint?: string;
+    owner?: string;
+    page?: number;
+    limit?: number;
+    cursor?: string;
+    before?: string;
+    after?: string;
+    options?: {
+      showZeroBalance?: boolean;
+    }
+  }
+
+  export interface GetTokenAccountsResponse {
+    total?: number;
+    limit?: number;
+    page?: number;
+    cursor?: string;
+    token_accounts?: TokenAccounts[];
+  }
   // End of DAS
 }
