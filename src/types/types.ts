@@ -329,7 +329,7 @@ export interface GetPriorityFeeEstimateOptions {
 
 export interface GetPriorityFeeEstimateRequest {
   transaction?: string;
-  accountKeys?: string [];
+  accountKeys?: string[];
   options?: GetPriorityFeeEstimateOptions;
 }
 
