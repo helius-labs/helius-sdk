@@ -28,7 +28,7 @@ export interface Webhook {
   wallet: string;
   project: string;
   webhookURL: string;
-  transactionTypes: string[];
+  transactionTypes: TransactionType[];
   accountAddresses: string[];
   accountAddressOwners?: string[];
   webhookType?: WebhookType;
