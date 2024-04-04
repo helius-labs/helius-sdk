@@ -9,7 +9,7 @@ import {
   RoyaltyModel,
   UseMethods,
 } from "./enums";
-import { FullAccount } from "./types";
+import { FullRwaAccount } from "./types";
 
 export namespace DAS {
   // getAssetsByOwner //
@@ -55,30 +55,31 @@ export namespace DAS {
     ids: string[];
   };
 
-  // searchAssets
-  export interface SearchAssetsRequest {
-    page: number; // starts at 1
-    limit?: number;
-    before?: string;
-    after?: string;
-    creatorAddress?: string;
-    ownerAddress?: string;
-    jsonUri?: string;
-    grouping?: string[];
-    burnt?: boolean;
-    sortBy?: AssetSortingRequest;
-    frozen?: boolean;
-    supplyMint?: string;
-    supply?: number;
-    interface?: string;
-    delegate?: number;
-    ownerType?: OwnershipModel;
-    royaltyAmount?: number;
-    royaltyTarget?: string;
-    royaltyTargetType?: RoyaltyModel;
-    compressible?: boolean;
-    compressed?: boolean;
-  }
+// searchAssets
+export interface SearchAssetsRequest {
+  page: number; // starts at 1
+  limit?: number;
+  before?: string;
+  after?: string;
+  creatorAddress?: string;
+  ownerAddress?: string;
+  jsonUri?: string;
+  grouping?: string[];
+  burnt?: boolean;
+  sortBy?: AssetSortingRequest;
+  frozen?: boolean;
+  supplyMint?: string;
+  supply?: number;
+  interface?: string;
+  delegate?: string;
+  ownerType?: OwnershipModel;
+  royaltyAmount?: number;
+  royaltyTarget?: string;
+  royaltyTargetType?: RoyaltyModel;
+  compressible?: boolean;
+  compressed?: boolean;
+  tokenType?: "fungible" | "nonFungible" | "regularNFT" | "compressedNFT" | "all" | (string & {});
+}
 
   // getAssetsByAuthority
   export type AssetsByAuthorityRequest = {
@@ -141,7 +142,7 @@ export namespace DAS {
   };
   // RWA Asset Response
   export type GetRwaAssetResponse = {
-    items: FullAccount
+    items: FullRwaAccount
   };
   export type GetAssetResponseList = {
     grand_total?: boolean;
@@ -290,6 +291,60 @@ export namespace DAS {
     tree: string;
     seq: number;
     leaf_id: number;
+  }
+  
+  // Get NFT Editions
+  export interface Editions {
+    mint?: string;
+    edition_address?: string;
+    edition?: number;
+  }
+  
+  export interface GetNftEditionsRequest {
+    mint?: string;
+    page?: number;
+    limit?: number;
+  }
+
+  export interface GetNftEditionsResponse {
+    total?: number;
+    limit?: number;
+    page?: number;
+    master_edition_address?: string;
+    supply?: number;
+    max_supply?: number;
+    editions?: Editions[];
+  }
+
+  // Get Token Accounts
+  export interface TokenAccounts {
+    address?: string;
+    mint?: string;
+    owner?: string;
+    amount?: number;
+    delegated_amount?: number;
+    frozen?: boolean;
+  }
+
+  export interface GetTokenAccountsRequest {
+    mint?: string;
+    owner?: string;
+    page?: number;
+    limit?: number;
+    cursor?: string;
+    before?: string;
+    after?: string;
+    options?: {
+      showZeroBalance?: boolean;
+    }
+  }
+
+  export interface GetTokenAccountsResponse {
+    total?: number;
+    limit?: number;
+    page?: number;
+    cursor?: string;
+    token_accounts?: TokenAccounts[];
   }
   // End of DAS
 }
