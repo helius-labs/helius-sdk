@@ -90,6 +90,8 @@ Comprehensive and performant API for tokens, NFTs, and compressed NFTs on Solana
   - [`getAssetsByGroup()`](#getAssetsByGroup): Get a list of assets by a group key and value. This endpoint is very useful for getting the mint list for NFT Collections.
   - [`getAssetsByCreator()`](#getAssetsByCreator): Get a list of assets created by an address.
   - [`getAssetsByAuthority()`](#getAssetsByAuthority): Get a list of assets with a specific authority.
+  - [`getTokenAccounts()`](#getTokenAccounts): Get information about all token accounts for a specific mint or a specific owner.
+  - [`getNftEditions()`](#getNftEditions): Get information about all the edition NFTs for a specific master NFT
 
 [**Mint API**](#mint-api)
 
