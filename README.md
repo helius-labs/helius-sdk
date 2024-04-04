@@ -272,6 +272,40 @@ const response = await helius.rpc.getAssetsByAuthority({
 console.log(response.items);
 ```
 
+### getTokenAccounts()
+
+Get information about all token accounts for a specific mint or a specific owner.
+
+```ts
+const response = await helius.rpc.getTokenAccounts({
+  page: 1,
+  limit: 100,
+  options: {
+    showZeroBalance: false,
+  },
+  owner: "CckxW6C1CjsxYcXSiDbk7NYfPLhfqAm3kSB5LEZunnSE"
+});
+
+console.log(response);
+```
+
+### getNftEditions()
+
+Get information about all the edition NFTs for a specific master NFT.
+
+```ts
+import { Helius } from "helius-sdk";
+
+const helius = new Helius("YOUR_API_KEY");
+const response = await helius.rpc.getNftEditions({
+  mint: "Ey2Qb8kLctbchQsMnhZs5DjY32To2QtPuXNwWvk4NosL",
+  page: 1,
+  limit: 2,
+});
+
+console.log(response);
+```
+
 ## Mint
 
 To read more about the easiest way to mint cNFTs on Solana, see [our docs](https://docs.helius.dev/compression-and-das-api/mint-api).
