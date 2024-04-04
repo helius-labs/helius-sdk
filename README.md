@@ -123,6 +123,7 @@ Offers additional tools for various Solana-related tasks like analyzing blockcha
 - [`airdrop()`](#airdrop): Request an allocation of lamports to the specified address
 - [`getStakeAccounts()`](#getStakeAccounts): Returns all the stake accounts for a given public key.
 - [`getTokenHolders()`](#getTokenHolders): Returns all the token accounts for a given mint address (ONLY FOR SPL TOKENS).
+- [`getPriorityFeeEstimate()`](#getPriorityFeeEstimate): Returns an estimated priority fee based on a set of predefined priority levels (percentiles).
 
 ## DAS API (Digital Asset Standard)
 
@@ -645,6 +646,23 @@ import { Helius } from "helius-sdk";
 const helius = new Helius("YOUR_API_KEY");
 
 const response = await helius.rpc.getTokenHolders("<token mint address>");
+```
+
+### getPriorityFeeEstimate()
+This method considers both global and local fee markets in the estimation. Users can also specify to receive all the priority levels and adjust the window with which these levels are calculated via `lookbackSlots`
+
+```ts
+import { Helius } from "helius-sdk";
+const helius = new Helius("YOUR_API_KEY");
+
+const response = await helius.rpc.getPriorityFeeEstimate({
+  accountKeys: ["JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4"],
+  options: {
+    includeAllPriorityFeeLevels: true,
+  }
+});
+
+console.log(response);
 ```
 
 ## helius.connection
