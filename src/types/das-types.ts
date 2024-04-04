@@ -292,6 +292,29 @@ export interface SearchAssetsRequest {
     seq: number;
     leaf_id: number;
   }
+  
+  // Get NFT Editions
+  export interface Editions {
+    mint?: string;
+    edition_address?: string;
+    edition?: number;
+  }
+  
+  export interface GetNftEditionsRequest {
+    mint?: string;
+    page?: number;
+    limit?: number;
+  }
+
+  export interface GetNftEditionsResponse {
+    total?: number;
+    limit?: number;
+    page?: number;
+    master_edition_address?: string;
+    supply?: number;
+    max_supply?: number;
+    editions?: Editions[];
+  }
 
   // Get Token Accounts
   export interface TokenAccounts {
