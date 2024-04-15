@@ -6,7 +6,6 @@ const config: Config = {
     testMatch: ["**/tests/**/*.test.ts"],
     clearMocks: true,
     verbose: true,
-    setupFilesAfterEnv: ["./jest.setup.ts"],
     collectCoverage: true,
     collectCoverageFrom: ["src/**/*.ts"],
     coverageDirectory: "coverage",
