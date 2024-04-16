@@ -4,3 +4,4 @@
 /src
 /tests
 .DS_Store
+/coverage
