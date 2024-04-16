@@ -13,6 +13,7 @@ import {
 } from "@solana/web3.js";
 import axios from "axios";
 import { DAS } from "./types/das-types";
+import { GetPriorityFeeEstimateRequest, GetPriorityFeeEstimateResponse } from "./types";
 
 export type SendAndConfirmTransactionResponse = {
   signature: TransactionSignature;
@@ -400,6 +401,31 @@ export class RpcClient {
   }
 
     /**
+  * Get priority fee estimate
+  * @returns {Promise<GetPriorityFeeEstimateResponse>}
+  * @throws {Error}
+  */
+  async getPriorityFeeEstimate(
+    params: GetPriorityFeeEstimateRequest
+  ): Promise<GetPriorityFeeEstimateResponse> {
+    try {
+      const url = `${this.connection.rpcEndpoint}`;
+      const response = await axios.post(url, {
+        jsonrpc: "2.0",
+        id: this.id,
+        method: "getPriorityFeeEstimate",
+        params: [params],
+      }, {
+        headers: { "Content-Type": "application/json" },
+      });
+
+      return response.data.result as GetPriorityFeeEstimateResponse;
+    } catch (error) {
+      throw new Error(`Error fetching priority fee estimate: ${error}`);
+    }
+  }
+ 
+  /**
    * Get information about all the edition NFTs for a specific master NFT
    * @returns {Promise<DAS.GetNftEditionsResponse>}
    * @throws {Error}
@@ -423,8 +449,8 @@ export class RpcClient {
       throw new Error(`Error in getNftEditions: ${error}`);
     }
   }
-  
-    /**
+
+  /**
    * Get information about all token accounts for a specific mint or a specific owner
    * @returns {Promise<DAS.GetTokenAccountsResponse>}
    * @throws {Error}

@@ -9,6 +9,8 @@ import type {
   TransactionContext,
   TxnStatus,
   AccountWebhookEncoding,
+  PriorityLevel,
+  UiTransactionEncoding,
 } from "./enums";
 
 export type HeliusCluster = Omit<Cluster, "testnet">;
@@ -316,4 +318,31 @@ export interface FullRwaAccount {
   data_registry?: DataRegistryAccount;
   identity_registry?: IdentityRegistryAccount;
   policy_engine?: PolicyEngine;
+}
+
+export interface GetPriorityFeeEstimateOptions {
+  priorityLevel?: PriorityLevel;
+  includeAllPriorityFeeLevels?: boolean;
+  transactionEncoding?: UiTransactionEncoding;
+  lookbackSlots?: number;
+}
+
+export interface GetPriorityFeeEstimateRequest {
+  transaction?: string;
+  accountKeys?: string[];
+  options?: GetPriorityFeeEstimateOptions;
+}
+
+export interface MicroLamportPriorityFeeLevels {
+  none: number;
+  low: number;
+  medium: number;
+  high: number;
+  veryHigh: number;
+  unsafeMax: number;
+}
+
+export interface GetPriorityFeeEstimateResponse {
+  priorityFeeEstimate?: number;
+  priorityFeeLevels?: MicroLamportPriorityFeeLevels; 
 }
