@@ -145,7 +145,7 @@ export interface SearchAssetsRequest {
     items: FullRwaAccount
   };
   export type GetAssetResponseList = {
-    grand_total?: boolean;
+    grand_total?: number;
     total: number;
     limit: number;
     page: number;
