@@ -1,7 +1,14 @@
 import {
   BlockhashWithExpiryBlockHeight,
+  VersionedTransaction,
+  AddressLookupTableAccount,
+  Transaction,
+  TransactionMessage,
+  TransactionInstruction,
   TransactionSignature,
+  sendAndConfirmTransaction,
   Commitment,
+  Keypair,
   PublicKey,
   AccountInfo,
   GetLatestBlockhashConfig,
@@ -10,6 +17,9 @@ import {
   Blockhash,
   Connection,
   ParsedAccountData,
+  LAMPORTS_PER_SOL,
+  SystemProgram,
+  ComputeBudgetProgram,
 } from "@solana/web3.js";
 import axios from "axios";
 import { DAS } from "./types/das-types";
@@ -400,7 +410,7 @@ export class RpcClient {
     }
   }
 
-    /**
+  /**
   * Get priority fee estimate
   * @returns {Promise<GetPriorityFeeEstimateResponse>}
   * @throws {Error}
@@ -423,6 +433,44 @@ export class RpcClient {
     } catch (error) {
       throw new Error(`Error fetching priority fee estimate: ${error}`);
     }
+  }
+
+  /**
+   * Simulate a transaction to get the total compute units consumed
+   * @param {TransactionInstruction[]} instructions - The transaction instructions
+   * @param {PublicKey} payer - The public key of the payer
+   * @param {AddressLookupTableAccount[]} lookupTables - The address lookup tables 
+   * @returns {Promise<number | null>} - The compute units consumed, or null if unsuccessful
+  */
+  async simulateComputeUnits(
+    instructions: TransactionInstruction[],
+    payer: PublicKey,
+    lookupTables: AddressLookupTableAccount[]
+  ): Promise<number | null> {
+    const testInstructions = [
+      ComputeBudgetProgram.setComputeUnitLimit({ units: 1_400_000 }),
+      ...instructions,
+    ];
+
+    const testTransaction = new VersionedTransaction(
+      new TransactionMessage({
+        instructions: testInstructions,
+        payerKey: payer,
+        recentBlockhash: (await this.connection.getLatestBlockhash()).blockhash,
+      }).compileToV0Message(lookupTables)
+    );
+
+    const rpcResponse = await this.connection.simulateTransaction(testTransaction, {
+      replaceRecentBlockhash: true,
+      sigVerify: false,
+    });
+
+    if (rpcResponse.value.err) {
+      console.error(`Simulation error: ${rpcResponse.value.err}`);
+      return null;
+    }
+
+    return rpcResponse.value.unitsConsumed || null;
   }
  
   /**
