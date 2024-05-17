@@ -24,6 +24,7 @@
   "devDependencies": {
     "@solana/web3.js": "^1.73.2",
     "@types/axios": "^0.14.0",
+    "@types/bs58": "^4.0.4",
     "@types/jest": "^29.5.12",
     "@typescript-eslint/eslint-plugin": "^3.9.0",
     "@typescript-eslint/parser": "^3.9.0",
