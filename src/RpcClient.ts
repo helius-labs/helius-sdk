@@ -21,9 +21,10 @@ import {
   SystemProgram,
   ComputeBudgetProgram,
 } from "@solana/web3.js";
+const bs58 = require("bs58");
 import axios from "axios";
 import { DAS } from "./types/das-types";
-import { GetPriorityFeeEstimateRequest, GetPriorityFeeEstimateResponse } from "./types";
+import { GetPriorityFeeEstimateRequest, GetPriorityFeeEstimateResponse, PriorityLevel } from "./types";
 
 export type SendAndConfirmTransactionResponse = {
   signature: TransactionSignature;
@@ -502,6 +503,77 @@ export class RpcClient {
         }
       }, interval);
     });
+  }
+
+  /**
+   * Build and send an optimized transaction, and handle its confirmation status
+   * @param {TransactionInstruction[]} instructions - The transaction instructions
+   * @param {Keypair} fromKeypair - The sender's keypair
+   * @param {PriorityLevel} priorityLevel - The priority level for the fee
+   * @returns {Promise<TransactionSignature>} - The transaction signature
+  */
+  async sendSmartTransaction(
+    instructions: TransactionInstruction[],
+    fromKeypair: Keypair,
+    priorityLevel: PriorityLevel = PriorityLevel.HIGH
+  ): Promise<TransactionSignature> {
+    try {
+      const pubKey = fromKeypair.publicKey;
+
+      // Build the initial transaction to estimate the priority fee
+      const transaction = new Transaction().add(...instructions);
+      transaction.recentBlockhash = (await this.connection.getLatestBlockhash()).blockhash;
+      transaction.feePayer = pubKey;
+      transaction.sign(fromKeypair);
+
+      // Serialize the transaction
+      const serializedTransaction = bs58.encode(transaction.serialize());
+
+      // Get the priority fee estimate based on the serialized transaction
+      const priorityFeeResponse = await this.getPriorityFeeEstimate({
+        transaction: serializedTransaction,
+        options: { 
+          priorityLevel, 
+        },
+      });
+
+      // Ensure the priority fee is at least 10k lamports
+      let priorityFee = priorityFeeResponse.priorityFeeEstimate || 0;
+      if (priorityFee < 10000) priorityFee = 10000;
+
+      // Add the compute unit price instruction with the estimated fee
+      const computeBudgetIx = ComputeBudgetProgram.setComputeUnitPrice({
+        microLamports: priorityFee,
+      });
+      instructions.unshift(computeBudgetIx);
+
+      // Get the optimal compute units
+      const units = await this.simulateComputeUnits(instructions, pubKey, []);
+      if (units) {
+        // Add some margin to the compute units
+        const computeUnitsIx = ComputeBudgetProgram.setComputeUnitLimit({
+          units: Math.ceil(units * 1.1),
+        });
+
+        instructions.unshift(computeUnitsIx);
+      }
+
+      // Build the optimized transaction
+      const optimizedTransaction = new Transaction().add(...instructions);
+      optimizedTransaction.recentBlockhash = (await this.connection.getLatestBlockhash()).blockhash;
+      optimizedTransaction.feePayer = pubKey;
+      optimizedTransaction.sign(fromKeypair);
+
+      // Send the transaction with 0 retries
+      const txtSig = await this.connection.sendRawTransaction(optimizedTransaction.serialize(), {
+        maxRetries: 0,
+        skipPreflight: true,
+      });
+
+      return await this.pollTransactionConfirmation(txtSig);
+    } catch (error) {
+      throw new Error(`Error sending smart transaction: ${error}`);
+    }
   }
  
   /**
