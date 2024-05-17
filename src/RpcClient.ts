@@ -472,6 +472,37 @@ export class RpcClient {
 
     return rpcResponse.value.unitsConsumed || null;
   }
+
+  /**
+   * Poll a transaction to confirm whether it has been confirmed
+   * @param {TransactionSignature} txtSig - The transaction signature
+   * @returns {Promise<TransactionSignature>} - The confirmed transaction signature
+  */
+  async pollTransactionConfirmation(txtSig: TransactionSignature): Promise<TransactionSignature> {
+    // 30 second timeout
+    const timeout = 30000;
+    // 5 second retry interval
+    const interval = 5000;
+    let elapsed = 0;
+
+    return new Promise<TransactionSignature>((resolve, reject) => {
+      const intervalId = setInterval(async () => {
+        elapsed += interval;
+
+        if (elapsed >= timeout) {
+          clearInterval(intervalId);
+          reject(new Error(`Transaction ${txtSig}'s confirmation timed out`));
+        }
+
+        const status = await this.connection.getSignatureStatus(txtSig);
+
+        if (status?.value?.confirmationStatus === "finalized") {
+          clearInterval(intervalId);
+          resolve(txtSig);
+        }
+      }, interval);
+    });
+  }
  
   /**
    * Get information about all the edition NFTs for a specific master NFT
