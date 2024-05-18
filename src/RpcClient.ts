@@ -562,7 +562,7 @@ export class RpcClient {
       optimizedTransaction.feePayer = pubKey;
       optimizedTransaction.sign(fromKeypair);
 
-      // Send the transaction with 0 retries
+      // Send the transaction with configurable retries and preflight checks
       const txtSig = await this.connection.sendRawTransaction(optimizedTransaction.serialize(), {
         maxRetries: maxRetries,
         skipPreflight: skipPreflightChecks,
