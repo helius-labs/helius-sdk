@@ -509,13 +509,15 @@ export class RpcClient {
    * Build and send an optimized transaction, and handle its confirmation status
    * @param {TransactionInstruction[]} instructions - The transaction instructions
    * @param {Keypair} fromKeypair - The sender's keypair
-   * @param {PriorityLevel} priorityLevel - The priority level for the fee
+   * @param {boolean} skipPreflightChecks - Whether the transaction should skip preflight checks. Defaults to `true`
+   * @param {number} maxRetries - The maximum number of times to retry sending the transaction to the leader. Defaults to 0
    * @returns {Promise<TransactionSignature>} - The transaction signature
   */
   async sendSmartTransaction(
     instructions: TransactionInstruction[],
     fromKeypair: Keypair,
-    priorityLevel: PriorityLevel = PriorityLevel.HIGH
+    skipPreflightChecks: boolean = true,
+    maxRetries: number = 0,
   ): Promise<TransactionSignature> {
     try {
       const pubKey = fromKeypair.publicKey;
@@ -533,17 +535,13 @@ export class RpcClient {
       const priorityFeeResponse = await this.getPriorityFeeEstimate({
         transaction: serializedTransaction,
         options: { 
-          priorityLevel, 
+          recommended: true,
         },
       });
 
-      // Ensure the priority fee is at least 10k lamports
-      let priorityFee = priorityFeeResponse.priorityFeeEstimate || 0;
-      if (priorityFee < 10000) priorityFee = 10000;
-
       // Add the compute unit price instruction with the estimated fee
       const computeBudgetIx = ComputeBudgetProgram.setComputeUnitPrice({
-        microLamports: priorityFee,
+        microLamports: priorityFeeResponse.priorityFeeEstimate || 0,
       });
       instructions.unshift(computeBudgetIx);
 
@@ -566,8 +564,8 @@ export class RpcClient {
 
       // Send the transaction with 0 retries
       const txtSig = await this.connection.sendRawTransaction(optimizedTransaction.serialize(), {
-        maxRetries: 0,
-        skipPreflight: true,
+        maxRetries: maxRetries,
+        skipPreflight: skipPreflightChecks,
       });
 
       return await this.pollTransactionConfirmation(txtSig);
