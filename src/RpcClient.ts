@@ -521,7 +521,7 @@ export class RpcClient {
   ): Promise<TransactionSignature> {
     try {
       const pubKey = fromKeypair.publicKey;
-      const recentBlockhash = (await this.connection.getLatestBlockhash()).blockhash;
+      let recentBlockhash = (await this.connection.getLatestBlockhash()).blockhash;
 
       // Build the initial transaction to estimate the priority fee
       const transaction = new Transaction().add(...instructions);
@@ -563,12 +563,22 @@ export class RpcClient {
       optimizedTransaction.feePayer = pubKey;
       optimizedTransaction.sign(fromKeypair);
 
+      // Re-fetch the blockhash every 4 retries, or, roughly once every minute
+      const blockhashValidityThreshold = 4;
+
       let retryCount: number = 0;
       let txtSig: string;
 
       // Send the transaction with configurable retries and preflight checks
       while (retryCount <= maxRetries) {
         try {
+          // Check if the blockhash needs to be refreshed based on the retry count
+          if (retryCount > 0 && retryCount % blockhashValidityThreshold === 0) {
+            let latestBlockhash = (await this.connection.getLatestBlockhash()).blockhash;
+            optimizedTransaction.recentBlockhash = latestBlockhash;
+            optimizedTransaction.sign(fromKeypair);
+          }
+
           txtSig = await this.connection.sendRawTransaction(optimizedTransaction.serialize(), {
             skipPreflight: skipPreflightChecks,
           });
