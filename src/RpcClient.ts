@@ -24,7 +24,7 @@ import {
 const bs58 = require("bs58");
 import axios from "axios";
 import { DAS } from "./types/das-types";
-import { GetPriorityFeeEstimateRequest, GetPriorityFeeEstimateResponse, PriorityLevel } from "./types";
+import { GetPriorityFeeEstimateRequest, GetPriorityFeeEstimateResponse } from "./types";
 
 export type SendAndConfirmTransactionResponse = {
   signature: TransactionSignature;
