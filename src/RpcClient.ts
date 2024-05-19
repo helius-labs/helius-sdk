@@ -521,7 +521,7 @@ export class RpcClient {
   ): Promise<TransactionSignature> {
     try {
       const pubKey = fromKeypair.publicKey;
-      let recentBlockhash = (await this.connection.getLatestBlockhash()).blockhash;
+      const recentBlockhash = (await this.connection.getLatestBlockhash()).blockhash;
 
       // Build the initial transaction to estimate the priority fee
       const transaction = new Transaction().add(...instructions);
