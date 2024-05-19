@@ -6,7 +6,6 @@ import {
   TransactionMessage,
   TransactionInstruction,
   TransactionSignature,
-  sendAndConfirmTransaction,
   Commitment,
   Keypair,
   PublicKey,
@@ -17,8 +16,6 @@ import {
   Blockhash,
   Connection,
   ParsedAccountData,
-  LAMPORTS_PER_SOL,
-  SystemProgram,
   ComputeBudgetProgram,
 } from "@solana/web3.js";
 const bs58 = require("bs58");
@@ -475,9 +472,9 @@ export class RpcClient {
   }
 
   /**
-   * Poll a transaction to confirm whether it has been confirmed
+   * Poll a transaction to check whether it has been confirmed
    * @param {TransactionSignature} txtSig - The transaction signature
-   * @returns {Promise<TransactionSignature>} - The confirmed transaction signature
+   * @returns {Promise<TransactionSignature>} - The confirmed transaction signature or an error if the confirmation times out
   */
   async pollTransactionConfirmation(txtSig: TransactionSignature): Promise<TransactionSignature> {
     // 15 second timeout
