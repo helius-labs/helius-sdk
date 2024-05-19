@@ -443,7 +443,7 @@ export class RpcClient {
    * @param {AddressLookupTableAccount[]} lookupTables - The address lookup tables 
    * @returns {Promise<number | null>} - The compute units consumed, or null if unsuccessful
   */
-  async simulateComputeUnits(
+  async getComputeUnits(
     instructions: TransactionInstruction[],
     payer: PublicKey,
     lookupTables: AddressLookupTableAccount[]
@@ -480,8 +480,8 @@ export class RpcClient {
    * @returns {Promise<TransactionSignature>} - The confirmed transaction signature
   */
   async pollTransactionConfirmation(txtSig: TransactionSignature): Promise<TransactionSignature> {
-    // 30 second timeout
-    const timeout = 30000;
+    // 15 second timeout
+    const timeout = 15000;
     // 5 second retry interval
     const interval = 5000;
     let elapsed = 0;
@@ -497,7 +497,7 @@ export class RpcClient {
 
         const status = await this.connection.getSignatureStatus(txtSig);
 
-        if (status?.value?.confirmationStatus === "finalized") {
+        if (status?.value?.confirmationStatus === "confirmed") {
           clearInterval(intervalId);
           resolve(txtSig);
         }
@@ -521,10 +521,11 @@ export class RpcClient {
   ): Promise<TransactionSignature> {
     try {
       const pubKey = fromKeypair.publicKey;
+      const recentBlockhash = (await this.connection.getLatestBlockhash()).blockhash;
 
       // Build the initial transaction to estimate the priority fee
       const transaction = new Transaction().add(...instructions);
-      transaction.recentBlockhash = (await this.connection.getLatestBlockhash()).blockhash;
+      transaction.recentBlockhash = recentBlockhash;
       transaction.feePayer = pubKey;
       transaction.sign(fromKeypair);
 
@@ -546,7 +547,7 @@ export class RpcClient {
       instructions.unshift(computeBudgetIx);
 
       // Get the optimal compute units
-      const units = await this.simulateComputeUnits(instructions, pubKey, []);
+      const units = await this.getComputeUnits(instructions, pubKey, []);
       if (units) {
         // Add some margin to the compute units
         const computeUnitsIx = ComputeBudgetProgram.setComputeUnitLimit({
@@ -558,20 +559,35 @@ export class RpcClient {
 
       // Build the optimized transaction
       const optimizedTransaction = new Transaction().add(...instructions);
-      optimizedTransaction.recentBlockhash = (await this.connection.getLatestBlockhash()).blockhash;
+      optimizedTransaction.recentBlockhash = recentBlockhash;
       optimizedTransaction.feePayer = pubKey;
       optimizedTransaction.sign(fromKeypair);
 
-      // Send the transaction with configurable retries and preflight checks
-      const txtSig = await this.connection.sendRawTransaction(optimizedTransaction.serialize(), {
-        maxRetries: maxRetries,
-        skipPreflight: skipPreflightChecks,
-      });
+      let retryCount: number = 0;
+      let txtSig: string;
 
-      return await this.pollTransactionConfirmation(txtSig);
+      // Send the transaction with configurable retries and preflight checks
+      while (retryCount <= maxRetries) {
+        try {
+          txtSig = await this.connection.sendRawTransaction(optimizedTransaction.serialize(), {
+            skipPreflight: skipPreflightChecks,
+          });
+
+          return await this.pollTransactionConfirmation(txtSig);
+        } catch (error) {
+          if (retryCount === maxRetries) {
+            throw new Error(`Error sending smart transaction: ${error}`);
+          }
+
+          retryCount++;
+        }
+      }
     } catch (error) {
       throw new Error(`Error sending smart transaction: ${error}`);
     }
+
+    // This should not be reached if all code paths are correct (the TS compiler is getting annoyed without it)
+    throw new Error("Reached an unexpected point in sendSmartTransaction");
   }
  
   /**
