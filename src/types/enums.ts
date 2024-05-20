@@ -572,13 +572,13 @@ export enum MintApiAuthority {
 }
 
 export enum PriorityLevel {
-  NONE = "NONE",
-  LOW = "LOW",
-  MEDIUM = "MEDIUM",
-  HIGH = "HIGH",
-  VERY_HIGH = "VERY_HIGH",
-  UNSAFE_MAX = "UNSAFE_MAX",
-  DEFAULT = "DEFAULT",
+  MIN = "Min",
+  LOW = "Low",
+  MEDIUM = "Medium",
+  HIGH = "High",
+  VERY_HIGH = "VeryHigh",
+  UNSAFE_MAX = "UnsafeMax",
+  DEFAULT = "Default",
 }
 
 export enum UiTransactionEncoding {
