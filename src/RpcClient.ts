@@ -578,6 +578,7 @@ export class RpcClient {
 
           txtSig = await this.connection.sendRawTransaction(optimizedTransaction.serialize(), {
             skipPreflight: skipPreflightChecks,
+            maxRetries: 0,
           });
 
           return await this.pollTransactionConfirmation(txtSig);
