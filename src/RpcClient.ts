@@ -514,7 +514,7 @@ export class RpcClient {
     instructions: TransactionInstruction[],
     fromKeypair: Keypair,
     skipPreflightChecks: boolean = true,
-    maxRetries: number = 0,
+    maxRetries: number = 6,
   ): Promise<TransactionSignature> {
     try {
       const pubKey = fromKeypair.publicKey;
