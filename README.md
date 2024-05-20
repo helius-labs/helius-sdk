@@ -681,7 +681,6 @@ import {
 const helius = new Helius("YOUR_API_KEY");
 
 const fromKeypair = /* Your keypair goes here */;
-
 const fromPubkey = fromKeypair.publicKey;
 const toPubkey = /* The person we're sending 0.5 SOL to */;
 
