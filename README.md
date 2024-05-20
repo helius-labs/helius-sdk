@@ -676,7 +676,7 @@ import {
   SystemProgram,
   LAMPORTS_PER_SOL,
   TransactionInstruction,
-}from "@solana/web3.js";
+} from "@solana/web3.js";
 
 const helius = new Helius("YOUR_API_KEY");
 
