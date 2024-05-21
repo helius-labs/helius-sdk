@@ -13,6 +13,7 @@ import {
   RevokeCollectionAuthorityRequest,
   HeliusCluster,
   HeliusEndpoints,
+  HeliusConfig,
 } from "./types";
 
 import axios, { type AxiosError } from "axios";
@@ -40,12 +41,6 @@ import { mintApiAuthority } from "./utils/mintApi";
  * @class
  */
 export class Helius {
-  /**
-   * API key generated at dev.helius.xyz
-   * @private
-   */
-  private apiKey: string;
-
   /** The cluster in which the connection endpoint belongs to */
   public readonly cluster: HeliusCluster;
 
@@ -67,21 +62,26 @@ export class Helius {
   /**
    * Initializes Helius API client with an API key
    * @constructor
+   * @param url - Secure RPC URL at dev.helius.xyz
    * @param apiKey - API key generated at dev.helius.xyz
    */
-  constructor(
-    apiKey: string,
-    cluster: HeliusCluster = "mainnet-beta",
-    id: string = "helius-sdk"
-  ) {
-    this.apiKey = apiKey;
+  constructor({ url, apiKey, cluster = "mainnet-beta", id = "helius-sdk", commitmentOrConfig }: Partial<HeliusConfig>) {
     this.cluster = cluster;
     this.endpoints = getHeliusEndpoints(cluster);
-    this.connection = new Connection(`${this.endpoints.rpc}?api-key=${this.apiKey}`);
+    this.mintApiAuthority = mintApiAuthority(cluster);
+
+    if (apiKey) {
+      this.connection = new Connection(`${this.endpoints.rpc}?api-key=${apiKey}`, commitmentOrConfig);
+    } else if (url) {
+      this.connection = new Connection(url, commitmentOrConfig);
+    } else {
+      throw Error("either `url` or `apiKey` is required")
+    }
+
     this.endpoint = this.connection.rpcEndpoint;
     this.rpc = new RpcClient(this.connection, id);
-    this.mintApiAuthority = mintApiAuthority(cluster);
   }
+
   /**
    * Retrieves a list of all webhooks associated with the current API key
    * @returns {Promise<Webhook[]>} a promise that resolves to an array of webhook objects
@@ -537,7 +537,7 @@ export class Helius {
     }
 
     // Construct and return the full API endpoint URL
-    return `${this.endpoints.api}${path}?api-key=${this.apiKey}`;
+    return this.connection.rpcEndpoint;
   }
 
   private async _editWebhook(

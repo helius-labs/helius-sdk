@@ -11,7 +11,7 @@ describe("Helius SDK Tests", () => {
 
   beforeEach(() => {
     // Initialize the SDK instance
-    helius = new Helius(apiKey, "mainnet-beta");
+    helius = new Helius({ apiKey, cluster: "mainnet-beta" });
   });
   
   it("Should fetch all webhooks correctly", async () => {

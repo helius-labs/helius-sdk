@@ -1,4 +1,10 @@
-import type { Cluster, Keypair, TransactionError } from "@solana/web3.js";
+import type {
+  Cluster,
+  Commitment,
+  ConnectionConfig,
+  Keypair,
+  TransactionError
+} from "@solana/web3.js";
 
 import type {
   WebhookType,
@@ -14,6 +20,14 @@ import type {
 } from "./enums";
 
 export type HeliusCluster = Omit<Cluster, "testnet">;
+
+export type HeliusConfig = {
+  url: string,
+  apiKey: string,
+  cluster: HeliusCluster,
+  id: string,
+  commitmentOrConfig: Commitment | ConnectionConfig,
+};
 
 export interface HeliusEndpoints {
   api: string;
