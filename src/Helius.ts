@@ -41,6 +41,12 @@ import { mintApiAuthority } from "./utils/mintApi";
  * @class
  */
 export class Helius {
+  /**
+   * API key generated at dev.helius.xyz
+   * @private
+   */
+  private apiKey?: string;
+
   /** The cluster in which the connection endpoint belongs to */
   public readonly cluster: HeliusCluster;
 
@@ -71,6 +77,7 @@ export class Helius {
     this.mintApiAuthority = mintApiAuthority(cluster);
 
     if (apiKey) {
+      this.apiKey = apiKey;
       this.connection = new Connection(`${this.endpoints.rpc}?api-key=${apiKey}`, commitmentOrConfig);
     } else if (url) {
       this.connection = new Connection(url, commitmentOrConfig);
@@ -536,8 +543,12 @@ export class Helius {
         throw new Error(`Invalid API path provided: ${path}. Path must start with '/v0' or '/v1'.`);
     }
 
+    if (!this.apiKey) {
+      throw new Error(`API key is not set`);
+    }
+
     // Construct and return the full API endpoint URL
-    return this.connection.rpcEndpoint;
+    return `${this.endpoints.api}${path}?api-key=${this.apiKey}`;
   }
 
   private async _editWebhook(
