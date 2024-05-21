@@ -124,6 +124,7 @@ Offers additional tools for various Solana-related tasks like analyzing blockcha
 - [`getStakeAccounts()`](#getStakeAccounts): Returns all the stake accounts for a given public key.
 - [`getTokenHolders()`](#getTokenHolders): Returns all the token accounts for a given mint address (ONLY FOR SPL TOKENS).
 - [`getPriorityFeeEstimate()`](#getPriorityFeeEstimate): Returns an estimated priority fee based on a set of predefined priority levels (percentiles).
+- [`sendSmartTransaction()`](#sendSmartTransaction): Builds and sends an optimized transaction
 
 ## DAS API (Digital Asset Standard)
 
@@ -663,6 +664,36 @@ const response = await helius.rpc.getPriorityFeeEstimate({
 });
 
 console.log(response);
+```
+
+### sendSmartTransaction
+This method builds and sends an optimized transaction, while handling its confirmation status. Whether the transaction skips preflight checks and how many times it is retried is configurable by the user. The following code snippet is an example of sending 0.5 SOL to a given public key, with an optimize transaction that skips preflight checks and retries twice, if necessary
+
+```ts
+import { Helius } from "helius-sdk";
+import {
+  Keypair,
+  SystemProgram,
+  LAMPORTS_PER_SOL,
+  TransactionInstruction,
+} from "@solana/web3.js";
+
+const helius = new Helius("YOUR_API_KEY");
+
+const fromKeypair = /* Your keypair goes here */;
+const fromPubkey = fromKeypair.publicKey;
+const toPubkey = /* The person we're sending 0.5 SOL to */;
+
+const instructions: TransactionInstruction[] = [
+  SystemProgram.transfer({
+    fromPubkey: fromPubkey,
+    toPubkey: toPubkey,
+    lamports: 0.5 * LAMPORTS_PER_SOL, 
+  }),
+];
+
+const transactionSignature = await sendSmartTransaction(instructions, fromKeypair, true, 2);
+console.log(`Successful transfer: ${transactionSignature}`);
 ```
 
 ## helius.connection

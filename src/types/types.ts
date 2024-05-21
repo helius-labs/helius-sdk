@@ -325,6 +325,7 @@ export interface GetPriorityFeeEstimateOptions {
   includeAllPriorityFeeLevels?: boolean;
   transactionEncoding?: UiTransactionEncoding;
   lookbackSlots?: number;
+  recommended?: boolean;
 }
 
 export interface GetPriorityFeeEstimateRequest {

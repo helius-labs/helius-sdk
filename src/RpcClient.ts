@@ -1,7 +1,13 @@
 import {
   BlockhashWithExpiryBlockHeight,
+  VersionedTransaction,
+  AddressLookupTableAccount,
+  Transaction,
+  TransactionMessage,
+  TransactionInstruction,
   TransactionSignature,
   Commitment,
+  Keypair,
   PublicKey,
   AccountInfo,
   GetLatestBlockhashConfig,
@@ -10,7 +16,9 @@ import {
   Blockhash,
   Connection,
   ParsedAccountData,
+  ComputeBudgetProgram,
 } from "@solana/web3.js";
+const bs58 = require("bs58");
 import axios from "axios";
 import { DAS } from "./types/das-types";
 import { GetPriorityFeeEstimateRequest, GetPriorityFeeEstimateResponse } from "./types";
@@ -400,7 +408,7 @@ export class RpcClient {
     }
   }
 
-    /**
+  /**
   * Get priority fee estimate
   * @returns {Promise<GetPriorityFeeEstimateResponse>}
   * @throws {Error}
@@ -423,6 +431,171 @@ export class RpcClient {
     } catch (error) {
       throw new Error(`Error fetching priority fee estimate: ${error}`);
     }
+  }
+
+  /**
+   * Simulate a transaction to get the total compute units consumed
+   * @param {TransactionInstruction[]} instructions - The transaction instructions
+   * @param {PublicKey} payer - The public key of the payer
+   * @param {AddressLookupTableAccount[]} lookupTables - The address lookup tables 
+   * @returns {Promise<number | null>} - The compute units consumed, or null if unsuccessful
+  */
+  async getComputeUnits(
+    instructions: TransactionInstruction[],
+    payer: PublicKey,
+    lookupTables: AddressLookupTableAccount[]
+  ): Promise<number | null> {
+    const testInstructions = [
+      ComputeBudgetProgram.setComputeUnitLimit({ units: 1_400_000 }),
+      ...instructions,
+    ];
+
+    const testTransaction = new VersionedTransaction(
+      new TransactionMessage({
+        instructions: testInstructions,
+        payerKey: payer,
+        recentBlockhash: (await this.connection.getLatestBlockhash()).blockhash,
+      }).compileToV0Message(lookupTables)
+    );
+
+    const rpcResponse = await this.connection.simulateTransaction(testTransaction, {
+      replaceRecentBlockhash: true,
+      sigVerify: false,
+    });
+
+    if (rpcResponse.value.err) {
+      console.error(`Simulation error: ${rpcResponse.value.err}`);
+      return null;
+    }
+
+    return rpcResponse.value.unitsConsumed || null;
+  }
+
+  /**
+   * Poll a transaction to check whether it has been confirmed
+   * @param {TransactionSignature} txtSig - The transaction signature
+   * @returns {Promise<TransactionSignature>} - The confirmed transaction signature or an error if the confirmation times out
+  */
+  async pollTransactionConfirmation(txtSig: TransactionSignature): Promise<TransactionSignature> {
+    // 15 second timeout
+    const timeout = 15000;
+    // 5 second retry interval
+    const interval = 5000;
+    let elapsed = 0;
+
+    return new Promise<TransactionSignature>((resolve, reject) => {
+      const intervalId = setInterval(async () => {
+        elapsed += interval;
+
+        if (elapsed >= timeout) {
+          clearInterval(intervalId);
+          reject(new Error(`Transaction ${txtSig}'s confirmation timed out`));
+        }
+
+        const status = await this.connection.getSignatureStatus(txtSig);
+
+        if (status?.value?.confirmationStatus === "confirmed") {
+          clearInterval(intervalId);
+          resolve(txtSig);
+        }
+      }, interval);
+    });
+  }
+
+  /**
+   * Build and send an optimized transaction, and handle its confirmation status
+   * @param {TransactionInstruction[]} instructions - The transaction instructions
+   * @param {Keypair} fromKeypair - The sender's keypair
+   * @param {boolean} skipPreflightChecks - Whether the transaction should skip preflight checks. Defaults to `true`
+   * @param {number} maxRetries - The maximum number of times to retry sending the transaction to the leader. Defaults to 0
+   * @returns {Promise<TransactionSignature>} - The transaction signature
+  */
+  async sendSmartTransaction(
+    instructions: TransactionInstruction[],
+    fromKeypair: Keypair,
+    skipPreflightChecks: boolean = true,
+    maxRetries: number = 6,
+  ): Promise<TransactionSignature> {
+    try {
+      const pubKey = fromKeypair.publicKey;
+      const recentBlockhash = (await this.connection.getLatestBlockhash()).blockhash;
+
+      // Build the initial transaction to estimate the priority fee
+      const transaction = new Transaction().add(...instructions);
+      transaction.recentBlockhash = recentBlockhash;
+      transaction.feePayer = pubKey;
+      transaction.sign(fromKeypair);
+
+      // Serialize the transaction
+      const serializedTransaction = bs58.encode(transaction.serialize());
+
+      // Get the priority fee estimate based on the serialized transaction
+      const priorityFeeResponse = await this.getPriorityFeeEstimate({
+        transaction: serializedTransaction,
+        options: { 
+          recommended: true,
+        },
+      });
+
+      // Add the compute unit price instruction with the estimated fee
+      const computeBudgetIx = ComputeBudgetProgram.setComputeUnitPrice({
+        microLamports: priorityFeeResponse.priorityFeeEstimate || 0,
+      });
+      instructions.unshift(computeBudgetIx);
+
+      // Get the optimal compute units
+      const units = await this.getComputeUnits(instructions, pubKey, []);
+      if (units) {
+        // Add some margin to the compute units
+        const computeUnitsIx = ComputeBudgetProgram.setComputeUnitLimit({
+          units: Math.ceil(units * 1.1),
+        });
+
+        instructions.unshift(computeUnitsIx);
+      }
+
+      // Build the optimized transaction
+      const optimizedTransaction = new Transaction().add(...instructions);
+      optimizedTransaction.recentBlockhash = recentBlockhash;
+      optimizedTransaction.feePayer = pubKey;
+      optimizedTransaction.sign(fromKeypair);
+
+      // Re-fetch the blockhash every 4 retries, or, roughly once every minute
+      const blockhashValidityThreshold = 4;
+
+      let retryCount: number = 0;
+      let txtSig: string;
+
+      // Send the transaction with configurable retries and preflight checks
+      while (retryCount <= maxRetries) {
+        try {
+          // Check if the blockhash needs to be refreshed based on the retry count
+          if (retryCount > 0 && retryCount % blockhashValidityThreshold === 0) {
+            let latestBlockhash = (await this.connection.getLatestBlockhash()).blockhash;
+            optimizedTransaction.recentBlockhash = latestBlockhash;
+            optimizedTransaction.sign(fromKeypair);
+          }
+
+          txtSig = await this.connection.sendRawTransaction(optimizedTransaction.serialize(), {
+            skipPreflight: skipPreflightChecks,
+            maxRetries: 0,
+          });
+
+          return await this.pollTransactionConfirmation(txtSig);
+        } catch (error) {
+          if (retryCount === maxRetries) {
+            throw new Error(`Error sending smart transaction: ${error}`);
+          }
+
+          retryCount++;
+        }
+      }
+    } catch (error) {
+      throw new Error(`Error sending smart transaction: ${error}`);
+    }
+
+    // This should not be reached if all code paths are correct (the TS compiler is getting annoyed without it)
+    throw new Error("Reached an unexpected point in sendSmartTransaction");
   }
  
   /**
