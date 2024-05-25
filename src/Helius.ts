@@ -68,7 +68,7 @@ export class Helius {
    * Initializes Helius API client with an API key
    * @constructor
    * @param apiKey - API key generated at dev.helius.xyz
-   * @param url - Secure RPC URL at dev.helius.xyz
+   * @param url - Secure RPC URL generated at dev.helius.xyz
    */
   constructor(
     apiKey: string,
