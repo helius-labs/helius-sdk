@@ -85,14 +85,13 @@ export class Helius {
     } else if (url !== "") {
       this.connection = new Connection(url);
     } else {
-      throw Error("either `url` or `apiKey` is required")
+      throw Error("either `apiKey` or `url` is required");
     }
 
     this.endpoint = this.connection.rpcEndpoint;
     this.rpc = new RpcClient(this.connection, id);
     this.mintApiAuthority = mintApiAuthority(cluster);
   }
-
   /**
    * Retrieves a list of all webhooks associated with the current API key
    * @returns {Promise<Webhook[]>} a promise that resolves to an array of webhook objects
@@ -548,7 +547,7 @@ export class Helius {
     }
 
     if (!this.apiKey) {
-      throw new Error(`API key is not set`);
+        throw new Error(`API key is not set`);
     }
 
     // Construct and return the full API endpoint URL
