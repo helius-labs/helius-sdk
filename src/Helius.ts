@@ -13,7 +13,6 @@ import {
   RevokeCollectionAuthorityRequest,
   HeliusCluster,
   HeliusEndpoints,
-  HeliusConfig,
 } from "./types";
 
 import axios, { type AxiosError } from "axios";
@@ -68,25 +67,30 @@ export class Helius {
   /**
    * Initializes Helius API client with an API key
    * @constructor
-   * @param url - Secure RPC URL at dev.helius.xyz
    * @param apiKey - API key generated at dev.helius.xyz
+   * @param url - Secure RPC URL at dev.helius.xyz
    */
-  constructor({ url, apiKey, cluster = "mainnet-beta", id = "helius-sdk", commitmentOrConfig }: Partial<HeliusConfig>) {
+  constructor(
+    apiKey: string,
+    cluster: HeliusCluster = "mainnet-beta",
+    id: string = "helius-sdk",
+    url: string = "",
+  ) {
     this.cluster = cluster;
     this.endpoints = getHeliusEndpoints(cluster);
-    this.mintApiAuthority = mintApiAuthority(cluster);
 
-    if (apiKey) {
+    if (apiKey !== "") {
       this.apiKey = apiKey;
-      this.connection = new Connection(`${this.endpoints.rpc}?api-key=${apiKey}`, commitmentOrConfig);
-    } else if (url) {
-      this.connection = new Connection(url, commitmentOrConfig);
+      this.connection = new Connection(`${this.endpoints.rpc}?api-key=${apiKey}`);
+    } else if (url !== "") {
+      this.connection = new Connection(url);
     } else {
       throw Error("either `url` or `apiKey` is required")
     }
 
     this.endpoint = this.connection.rpcEndpoint;
     this.rpc = new RpcClient(this.connection, id);
+    this.mintApiAuthority = mintApiAuthority(cluster);
   }
 
   /**
