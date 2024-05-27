@@ -666,7 +666,7 @@ const response = await helius.rpc.getPriorityFeeEstimate({
 console.log(response);
 ```
 
-### sendSmartTransaction
+### sendSmartTransaction()
 This method builds and sends an optimized transaction, while handling its confirmation status. Whether the transaction skips preflight checks and how many times it is retried is configurable by the user. The following code snippet is an example of sending 0.5 SOL to a given public key, with an optimize transaction that skips preflight checks and retries twice, if necessary
 
 ```ts
@@ -692,7 +692,7 @@ const instructions: TransactionInstruction[] = [
   }),
 ];
 
-const transactionSignature = await sendSmartTransaction(instructions, fromKeypair, true, 2);
+const transactionSignature = await helius.rpc.sendSmartTransaction(instructions, fromKeypair, true, 2);
 console.log(`Successful transfer: ${transactionSignature}`);
 ```
 
