@@ -547,16 +547,16 @@ export class RpcClient {
       const serializedTransaction = bs58.encode(isVersioned ? versionedTransaction!.serialize() : legacyTransaction!.serialize());
 
       // Get the priority fee estimate based on the serialized transaction
-      // const priorityFeeResponse = await this.getPriorityFeeEstimate({
-      //   transaction: serializedTransaction,
-      //   options: { 
-      //     recommended: true,
-      //   },
-      // });
+      const priorityFeeResponse = await this.getPriorityFeeEstimate({
+        transaction: serializedTransaction,
+        options: { 
+          recommended: true,
+        },
+      });
 
       // Add the compute unit price instruction with the estimated fee
       const computeBudgetIx = ComputeBudgetProgram.setComputeUnitPrice({
-        microLamports: /*priorityFeeResponse.priorityFeeEstimate ||*/ 1000,
+        microLamports: priorityFeeResponse.priorityFeeEstimate || 0,
       });
       instructions.unshift(computeBudgetIx);
 
