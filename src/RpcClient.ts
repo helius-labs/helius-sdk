@@ -513,38 +513,55 @@ export class RpcClient {
   async sendSmartTransaction(
     instructions: TransactionInstruction[],
     fromKeypair: Keypair,
+    lookupTables: AddressLookupTableAccount[] = [],
     skipPreflightChecks: boolean = true,
     maxRetries: number = 6,
   ): Promise<TransactionSignature> {
     try {
       const pubKey = fromKeypair.publicKey;
-      const recentBlockhash = (await this.connection.getLatestBlockhash()).blockhash;
+      let recentBlockhash = (await this.connection.getLatestBlockhash()).blockhash;
 
-      // Build the initial transaction to estimate the priority fee
-      const transaction = new Transaction().add(...instructions);
-      transaction.recentBlockhash = recentBlockhash;
-      transaction.feePayer = pubKey;
-      transaction.sign(fromKeypair);
+      // Determine if we need to use a versioned transaction
+      const isVersioned = lookupTables.length > 0;
+      let legacyTransaction: Transaction | null = null;
+      let versionedTransaction: VersionedTransaction | null = null;
+
+      // Build the initial transaction based on whether lookup tables are present
+      if (isVersioned) {
+        const v0Message = new TransactionMessage({
+          instructions: instructions,
+          payerKey: pubKey,
+          recentBlockhash: recentBlockhash,
+        }).compileToV0Message(lookupTables);
+
+        versionedTransaction = new VersionedTransaction(v0Message);
+        versionedTransaction.sign([fromKeypair]);
+      } else {
+        legacyTransaction = new Transaction().add(...instructions);
+        legacyTransaction.recentBlockhash = recentBlockhash;
+        legacyTransaction.feePayer = pubKey;
+        legacyTransaction.sign(fromKeypair);
+      }
 
       // Serialize the transaction
-      const serializedTransaction = bs58.encode(transaction.serialize());
+      const serializedTransaction = bs58.encode(isVersioned ? versionedTransaction!.serialize() : legacyTransaction!.serialize());
 
       // Get the priority fee estimate based on the serialized transaction
-      const priorityFeeResponse = await this.getPriorityFeeEstimate({
-        transaction: serializedTransaction,
-        options: { 
-          recommended: true,
-        },
-      });
+      // const priorityFeeResponse = await this.getPriorityFeeEstimate({
+      //   transaction: serializedTransaction,
+      //   options: { 
+      //     recommended: true,
+      //   },
+      // });
 
       // Add the compute unit price instruction with the estimated fee
       const computeBudgetIx = ComputeBudgetProgram.setComputeUnitPrice({
-        microLamports: priorityFeeResponse.priorityFeeEstimate || 0,
+        microLamports: /*priorityFeeResponse.priorityFeeEstimate ||*/ 1000,
       });
       instructions.unshift(computeBudgetIx);
 
       // Get the optimal compute units
-      const units = await this.getComputeUnits(instructions, pubKey, []);
+      const units = await this.getComputeUnits(instructions, pubKey, isVersioned ? lookupTables : []);
       if (units) {
         // Add some margin to the compute units
         const computeUnitsIx = ComputeBudgetProgram.setComputeUnitLimit({
@@ -555,13 +572,27 @@ export class RpcClient {
       }
 
       // Build the optimized transaction
-      const optimizedTransaction = new Transaction().add(...instructions);
-      optimizedTransaction.recentBlockhash = recentBlockhash;
-      optimizedTransaction.feePayer = pubKey;
-      optimizedTransaction.sign(fromKeypair);
+      let optimizedTransaction: VersionedTransaction | Transaction;
+      
+      if (isVersioned) {
+        const v0Message = new TransactionMessage({
+          instructions: instructions,
+          payerKey: pubKey,
+          recentBlockhash: recentBlockhash,
+        }).compileToV0Message(lookupTables);
 
-      // Re-fetch the blockhash every 4 retries, or, roughly once every minute
-      const blockhashValidityThreshold = 4;
+        optimizedTransaction = new VersionedTransaction(v0Message);
+        versionedTransaction?.sign([fromKeypair]);
+      } else {
+        optimizedTransaction = new Transaction().add(...instructions);
+        optimizedTransaction.recentBlockhash = recentBlockhash;
+        optimizedTransaction.feePayer = pubKey;
+        optimizedTransaction.sign(fromKeypair);
+      }
+
+      // Re-fetch the blockhash every 60 seconds
+      const blockhashRefetchInterval = 60000;
+      let lastBlockhashRefetch = Date.now();
 
       let retryCount: number = 0;
       let txtSig: string;
@@ -569,11 +600,19 @@ export class RpcClient {
       // Send the transaction with configurable retries and preflight checks
       while (retryCount <= maxRetries) {
         try {
-          // Check if the blockhash needs to be refreshed based on the retry count
-          if (retryCount > 0 && retryCount % blockhashValidityThreshold === 0) {
-            let latestBlockhash = (await this.connection.getLatestBlockhash()).blockhash;
-            optimizedTransaction.recentBlockhash = latestBlockhash;
-            optimizedTransaction.sign(fromKeypair);
+          // Check if the blockhash needs to be refreshed based on the refetch interval
+          if (Date.now() - lastBlockhashRefetch >= blockhashRefetchInterval) {
+            recentBlockhash = (await this.connection.getLatestBlockhash()).blockhash;
+
+            if (isVersioned) {
+              versionedTransaction!.message.recentBlockhash = recentBlockhash;
+              versionedTransaction!.sign([fromKeypair]);
+            } else {
+              legacyTransaction!.recentBlockhash = recentBlockhash;
+              legacyTransaction!.sign(fromKeypair);
+            }
+
+            lastBlockhashRefetch = Date.now();
           }
 
           txtSig = await this.connection.sendRawTransaction(optimizedTransaction.serialize(), {
