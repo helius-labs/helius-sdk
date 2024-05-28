@@ -21,7 +21,7 @@ import {
 const bs58 = require("bs58");
 import axios from "axios";
 import { DAS } from "./types/das-types";
-import { GetPriorityFeeEstimateRequest, GetPriorityFeeEstimateResponse } from "./types";
+import { GetPriorityFeeEstimateRequest, GetPriorityFeeEstimateResponse, PriorityLevel } from "./types";
 
 export type SendAndConfirmTransactionResponse = {
   signature: TransactionSignature;
@@ -506,18 +506,31 @@ export class RpcClient {
    * Build and send an optimized transaction, and handle its confirmation status
    * @param {TransactionInstruction[]} instructions - The transaction instructions
    * @param {Keypair} fromKeypair - The sender's keypair
-   * @param {boolean} skipPreflightChecks - Whether the transaction should skip preflight checks. Defaults to `true`
-   * @param {number} maxRetries - The maximum number of times to retry sending the transaction to the leader. Defaults to 0
+   * @param {AddressLookupTableAccount[]} lookupTables - The lookup tables to be included in a versioned transaction. Defaults to `[]`
+   * @param {boolean} skipPreflightChecks - Whether the transaction should skip preflight checks. Defaults to `false`
    * @returns {Promise<TransactionSignature>} - The transaction signature
   */
   async sendSmartTransaction(
     instructions: TransactionInstruction[],
     fromKeypair: Keypair,
     lookupTables: AddressLookupTableAccount[] = [],
-    skipPreflightChecks: boolean = true,
-    maxRetries: number = 6,
+    skipPreflightChecks: boolean = false,
   ): Promise<TransactionSignature> {
     try {
+      // Check if any of the instructions provided set the compute unit price and/or limit, and throw an error if true
+      const existingComputeBudgetInstructions = instructions.filter(instruction => 
+        instruction.programId.equals(ComputeBudgetProgram.programId)
+      );
+
+      if (existingComputeBudgetInstructions.length > 0) {
+        throw new Error("Cannot provide instructions that set the compute unit price and/or limit");
+      }
+      
+      // For calculating the priority fee
+      const LAMPORTS_TO_MICRO_LAMPORTS = 10 ** 6;
+      const MINIMUM_TOTAL_PFEE_LAMPORTS = 10_000;
+
+      // For building the transaction
       const pubKey = fromKeypair.publicKey;
       let recentBlockhash = (await this.connection.getLatestBlockhash()).blockhash;
 
@@ -543,6 +556,21 @@ export class RpcClient {
         legacyTransaction.sign(fromKeypair);
       }
 
+      // Get the optimal compute units
+      const units = await this.getComputeUnits(instructions, pubKey, isVersioned ? lookupTables : []);
+
+      if (!units) {
+        throw new Error(`Error fetching compute units for the instructions provided`);
+      }
+
+      let customersCU = Math.ceil(units * 1.1);
+      const computeUnitsIx = ComputeBudgetProgram.setComputeUnitLimit({
+        units: customersCU,
+      });
+
+      instructions.unshift(computeUnitsIx);
+
+
       // Serialize the transaction
       const serializedTransaction = bs58.encode(isVersioned ? versionedTransaction!.serialize() : legacyTransaction!.serialize());
 
@@ -550,26 +578,22 @@ export class RpcClient {
       const priorityFeeResponse = await this.getPriorityFeeEstimate({
         transaction: serializedTransaction,
         options: { 
-          recommended: true,
+          priorityLevel: PriorityLevel.HIGH,
         },
       });
 
+      let priorityFeeRecommendation = priorityFeeResponse.priorityFeeEstimate || 0;
+
+      let microlamportsPerCU = Math.max(
+        priorityFeeRecommendation,
+        (MINIMUM_TOTAL_PFEE_LAMPORTS / customersCU) * LAMPORTS_TO_MICRO_LAMPORTS,
+      );
+
       // Add the compute unit price instruction with the estimated fee
       const computeBudgetIx = ComputeBudgetProgram.setComputeUnitPrice({
-        microLamports: priorityFeeResponse.priorityFeeEstimate || 0,
+        microLamports: microlamportsPerCU,
       });
       instructions.unshift(computeBudgetIx);
-
-      // Get the optimal compute units
-      const units = await this.getComputeUnits(instructions, pubKey, isVersioned ? lookupTables : []);
-      if (units) {
-        // Add some margin to the compute units
-        const computeUnitsIx = ComputeBudgetProgram.setComputeUnitLimit({
-          units: Math.ceil(units * 1.1),
-        });
-
-        instructions.unshift(computeUnitsIx);
-      }
 
       // Build the optimized transaction
       let optimizedTransaction: VersionedTransaction | Transaction;
@@ -590,31 +614,14 @@ export class RpcClient {
         optimizedTransaction.sign(fromKeypair);
       }
 
-      // Re-fetch the blockhash every 60 seconds
-      const blockhashRefetchInterval = 60000;
-      let lastBlockhashRefetch = Date.now();
-
-      let retryCount: number = 0;
+      // Timeout of 60s. The transaction will be routed through our staked connections and should be confirmed by then
+      const timeout = 60000;
+      let startTime = Date.now();
       let txtSig: string;
 
       // Send the transaction with configurable retries and preflight checks
-      while (retryCount <= maxRetries) {
+      while (Date.now() - startTime < timeout) {
         try {
-          // Check if the blockhash needs to be refreshed based on the refetch interval
-          if (Date.now() - lastBlockhashRefetch >= blockhashRefetchInterval) {
-            recentBlockhash = (await this.connection.getLatestBlockhash()).blockhash;
-
-            if (isVersioned) {
-              versionedTransaction!.message.recentBlockhash = recentBlockhash;
-              versionedTransaction!.sign([fromKeypair]);
-            } else {
-              legacyTransaction!.recentBlockhash = recentBlockhash;
-              legacyTransaction!.sign(fromKeypair);
-            }
-
-            lastBlockhashRefetch = Date.now();
-          }
-
           txtSig = await this.connection.sendRawTransaction(optimizedTransaction.serialize(), {
             skipPreflight: skipPreflightChecks,
             maxRetries: 0,
@@ -622,19 +629,15 @@ export class RpcClient {
 
           return await this.pollTransactionConfirmation(txtSig);
         } catch (error) {
-          if (retryCount === maxRetries) {
-            throw new Error(`Error sending smart transaction: ${error}`);
-          }
-
-          retryCount++;
+          continue;
         }
       }
     } catch (error) {
       throw new Error(`Error sending smart transaction: ${error}`);
     }
 
-    // This should not be reached if all code paths are correct (the TS compiler is getting annoyed without it)
-    throw new Error("Reached an unexpected point in sendSmartTransaction");
+    // Transaction failed to confirm in 60s
+    throw new Error("Transaction failed to confirm in 60s");
   }
  
   /**
