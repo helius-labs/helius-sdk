@@ -539,6 +539,20 @@ export class RpcClient {
       let legacyTransaction: Transaction | null = null;
       let versionedTransaction: VersionedTransaction | null = null;
 
+      // Get the optimal compute units
+      const units = await this.getComputeUnits(instructions, pubKey, isVersioned ? lookupTables : []);
+
+      if (!units) {
+        throw new Error(`Error fetching compute units for the instructions provided`);
+      }
+      
+      let customersCU = Math.ceil(units * 1.1);
+      const computeUnitsIx = ComputeBudgetProgram.setComputeUnitLimit({
+        units: customersCU,
+      });
+      
+      instructions.unshift(computeUnitsIx);
+
       // Build the initial transaction based on whether lookup tables are present
       if (isVersioned) {
         const v0Message = new TransactionMessage({
@@ -555,21 +569,6 @@ export class RpcClient {
         legacyTransaction.feePayer = pubKey;
         legacyTransaction.sign(fromKeypair);
       }
-
-      // Get the optimal compute units
-      const units = await this.getComputeUnits(instructions, pubKey, isVersioned ? lookupTables : []);
-
-      if (!units) {
-        throw new Error(`Error fetching compute units for the instructions provided`);
-      }
-
-      let customersCU = Math.ceil(units * 1.1);
-      const computeUnitsIx = ComputeBudgetProgram.setComputeUnitLimit({
-        units: customersCU,
-      });
-
-      instructions.unshift(computeUnitsIx);
-
 
       // Serialize the transaction
       const serializedTransaction = bs58.encode(isVersioned ? versionedTransaction!.serialize() : legacyTransaction!.serialize());
