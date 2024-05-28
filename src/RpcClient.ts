@@ -619,7 +619,7 @@ export class RpcClient {
       let startTime = Date.now();
       let txtSig: string;
 
-      // Send the transaction with configurable retries and preflight checks
+      // Send the transaction with configurable preflight checks
       while (Date.now() - startTime < timeout) {
         try {
           txtSig = await this.connection.sendRawTransaction(optimizedTransaction.serialize(), {
