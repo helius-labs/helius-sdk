@@ -17,6 +17,7 @@ import {
   Connection,
   ParsedAccountData,
   ComputeBudgetProgram,
+  SendOptions,
 } from "@solana/web3.js";
 const bs58 = require("bs58");
 import axios from "axios";
@@ -507,14 +508,14 @@ export class RpcClient {
    * @param {TransactionInstruction[]} instructions - The transaction instructions
    * @param {Keypair} fromKeypair - The sender's keypair
    * @param {AddressLookupTableAccount[]} lookupTables - The lookup tables to be included in a versioned transaction. Defaults to `[]`
-   * @param {boolean} skipPreflightChecks - Whether the transaction should skip preflight checks. Defaults to `false`
+   * @param {SendOptions} sendOptions - Options for sending the transaction. Defaults to `{ skipPreflight: false }`
    * @returns {Promise<TransactionSignature>} - The transaction signature
   */
   async sendSmartTransaction(
     instructions: TransactionInstruction[],
     fromKeypair: Keypair,
     lookupTables: AddressLookupTableAccount[] = [],
-    skipPreflightChecks: boolean = false,
+    sendOptions: SendOptions = { skipPreflight: false },
   ): Promise<TransactionSignature> {
     try {
       // Check if any of the instructions provided set the compute unit price and/or limit, and throw an error if true
@@ -539,20 +540,6 @@ export class RpcClient {
       let legacyTransaction: Transaction | null = null;
       let versionedTransaction: VersionedTransaction | null = null;
 
-      // Get the optimal compute units
-      const units = await this.getComputeUnits(instructions, pubKey, isVersioned ? lookupTables : []);
-
-      if (!units) {
-        throw new Error(`Error fetching compute units for the instructions provided`);
-      }
-      
-      let customersCU = Math.ceil(units * 1.1);
-      const computeUnitsIx = ComputeBudgetProgram.setComputeUnitLimit({
-        units: customersCU,
-      });
-      
-      instructions.unshift(computeUnitsIx);
-
       // Build the initial transaction based on whether lookup tables are present
       if (isVersioned) {
         const v0Message = new TransactionMessage({
@@ -570,6 +557,20 @@ export class RpcClient {
         legacyTransaction.sign(fromKeypair);
       }
 
+      // Get the optimal compute units
+      const units = await this.getComputeUnits(instructions, pubKey, isVersioned ? lookupTables : []);
+
+      if (!units) {
+        throw new Error(`Error fetching compute units for the instructions provided`);
+      }
+                
+      let customersCU = Math.ceil(units * 1.1);
+      const computeUnitsIx = ComputeBudgetProgram.setComputeUnitLimit({
+        units: customersCU,
+      });
+                  
+      instructions.unshift(computeUnitsIx);
+
       // Serialize the transaction
       const serializedTransaction = bs58.encode(isVersioned ? versionedTransaction!.serialize() : legacyTransaction!.serialize());
 
@@ -577,16 +578,16 @@ export class RpcClient {
       const priorityFeeResponse = await this.getPriorityFeeEstimate({
         transaction: serializedTransaction,
         options: { 
-          priorityLevel: PriorityLevel.HIGH,
+          recommended: true,
         },
       });
 
       let priorityFeeRecommendation = priorityFeeResponse.priorityFeeEstimate || 0;
 
-      let microlamportsPerCU = Math.max(
+      let microlamportsPerCU = Math.floor(Math.max(
         priorityFeeRecommendation,
         (MINIMUM_TOTAL_PFEE_LAMPORTS / customersCU) * LAMPORTS_TO_MICRO_LAMPORTS,
-      );
+      ));
 
       // Add the compute unit price instruction with the estimated fee
       const computeBudgetIx = ComputeBudgetProgram.setComputeUnitPrice({
@@ -622,8 +623,8 @@ export class RpcClient {
       while (Date.now() - startTime < timeout) {
         try {
           txtSig = await this.connection.sendRawTransaction(optimizedTransaction.serialize(), {
-            skipPreflight: skipPreflightChecks,
-            maxRetries: 0,
+            skipPreflight: sendOptions.skipPreflight,
+            ...sendOptions,
           });
 
           return await this.pollTransactionConfirmation(txtSig);
