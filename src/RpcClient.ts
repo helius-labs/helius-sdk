@@ -608,7 +608,7 @@ export class RpcClient {
         }).compileToV0Message(lookupTables);
 
         optimizedTransaction = new VersionedTransaction(v0Message);
-        versionedTransaction?.sign([fromKeypair]);
+        optimizedTransaction.sign([fromKeypair]);
       } else {
         optimizedTransaction = new Transaction().add(...instructions);
         optimizedTransaction.recentBlockhash = recentBlockhash;
