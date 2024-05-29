@@ -563,12 +563,14 @@ export class RpcClient {
       if (!units) {
         throw new Error(`Error fetching compute units for the instructions provided`);
       }
-                
-      let customersCU = Math.ceil(units * 1.1);
+       
+      // For very small transactions, such as simple transfers, default to 1k CUs
+      let customersCU = units < 1000 ? 1000 : Math.ceil(units * 1.5);
+
       const computeUnitsIx = ComputeBudgetProgram.setComputeUnitLimit({
         units: customersCU,
-      });
-                  
+      });         
+      
       instructions.unshift(computeUnitsIx);
 
       // Serialize the transaction
@@ -583,16 +585,16 @@ export class RpcClient {
       });
 
       let priorityFeeRecommendation = priorityFeeResponse.priorityFeeEstimate || 0;
-
-      let microlamportsPerCU = Math.floor(Math.max(
+      let microlamportsPerCU = Math.max(
         priorityFeeRecommendation,
-        (MINIMUM_TOTAL_PFEE_LAMPORTS / customersCU) * LAMPORTS_TO_MICRO_LAMPORTS,
-      ));
+        Math.round((MINIMUM_TOTAL_PFEE_LAMPORTS / customersCU) * LAMPORTS_TO_MICRO_LAMPORTS),
+      );
 
       // Add the compute unit price instruction with the estimated fee
       const computeBudgetIx = ComputeBudgetProgram.setComputeUnitPrice({
-        microLamports: microlamportsPerCU,
+        microLamports: microlamportsPerCU, 
       });
+      
       instructions.unshift(computeBudgetIx);
 
       // Build the optimized transaction
