@@ -17,11 +17,12 @@ import {
   Connection,
   ParsedAccountData,
   ComputeBudgetProgram,
+  SendOptions,
 } from "@solana/web3.js";
 const bs58 = require("bs58");
 import axios from "axios";
 import { DAS } from "./types/das-types";
-import { GetPriorityFeeEstimateRequest, GetPriorityFeeEstimateResponse } from "./types";
+import { GetPriorityFeeEstimateRequest, GetPriorityFeeEstimateResponse, PriorityLevel } from "./types";
 
 export type SendAndConfirmTransactionResponse = {
   signature: TransactionSignature;
@@ -506,28 +507,74 @@ export class RpcClient {
    * Build and send an optimized transaction, and handle its confirmation status
    * @param {TransactionInstruction[]} instructions - The transaction instructions
    * @param {Keypair} fromKeypair - The sender's keypair
-   * @param {boolean} skipPreflightChecks - Whether the transaction should skip preflight checks. Defaults to `true`
-   * @param {number} maxRetries - The maximum number of times to retry sending the transaction to the leader. Defaults to 0
+   * @param {AddressLookupTableAccount[]} lookupTables - The lookup tables to be included in a versioned transaction. Defaults to `[]`
+   * @param {SendOptions} sendOptions - Options for sending the transaction. Defaults to `{ skipPreflight: false }`
    * @returns {Promise<TransactionSignature>} - The transaction signature
   */
   async sendSmartTransaction(
     instructions: TransactionInstruction[],
     fromKeypair: Keypair,
-    skipPreflightChecks: boolean = true,
-    maxRetries: number = 6,
+    lookupTables: AddressLookupTableAccount[] = [],
+    sendOptions: SendOptions = { skipPreflight: false },
   ): Promise<TransactionSignature> {
     try {
-      const pubKey = fromKeypair.publicKey;
-      const recentBlockhash = (await this.connection.getLatestBlockhash()).blockhash;
+      // Check if any of the instructions provided set the compute unit price and/or limit, and throw an error if true
+      const existingComputeBudgetInstructions = instructions.filter(instruction => 
+        instruction.programId.equals(ComputeBudgetProgram.programId)
+      );
 
-      // Build the initial transaction to estimate the priority fee
-      const transaction = new Transaction().add(...instructions);
-      transaction.recentBlockhash = recentBlockhash;
-      transaction.feePayer = pubKey;
-      transaction.sign(fromKeypair);
+      if (existingComputeBudgetInstructions.length > 0) {
+        throw new Error("Cannot provide instructions that set the compute unit price and/or limit");
+      }
+      
+      // For calculating the priority fee
+      const LAMPORTS_TO_MICRO_LAMPORTS = 10 ** 6;
+      const MINIMUM_TOTAL_PFEE_LAMPORTS = 10_000;
+
+      // For building the transaction
+      const pubKey = fromKeypair.publicKey;
+      let recentBlockhash = (await this.connection.getLatestBlockhash()).blockhash;
+
+      // Determine if we need to use a versioned transaction
+      const isVersioned = lookupTables.length > 0;
+      let legacyTransaction: Transaction | null = null;
+      let versionedTransaction: VersionedTransaction | null = null;
+
+      // Build the initial transaction based on whether lookup tables are present
+      if (isVersioned) {
+        const v0Message = new TransactionMessage({
+          instructions: instructions,
+          payerKey: pubKey,
+          recentBlockhash: recentBlockhash,
+        }).compileToV0Message(lookupTables);
+
+        versionedTransaction = new VersionedTransaction(v0Message);
+        versionedTransaction.sign([fromKeypair]);
+      } else {
+        legacyTransaction = new Transaction().add(...instructions);
+        legacyTransaction.recentBlockhash = recentBlockhash;
+        legacyTransaction.feePayer = pubKey;
+        legacyTransaction.sign(fromKeypair);
+      }
+
+      // Get the optimal compute units
+      const units = await this.getComputeUnits(instructions, pubKey, isVersioned ? lookupTables : []);
+
+      if (!units) {
+        throw new Error(`Error fetching compute units for the instructions provided`);
+      }
+       
+      // For very small transactions, such as simple transfers, default to 1k CUs
+      let customersCU = units < 1000 ? 1000 : Math.ceil(units * 1.5);
+
+      const computeUnitsIx = ComputeBudgetProgram.setComputeUnitLimit({
+        units: customersCU,
+      });         
+      
+      instructions.unshift(computeUnitsIx);
 
       // Serialize the transaction
-      const serializedTransaction = bs58.encode(transaction.serialize());
+      const serializedTransaction = bs58.encode(isVersioned ? versionedTransaction!.serialize() : legacyTransaction!.serialize());
 
       // Get the priority fee estimate based on the serialized transaction
       const priorityFeeResponse = await this.getPriorityFeeEstimate({
@@ -537,65 +584,62 @@ export class RpcClient {
         },
       });
 
+      let priorityFeeRecommendation = priorityFeeResponse.priorityFeeEstimate || 0;
+      let microlamportsPerCU = Math.max(
+        priorityFeeRecommendation,
+        Math.round((MINIMUM_TOTAL_PFEE_LAMPORTS / customersCU) * LAMPORTS_TO_MICRO_LAMPORTS),
+      );
+
       // Add the compute unit price instruction with the estimated fee
       const computeBudgetIx = ComputeBudgetProgram.setComputeUnitPrice({
-        microLamports: priorityFeeResponse.priorityFeeEstimate || 0,
+        microLamports: microlamportsPerCU, 
       });
+      
       instructions.unshift(computeBudgetIx);
 
-      // Get the optimal compute units
-      const units = await this.getComputeUnits(instructions, pubKey, []);
-      if (units) {
-        // Add some margin to the compute units
-        const computeUnitsIx = ComputeBudgetProgram.setComputeUnitLimit({
-          units: Math.ceil(units * 1.1),
-        });
+      // Build the optimized transaction
+      let optimizedTransaction: VersionedTransaction | Transaction;
+      
+      if (isVersioned) {
+        const v0Message = new TransactionMessage({
+          instructions: instructions,
+          payerKey: pubKey,
+          recentBlockhash: recentBlockhash,
+        }).compileToV0Message(lookupTables);
 
-        instructions.unshift(computeUnitsIx);
+        optimizedTransaction = new VersionedTransaction(v0Message);
+        optimizedTransaction.sign([fromKeypair]);
+      } else {
+        optimizedTransaction = new Transaction().add(...instructions);
+        optimizedTransaction.recentBlockhash = recentBlockhash;
+        optimizedTransaction.feePayer = pubKey;
+        optimizedTransaction.sign(fromKeypair);
       }
 
-      // Build the optimized transaction
-      const optimizedTransaction = new Transaction().add(...instructions);
-      optimizedTransaction.recentBlockhash = recentBlockhash;
-      optimizedTransaction.feePayer = pubKey;
-      optimizedTransaction.sign(fromKeypair);
-
-      // Re-fetch the blockhash every 4 retries, or, roughly once every minute
-      const blockhashValidityThreshold = 4;
-
-      let retryCount: number = 0;
+      // Timeout of 60s. The transaction will be routed through our staked connections and should be confirmed by then
+      const timeout = 60000;
+      let startTime = Date.now();
       let txtSig: string;
 
-      // Send the transaction with configurable retries and preflight checks
-      while (retryCount <= maxRetries) {
+      // Send the transaction with configurable preflight checks
+      while (Date.now() - startTime < timeout) {
         try {
-          // Check if the blockhash needs to be refreshed based on the retry count
-          if (retryCount > 0 && retryCount % blockhashValidityThreshold === 0) {
-            let latestBlockhash = (await this.connection.getLatestBlockhash()).blockhash;
-            optimizedTransaction.recentBlockhash = latestBlockhash;
-            optimizedTransaction.sign(fromKeypair);
-          }
-
           txtSig = await this.connection.sendRawTransaction(optimizedTransaction.serialize(), {
-            skipPreflight: skipPreflightChecks,
-            maxRetries: 0,
+            skipPreflight: sendOptions.skipPreflight,
+            ...sendOptions,
           });
 
           return await this.pollTransactionConfirmation(txtSig);
         } catch (error) {
-          if (retryCount === maxRetries) {
-            throw new Error(`Error sending smart transaction: ${error}`);
-          }
-
-          retryCount++;
+          continue;
         }
       }
     } catch (error) {
       throw new Error(`Error sending smart transaction: ${error}`);
     }
 
-    // This should not be reached if all code paths are correct (the TS compiler is getting annoyed without it)
-    throw new Error("Reached an unexpected point in sendSmartTransaction");
+    // Transaction failed to confirm in 60s
+    throw new Error("Transaction failed to confirm in 60s");
   }
  
   /**
