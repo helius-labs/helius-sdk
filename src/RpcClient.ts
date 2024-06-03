@@ -506,7 +506,7 @@ export class RpcClient {
   /**
    * Build and send an optimized transaction, and handle its confirmation status
    * @param {TransactionInstruction[]} instructions - The transaction instructions
-   * @param {Signer[]} signers - The transaction signers. the first signer should be the fee payer
+   * @param {Signer[]} signers - The transaction's signers. The first signer should be the fee payer
    * @param {AddressLookupTableAccount[]} lookupTables - The lookup tables to be included in a versioned transaction. Defaults to `[]`
    * @param {SendOptions} sendOptions - Options for sending the transaction. Defaults to `{ skipPreflight: false }`
    * @returns {Promise<TransactionSignature>} - The transaction signature
@@ -518,7 +518,7 @@ export class RpcClient {
     sendOptions: SendOptions = { skipPreflight: false },
   ): Promise<TransactionSignature> {
     if (!signers.length) {
-      throw new Error("Fee payer must sign the transaction");
+      throw new Error("The fee payer must sign the transaction");
     }
 
     try {
