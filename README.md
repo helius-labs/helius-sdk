@@ -692,7 +692,7 @@ const instructions: TransactionInstruction[] = [
   }),
 ];
 
-const transactionSignature = await helius.rpc.sendSmartTransaction(instructions, fromKeypair, true, 2);
+const transactionSignature = await helius.rpc.sendSmartTransaction(instructions, [fromKeypair], [], { skipPreflight: true });
 console.log(`Successful transfer: ${transactionSignature}`);
 ```
 

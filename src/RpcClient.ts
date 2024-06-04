@@ -7,7 +7,6 @@ import {
   TransactionInstruction,
   TransactionSignature,
   Commitment,
-  Keypair,
   PublicKey,
   AccountInfo,
   GetLatestBlockhashConfig,
@@ -18,6 +17,8 @@ import {
   ParsedAccountData,
   ComputeBudgetProgram,
   SendOptions,
+  Signer,
+  TransactionExpiredTimeoutError,
 } from "@solana/web3.js";
 const bs58 = require("bs58");
 import axios from "axios";
@@ -506,17 +507,21 @@ export class RpcClient {
   /**
    * Build and send an optimized transaction, and handle its confirmation status
    * @param {TransactionInstruction[]} instructions - The transaction instructions
-   * @param {Keypair} fromKeypair - The sender's keypair
+   * @param {Signer[]} signers - The transaction's signers. The first signer should be the fee payer
    * @param {AddressLookupTableAccount[]} lookupTables - The lookup tables to be included in a versioned transaction. Defaults to `[]`
    * @param {SendOptions} sendOptions - Options for sending the transaction. Defaults to `{ skipPreflight: false }`
    * @returns {Promise<TransactionSignature>} - The transaction signature
   */
   async sendSmartTransaction(
     instructions: TransactionInstruction[],
-    fromKeypair: Keypair,
+    signers: Signer[],
     lookupTables: AddressLookupTableAccount[] = [],
     sendOptions: SendOptions = { skipPreflight: false },
   ): Promise<TransactionSignature> {
+    if (!signers.length) {
+      throw new Error("The fee payer must sign the transaction");
+    }
+
     try {
       // Check if any of the instructions provided set the compute unit price and/or limit, and throw an error if true
       const existingComputeBudgetInstructions = instructions.filter(instruction => 
@@ -532,7 +537,7 @@ export class RpcClient {
       const MINIMUM_TOTAL_PFEE_LAMPORTS = 10_000;
 
       // For building the transaction
-      const pubKey = fromKeypair.publicKey;
+      const payerKey = signers[0].publicKey;
       let recentBlockhash = (await this.connection.getLatestBlockhash()).blockhash;
 
       // Determine if we need to use a versioned transaction
@@ -544,21 +549,23 @@ export class RpcClient {
       if (isVersioned) {
         const v0Message = new TransactionMessage({
           instructions: instructions,
-          payerKey: pubKey,
+          payerKey: payerKey,
           recentBlockhash: recentBlockhash,
         }).compileToV0Message(lookupTables);
 
         versionedTransaction = new VersionedTransaction(v0Message);
-        versionedTransaction.sign([fromKeypair]);
+        versionedTransaction.sign(signers);
       } else {
         legacyTransaction = new Transaction().add(...instructions);
         legacyTransaction.recentBlockhash = recentBlockhash;
-        legacyTransaction.feePayer = pubKey;
-        legacyTransaction.sign(fromKeypair);
+        legacyTransaction.feePayer = payerKey;
+        for (const signer of signers) {
+          legacyTransaction.sign(signer);
+        }
       }
 
       // Get the optimal compute units
-      const units = await this.getComputeUnits(instructions, pubKey, isVersioned ? lookupTables : []);
+      const units = await this.getComputeUnits(instructions, payerKey, isVersioned ? lookupTables : []);
 
       if (!units) {
         throw new Error(`Error fetching compute units for the instructions provided`);
@@ -577,16 +584,15 @@ export class RpcClient {
       const serializedTransaction = bs58.encode(isVersioned ? versionedTransaction!.serialize() : legacyTransaction!.serialize());
 
       // Get the priority fee estimate based on the serialized transaction
-      const priorityFeeResponse = await this.getPriorityFeeEstimate({
+      const { priorityFeeEstimate } = await this.getPriorityFeeEstimate({
         transaction: serializedTransaction,
         options: { 
           recommended: true,
         },
       });
 
-      let priorityFeeRecommendation = priorityFeeResponse.priorityFeeEstimate || 0;
-      let microlamportsPerCU = Math.max(
-        priorityFeeRecommendation,
+      const microlamportsPerCU = Math.max(
+        priorityFeeEstimate ? Math.ceil(priorityFeeEstimate) : 0,
         Math.round((MINIMUM_TOTAL_PFEE_LAMPORTS / customersCU) * LAMPORTS_TO_MICRO_LAMPORTS),
       );
 
@@ -603,17 +609,19 @@ export class RpcClient {
       if (isVersioned) {
         const v0Message = new TransactionMessage({
           instructions: instructions,
-          payerKey: pubKey,
+          payerKey: payerKey,
           recentBlockhash: recentBlockhash,
         }).compileToV0Message(lookupTables);
 
         optimizedTransaction = new VersionedTransaction(v0Message);
-        optimizedTransaction.sign([fromKeypair]);
+        optimizedTransaction.sign(signers);
       } else {
         optimizedTransaction = new Transaction().add(...instructions);
         optimizedTransaction.recentBlockhash = recentBlockhash;
-        optimizedTransaction.feePayer = pubKey;
-        optimizedTransaction.sign(fromKeypair);
+        optimizedTransaction.feePayer = payerKey;
+        for (const signer of signers) {
+          optimizedTransaction.sign(signer);
+        }
       }
 
       // Timeout of 60s. The transaction will be routed through our staked connections and should be confirmed by then
@@ -631,7 +639,11 @@ export class RpcClient {
 
           return await this.pollTransactionConfirmation(txtSig);
         } catch (error) {
-          continue;
+          if (error instanceof TransactionExpiredTimeoutError) {
+            continue;
+          } else {
+            throw error;
+          }
         }
       }
     } catch (error) {
