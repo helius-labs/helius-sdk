@@ -18,6 +18,7 @@ import {
   ComputeBudgetProgram,
   SendOptions,
   Signer,
+  TransactionExpiredTimeoutError,
 } from "@solana/web3.js";
 const bs58 = require("bs58");
 import axios from "axios";
@@ -639,7 +640,11 @@ export class RpcClient {
 
           return await this.pollTransactionConfirmation(txtSig);
         } catch (error) {
-          continue;
+          if (error instanceof TransactionExpiredTimeoutError) {
+            continue;
+          } else {
+            throw error;
+          }
         }
       }
     } catch (error) {
