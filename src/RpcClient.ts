@@ -584,16 +584,15 @@ export class RpcClient {
       const serializedTransaction = bs58.encode(isVersioned ? versionedTransaction!.serialize() : legacyTransaction!.serialize());
 
       // Get the priority fee estimate based on the serialized transaction
-      const priorityFeeResponse = await this.getPriorityFeeEstimate({
+      const { priorityFeeEstimate } = await this.getPriorityFeeEstimate({
         transaction: serializedTransaction,
         options: { 
           recommended: true,
         },
       });
 
-      let priorityFeeRecommendation = priorityFeeResponse.priorityFeeEstimate || 0;
-      let microlamportsPerCU = Math.max(
-        priorityFeeRecommendation,
+      const microlamportsPerCU = Math.max(
+        priorityFeeEstimate ? Math.ceil(priorityFeeEstimate) : 0,
         Math.round((MINIMUM_TOTAL_PFEE_LAMPORTS / customersCU) * LAMPORTS_TO_MICRO_LAMPORTS),
       );
 
