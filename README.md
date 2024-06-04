@@ -696,6 +696,12 @@ const transactionSignature = await helius.rpc.sendSmartTransaction(instructions,
 console.log(`Successful transfer: ${transactionSignature}`);
 ```
 
+### createSmartTransaction()
+The smart transaction creation functionality has been abstracted out of `sendSmartTransaction` and is available with the `createSmartTransaction()` method. It can be called using the exact same parameters as `sendSmartTransaction` and will return either an optimized `Transaction` or `VersionedTransaction`:
+```ts
+const transaction = await this.createSmartTransaction(instructions, signers, lookupTables, sendOptions);
+```
+
 ## helius.connection
 
 > [!WARNING]   
