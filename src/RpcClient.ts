@@ -505,6 +505,127 @@ export class RpcClient {
   }
 
   /**
+   * Create a smart transaction with the provided configuration
+   * @param {TransactionInstruction[]} instructions - The transaction instructions
+   * @param {Signer[]} signers - The transaction's signers. The first signer should be the fee payer
+   * @param {AddressLookupTableAccount[]} lookupTables - The lookup tables to be included in a versioned transaction. Defaults to `[]`
+   * @param {SendOptions} sendOptions - Options for sending the transaction. Defaults to `{ skipPreflight: false }`
+   * @returns {Promise<TransactionSignature>} - The transaction signature
+  */
+  async createSmartTransaction(
+    instructions: TransactionInstruction[],
+    signers: Signer[],
+    lookupTables: AddressLookupTableAccount[] = [],
+    sendOptions: SendOptions = { skipPreflight: false },
+  ) {
+    if (!signers.length) {
+      throw new Error("The fee payer must sign the transaction");
+    }
+
+    // Check if any of the instructions provided set the compute unit price and/or limit, and throw an error if true
+    const existingComputeBudgetInstructions = instructions.filter(instruction => 
+      instruction.programId.equals(ComputeBudgetProgram.programId)
+    );
+
+    if (existingComputeBudgetInstructions.length > 0) {
+      throw new Error("Cannot provide instructions that set the compute unit price and/or limit");
+    }
+
+    // For building the transaction
+    const payerKey = signers[0].publicKey;
+    let recentBlockhash = (await this.connection.getLatestBlockhash()).blockhash;
+
+    // Determine if we need to use a versioned transaction
+    const isVersioned = lookupTables.length > 0;
+    let legacyTransaction: Transaction | null = null;
+    let versionedTransaction: VersionedTransaction | null = null;
+
+    // Build the initial transaction based on whether lookup tables are present
+    if (isVersioned) {
+      const v0Message = new TransactionMessage({
+        instructions: instructions,
+        payerKey: payerKey,
+        recentBlockhash: recentBlockhash,
+      }).compileToV0Message(lookupTables);
+
+      versionedTransaction = new VersionedTransaction(v0Message);
+      versionedTransaction.sign(signers);
+    } else {
+      legacyTransaction = new Transaction().add(...instructions);
+      legacyTransaction.recentBlockhash = recentBlockhash;
+      legacyTransaction.feePayer = payerKey;
+      for (const signer of signers) {
+        legacyTransaction.sign(signer);
+      }
+    }
+
+    // Serialize the transaction
+    const serializedTransaction = bs58.encode(isVersioned ? versionedTransaction!.serialize() : legacyTransaction!.serialize());
+
+    // Get the priority fee estimate based on the serialized transaction
+    const priorityFeeEstimateResponse = await this.getPriorityFeeEstimate({
+      transaction: serializedTransaction,
+      options: {
+        recommended: true,
+      },
+    });
+
+    const priorityFeeEstimate = priorityFeeEstimateResponse.priorityFeeEstimate;
+
+    if (!priorityFeeEstimate) {
+      throw new Error("Priority fee estimate not available");
+    }
+
+    // Add the compute unit price instruction with the estimated fee
+    const computeBudgetIx = ComputeBudgetProgram.setComputeUnitPrice({
+      microLamports: priorityFeeEstimate,
+    });
+
+    instructions.unshift(computeBudgetIx);
+
+
+    // Get the optimal compute units
+    const units = await this.getComputeUnits(instructions, payerKey, isVersioned ? lookupTables : []);
+
+    if (!units) {
+      throw new Error(`Error fetching compute units for the instructions provided`);
+    }
+     
+    // For very small transactions, such as simple transfers, default to 1k CUs
+    let customersCU = units < 1000 ? 1000 : Math.ceil(units * 1.1);
+
+    const computeUnitsIx = ComputeBudgetProgram.setComputeUnitLimit({
+      units: customersCU,
+    });         
+    
+    instructions.unshift(computeUnitsIx);
+
+    // Rebuild the transaction with the final instructions
+    if (isVersioned) {
+      const v0Message = new TransactionMessage({
+        instructions: instructions,
+        payerKey: payerKey,
+        recentBlockhash: recentBlockhash,
+      }).compileToV0Message(lookupTables);
+
+      versionedTransaction = new VersionedTransaction(v0Message);
+      versionedTransaction.sign(signers);
+
+      return versionedTransaction;
+    } else {
+      legacyTransaction = new Transaction().add(...instructions);
+      legacyTransaction.recentBlockhash = recentBlockhash;
+      legacyTransaction.feePayer = payerKey;
+
+      for (const signer of signers) {
+        legacyTransaction.sign(signer);
+      }
+
+      return legacyTransaction;
+    }
+  }
+  
+  /**
    * Build and send an optimized transaction, and handle its confirmation status
    * @param {TransactionInstruction[]} instructions - The transaction instructions
    * @param {Signer[]} signers - The transaction's signers. The first signer should be the fee payer
@@ -518,139 +639,31 @@ export class RpcClient {
     lookupTables: AddressLookupTableAccount[] = [],
     sendOptions: SendOptions = { skipPreflight: false },
   ): Promise<TransactionSignature> {
-    if (!signers.length) {
-      throw new Error("The fee payer must sign the transaction");
-    }
-
     try {
-      // Check if any of the instructions provided set the compute unit price and/or limit, and throw an error if true
-      const existingComputeBudgetInstructions = instructions.filter(instruction => 
-        instruction.programId.equals(ComputeBudgetProgram.programId)
-      );
-
-      if (existingComputeBudgetInstructions.length > 0) {
-        throw new Error("Cannot provide instructions that set the compute unit price and/or limit");
-      }
-      
-      // For calculating the priority fee
-      const LAMPORTS_TO_MICRO_LAMPORTS = 10 ** 6;
-      const MINIMUM_TOTAL_PFEE_LAMPORTS = 10_000;
-
-      // For building the transaction
-      const payerKey = signers[0].publicKey;
-      let recentBlockhash = (await this.connection.getLatestBlockhash()).blockhash;
-
-      // Determine if we need to use a versioned transaction
-      const isVersioned = lookupTables.length > 0;
-      let legacyTransaction: Transaction | null = null;
-      let versionedTransaction: VersionedTransaction | null = null;
-
-      // Build the initial transaction based on whether lookup tables are present
-      if (isVersioned) {
-        const v0Message = new TransactionMessage({
-          instructions: instructions,
-          payerKey: payerKey,
-          recentBlockhash: recentBlockhash,
-        }).compileToV0Message(lookupTables);
-
-        versionedTransaction = new VersionedTransaction(v0Message);
-        versionedTransaction.sign(signers);
-      } else {
-        legacyTransaction = new Transaction().add(...instructions);
-        legacyTransaction.recentBlockhash = recentBlockhash;
-        legacyTransaction.feePayer = payerKey;
-        for (const signer of signers) {
-          legacyTransaction.sign(signer);
-        }
-      }
-
-      // Get the optimal compute units
-      const units = await this.getComputeUnits(instructions, payerKey, isVersioned ? lookupTables : []);
-
-      if (!units) {
-        throw new Error(`Error fetching compute units for the instructions provided`);
-      }
-       
-      // For very small transactions, such as simple transfers, default to 1k CUs
-      let customersCU = units < 1000 ? 1000 : Math.ceil(units * 1.5);
-
-      const computeUnitsIx = ComputeBudgetProgram.setComputeUnitLimit({
-        units: customersCU,
-      });         
-      
-      instructions.unshift(computeUnitsIx);
-
-      // Serialize the transaction
-      const serializedTransaction = bs58.encode(isVersioned ? versionedTransaction!.serialize() : legacyTransaction!.serialize());
-
-      // Get the priority fee estimate based on the serialized transaction
-      const { priorityFeeEstimate } = await this.getPriorityFeeEstimate({
-        transaction: serializedTransaction,
-        options: { 
-          recommended: true,
-        },
-      });
-
-      const microlamportsPerCU = Math.max(
-        priorityFeeEstimate ? Math.ceil(priorityFeeEstimate) : 0,
-        Math.round((MINIMUM_TOTAL_PFEE_LAMPORTS / customersCU) * LAMPORTS_TO_MICRO_LAMPORTS),
-      );
-
-      // Add the compute unit price instruction with the estimated fee
-      const computeBudgetIx = ComputeBudgetProgram.setComputeUnitPrice({
-        microLamports: microlamportsPerCU, 
-      });
-      
-      instructions.unshift(computeBudgetIx);
-
-      // Build the optimized transaction
-      let optimizedTransaction: VersionedTransaction | Transaction;
-      
-      if (isVersioned) {
-        const v0Message = new TransactionMessage({
-          instructions: instructions,
-          payerKey: payerKey,
-          recentBlockhash: recentBlockhash,
-        }).compileToV0Message(lookupTables);
-
-        optimizedTransaction = new VersionedTransaction(v0Message);
-        optimizedTransaction.sign(signers);
-      } else {
-        optimizedTransaction = new Transaction().add(...instructions);
-        optimizedTransaction.recentBlockhash = recentBlockhash;
-        optimizedTransaction.feePayer = payerKey;
-        for (const signer of signers) {
-          optimizedTransaction.sign(signer);
-        }
-      }
-
+      // Create a smart transaction
+      const transaction = await this.createSmartTransaction(instructions, signers, lookupTables, sendOptions);
+  
       // Timeout of 60s. The transaction will be routed through our staked connections and should be confirmed by then
       const timeout = 60000;
-      let startTime = Date.now();
-      let txtSig: string;
-
-      // Send the transaction with configurable preflight checks
+      const startTime = Date.now();
+      let txtSig;
+  
       while (Date.now() - startTime < timeout) {
         try {
-          txtSig = await this.connection.sendRawTransaction(optimizedTransaction.serialize(), {
+          txtSig = await this.connection.sendRawTransaction(transaction.serialize(), {
             skipPreflight: sendOptions.skipPreflight,
             ...sendOptions,
           });
-
+  
           return await this.pollTransactionConfirmation(txtSig);
         } catch (error) {
-          if (error instanceof TransactionExpiredTimeoutError) {
-            continue;
-          } else {
-            throw error;
-          }
+          continue;
         }
       }
     } catch (error) {
       throw new Error(`Error sending smart transaction: ${error}`);
     }
-
-    // Transaction failed to confirm in 60s
+  
     throw new Error("Transaction failed to confirm in 60s");
   }
  
