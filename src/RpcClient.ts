@@ -18,12 +18,11 @@ import {
   ComputeBudgetProgram,
   SendOptions,
   Signer,
-  TransactionExpiredTimeoutError,
 } from "@solana/web3.js";
 const bs58 = require("bs58");
 import axios from "axios";
 import { DAS } from "./types/das-types";
-import { GetPriorityFeeEstimateRequest, GetPriorityFeeEstimateResponse, PriorityLevel } from "./types";
+import { GetPriorityFeeEstimateRequest, GetPriorityFeeEstimateResponse, SmartTransactionContext } from "./types";
 
 export type SendAndConfirmTransactionResponse = {
   signature: TransactionSignature;
@@ -509,15 +508,13 @@ export class RpcClient {
    * @param {TransactionInstruction[]} instructions - The transaction instructions
    * @param {Signer[]} signers - The transaction's signers. The first signer should be the fee payer
    * @param {AddressLookupTableAccount[]} lookupTables - The lookup tables to be included in a versioned transaction. Defaults to `[]`
-   * @param {SendOptions} sendOptions - Options for sending the transaction. Defaults to `{ skipPreflight: false }`
-   * @returns {Promise<TransactionSignature>} - The transaction signature
+   * @returns {Promise<SmartTransactionContext>} - The transaction with blockhash, blockheight and slot
   */
   async createSmartTransaction(
     instructions: TransactionInstruction[],
     signers: Signer[],
     lookupTables: AddressLookupTableAccount[] = [],
-    sendOptions: SendOptions = { skipPreflight: false },
-  ) {
+  ): Promise<SmartTransactionContext> {
     if (!signers.length) {
       throw new Error("The fee payer must sign the transaction");
     }
@@ -533,7 +530,8 @@ export class RpcClient {
 
     // For building the transaction
     const payerKey = signers[0].publicKey;
-    let recentBlockhash = (await this.connection.getLatestBlockhash()).blockhash;
+    const { context: { slot: minContextSlot }, value: blockhash } = await this.connection.getLatestBlockhashAndContext();
+    const recentBlockhash = blockhash.blockhash;
 
     // Determine if we need to use a versioned transaction
     const isVersioned = lookupTables.length > 0;
@@ -611,7 +609,11 @@ export class RpcClient {
       versionedTransaction = new VersionedTransaction(v0Message);
       versionedTransaction.sign(signers);
 
-      return versionedTransaction;
+      return {
+        txBuff: versionedTransaction.serialize(),
+        blockhash: blockhash,
+        minContextSlot: minContextSlot,
+      };
     } else {
       legacyTransaction = new Transaction().add(...instructions);
       legacyTransaction.recentBlockhash = recentBlockhash;
@@ -621,7 +623,11 @@ export class RpcClient {
         legacyTransaction.sign(signer);
       }
 
-      return legacyTransaction;
+      return {
+        txBuff: legacyTransaction.serialize(),
+        blockhash: blockhash,
+        minContextSlot: minContextSlot,
+      };
     }
   }
   
@@ -630,32 +636,44 @@ export class RpcClient {
    * @param {TransactionInstruction[]} instructions - The transaction instructions
    * @param {Signer[]} signers - The transaction's signers. The first signer should be the fee payer
    * @param {AddressLookupTableAccount[]} lookupTables - The lookup tables to be included in a versioned transaction. Defaults to `[]`
-   * @param {SendOptions} sendOptions - Options for sending the transaction. Defaults to `{ skipPreflight: false }`
+   * @param {SendOptions} sendOptions - Options for sending the transaction
    * @returns {Promise<TransactionSignature>} - The transaction signature
   */
   async sendSmartTransaction(
     instructions: TransactionInstruction[],
     signers: Signer[],
     lookupTables: AddressLookupTableAccount[] = [],
-    sendOptions: SendOptions = { skipPreflight: false },
+    sendOptions?: SendOptions,
   ): Promise<TransactionSignature> {
     try {
       // Create a smart transaction
-      const transaction = await this.createSmartTransaction(instructions, signers, lookupTables, sendOptions);
+      const { txBuff, blockhash, minContextSlot } = await this.createSmartTransaction(instructions, signers, lookupTables);
+
+      const recdSendOptions: SendOptions = {
+        maxRetries: 0,
+        preflightCommitment: "confirmed",
+        skipPreflight: true,
+        minContextSlot: minContextSlot,
+      };
+      const commitment = sendOptions?.preflightCommitment || recdSendOptions.preflightCommitment;
   
       // Timeout of 60s. The transaction will be routed through our staked connections and should be confirmed by then
       const timeout = 60000;
       const startTime = Date.now();
-      let txtSig;
   
       while (Date.now() - startTime < timeout) {
         try {
-          txtSig = await this.connection.sendRawTransaction(transaction.serialize(), {
-            skipPreflight: sendOptions.skipPreflight,
+          // signature does not change when it resends the same one
+          const signature = await this.connection.sendRawTransaction(txBuff, {
+            ...recdSendOptions,
             ...sendOptions,
           });
   
-          return await this.pollTransactionConfirmation(txtSig);
+          const abortSignal = AbortSignal.timeout(15000);
+          await this.connection.confirmTransaction({ abortSignal, signature, ...blockhash }, commitment);
+          abortSignal.removeEventListener("abort", () => {});
+
+          return signature;
         } catch (error) {
           continue;
         }
