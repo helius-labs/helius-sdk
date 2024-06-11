@@ -44,7 +44,7 @@ export class Helius {
    * API key generated at dev.helius.xyz
    * @private
    */
-  private apiKey: string;
+  private apiKey?: string;
 
   /** The cluster in which the connection endpoint belongs to */
   public readonly cluster: HeliusCluster;
@@ -68,16 +68,26 @@ export class Helius {
    * Initializes Helius API client with an API key
    * @constructor
    * @param apiKey - API key generated at dev.helius.xyz
+   * @param url - Secure RPC URL generated at dev.helius.xyz
    */
   constructor(
     apiKey: string,
     cluster: HeliusCluster = "mainnet-beta",
-    id: string = "helius-sdk"
+    id: string = "helius-sdk",
+    url: string = "",
   ) {
-    this.apiKey = apiKey;
     this.cluster = cluster;
     this.endpoints = getHeliusEndpoints(cluster);
-    this.connection = new Connection(`${this.endpoints.rpc}?api-key=${this.apiKey}`);
+
+    if (apiKey !== "") {
+      this.apiKey = apiKey;
+      this.connection = new Connection(`${this.endpoints.rpc}?api-key=${apiKey}`);
+    } else if (url !== "") {
+      this.connection = new Connection(url);
+    } else {
+      throw Error("either `apiKey` or `url` is required");
+    }
+
     this.endpoint = this.connection.rpcEndpoint;
     this.rpc = new RpcClient(this.connection, id);
     this.mintApiAuthority = mintApiAuthority(cluster);
@@ -534,6 +544,10 @@ export class Helius {
     // Check if the path starts with '/v0' or '/v1'
     if (!path.startsWith('/v0') && !path.startsWith('/v1')) {
         throw new Error(`Invalid API path provided: ${path}. Path must start with '/v0' or '/v1'.`);
+    }
+
+    if (!this.apiKey) {
+        throw new Error(`API key is not set`);
     }
 
     // Construct and return the full API endpoint URL
