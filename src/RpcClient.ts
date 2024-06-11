@@ -466,7 +466,7 @@ export class RpcClient {
     });
 
     if (rpcResponse.value.err) {
-      console.error(`Simulation error: ${rpcResponse.value.err}`);
+      console.error(`Simulation error: ${JSON.stringify(rpcResponse.value.err, null, 2)}`);
       return null;
     }
 
