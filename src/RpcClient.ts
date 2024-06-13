@@ -809,7 +809,26 @@ export class RpcClient {
     // Send the transaction as a Jito Bundle
     const bundleId = await this.sendJitoBundle([serializedTransaction], jitoApiUrl);
 
-    return bundleId;
+    // Poll for confirmation status
+    const timeout = 60000 // 60 second timeout
+    const interval = 5000 // 5 second interval
+    const startTime = Date.now();
+
+    while (Date.now() - startTime < timeout) {
+      const bundleStatuses = await this.getBundleStatuses([bundleId], jitoApiUrl);
+
+      if (bundleStatuses && bundleStatuses.value && bundleStatuses.value.length > 0) {
+        const status = bundleStatuses.value[0].confirmationStatus;
+
+        if (status === "confirmed") {
+          return bundleId;
+        }
+      }
+
+      await new Promise(resolve => setTimeout(resolve, interval));
+    }
+
+    throw new Error("Bundle failed to confirm within the timeout period");
   }
  
   /**
