@@ -347,3 +347,5 @@ export interface GetPriorityFeeEstimateResponse {
   priorityFeeEstimate?: number;
   priorityFeeLevels?: MicroLamportPriorityFeeLevels; 
 }
+
+export type JitoRegion = "Default" | "NY" | "Amsterdam" | "Frankfurt" | "Tokyo";
