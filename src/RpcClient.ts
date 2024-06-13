@@ -549,22 +549,21 @@ export class RpcClient {
       }).compileToV0Message(lookupTables);
 
       versionedTransaction = new VersionedTransaction(v0Message);
-      versionedTransaction.sign(signers);
 
-      if (feePayer) {
-        versionedTransaction.sign([feePayer]);
-      }
+      // Include feePayer in signers if it exists and is not already in the list
+      const allSigners = feePayer ? [...signers, feePayer] : signers;
+      versionedTransaction.sign(allSigners);
     } else {
       legacyTransaction = new Transaction().add(...instructions);
       legacyTransaction.recentBlockhash = recentBlockhash;
       legacyTransaction.feePayer = payerKey;
 
       for (const signer of signers) {
-        legacyTransaction.sign(signer);
+        legacyTransaction.partialSign(signer);
       }
 
       if (feePayer) {
-        legacyTransaction.sign(feePayer);
+        legacyTransaction.partialSign(feePayer);
       }
     }
 
@@ -618,11 +617,9 @@ export class RpcClient {
       }).compileToV0Message(lookupTables);
 
       versionedTransaction = new VersionedTransaction(v0Message);
-      versionedTransaction.sign(signers);
-
-      if (feePayer) {
-        versionedTransaction.sign([feePayer]);
-      }
+      
+      const allSigners = feePayer ? [...signers, feePayer] : signers;
+      versionedTransaction.sign(allSigners);
 
       return versionedTransaction;
     } else {
@@ -631,11 +628,11 @@ export class RpcClient {
       legacyTransaction.feePayer = payerKey;
 
       for (const signer of signers) {
-        legacyTransaction.sign(signer);
+        legacyTransaction.partialSign(signer);
       }
 
       if (feePayer) {
-        legacyTransaction.sign(feePayer);
+        legacyTransaction.partialSign(feePayer);
       }
 
       return legacyTransaction;
