@@ -724,6 +724,32 @@ export class RpcClient {
     // Return the serialized transaction
     return bs58.encode(smartTransaction.serialize());
   }
+
+  /**
+   * Send a bundle of transactions to the Jito Block Engine
+   * @param {string[]} serializedTransactions - The serialized transactions in the bundle
+   * @param {string} jitoApiUrl - The Jito Block Engine API URL
+   * @returns {Promise<string>} - The bundle ID
+   */
+  async sendJitoBundle(
+    serializedTransactions: string[],
+    jitoApiUrl: string,
+  ): Promise<string> {
+    const response = await axios.post(jitoApiUrl, {
+      jsonrpc: "2.0",
+      id: 1,
+      method: "sendBundle",
+      params: [serializedTransactions],
+    }, {
+      headers: { "Content-Type": "application/json" },
+    });
+
+    if (response.data.error) {
+      throw new Error(`Error sending bundles: ${JSON.stringify(response.data.error, null, 2)}`);
+    }
+
+    return response.data.result;
+  }
  
   /**
    * Get information about all the edition NFTs for a specific master NFT
