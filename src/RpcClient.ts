@@ -24,7 +24,7 @@ const bs58 = require("bs58");
 import axios from "axios";
 
 import { DAS } from "./types/das-types";
-import { Address, GetPriorityFeeEstimateRequest, GetPriorityFeeEstimateResponse, JITO_TIP_ACCOUNTS } from "./types";
+import { Address, GetPriorityFeeEstimateRequest, GetPriorityFeeEstimateResponse, JITO_API_URLS, JITO_TIP_ACCOUNTS, JitoRegion } from "./types";
 
 export type SendAndConfirmTransactionResponse = {
   signature: TransactionSignature;
@@ -749,6 +749,41 @@ export class RpcClient {
     }
 
     return response.data.result;
+  }
+
+  /**
+   * Send a smart transaction as a Jito bundle with a tip
+   * @param {TransactionInstruction[]} instructions - The transaction instructions
+   * @param {Signer[]} signers - The transaction's signers. The first signer should be the fee payer if a separate one isn't provided
+   * @param {AddressLookupTableAccount[]} lookupTables - The lookup tables to be included. Defaults to `[]`
+   * @param {number} tipAmount - The amount of lamports to tip. Defaults to 1000
+   * @param {JitoRegion} region - The Jito Block Engine region. Defaults to "Default" (i.e., https://mainnet.block-engine.jito.wtf)
+   * @param {Signer} feePayer - Optional fee payer separate from the signers
+   * @returns {Promise<string>} - The bundle ID
+   */
+  async sendSmartTransactionWithTip(
+    instructions: TransactionInstruction[],
+    signers: Signer[],
+    lookupTables: AddressLookupTableAccount[] = [],
+    tipAmount: number = 1000,
+    region: JitoRegion = "Default",
+    feePayer?: Signer,
+  ): Promise<string> {
+    if (!signers.length) {
+      throw new Error("The transaction must have at least one signer");
+    }
+
+    // Create the smart transaction with tip
+    // @todo merge PR #100 so we can pass in the feePayer here 
+    const serializedTransaction = await this.createSmartTransactionWithTip(instructions, signers, lookupTables, tipAmount);
+
+    // Get the Jito API URL for the specified region
+    const jitoApiUrl = JITO_API_URLS[region] + "/api/v1/bundles";
+
+    // Send the transaction as a Jito Bundle
+    const bundleId = await this.sendJitoBundle([serializedTransaction], jitoApiUrl);
+
+    return bundleId;
   }
  
   /**
