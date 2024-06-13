@@ -591,6 +591,7 @@ export enum UiTransactionEncoding {
   JsonParsed = "JsonParsed",
 }
 
+// https://jito-foundation.gitbook.io/mev/mev-payment-and-distribution/on-chain-addresses
 export const JITO_TIP_ACCOUNTS: string[] = [
   "96gYZGLnJYVFmbjzopPSU6QiEV5fGqZNyN9nmNhvrZU5",
   "HFqU5x63VTqvQss8hp11i4wVV8bD44PvwucfZ2bU7gRe",
@@ -602,6 +603,7 @@ export const JITO_TIP_ACCOUNTS: string[] = [
   "3AVi9Tg9Uo68tJfuvoKvqKNWKkC5wPdSSdeBnizKZ6jT",
 ];
 
+// https://jito-labs.gitbook.io/mev/searcher-resources/json-rpc-api-reference/url
 export const JITO_API_URLS: Record<JitoRegion, string> = {
   Default: "https://mainnet.block-engine.jito.wtf",
   NY: "https://ny.mainnet.block-engine.jito.wtf",

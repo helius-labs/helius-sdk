@@ -669,7 +669,7 @@ export class RpcClient {
   }
 
   /**
-   * Add a tip instruction to the last instruction in the bundle
+   * Add a tip instruction to the last instruction in the bundle provided
    * @param {TransactionInstruction[]} instructions - The transaction instructions
    * @param {PublicKey} feePayer - The public key of the fee payer
    * @param {string} tipAccount - The public key of the tip account
