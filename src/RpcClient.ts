@@ -818,10 +818,10 @@ export class RpcClient {
       const bundleStatuses = await this.getBundleStatuses([bundleId], jitoApiUrl);
 
       if (bundleStatuses && bundleStatuses.value && bundleStatuses.value.length > 0) {
-        const status = bundleStatuses.value[0].confirmationStatus;
+        const status = bundleStatuses.value[0].confirmation_status;
 
         if (status === "confirmed") {
-          return bundleId;
+          return bundleStatuses.value[0].transactions[0];
         }
       }
 
