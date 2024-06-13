@@ -18,12 +18,13 @@ import {
   ComputeBudgetProgram,
   SendOptions,
   Signer,
-  TransactionExpiredTimeoutError,
+  SystemProgram,
 } from "@solana/web3.js";
 const bs58 = require("bs58");
 import axios from "axios";
+
 import { DAS } from "./types/das-types";
-import { GetPriorityFeeEstimateRequest, GetPriorityFeeEstimateResponse, PriorityLevel } from "./types";
+import { GetPriorityFeeEstimateRequest, GetPriorityFeeEstimateResponse, JITO_TIP_ACCOUNTS } from "./types";
 
 export type SendAndConfirmTransactionResponse = {
   signature: TransactionSignature;
@@ -665,6 +666,28 @@ export class RpcClient {
     }
   
     throw new Error("Transaction failed to confirm in 60s");
+  }
+
+  /**
+   * Add a tip instruction to the last instruction in the bundle
+   * @param {TransactionInstruction[]} instructions - The transaction instructions
+   * @param {PublicKey} feePayer - The public key of the fee payer
+   * @param {string} tipAccount - The public key of the tip account
+   * @param {number} tipAmount - The amount of lamports to tip
+   */
+   addTipInstruction(
+    instructions: TransactionInstruction[],
+    feePayer: PublicKey,
+    tipAccount: string,
+    tipAmount: number,
+  ): void {
+    const tipInstruction = SystemProgram.transfer({
+      fromPubkey: feePayer,
+      toPubkey: new PublicKey(tipAccount),
+      lamports: tipAmount,
+    });
+
+    instructions.push(tipInstruction);
   }
  
   /**
