@@ -752,6 +752,32 @@ export class RpcClient {
   }
 
   /**
+   * Get the status of Jito bundles
+   * @param {string[]} bundleIds - An array of bundle IDs to check the status for
+   * @param {string} jitoApiUrl - The Jito Block Engine API URL
+   * @returns {Promise<any>} - The status of the bundles 
+   */
+  async getBundleStatuses(
+    bundleIds: string[],
+    jitoApiUrl: string,
+  ): Promise<any> {
+    const response = await axios.post(jitoApiUrl, {
+      jsonrpc: "2.0",
+      id: 1,
+      method: "getBundleStatuses",
+      params: [bundleIds],
+    }, {
+      headers: { "Content-Type": "application/json" },
+    });
+
+    if (response.data.error) {
+      throw new Error(`Error getting bundle statuses: ${JSON.stringify(response.data.error, null, 2)}`);
+    }
+
+    return response.data.result;
+  }
+
+  /**
    * Send a smart transaction as a Jito bundle with a tip
    * @param {TransactionInstruction[]} instructions - The transaction instructions
    * @param {Signer[]} signers - The transaction's signers. The first signer should be the fee payer if a separate one isn't provided
