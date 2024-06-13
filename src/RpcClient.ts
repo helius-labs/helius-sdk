@@ -24,7 +24,7 @@ const bs58 = require("bs58");
 import axios from "axios";
 
 import { DAS } from "./types/das-types";
-import { GetPriorityFeeEstimateRequest, GetPriorityFeeEstimateResponse, JITO_TIP_ACCOUNTS } from "./types";
+import { Address, GetPriorityFeeEstimateRequest, GetPriorityFeeEstimateResponse, JITO_TIP_ACCOUNTS } from "./types";
 
 export type SendAndConfirmTransactionResponse = {
   signature: TransactionSignature;
@@ -511,7 +511,7 @@ export class RpcClient {
    * @param {Signer[]} signers - The transaction's signers. The first signer should be the fee payer
    * @param {AddressLookupTableAccount[]} lookupTables - The lookup tables to be included in a versioned transaction. Defaults to `[]`
    * @param {SendOptions} sendOptions - Options for sending the transaction. Defaults to `{ skipPreflight: false }`
-   * @returns {Promise<TransactionSignature>} - The transaction signature
+   * @returns {Promise<Transaction | VersionedTransaction>} - The optimized transaction 
   */
   async createSmartTransaction(
     instructions: TransactionInstruction[],
@@ -688,6 +688,41 @@ export class RpcClient {
     });
 
     instructions.push(tipInstruction);
+  }
+
+  /**
+   * Create a smart transaction with a Jito tip
+   * @param {TransactionInstruction[]} instructions - The transaction instructions
+   * @param {Signer[]} signers - The transaction's signers. The first signer should be the fee payer if a separate one isn't provided
+   * @param {AddressLookupTableAccount[]} lookupTables - The lookup tables to be included. Defaults to `[]`
+   * @param {number} tipAmount - The amount of lamports to tip. Defaults to 1000
+   * @param {Signer} feePayer - Optional fee payer separate from the signers
+   * @returns {Promise<string>} - The serialized transaction
+   */
+  async createSmartTransactionWithTip(
+    instructions: TransactionInstruction[],
+    signers: Signer[],
+    lookupTables: AddressLookupTableAccount[] = [],
+    tipAmount: number = 1000,
+    feePayer?: Signer,
+  ): Promise<string> {
+    if (!signers.length) {
+      throw new Error("The transaction must have at least one signer");
+    }
+    
+    // Select a random tip account
+    const randomTipAccount = JITO_TIP_ACCOUNTS[Math.floor(Math.random() * JITO_TIP_ACCOUNTS.length)];
+
+    // Set the fee payer and add the tip instruction
+    const payerKey = feePayer ? feePayer.publicKey : signers[0].publicKey;
+    this.addTipInstruction(instructions, payerKey, randomTipAccount, tipAmount);
+
+    // Create the smart transaction
+    // @todo merge PR #100 so we can pass in the feePayer here  
+    const smartTransaction = await this.createSmartTransaction(instructions, signers, lookupTables);
+
+    // Return the serialized transaction
+    return bs58.encode(smartTransaction.serialize());
   }
  
   /**
