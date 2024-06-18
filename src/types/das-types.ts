@@ -78,7 +78,7 @@ export interface SearchAssetsRequest {
   royaltyTargetType?: RoyaltyModel;
   compressible?: boolean;
   compressed?: boolean;
-  tokenType?: "fungible" | "nonFungible" | "regularNFT" | "compressedNFT" | "all" | (string & {});
+  tokenType?: TokenType;
 }
 
   // getAssetsByAuthority
@@ -139,6 +139,8 @@ export interface SearchAssetsRequest {
     supply?: Supply;
     mutable: boolean;
     burnt: boolean;
+    mint_extensions?: MintExtensions;
+    token_info?: TokenInfo;
   };
   // RWA Asset Response
   export type GetRwaAssetResponse = {
@@ -275,6 +277,7 @@ export interface SearchAssetsRequest {
     description: string;
     name: string;
     symbol: string;
+    token_standard?: TokenType;
   }
   // Attributes
   export interface Attribute {
@@ -345,6 +348,129 @@ export interface SearchAssetsRequest {
     page?: number;
     cursor?: string;
     token_accounts?: TokenAccounts[];
+  }
+
+  export type TokenType = "Fungible" | "NonFungible" | "CompressedNft" | "RegularNft" | "All" | (string & {});
+
+  export interface MintExtensions {
+    confidential_transfer_mint?: ConfidentialTransferMint;
+    confidential_transfer_fee_config?: ConfidentialTransferFeeConfig;
+    transfer_fee_config?: TransferFeeConfig;
+    metadata_pointer?: MetadataPointer;
+    mint_close_authority?: MintCloseAuthority;
+    permanent_delegate?: PermanentDelegate;
+    transfer_hook?: TransferHook;
+    interest_bearing_config?: InterestBearingConfig;
+    default_account_state?: DefaultAccountState;
+    confidential_transfer_account?: ConfidentialTransferAccount;
+    metadata?: MintExtensionMetadata;
+  }
+  
+  export interface ConfidentialTransferMint {
+    authority: string;
+    auto_approve_new_accounts: boolean;
+    auditor_elgamal_pubkey: string;
+  }
+  
+  export interface ConfidentialTransferFeeConfig {
+    authority: string;
+    withdraw_withheld_authority_elgamal_pubkey: string;
+    harvest_to_mint_enabled: boolean;
+    withheld_amount: string;
+  }
+  
+  export interface TransferFeeConfig {
+    transfer_fee_config_authority: string;
+    withdraw_withheld_authority: string;
+    withheld_amount: number;
+    older_transfer_fee: OlderTransferFee;
+    newer_transfer_fee: NewTransferFee; 
+  }
+  
+  export interface OlderTransferFee {
+    epoch: string;
+    maximum_fee: string;
+    transfer_fee_basis_points: string;
+  }
+  
+  export interface NewTransferFee {
+    epoch: string;
+  }
+  
+  export interface MetadataPointer {
+    authority: string;
+    metadata_address: string;
+  }
+  
+  export interface MintCloseAuthority {
+    close_authority: string;
+  }
+  
+  export interface PermanentDelegate {
+    delegate: string;
+  }
+  
+  export interface TransferHook {
+    authority: string;
+    programId: string;
+  }
+  
+  export interface InterestBearingConfig {
+    rate_authority: string;
+    initialization_timestamp: number;
+    pre_update_average_rate: number;
+    last_update_timestamp: number;
+    current_rate: number;
+  }
+  
+  export interface DefaultAccountState {
+    state: string;
+  }
+  
+  export interface ConfidentialTransferAccount {
+    approved: boolean;
+    elgamal_pubkey: string;
+    pending_balance_lo: string;
+    pending_balance_hi: string;
+    available_balance: string;
+    decryptable_available_balance: string;
+    allow_confidential_credits: boolean;
+    allow_non_confidential_credits: boolean;
+    pending_balance_credit_counter: number;
+    maximum_pending_balance_credit_counter: number;
+    expected_pending_balance_credit_counter: number;
+    actual_pending_balance_credit_counter: number;
+  }
+  
+  export interface MintExtensionMetadata {
+    updateAuthority: string;
+    mint: string;
+    name: string;
+    symbol: string;
+    uri: string;
+    additionalMetadata: AdditionalMetadata;
+  }
+  
+  export interface AdditionalMetadata {
+    key: string;
+    value: string;
+  }
+
+  export interface TokenInfo {
+    symbol?: string;
+    balance?: number;
+    supply?: number;
+    decimals?: number;
+    token_program?: string;
+    associated_token_address?: string;
+    price_info?: PriceInfo;
+    mint_authority?: string;
+    freeze_authority?: string;
+  }
+  
+  export interface PriceInfo {
+    price_per_token: number;
+    currency: string;
   }
   // End of DAS
 }
