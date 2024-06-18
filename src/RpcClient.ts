@@ -509,17 +509,17 @@ export class RpcClient {
    * @param {TransactionInstruction[]} instructions - The transaction instructions
    * @param {Signer[]} signers - The transaction's signers. The first signer should be the fee payer
    * @param {AddressLookupTableAccount[]} lookupTables - The lookup tables to be included in a versioned transaction. Defaults to `[]`
-   * @param {SendOptions} sendOptions - Options for sending the transaction. Defaults to `{ skipPreflight: false }`
+   * @param {Signer} feePayer - Optional fee payer separate from the signers
    * @returns {Promise<TransactionSignature>} - The transaction signature
   */
   async createSmartTransaction(
     instructions: TransactionInstruction[],
     signers: Signer[],
     lookupTables: AddressLookupTableAccount[] = [],
-    sendOptions: SendOptions = { skipPreflight: false },
+    feePayer?: Signer,
   ) {
     if (!signers.length) {
-      throw new Error("The fee payer must sign the transaction");
+      throw new Error("The transaction must have at least one signer");
     }
 
     // Check if any of the instructions provided set the compute unit price and/or limit, and throw an error if true
@@ -532,7 +532,7 @@ export class RpcClient {
     }
 
     // For building the transaction
-    const payerKey = signers[0].publicKey;
+    const payerKey = feePayer ? feePayer.publicKey : signers[0].publicKey;
     let recentBlockhash = (await this.connection.getLatestBlockhash()).blockhash;
 
     // Determine if we need to use a versioned transaction
@@ -549,13 +549,21 @@ export class RpcClient {
       }).compileToV0Message(lookupTables);
 
       versionedTransaction = new VersionedTransaction(v0Message);
-      versionedTransaction.sign(signers);
+
+      // Include feePayer in signers if it exists and is not already in the list
+      const allSigners = feePayer ? [...signers, feePayer] : signers;
+      versionedTransaction.sign(allSigners);
     } else {
       legacyTransaction = new Transaction().add(...instructions);
       legacyTransaction.recentBlockhash = recentBlockhash;
       legacyTransaction.feePayer = payerKey;
+
       for (const signer of signers) {
-        legacyTransaction.sign(signer);
+        legacyTransaction.partialSign(signer);
+      }
+
+      if (feePayer) {
+        legacyTransaction.partialSign(feePayer);
       }
     }
 
@@ -609,7 +617,9 @@ export class RpcClient {
       }).compileToV0Message(lookupTables);
 
       versionedTransaction = new VersionedTransaction(v0Message);
-      versionedTransaction.sign(signers);
+      
+      const allSigners = feePayer ? [...signers, feePayer] : signers;
+      versionedTransaction.sign(allSigners);
 
       return versionedTransaction;
     } else {
@@ -618,7 +628,11 @@ export class RpcClient {
       legacyTransaction.feePayer = payerKey;
 
       for (const signer of signers) {
-        legacyTransaction.sign(signer);
+        legacyTransaction.partialSign(signer);
+      }
+
+      if (feePayer) {
+        legacyTransaction.partialSign(feePayer);
       }
 
       return legacyTransaction;
@@ -630,18 +644,18 @@ export class RpcClient {
    * @param {TransactionInstruction[]} instructions - The transaction instructions
    * @param {Signer[]} signers - The transaction's signers. The first signer should be the fee payer
    * @param {AddressLookupTableAccount[]} lookupTables - The lookup tables to be included in a versioned transaction. Defaults to `[]`
-   * @param {SendOptions} sendOptions - Options for sending the transaction. Defaults to `{ skipPreflight: false }`
+   * @param {SendOptions & { feePayer?: Signer }} sendOptions - Options for sending the transaction, including an optional feePayer. Defaults to `{ skipPreflight: false }`
    * @returns {Promise<TransactionSignature>} - The transaction signature
   */
   async sendSmartTransaction(
     instructions: TransactionInstruction[],
     signers: Signer[],
     lookupTables: AddressLookupTableAccount[] = [],
-    sendOptions: SendOptions = { skipPreflight: false },
+    sendOptions: SendOptions & { feePayer?: Signer } = { skipPreflight: false },
   ): Promise<TransactionSignature> {
     try {
       // Create a smart transaction
-      const transaction = await this.createSmartTransaction(instructions, signers, lookupTables, sendOptions);
+      const transaction = await this.createSmartTransaction(instructions, signers, lookupTables, sendOptions.feePayer);
   
       // Timeout of 60s. The transaction will be routed through our staked connections and should be confirmed by then
       const timeout = 60000;
