@@ -1,3 +1,5 @@
+import { JitoRegion } from "./types";
+
 export enum WebhookType {
   ENHANCED = "enhanced",
   RAW = "raw",
@@ -588,3 +590,24 @@ export enum UiTransactionEncoding {
   Json = "Json",
   JsonParsed = "JsonParsed",
 }
+
+// https://jito-foundation.gitbook.io/mev/mev-payment-and-distribution/on-chain-addresses
+export const JITO_TIP_ACCOUNTS: string[] = [
+  "96gYZGLnJYVFmbjzopPSU6QiEV5fGqZNyN9nmNhvrZU5",
+  "HFqU5x63VTqvQss8hp11i4wVV8bD44PvwucfZ2bU7gRe",
+  "Cw8CFyM9FkoMi7K7Crf6HNQqf4uEMzpKw6QNghXLvLkY",
+  "ADaUMid9yfUytqMBgopwjb2DTLSokTSzL1zt6iGPaS49",
+  "DfXygSm4jCyNCybVYYK6DwvWqjKee8pbDmJGcLWNDXjh",
+  "ADuUkR4vqLUMWXxW9gh6D6L8pMSawimctcNZ5pGwDcEt",
+  "DttWaMuVvTiduZRnguLF7jNxTgiMBZ1hyAumKUiL2KRL",
+  "3AVi9Tg9Uo68tJfuvoKvqKNWKkC5wPdSSdeBnizKZ6jT",
+];
+
+// https://jito-labs.gitbook.io/mev/searcher-resources/json-rpc-api-reference/url
+export const JITO_API_URLS: Record<JitoRegion, string> = {
+  Default: "https://mainnet.block-engine.jito.wtf",
+  NY: "https://ny.mainnet.block-engine.jito.wtf",
+  Amsterdam: "https://amsterdam.mainnet.block-engine.jito.wtf",
+  Frankfurt: "https://frankfurt.mainnet.block-engine.jito.wtf",
+  Tokyo: "https://tokyo.mainnet.block-engine.jito.wtf",
+};

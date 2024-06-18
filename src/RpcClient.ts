@@ -18,12 +18,13 @@ import {
   ComputeBudgetProgram,
   SendOptions,
   Signer,
-  TransactionExpiredTimeoutError,
+  SystemProgram,
 } from "@solana/web3.js";
 const bs58 = require("bs58");
 import axios from "axios";
+
 import { DAS } from "./types/das-types";
-import { GetPriorityFeeEstimateRequest, GetPriorityFeeEstimateResponse, PriorityLevel } from "./types";
+import { Address, GetPriorityFeeEstimateRequest, GetPriorityFeeEstimateResponse, JITO_API_URLS, JITO_TIP_ACCOUNTS, JitoRegion } from "./types";
 
 export type SendAndConfirmTransactionResponse = {
   signature: TransactionSignature;
@@ -679,6 +680,169 @@ export class RpcClient {
     }
   
     throw new Error("Transaction failed to confirm in 60s");
+  }
+
+  /**
+   * Add a tip instruction to the last instruction in the bundle provided
+   * @param {TransactionInstruction[]} instructions - The transaction instructions
+   * @param {PublicKey} feePayer - The public key of the fee payer
+   * @param {string} tipAccount - The public key of the tip account
+   * @param {number} tipAmount - The amount of lamports to tip
+   */
+   addTipInstruction(
+    instructions: TransactionInstruction[],
+    feePayer: PublicKey,
+    tipAccount: string,
+    tipAmount: number,
+  ): void {
+    const tipInstruction = SystemProgram.transfer({
+      fromPubkey: feePayer,
+      toPubkey: new PublicKey(tipAccount),
+      lamports: tipAmount,
+    });
+
+    instructions.push(tipInstruction);
+  }
+
+  /**
+   * Create a smart transaction with a Jito tip
+   * @param {TransactionInstruction[]} instructions - The transaction instructions
+   * @param {Signer[]} signers - The transaction's signers. The first signer should be the fee payer if a separate one isn't provided
+   * @param {AddressLookupTableAccount[]} lookupTables - The lookup tables to be included. Defaults to `[]`
+   * @param {number} tipAmount - The amount of lamports to tip. Defaults to 1000
+   * @param {Signer} feePayer - Optional fee payer separate from the signers
+   * @returns {Promise<string>} - The serialized transaction
+   */
+  async createSmartTransactionWithTip(
+    instructions: TransactionInstruction[],
+    signers: Signer[],
+    lookupTables: AddressLookupTableAccount[] = [],
+    tipAmount: number = 1000,
+    feePayer?: Signer,
+  ): Promise<string> {
+    if (!signers.length) {
+      throw new Error("The transaction must have at least one signer");
+    }
+    
+    // Select a random tip account
+    const randomTipAccount = JITO_TIP_ACCOUNTS[Math.floor(Math.random() * JITO_TIP_ACCOUNTS.length)];
+
+    // Set the fee payer and add the tip instruction
+    const payerKey = feePayer ? feePayer.publicKey : signers[0].publicKey;
+    this.addTipInstruction(instructions, payerKey, randomTipAccount, tipAmount);
+
+    // Create the smart transaction
+    // @todo merge PR #100 so we can pass in the feePayer here  
+    const smartTransaction = await this.createSmartTransaction(instructions, signers, lookupTables);
+
+    // Return the serialized transaction
+    return bs58.encode(smartTransaction.serialize());
+  }
+
+  /**
+   * Send a bundle of transactions to the Jito Block Engine
+   * @param {string[]} serializedTransactions - The serialized transactions in the bundle
+   * @param {string} jitoApiUrl - The Jito Block Engine API URL
+   * @returns {Promise<string>} - The bundle ID
+   */
+  async sendJitoBundle(
+    serializedTransactions: string[],
+    jitoApiUrl: string,
+  ): Promise<string> {
+    const response = await axios.post(jitoApiUrl, {
+      jsonrpc: "2.0",
+      id: 1,
+      method: "sendBundle",
+      params: [serializedTransactions],
+    }, {
+      headers: { "Content-Type": "application/json" },
+    });
+
+    if (response.data.error) {
+      throw new Error(`Error sending bundles: ${JSON.stringify(response.data.error, null, 2)}`);
+    }
+
+    return response.data.result;
+  }
+
+  /**
+   * Get the status of Jito bundles
+   * @param {string[]} bundleIds - An array of bundle IDs to check the status for
+   * @param {string} jitoApiUrl - The Jito Block Engine API URL
+   * @returns {Promise<any>} - The status of the bundles 
+   */
+  async getBundleStatuses(
+    bundleIds: string[],
+    jitoApiUrl: string,
+  ): Promise<any> {
+    const response = await axios.post(jitoApiUrl, {
+      jsonrpc: "2.0",
+      id: 1,
+      method: "getBundleStatuses",
+      params: [bundleIds],
+    }, {
+      headers: { "Content-Type": "application/json" },
+    });
+
+    if (response.data.error) {
+      throw new Error(`Error getting bundle statuses: ${JSON.stringify(response.data.error, null, 2)}`);
+    }
+
+    return response.data.result;
+  }
+
+  /**
+   * Send a smart transaction as a Jito bundle with a tip
+   * @param {TransactionInstruction[]} instructions - The transaction instructions
+   * @param {Signer[]} signers - The transaction's signers. The first signer should be the fee payer if a separate one isn't provided
+   * @param {AddressLookupTableAccount[]} lookupTables - The lookup tables to be included. Defaults to `[]`
+   * @param {number} tipAmount - The amount of lamports to tip. Defaults to 1000
+   * @param {JitoRegion} region - The Jito Block Engine region. Defaults to "Default" (i.e., https://mainnet.block-engine.jito.wtf)
+   * @param {Signer} feePayer - Optional fee payer separate from the signers
+   * @returns {Promise<string>} - The bundle ID
+   */
+  async sendSmartTransactionWithTip(
+    instructions: TransactionInstruction[],
+    signers: Signer[],
+    lookupTables: AddressLookupTableAccount[] = [],
+    tipAmount: number = 1000,
+    region: JitoRegion = "Default",
+    feePayer?: Signer,
+  ): Promise<string> {
+    if (!signers.length) {
+      throw new Error("The transaction must have at least one signer");
+    }
+
+    // Create the smart transaction with tip
+    // @todo merge PR #100 so we can pass in the feePayer here 
+    const serializedTransaction = await this.createSmartTransactionWithTip(instructions, signers, lookupTables, tipAmount);
+
+    // Get the Jito API URL for the specified region
+    const jitoApiUrl = JITO_API_URLS[region] + "/api/v1/bundles";
+
+    // Send the transaction as a Jito Bundle
+    const bundleId = await this.sendJitoBundle([serializedTransaction], jitoApiUrl);
+
+    // Poll for confirmation status
+    const timeout = 60000 // 60 second timeout
+    const interval = 5000 // 5 second interval
+    const startTime = Date.now();
+
+    while (Date.now() - startTime < timeout) {
+      const bundleStatuses = await this.getBundleStatuses([bundleId], jitoApiUrl);
+
+      if (bundleStatuses && bundleStatuses.value && bundleStatuses.value.length > 0) {
+        const status = bundleStatuses.value[0].confirmation_status;
+
+        if (status === "confirmed") {
+          return bundleStatuses.value[0].transactions[0];
+        }
+      }
+
+      await new Promise(resolve => setTimeout(resolve, interval));
+    }
+
+    throw new Error("Bundle failed to confirm within the timeout period");
   }
  
   /**
