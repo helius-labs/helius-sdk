@@ -534,7 +534,7 @@ export class RpcClient {
 
     // For building the transaction
     const payerKey = feePayer ? feePayer.publicKey : signers[0].publicKey;
-    let recentBlockhash = (await this.connection.getLatestBlockhash()).blockhash;
+    let { blockhash: recentBlockhash, lastValidBlockHeight } = await this.connection.getLatestBlockhash();
 
     // Determine if we need to use a versioned transaction
     const isVersioned = lookupTables.length > 0;
@@ -622,7 +622,7 @@ export class RpcClient {
       const allSigners = feePayer ? [...signers, feePayer] : signers;
       versionedTransaction.sign(allSigners);
 
-      return versionedTransaction;
+      return { smartTransaction: versionedTransaction, lastValidBlockHeight };
     } else {
       legacyTransaction = new Transaction().add(...instructions);
       legacyTransaction.recentBlockhash = recentBlockhash;
@@ -636,7 +636,7 @@ export class RpcClient {
         legacyTransaction.partialSign(feePayer);
       }
 
-      return legacyTransaction;
+      return { smartTransaction: legacyTransaction, lastValidBlockHeight };
     }
   }
   
@@ -656,14 +656,11 @@ export class RpcClient {
   ): Promise<TransactionSignature> {
     try {
       // Create a smart transaction
-      const transaction = await this.createSmartTransaction(instructions, signers, lookupTables, sendOptions.feePayer);
-  
-      // Timeout of 60s. The transaction will be routed through our staked connections and should be confirmed by then
-      const timeout = 60000;
-      const startTime = Date.now();
+      const { smartTransaction: transaction, lastValidBlockHeight } = await this.createSmartTransaction(instructions, signers, lookupTables, sendOptions.feePayer);
+
       let txtSig;
   
-      while (Date.now() - startTime < timeout) {
+      while ((await this.connection.getBlockHeight()) <= lastValidBlockHeight) {
         try {
           txtSig = await this.connection.sendRawTransaction(transaction.serialize(), {
             skipPreflight: sendOptions.skipPreflight,
@@ -679,7 +676,7 @@ export class RpcClient {
       throw new Error(`Error sending smart transaction: ${error}`);
     }
   
-    throw new Error("Transaction failed to confirm in 60s");
+    throw new Error("Transaction failed to confirm within lastValidBlockHeight");
   }
 
   /**
@@ -733,7 +730,7 @@ export class RpcClient {
 
     // Create the smart transaction
     // @todo merge PR #100 so we can pass in the feePayer here  
-    const smartTransaction = await this.createSmartTransaction(instructions, signers, lookupTables);
+    const { smartTransaction } = await this.createSmartTransaction(instructions, signers, lookupTables);
 
     // Return the serialized transaction
     return bs58.encode(smartTransaction.serialize());
