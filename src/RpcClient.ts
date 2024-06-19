@@ -731,9 +731,7 @@ export class RpcClient {
     const payerKey = feePayer ? feePayer.publicKey : signers[0].publicKey;
     this.addTipInstruction(instructions, payerKey, randomTipAccount, tipAmount);
 
-    // Create the smart transaction
-    // @todo merge PR #100 so we can pass in the feePayer here  
-    const { smartTransaction } = await this.createSmartTransaction(instructions, signers, lookupTables);
+    const { smartTransaction } = await this.createSmartTransaction(instructions, signers, lookupTables, feePayer);
 
     // Return the serialized transaction
     return bs58.encode(smartTransaction.serialize());
@@ -813,9 +811,15 @@ export class RpcClient {
       throw new Error("The transaction must have at least one signer");
     }
 
-    // Create the smart transaction with tip
-    // @todo merge PR #100 so we can pass in the feePayer here 
-    const serializedTransaction = await this.createSmartTransactionWithTip(instructions, signers, lookupTables, tipAmount);
+    // Create the smart transaction with tip based on whether a separate fee payer was provided
+    let serializedTransaction;
+    
+    if (feePayer) {
+      serializedTransaction = await this.createSmartTransactionWithTip(instructions, signers, lookupTables, tipAmount, feePayer);
+    } else {
+      serializedTransaction = await this.createSmartTransactionWithTip(instructions, signers, lookupTables, tipAmount);
+    }
+    
 
     // Get the Jito API URL for the specified region
     const jitoApiUrl = JITO_API_URLS[region] + "/api/v1/bundles";
