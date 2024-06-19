@@ -511,14 +511,14 @@ export class RpcClient {
    * @param {Signer[]} signers - The transaction's signers. The first signer should be the fee payer
    * @param {AddressLookupTableAccount[]} lookupTables - The lookup tables to be included in a versioned transaction. Defaults to `[]`
    * @param {Signer} feePayer - Optional fee payer separate from the signers
-   * @returns {Promise<TransactionSignature>} - The transaction signature
+   * @returns {Promise<{ smartTransaction: Transaction | VersionedTransaction, lastValidBlockHeight: number }>} - The transaction and the last valid block height
   */
   async createSmartTransaction(
     instructions: TransactionInstruction[],
     signers: Signer[],
     lookupTables: AddressLookupTableAccount[] = [],
     feePayer?: Signer,
-  ) {
+  ): Promise<{ smartTransaction: Transaction | VersionedTransaction, lastValidBlockHeight: number }> {
     if (!signers.length) {
       throw new Error("The transaction must have at least one signer");
     }
