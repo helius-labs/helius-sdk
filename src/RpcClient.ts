@@ -658,9 +658,12 @@ export class RpcClient {
       // Create a smart transaction
       const { smartTransaction: transaction, lastValidBlockHeight } = await this.createSmartTransaction(instructions, signers, lookupTables, sendOptions.feePayer);
 
+      // Timeout of 60s. The transaction will be routed through our staked connections and should be confirmed by then
+      const timeout = 60000;
+      const startTime = Date.now();
       let txtSig;
   
-      while ((await this.connection.getBlockHeight()) <= lastValidBlockHeight) {
+      while (Date.now() - startTime < timeout || (await this.connection.getBlockHeight()) <= lastValidBlockHeight) {
         try {
           txtSig = await this.connection.sendRawTransaction(transaction.serialize(), {
             skipPreflight: sendOptions.skipPreflight,
