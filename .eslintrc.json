@@ -5,8 +5,7 @@
     },
     "extends": [
         "airbnb-base",
-        "prettier",
-        "prettier/@typescript-eslint"
+        "prettier"
     ],
     "globals": {
         "Atomics": "readonly",
