@@ -19,12 +19,19 @@ import {
   SendOptions,
   Signer,
   SystemProgram,
-} from "@solana/web3.js";
-const bs58 = require("bs58");
-import axios from "axios";
+} from '@solana/web3.js';
+const bs58 = require('bs58');
+import axios from 'axios';
 
-import { DAS } from "./types/das-types";
-import { Address, GetPriorityFeeEstimateRequest, GetPriorityFeeEstimateResponse, JITO_API_URLS, JITO_TIP_ACCOUNTS, JitoRegion } from "./types";
+import { DAS } from './types/das-types';
+import {
+  Address,
+  GetPriorityFeeEstimateRequest,
+  GetPriorityFeeEstimateResponse,
+  JITO_API_URLS,
+  JITO_TIP_ACCOUNTS,
+  JitoRegion,
+} from './types';
 
 export type SendAndConfirmTransactionResponse = {
   signature: TransactionSignature;
@@ -40,7 +47,7 @@ export class RpcClient {
   constructor(
     protected readonly connection: Connection,
     protected readonly id?: string
-  ) { }
+  ) {}
 
   /**
    * Request an allocation of lamports to the specified address
@@ -70,7 +77,7 @@ export class RpcClient {
    * @returns {Promise<BlockhashWithExpiryBlockHeight>}
    */
   async getLatestBlockhash(
-    commitmentOrConfig: Commitment | GetLatestBlockhashConfig = "finalized"
+    commitmentOrConfig: Commitment | GetLatestBlockhashConfig = 'finalized'
   ): Promise<BlockhashWithExpiryBlockHeight> {
     return this.connection.getLatestBlockhash(commitmentOrConfig);
   }
@@ -99,7 +106,7 @@ export class RpcClient {
   async getStakeAccounts(wallet: string): Promise<any> {
     try {
       return this.connection.getParsedProgramAccounts(
-        new PublicKey("Stake11111111111111111111111111111111111111"),
+        new PublicKey('Stake11111111111111111111111111111111111111'),
         {
           filters: [
             {
@@ -133,7 +140,7 @@ export class RpcClient {
   > {
     try {
       return this.connection.getParsedProgramAccounts(
-        new PublicKey("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"),
+        new PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA'),
         {
           filters: [
             {
@@ -168,14 +175,14 @@ export class RpcClient {
       const response = await axios.post(
         url,
         {
-          jsonrpc: "2.0",
+          jsonrpc: '2.0',
           id: this.id,
-          method: "getAsset",
+          method: 'getAsset',
           params,
         },
         {
           headers: {
-            "Content-Type": "application/json",
+            'Content-Type': 'application/json',
           },
         }
       );
@@ -201,14 +208,14 @@ export class RpcClient {
       const response = await axios.post(
         url,
         {
-          jsonrpc: "2.0",
+          jsonrpc: '2.0',
           id: this.id,
-          method: "getRwaAccountsByMint",
+          method: 'getRwaAccountsByMint',
           params,
         },
         {
           headers: {
-            "Content-Type": "application/json",
+            'Content-Type': 'application/json',
           },
         }
       );
@@ -232,9 +239,9 @@ export class RpcClient {
       const url = `${this.connection.rpcEndpoint}`;
 
       const response = await axios.post(url, {
-        jsonrpc: "2.0",
+        jsonrpc: '2.0',
         id: this.id,
-        method: "getAssetBatch",
+        method: 'getAssetBatch',
         params, // <-- Here we directly pass the params
       });
 
@@ -254,9 +261,9 @@ export class RpcClient {
     try {
       const url = `${this.connection.rpcEndpoint}`;
       const response = await axios.post(url, {
-        jsonrpc: "2.0",
+        jsonrpc: '2.0',
         id: this.id,
-        method: "getAssetProof",
+        method: 'getAssetProof',
         params: params,
       });
 
@@ -278,9 +285,9 @@ export class RpcClient {
     try {
       const url = `${this.connection.rpcEndpoint}`;
       const response = await axios.post(url, {
-        jsonrpc: "2.0",
+        jsonrpc: '2.0',
         id: this.id,
-        method: "getAssetsByGroup",
+        method: 'getAssetsByGroup',
         params: params,
       });
 
@@ -302,9 +309,9 @@ export class RpcClient {
     try {
       const url = `${this.connection.rpcEndpoint}`;
       const response = await axios.post(url, {
-        jsonrpc: "2.0",
+        jsonrpc: '2.0',
         id: this.id,
-        method: "getAssetsByOwner",
+        method: 'getAssetsByOwner',
         params: params,
       });
 
@@ -326,9 +333,9 @@ export class RpcClient {
     try {
       const url = `${this.connection.rpcEndpoint}`;
       const response = await axios.post(url, {
-        jsonrpc: "2.0",
+        jsonrpc: '2.0',
         id: this.id,
-        method: "getAssetsByCreator",
+        method: 'getAssetsByCreator',
         params: params,
       });
 
@@ -350,9 +357,9 @@ export class RpcClient {
     try {
       const url = `${this.connection.rpcEndpoint}`;
       const response = await axios.post(url, {
-        jsonrpc: "2.0",
+        jsonrpc: '2.0',
         id: this.id,
-        method: "getAssetsByAuthority",
+        method: 'getAssetsByAuthority',
         params: params,
       });
 
@@ -374,9 +381,9 @@ export class RpcClient {
     try {
       const url = `${this.connection.rpcEndpoint}`;
       const response = await axios.post(url, {
-        jsonrpc: "2.0",
+        jsonrpc: '2.0',
         id: this.id,
-        method: "searchAssets",
+        method: 'searchAssets',
         params: params,
       });
 
@@ -398,9 +405,9 @@ export class RpcClient {
     try {
       const url = `${this.connection.rpcEndpoint}`;
       const response = await axios.post(url, {
-        jsonrpc: "2.0",
+        jsonrpc: '2.0',
         id: this.id,
-        method: "getSignaturesForAsset",
+        method: 'getSignaturesForAsset',
         params: params,
       });
 
@@ -412,23 +419,27 @@ export class RpcClient {
   }
 
   /**
-  * Get priority fee estimate
-  * @returns {Promise<GetPriorityFeeEstimateResponse>}
-  * @throws {Error}
-  */
+   * Get priority fee estimate
+   * @returns {Promise<GetPriorityFeeEstimateResponse>}
+   * @throws {Error}
+   */
   async getPriorityFeeEstimate(
     params: GetPriorityFeeEstimateRequest
   ): Promise<GetPriorityFeeEstimateResponse> {
     try {
       const url = `${this.connection.rpcEndpoint}`;
-      const response = await axios.post(url, {
-        jsonrpc: "2.0",
-        id: this.id,
-        method: "getPriorityFeeEstimate",
-        params: [params],
-      }, {
-        headers: { "Content-Type": "application/json" },
-      });
+      const response = await axios.post(
+        url,
+        {
+          jsonrpc: '2.0',
+          id: this.id,
+          method: 'getPriorityFeeEstimate',
+          params: [params],
+        },
+        {
+          headers: { 'Content-Type': 'application/json' },
+        }
+      );
 
       return response.data.result as GetPriorityFeeEstimateResponse;
     } catch (error) {
@@ -440,9 +451,9 @@ export class RpcClient {
    * Simulate a transaction to get the total compute units consumed
    * @param {TransactionInstruction[]} instructions - The transaction instructions
    * @param {PublicKey} payer - The public key of the payer
-   * @param {AddressLookupTableAccount[]} lookupTables - The address lookup tables 
+   * @param {AddressLookupTableAccount[]} lookupTables - The address lookup tables
    * @returns {Promise<number | null>} - The compute units consumed, or null if unsuccessful
-  */
+   */
   async getComputeUnits(
     instructions: TransactionInstruction[],
     payer: PublicKey,
@@ -461,13 +472,18 @@ export class RpcClient {
       }).compileToV0Message(lookupTables)
     );
 
-    const rpcResponse = await this.connection.simulateTransaction(testTransaction, {
-      replaceRecentBlockhash: true,
-      sigVerify: false,
-    });
+    const rpcResponse = await this.connection.simulateTransaction(
+      testTransaction,
+      {
+        replaceRecentBlockhash: true,
+        sigVerify: false,
+      }
+    );
 
     if (rpcResponse.value.err) {
-      console.error(`Simulation error: ${JSON.stringify(rpcResponse.value.err, null, 2)}`);
+      console.error(
+        `Simulation error: ${JSON.stringify(rpcResponse.value.err, null, 2)}`
+      );
       return null;
     }
 
@@ -478,8 +494,10 @@ export class RpcClient {
    * Poll a transaction to check whether it has been confirmed
    * @param {TransactionSignature} txtSig - The transaction signature
    * @returns {Promise<TransactionSignature>} - The confirmed transaction signature or an error if the confirmation times out
-  */
-  async pollTransactionConfirmation(txtSig: TransactionSignature): Promise<TransactionSignature> {
+   */
+  async pollTransactionConfirmation(
+    txtSig: TransactionSignature
+  ): Promise<TransactionSignature> {
     // 15 second timeout
     const timeout = 15000;
     // 5 second retry interval
@@ -497,7 +515,7 @@ export class RpcClient {
 
         const status = await this.connection.getSignatureStatus(txtSig);
 
-        if (status?.value?.confirmationStatus === "confirmed") {
+        if (status?.value?.confirmationStatus === 'confirmed') {
           clearInterval(intervalId);
           resolve(txtSig);
         }
@@ -512,29 +530,36 @@ export class RpcClient {
    * @param {AddressLookupTableAccount[]} lookupTables - The lookup tables to be included in a versioned transaction. Defaults to `[]`
    * @param {Signer} feePayer - Optional fee payer separate from the signers
    * @returns {Promise<{ smartTransaction: Transaction | VersionedTransaction, lastValidBlockHeight: number }>} - The transaction and the last valid block height
-  */
+   */
   async createSmartTransaction(
     instructions: TransactionInstruction[],
     signers: Signer[],
     lookupTables: AddressLookupTableAccount[] = [],
-    feePayer?: Signer,
-  ): Promise<{ smartTransaction: Transaction | VersionedTransaction, lastValidBlockHeight: number }> {
+    feePayer?: Signer
+  ): Promise<{
+    smartTransaction: Transaction | VersionedTransaction;
+    lastValidBlockHeight: number;
+  }> {
     if (!signers.length) {
-      throw new Error("The transaction must have at least one signer");
+      throw new Error('The transaction must have at least one signer');
     }
 
     // Check if any of the instructions provided set the compute unit price and/or limit, and throw an error if true
-    const existingComputeBudgetInstructions = instructions.filter(instruction => 
-      instruction.programId.equals(ComputeBudgetProgram.programId)
+    const existingComputeBudgetInstructions = instructions.filter(
+      (instruction) =>
+        instruction.programId.equals(ComputeBudgetProgram.programId)
     );
 
     if (existingComputeBudgetInstructions.length > 0) {
-      throw new Error("Cannot provide instructions that set the compute unit price and/or limit");
+      throw new Error(
+        'Cannot provide instructions that set the compute unit price and/or limit'
+      );
     }
 
     // For building the transaction
     const payerKey = feePayer ? feePayer.publicKey : signers[0].publicKey;
-    let { blockhash: recentBlockhash, lastValidBlockHeight } = await this.connection.getLatestBlockhash();
+    let { blockhash: recentBlockhash, lastValidBlockHeight } =
+      await this.connection.getLatestBlockhash();
 
     // Determine if we need to use a versioned transaction
     const isVersioned = lookupTables.length > 0;
@@ -569,7 +594,11 @@ export class RpcClient {
     }
 
     // Serialize the transaction
-    const serializedTransaction = bs58.encode(isVersioned ? versionedTransaction!.serialize() : legacyTransaction!.serialize());
+    const serializedTransaction = bs58.encode(
+      isVersioned
+        ? versionedTransaction!.serialize()
+        : legacyTransaction!.serialize()
+    );
 
     // Get the priority fee estimate based on the serialized transaction
     const priorityFeeEstimateResponse = await this.getPriorityFeeEstimate({
@@ -582,7 +611,7 @@ export class RpcClient {
     const priorityFeeEstimate = priorityFeeEstimateResponse.priorityFeeEstimate;
 
     if (!priorityFeeEstimate) {
-      throw new Error("Priority fee estimate not available");
+      throw new Error('Priority fee estimate not available');
     }
 
     // Add the compute unit price instruction with the estimated fee
@@ -592,21 +621,26 @@ export class RpcClient {
 
     instructions.unshift(computeBudgetIx);
 
-
     // Get the optimal compute units
-    const units = await this.getComputeUnits(instructions, payerKey, isVersioned ? lookupTables : []);
+    const units = await this.getComputeUnits(
+      instructions,
+      payerKey,
+      isVersioned ? lookupTables : []
+    );
 
     if (!units) {
-      throw new Error(`Error fetching compute units for the instructions provided`);
+      throw new Error(
+        `Error fetching compute units for the instructions provided`
+      );
     }
-     
+
     // For very small transactions, such as simple transfers, default to 1k CUs
     let customersCU = units < 1000 ? 1000 : Math.ceil(units * 1.1);
 
     const computeUnitsIx = ComputeBudgetProgram.setComputeUnitLimit({
       units: customersCU,
-    });         
-    
+    });
+
     instructions.unshift(computeUnitsIx);
 
     // Rebuild the transaction with the final instructions
@@ -618,7 +652,7 @@ export class RpcClient {
       }).compileToV0Message(lookupTables);
 
       versionedTransaction = new VersionedTransaction(v0Message);
-      
+
       const allSigners = feePayer ? [...signers, feePayer] : signers;
       versionedTransaction.sign(allSigners);
 
@@ -639,7 +673,7 @@ export class RpcClient {
       return { smartTransaction: legacyTransaction, lastValidBlockHeight };
     }
   }
-  
+
   /**
    * Build and send an optimized transaction, and handle its confirmation status
    * @param {TransactionInstruction[]} instructions - The transaction instructions
@@ -647,29 +681,41 @@ export class RpcClient {
    * @param {AddressLookupTableAccount[]} lookupTables - The lookup tables to be included in a versioned transaction. Defaults to `[]`
    * @param {SendOptions & { feePayer?: Signer }} sendOptions - Options for sending the transaction, including an optional feePayer. Defaults to `{ skipPreflight: false }`
    * @returns {Promise<TransactionSignature>} - The transaction signature
-  */
+   */
   async sendSmartTransaction(
     instructions: TransactionInstruction[],
     signers: Signer[],
     lookupTables: AddressLookupTableAccount[] = [],
-    sendOptions: SendOptions & { feePayer?: Signer } = { skipPreflight: false },
+    sendOptions: SendOptions & { feePayer?: Signer } = { skipPreflight: false }
   ): Promise<TransactionSignature> {
     try {
       // Create a smart transaction
-      const { smartTransaction: transaction, lastValidBlockHeight } = await this.createSmartTransaction(instructions, signers, lookupTables, sendOptions.feePayer);
+      const { smartTransaction: transaction, lastValidBlockHeight } =
+        await this.createSmartTransaction(
+          instructions,
+          signers,
+          lookupTables,
+          sendOptions.feePayer
+        );
 
       // Timeout of 60s. The transaction will be routed through our staked connections and should be confirmed by then
       const timeout = 60000;
       const startTime = Date.now();
       let txtSig;
-  
-      while (Date.now() - startTime < timeout || (await this.connection.getBlockHeight()) <= lastValidBlockHeight) {
+
+      while (
+        Date.now() - startTime < timeout ||
+        (await this.connection.getBlockHeight()) <= lastValidBlockHeight
+      ) {
         try {
-          txtSig = await this.connection.sendRawTransaction(transaction.serialize(), {
-            skipPreflight: sendOptions.skipPreflight,
-            ...sendOptions,
-          });
-  
+          txtSig = await this.connection.sendRawTransaction(
+            transaction.serialize(),
+            {
+              skipPreflight: sendOptions.skipPreflight,
+              ...sendOptions,
+            }
+          );
+
           return await this.pollTransactionConfirmation(txtSig);
         } catch (error) {
           continue;
@@ -678,8 +724,10 @@ export class RpcClient {
     } catch (error) {
       throw new Error(`Error sending smart transaction: ${error}`);
     }
-  
-    throw new Error("Transaction failed to confirm within lastValidBlockHeight");
+
+    throw new Error(
+      'Transaction failed to confirm within lastValidBlockHeight'
+    );
   }
 
   /**
@@ -689,11 +737,11 @@ export class RpcClient {
    * @param {string} tipAccount - The public key of the tip account
    * @param {number} tipAmount - The amount of lamports to tip
    */
-   addTipInstruction(
+  addTipInstruction(
     instructions: TransactionInstruction[],
     feePayer: PublicKey,
     tipAccount: string,
-    tipAmount: number,
+    tipAmount: number
   ): void {
     const tipInstruction = SystemProgram.transfer({
       fromPubkey: feePayer,
@@ -718,23 +766,33 @@ export class RpcClient {
     signers: Signer[],
     lookupTables: AddressLookupTableAccount[] = [],
     tipAmount: number = 1000,
-    feePayer?: Signer,
-  ): Promise<{ serializedTransaction: string, lastValidBlockHeight: number }> {
+    feePayer?: Signer
+  ): Promise<{ serializedTransaction: string; lastValidBlockHeight: number }> {
     if (!signers.length) {
-      throw new Error("The transaction must have at least one signer");
+      throw new Error('The transaction must have at least one signer');
     }
-    
+
     // Select a random tip account
-    const randomTipAccount = JITO_TIP_ACCOUNTS[Math.floor(Math.random() * JITO_TIP_ACCOUNTS.length)];
+    const randomTipAccount =
+      JITO_TIP_ACCOUNTS[Math.floor(Math.random() * JITO_TIP_ACCOUNTS.length)];
 
     // Set the fee payer and add the tip instruction
     const payerKey = feePayer ? feePayer.publicKey : signers[0].publicKey;
     this.addTipInstruction(instructions, payerKey, randomTipAccount, tipAmount);
 
-    const { smartTransaction, lastValidBlockHeight } = await this.createSmartTransaction(instructions, signers, lookupTables, feePayer);
+    const { smartTransaction, lastValidBlockHeight } =
+      await this.createSmartTransaction(
+        instructions,
+        signers,
+        lookupTables,
+        feePayer
+      );
 
     // Return the serialized transaction
-    return { serializedTransaction: bs58.encode(smartTransaction.serialize()), lastValidBlockHeight };
+    return {
+      serializedTransaction: bs58.encode(smartTransaction.serialize()),
+      lastValidBlockHeight,
+    };
   }
 
   /**
@@ -745,19 +803,25 @@ export class RpcClient {
    */
   async sendJitoBundle(
     serializedTransactions: string[],
-    jitoApiUrl: string,
+    jitoApiUrl: string
   ): Promise<string> {
-    const response = await axios.post(jitoApiUrl, {
-      jsonrpc: "2.0",
-      id: 1,
-      method: "sendBundle",
-      params: [serializedTransactions],
-    }, {
-      headers: { "Content-Type": "application/json" },
-    });
+    const response = await axios.post(
+      jitoApiUrl,
+      {
+        jsonrpc: '2.0',
+        id: 1,
+        method: 'sendBundle',
+        params: [serializedTransactions],
+      },
+      {
+        headers: { 'Content-Type': 'application/json' },
+      }
+    );
 
     if (response.data.error) {
-      throw new Error(`Error sending bundles: ${JSON.stringify(response.data.error, null, 2)}`);
+      throw new Error(
+        `Error sending bundles: ${JSON.stringify(response.data.error, null, 2)}`
+      );
     }
 
     return response.data.result;
@@ -767,23 +831,29 @@ export class RpcClient {
    * Get the status of Jito bundles
    * @param {string[]} bundleIds - An array of bundle IDs to check the status for
    * @param {string} jitoApiUrl - The Jito Block Engine API URL
-   * @returns {Promise<any>} - The status of the bundles 
+   * @returns {Promise<any>} - The status of the bundles
    */
   async getBundleStatuses(
     bundleIds: string[],
-    jitoApiUrl: string,
+    jitoApiUrl: string
   ): Promise<any> {
-    const response = await axios.post(jitoApiUrl, {
-      jsonrpc: "2.0",
-      id: 1,
-      method: "getBundleStatuses",
-      params: [bundleIds],
-    }, {
-      headers: { "Content-Type": "application/json" },
-    });
+    const response = await axios.post(
+      jitoApiUrl,
+      {
+        jsonrpc: '2.0',
+        id: 1,
+        method: 'getBundleStatuses',
+        params: [bundleIds],
+      },
+      {
+        headers: { 'Content-Type': 'application/json' },
+      }
+    );
 
     if (response.data.error) {
-      throw new Error(`Error getting bundle statuses: ${JSON.stringify(response.data.error, null, 2)}`);
+      throw new Error(
+        `Error getting bundle statuses: ${JSON.stringify(response.data.error, null, 2)}`
+      );
     }
 
     return response.data.result;
@@ -804,44 +874,64 @@ export class RpcClient {
     signers: Signer[],
     lookupTables: AddressLookupTableAccount[] = [],
     tipAmount: number = 1000,
-    region: JitoRegion = "Default",
-    feePayer?: Signer,
+    region: JitoRegion = 'Default',
+    feePayer?: Signer
   ): Promise<string> {
     if (!signers.length) {
-      throw new Error("The transaction must have at least one signer");
+      throw new Error('The transaction must have at least one signer');
     }
 
-    // Create the smart transaction with tip based 
-    let { serializedTransaction, lastValidBlockHeight } = await this.createSmartTransactionWithTip(instructions, signers, lookupTables, tipAmount, feePayer);
+    // Create the smart transaction with tip based
+    let { serializedTransaction, lastValidBlockHeight } =
+      await this.createSmartTransactionWithTip(
+        instructions,
+        signers,
+        lookupTables,
+        tipAmount,
+        feePayer
+      );
 
     // Get the Jito API URL for the specified region
-    const jitoApiUrl = JITO_API_URLS[region] + "/api/v1/bundles";
+    const jitoApiUrl = JITO_API_URLS[region] + '/api/v1/bundles';
 
     // Send the transaction as a Jito Bundle
-    const bundleId = await this.sendJitoBundle([serializedTransaction], jitoApiUrl);
+    const bundleId = await this.sendJitoBundle(
+      [serializedTransaction],
+      jitoApiUrl
+    );
 
     // Poll for confirmation status
-    const timeout = 60000 // 60 second timeout
-    const interval = 5000 // 5 second interval
+    const timeout = 60000; // 60 second timeout
+    const interval = 5000; // 5 second interval
     const startTime = Date.now();
 
-    while (Date.now() - startTime < timeout || (await this.connection.getBlockHeight()) <= lastValidBlockHeight) {
-      const bundleStatuses = await this.getBundleStatuses([bundleId], jitoApiUrl);
+    while (
+      Date.now() - startTime < timeout ||
+      (await this.connection.getBlockHeight()) <= lastValidBlockHeight
+    ) {
+      const bundleStatuses = await this.getBundleStatuses(
+        [bundleId],
+        jitoApiUrl
+      );
 
-      if (bundleStatuses && bundleStatuses.value && bundleStatuses.value.length > 0) {
+      if (
+        bundleStatuses &&
+        bundleStatuses.value &&
+        bundleStatuses.value.length > 0
+      ) {
         const status = bundleStatuses.value[0].confirmation_status;
 
-        if (status === "confirmed") {
+        if (status === 'confirmed') {
           return bundleStatuses.value[0].transactions[0];
         }
       }
 
-      await new Promise(resolve => setTimeout(resolve, interval));
+      await new Promise((resolve) => setTimeout(resolve, interval));
     }
 
-    throw new Error("Bundle failed to confirm within the timeout period");
+    throw new Error('Bundle failed to confirm within the timeout period');
   }
- 
+
   /**
    * Get information about all the edition NFTs for a specific master NFT
    * @returns {Promise<DAS.GetNftEditionsResponse>}
@@ -852,14 +942,18 @@ export class RpcClient {
   ): Promise<DAS.GetNftEditionsResponse> {
     try {
       const url = `${this.connection.rpcEndpoint}`;
-      const response = await axios.post(url, {
-        jsonrpc:"2.0",
-        id: this.id,
-        method: "getNftEditions",
-        params: params,
-      }, {
-        headers: { "Content-Type": "application/json" },
-      });
+      const response = await axios.post(
+        url,
+        {
+          jsonrpc: '2.0',
+          id: this.id,
+          method: 'getNftEditions',
+          params: params,
+        },
+        {
+          headers: { 'Content-Type': 'application/json' },
+        }
+      );
 
       return response.data.result as DAS.GetNftEditionsResponse;
     } catch (error) {
@@ -877,18 +971,22 @@ export class RpcClient {
   ): Promise<DAS.GetTokenAccountsResponse> {
     try {
       const url = `${this.connection.rpcEndpoint}`;
-      const response = await axios.post(url, {
-        jsonrpc: "2.0",
-        id: this.id,
-        method: "getTokenAccounts",
-        params: params,
-      }, {
-        headers: { "Content-Type": "application/json" },
-      });
+      const response = await axios.post(
+        url,
+        {
+          jsonrpc: '2.0',
+          id: this.id,
+          method: 'getTokenAccounts',
+          params: params,
+        },
+        {
+          headers: { 'Content-Type': 'application/json' },
+        }
+      );
 
       return response.data.result as DAS.GetTokenAccountsResponse;
     } catch (error) {
-      throw new Error(`Error in getTokenAccounts: ${error}`)
+      throw new Error(`Error in getTokenAccounts: ${error}`);
     }
   }
 }

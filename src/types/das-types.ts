@@ -8,8 +8,8 @@ import {
   OwnershipModel,
   RoyaltyModel,
   UseMethods,
-} from "./enums";
-import { FullRwaAccount } from "./types";
+} from './enums';
+import { FullRwaAccount } from './types';
 
 export namespace DAS {
   // getAssetsByOwner //
@@ -38,7 +38,7 @@ export namespace DAS {
   export type GetAssetBatchRequest = {
     ids: Array<string>;
     displayOptions?: GetAssetDisplayOptions;
-  }
+  };
 
   // getAssetsByGroup //
   export type AssetsByGroupRequest = {
@@ -55,31 +55,31 @@ export namespace DAS {
     ids: string[];
   };
 
-// searchAssets
-export interface SearchAssetsRequest {
-  page: number; // starts at 1
-  limit?: number;
-  before?: string;
-  after?: string;
-  creatorAddress?: string;
-  ownerAddress?: string;
-  jsonUri?: string;
-  grouping?: string[];
-  burnt?: boolean;
-  sortBy?: AssetSortingRequest;
-  frozen?: boolean;
-  supplyMint?: string;
-  supply?: number;
-  interface?: string;
-  delegate?: string;
-  ownerType?: OwnershipModel;
-  royaltyAmount?: number;
-  royaltyTarget?: string;
-  royaltyTargetType?: RoyaltyModel;
-  compressible?: boolean;
-  compressed?: boolean;
-  tokenType?: TokenType;
-}
+  // searchAssets
+  export interface SearchAssetsRequest {
+    page: number; // starts at 1
+    limit?: number;
+    before?: string;
+    after?: string;
+    creatorAddress?: string;
+    ownerAddress?: string;
+    jsonUri?: string;
+    grouping?: string[];
+    burnt?: boolean;
+    sortBy?: AssetSortingRequest;
+    frozen?: boolean;
+    supplyMint?: string;
+    supply?: number;
+    interface?: string;
+    delegate?: string;
+    ownerType?: OwnershipModel;
+    royaltyAmount?: number;
+    royaltyTarget?: string;
+    royaltyTargetType?: RoyaltyModel;
+    compressible?: boolean;
+    compressed?: boolean;
+    tokenType?: TokenType;
+  }
 
   // getAssetsByAuthority
   export type AssetsByAuthorityRequest = {
@@ -95,7 +95,6 @@ export interface SearchAssetsRequest {
   export type GetAssetRequest = {
     id: string;
     displayOptions?: GetAssetDisplayOptions;
-
   };
   // getRwaAsset
   export type GetRwaAssetRequest = {
@@ -144,7 +143,7 @@ export interface SearchAssetsRequest {
   };
   // RWA Asset Response
   export type GetRwaAssetResponse = {
-    items: FullRwaAccount
+    items: FullRwaAccount;
   };
   export type GetAssetResponseList = {
     grand_total?: number;
@@ -171,16 +170,16 @@ export interface SearchAssetsRequest {
   // DisplayOptions
 
   export type DisplayOptions = {
-    showUnverifiedCollections?: boolean,
-    showCollectionMetadata?: boolean,
-    showGrandTotal?: boolean
-  }
+    showUnverifiedCollections?: boolean;
+    showCollectionMetadata?: boolean;
+    showGrandTotal?: boolean;
+  };
 
   // Display options for getAssetBatch do not include grand_total.
   export type GetAssetDisplayOptions = {
-    showUnverifiedCollections?: boolean,
-    showCollectionMetadata?: boolean,
-  }
+    showUnverifiedCollections?: boolean;
+    showCollectionMetadata?: boolean;
+  };
 
   // Ownership --
   export interface Ownership {
@@ -223,7 +222,6 @@ export interface SearchAssetsRequest {
     group_value: string;
     verified?: boolean;
     collection_metadata?: CollectionMetadata;
-
   }
   export interface CollectionMetadata {
     name?: string;
@@ -231,7 +229,6 @@ export interface SearchAssetsRequest {
     image?: string;
     description?: string;
     external_url?: string;
-
   }
   // Authorities --
   export interface Authorities {
@@ -295,14 +292,14 @@ export interface SearchAssetsRequest {
     seq: number;
     leaf_id: number;
   }
-  
+
   // Get NFT Editions
   export interface Editions {
     mint?: string;
     edition_address?: string;
     edition?: number;
   }
-  
+
   export interface GetNftEditionsRequest {
     mint?: string;
     page?: number;
@@ -339,7 +336,7 @@ export interface SearchAssetsRequest {
     after?: string;
     options?: {
       showZeroBalance?: boolean;
-    }
+    };
   }
 
   export interface GetTokenAccountsResponse {
@@ -350,7 +347,13 @@ export interface SearchAssetsRequest {
     token_accounts?: TokenAccounts[];
   }
 
-  export type TokenType = "Fungible" | "NonFungible" | "CompressedNft" | "RegularNft" | "All" | (string & {});
+  export type TokenType =
+    | 'Fungible'
+    | 'NonFungible'
+    | 'CompressedNft'
+    | 'RegularNft'
+    | 'All'
+    | (string & {});
 
   export interface MintExtensions {
     confidential_transfer_mint?: ConfidentialTransferMint;
@@ -365,56 +368,56 @@ export interface SearchAssetsRequest {
     confidential_transfer_account?: ConfidentialTransferAccount;
     metadata?: MintExtensionMetadata;
   }
-  
+
   export interface ConfidentialTransferMint {
     authority: string;
     auto_approve_new_accounts: boolean;
     auditor_elgamal_pubkey: string;
   }
-  
+
   export interface ConfidentialTransferFeeConfig {
     authority: string;
     withdraw_withheld_authority_elgamal_pubkey: string;
     harvest_to_mint_enabled: boolean;
     withheld_amount: string;
   }
-  
+
   export interface TransferFeeConfig {
     transfer_fee_config_authority: string;
     withdraw_withheld_authority: string;
     withheld_amount: number;
     older_transfer_fee: OlderTransferFee;
-    newer_transfer_fee: NewTransferFee; 
+    newer_transfer_fee: NewTransferFee;
   }
-  
+
   export interface OlderTransferFee {
     epoch: string;
     maximum_fee: string;
     transfer_fee_basis_points: string;
   }
-  
+
   export interface NewTransferFee {
     epoch: string;
   }
-  
+
   export interface MetadataPointer {
     authority: string;
     metadata_address: string;
   }
-  
+
   export interface MintCloseAuthority {
     close_authority: string;
   }
-  
+
   export interface PermanentDelegate {
     delegate: string;
   }
-  
+
   export interface TransferHook {
     authority: string;
     programId: string;
   }
-  
+
   export interface InterestBearingConfig {
     rate_authority: string;
     initialization_timestamp: number;
@@ -422,11 +425,11 @@ export interface SearchAssetsRequest {
     last_update_timestamp: number;
     current_rate: number;
   }
-  
+
   export interface DefaultAccountState {
     state: string;
   }
-  
+
   export interface ConfidentialTransferAccount {
     approved: boolean;
     elgamal_pubkey: string;
@@ -441,7 +444,7 @@ export interface SearchAssetsRequest {
     expected_pending_balance_credit_counter: number;
     actual_pending_balance_credit_counter: number;
   }
-  
+
   export interface MintExtensionMetadata {
     updateAuthority: string;
     mint: string;
@@ -450,7 +453,7 @@ export interface SearchAssetsRequest {
     uri: string;
     additionalMetadata: AdditionalMetadata;
   }
-  
+
   export interface AdditionalMetadata {
     key: string;
     value: string;
@@ -467,7 +470,7 @@ export interface SearchAssetsRequest {
     mint_authority?: string;
     freeze_authority?: string;
   }
-  
+
   export interface PriceInfo {
     price_per_token: number;
     currency: string;
