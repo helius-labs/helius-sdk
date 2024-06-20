@@ -511,14 +511,14 @@ export class RpcClient {
    * @param {Signer[]} signers - The transaction's signers. The first signer should be the fee payer
    * @param {AddressLookupTableAccount[]} lookupTables - The lookup tables to be included in a versioned transaction. Defaults to `[]`
    * @param {Signer} feePayer - Optional fee payer separate from the signers
-   * @returns {Promise<TransactionSignature>} - The transaction signature
+   * @returns {Promise<{ smartTransaction: Transaction | VersionedTransaction, lastValidBlockHeight: number }>} - The transaction and the last valid block height
   */
   async createSmartTransaction(
     instructions: TransactionInstruction[],
     signers: Signer[],
     lookupTables: AddressLookupTableAccount[] = [],
     feePayer?: Signer,
-  ) {
+  ): Promise<{ smartTransaction: Transaction | VersionedTransaction, lastValidBlockHeight: number }> {
     if (!signers.length) {
       throw new Error("The transaction must have at least one signer");
     }
@@ -534,7 +534,7 @@ export class RpcClient {
 
     // For building the transaction
     const payerKey = feePayer ? feePayer.publicKey : signers[0].publicKey;
-    let recentBlockhash = (await this.connection.getLatestBlockhash()).blockhash;
+    let { blockhash: recentBlockhash, lastValidBlockHeight } = await this.connection.getLatestBlockhash();
 
     // Determine if we need to use a versioned transaction
     const isVersioned = lookupTables.length > 0;
@@ -622,7 +622,7 @@ export class RpcClient {
       const allSigners = feePayer ? [...signers, feePayer] : signers;
       versionedTransaction.sign(allSigners);
 
-      return versionedTransaction;
+      return { smartTransaction: versionedTransaction, lastValidBlockHeight };
     } else {
       legacyTransaction = new Transaction().add(...instructions);
       legacyTransaction.recentBlockhash = recentBlockhash;
@@ -636,7 +636,7 @@ export class RpcClient {
         legacyTransaction.partialSign(feePayer);
       }
 
-      return legacyTransaction;
+      return { smartTransaction: legacyTransaction, lastValidBlockHeight };
     }
   }
   
@@ -656,14 +656,14 @@ export class RpcClient {
   ): Promise<TransactionSignature> {
     try {
       // Create a smart transaction
-      const transaction = await this.createSmartTransaction(instructions, signers, lookupTables, sendOptions.feePayer);
-  
+      const { smartTransaction: transaction, lastValidBlockHeight } = await this.createSmartTransaction(instructions, signers, lookupTables, sendOptions.feePayer);
+
       // Timeout of 60s. The transaction will be routed through our staked connections and should be confirmed by then
       const timeout = 60000;
       const startTime = Date.now();
       let txtSig;
   
-      while (Date.now() - startTime < timeout) {
+      while (Date.now() - startTime < timeout || (await this.connection.getBlockHeight()) <= lastValidBlockHeight) {
         try {
           txtSig = await this.connection.sendRawTransaction(transaction.serialize(), {
             skipPreflight: sendOptions.skipPreflight,
@@ -679,7 +679,7 @@ export class RpcClient {
       throw new Error(`Error sending smart transaction: ${error}`);
     }
   
-    throw new Error("Transaction failed to confirm in 60s");
+    throw new Error("Transaction failed to confirm within lastValidBlockHeight");
   }
 
   /**
@@ -711,7 +711,7 @@ export class RpcClient {
    * @param {AddressLookupTableAccount[]} lookupTables - The lookup tables to be included. Defaults to `[]`
    * @param {number} tipAmount - The amount of lamports to tip. Defaults to 1000
    * @param {Signer} feePayer - Optional fee payer separate from the signers
-   * @returns {Promise<string>} - The serialized transaction
+   * @returns {Promise<{ serializedTransaction: string, lastValidBlockHeight: number }>} - The serialized transaction
    */
   async createSmartTransactionWithTip(
     instructions: TransactionInstruction[],
@@ -719,7 +719,7 @@ export class RpcClient {
     lookupTables: AddressLookupTableAccount[] = [],
     tipAmount: number = 1000,
     feePayer?: Signer,
-  ): Promise<string> {
+  ): Promise<{ serializedTransaction: string, lastValidBlockHeight: number }> {
     if (!signers.length) {
       throw new Error("The transaction must have at least one signer");
     }
@@ -731,17 +731,10 @@ export class RpcClient {
     const payerKey = feePayer ? feePayer.publicKey : signers[0].publicKey;
     this.addTipInstruction(instructions, payerKey, randomTipAccount, tipAmount);
 
-    // Create the smart transaction based on whether a separate fee payer was provided
-    let smartTransaction;
-    
-    if (feePayer) {
-      smartTransaction = await this.createSmartTransaction(instructions, signers, lookupTables, feePayer);
-    } else {
-      smartTransaction = await this.createSmartTransaction(instructions, signers, lookupTables);
-    }
+    const { smartTransaction, lastValidBlockHeight } = await this.createSmartTransaction(instructions, signers, lookupTables, feePayer);
 
     // Return the serialized transaction
-    return bs58.encode(smartTransaction.serialize());
+    return { serializedTransaction: bs58.encode(smartTransaction.serialize()), lastValidBlockHeight };
   }
 
   /**
@@ -818,15 +811,8 @@ export class RpcClient {
       throw new Error("The transaction must have at least one signer");
     }
 
-    // Create the smart transaction with tip based on whether a separate fee payer was provided
-    let serializedTransaction;
-    
-    if (feePayer) {
-      serializedTransaction = await this.createSmartTransactionWithTip(instructions, signers, lookupTables, tipAmount, feePayer);
-    } else {
-      serializedTransaction = await this.createSmartTransactionWithTip(instructions, signers, lookupTables, tipAmount);
-    }
-    
+    // Create the smart transaction with tip based 
+    let { serializedTransaction, lastValidBlockHeight } = await this.createSmartTransactionWithTip(instructions, signers, lookupTables, tipAmount, feePayer);
 
     // Get the Jito API URL for the specified region
     const jitoApiUrl = JITO_API_URLS[region] + "/api/v1/bundles";
@@ -839,7 +825,7 @@ export class RpcClient {
     const interval = 5000 // 5 second interval
     const startTime = Date.now();
 
-    while (Date.now() - startTime < timeout) {
+    while (Date.now() - startTime < timeout || (await this.connection.getBlockHeight()) <= lastValidBlockHeight) {
       const bundleStatuses = await this.getBundleStatuses([bundleId], jitoApiUrl);
 
       if (bundleStatuses && bundleStatuses.value && bundleStatuses.value.length > 0) {
