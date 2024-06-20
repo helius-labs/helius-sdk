@@ -711,7 +711,7 @@ export class RpcClient {
    * @param {AddressLookupTableAccount[]} lookupTables - The lookup tables to be included. Defaults to `[]`
    * @param {number} tipAmount - The amount of lamports to tip. Defaults to 1000
    * @param {Signer} feePayer - Optional fee payer separate from the signers
-   * @returns {Promise<string>} - The serialized transaction
+   * @returns {Promise<{ serializedTransaction: string, lastValidBlockHeight: number }>} - The serialized transaction
    */
   async createSmartTransactionWithTip(
     instructions: TransactionInstruction[],
@@ -719,7 +719,7 @@ export class RpcClient {
     lookupTables: AddressLookupTableAccount[] = [],
     tipAmount: number = 1000,
     feePayer?: Signer,
-  ): Promise<string> {
+  ): Promise<{ serializedTransaction: string, lastValidBlockHeight: number }> {
     if (!signers.length) {
       throw new Error("The transaction must have at least one signer");
     }
@@ -731,10 +731,10 @@ export class RpcClient {
     const payerKey = feePayer ? feePayer.publicKey : signers[0].publicKey;
     this.addTipInstruction(instructions, payerKey, randomTipAccount, tipAmount);
 
-    const { smartTransaction } = await this.createSmartTransaction(instructions, signers, lookupTables, feePayer);
+    const { smartTransaction, lastValidBlockHeight } = await this.createSmartTransaction(instructions, signers, lookupTables, feePayer);
 
     // Return the serialized transaction
-    return bs58.encode(smartTransaction.serialize());
+    return { serializedTransaction: bs58.encode(smartTransaction.serialize()), lastValidBlockHeight };
   }
 
   /**
@@ -811,15 +811,8 @@ export class RpcClient {
       throw new Error("The transaction must have at least one signer");
     }
 
-    // Create the smart transaction with tip based on whether a separate fee payer was provided
-    let serializedTransaction;
-    
-    if (feePayer) {
-      serializedTransaction = await this.createSmartTransactionWithTip(instructions, signers, lookupTables, tipAmount, feePayer);
-    } else {
-      serializedTransaction = await this.createSmartTransactionWithTip(instructions, signers, lookupTables, tipAmount);
-    }
-    
+    // Create the smart transaction with tip based 
+    let { serializedTransaction, lastValidBlockHeight } = await this.createSmartTransactionWithTip(instructions, signers, lookupTables, tipAmount, feePayer);
 
     // Get the Jito API URL for the specified region
     const jitoApiUrl = JITO_API_URLS[region] + "/api/v1/bundles";
@@ -832,7 +825,7 @@ export class RpcClient {
     const interval = 5000 // 5 second interval
     const startTime = Date.now();
 
-    while (Date.now() - startTime < timeout) {
+    while (Date.now() - startTime < timeout || (await this.connection.getBlockHeight()) <= lastValidBlockHeight) {
       const bundleStatuses = await this.getBundleStatuses([bundleId], jitoApiUrl);
 
       if (bundleStatuses && bundleStatuses.value && bundleStatuses.value.length > 0) {
