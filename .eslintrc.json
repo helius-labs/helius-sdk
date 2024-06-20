@@ -5,6 +5,7 @@
     },
     "extends": [
         "airbnb-base",
+        "prettier",
         "prettier/@typescript-eslint"
     ],
     "globals": {
@@ -17,7 +18,10 @@
         "sourceType": "module"
     },
     "plugins": [
-        "@typescript-eslint"
+        "@typescript-eslint",
+        "prettier"
     ],
-    "rules": {}
+    "rules": {
+        "prettier/prettier": "error"
+    }
 }
