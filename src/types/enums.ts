@@ -515,6 +515,7 @@ export enum Interface {
   EXECUTABLE = "Executable",
   PROGRAMMABLENFT = "ProgrammableNFT",
   FUNGIBLE_TOKEN = "FungibleToken",
+  MPL_CORE_ASSET = "MplCoreAsset",
 }
 
 export enum OwnershipModel {
