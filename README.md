@@ -122,9 +122,11 @@ Provides methods for setting up, editing, and managing webhooks, crucial for lis
 - [`sendSmartTransaction()`](#sendSmartTransaction): Builds and sends an optimized transaction
 
 [**Jito Smart Transactions and Helper Methods**]()
-- [`addTipInstruction`](#addTipInstruction): Adds a tip instruction as the last instruction given the provided instructions
-- [`createSmartTransactionWithTip()`](#createSmartTransactionWithTip):
-- [`sendSmartTransactionWithTip()`](#sendSmartTransactionWithTip):
+- [`addTipInstruction()`](#addTipInstruction): Adds a tip instruction as the last instruction given the provided instructions
+- [`createSmartTransactionWithTip()`](#createSmartTransactionWithTip): Creates a smart transaction with a Jito tip
+- [`getBundleStatuses()`](#getBundleStatuses): Gets the status of the provided bundles
+- [`sendJitoBundle()`](#sendJitoBundle): Sends a bundle of transactions to the Jito Block Engine
+- [`sendSmartTransactionWithTip()`](#sendSmartTransactionWithTip): Sends a smart transaction as a Jito bundle with a tip
 
 [**Helper methods**](#helper-methods)
 
