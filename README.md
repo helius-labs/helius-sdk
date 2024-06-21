@@ -667,7 +667,7 @@ console.log(response);
 ```
 
 ### sendSmartTransaction()
-This method builds and sends an optimized transaction, while handling its confirmation status. Whether the transaction skips preflight checks and how many times it is retried is configurable by the user. The following code snippet is an example of sending 0.5 SOL to a given public key, with an optimize transaction that skips preflight checks and retries twice, if necessary
+This method builds and sends an optimized transaction, while handling its confirmation status. Whether the transaction skips preflight checks and how many times it is retried is configurable by the user. The following code snippet is an example of sending 0.5 SOL to a given public key, with an optimize transaction that skips preflight checks:
 
 ```ts
 import { Helius } from "helius-sdk";
@@ -697,9 +697,48 @@ console.log(`Successful transfer: ${transactionSignature}`);
 ```
 
 ### createSmartTransaction()
-The smart transaction creation functionality has been abstracted out of `sendSmartTransaction` and is available with the `createSmartTransaction()` method. It can be called using the exact same parameters as `sendSmartTransaction` and will return either an optimized `Transaction` or `VersionedTransaction`:
+The smart transaction creation functionality has been abstracted out of `sendSmartTransaction` and is available with the `createSmartTransaction()` method. It takes in an array of instructions, signers, lookup tables, and an optional fee payer. It returns an object containing the smart transaction (i.e., `Transaction | VersionedTransaction`) as well as the `lastValidBlockHeight`:
+
 ```ts
-const transaction = await this.createSmartTransaction(instructions, signers, lookupTables, sendOptions);
+const { smartTransaction: transaction, lastValidBlockHeight } = await this.createSmartTransaction(instructions, signers, lookupTables, feePayer);
+```
+
+### sendSmartTransactionWithTip()
+This method has the same functionality as `sendSmartTransaction`. However, it sends the optimized transaction as a bundle and includes a tip so it is processed by Jito's Block Engine. The following code snippet sends 0.05 SOL to a given public key with a Jito tip of 100k lamports using Jito's New York API URL:
+
+```ts
+import { Helius } from "helius-sdk";
+import {
+  Keypair,
+  SystemProgram,
+  LAMPORTS_PER_SOL,
+  TransactionInstruction,
+} from "@solana/web3.js";
+
+const helius = new Helius("YOUR_API_KEY");
+
+const fromKeypair = /* Your keypair goes here */;
+const fromPubkey = fromKeypair.publicKey;
+const toPubkey = /* The person we're sending 0.05 SOL to */;
+
+const instructions: TransactionInstruction[] = [
+  SystemProgram.transfer({
+    fromPubkey: fromPubkey,
+    toPubkey: toPubkey,
+    lamports: 0.05 * LAMPORTS_PER_SOL, 
+  }),
+];
+
+// Call the sendSmartTransactionWithTip function
+const bundleId = await helius.rpc.sendSmartTransactionWithTip(instructions, [keypair], address_lut, 100000, "NY");
+console.log(`Bundle sent successfully with ID: ${bundleId}`);
+```
+
+### createSmartTransactionWithTip()
+Similarly to `createSmartTransaction`, the smart transaction creation functionality for smart transactions with tips has been abstracted out of `sendSmartTransactionWithTip` and is available with the `createSmartTransactionWithTip` method. It takes in an array of instructions, signers, lookup tables, as well as a tip amount and an optional fee payer. The tip amount defaults to 1000 lamports — the minimum specified in [Jito's documentation](https://jito-labs.gitbook.io/mev/searcher-resources/bundles#tip-guidelines). It returns the serialized transaction as a string, and the `lastValidBlockHeight`. The reason we return the transaction as a string is because the `sendJitoBundle` method requires a serialzied transaction:
+
+```ts
+const { serializedTransaction, lastValidBlockHeight } = await this.createSmartTransactionWithTip(instructions, signers, lookupTables, tipAmount, feePayer);
 ```
 
 ## helius.connection
