@@ -1,4 +1,4 @@
-import type { Cluster, Keypair, TransactionError } from "@solana/web3.js";
+import type { Cluster, Keypair, TransactionError } from '@solana/web3.js';
 
 import type {
   WebhookType,
@@ -11,9 +11,9 @@ import type {
   AccountWebhookEncoding,
   PriorityLevel,
   UiTransactionEncoding,
-} from "./enums";
+} from './enums';
 
-export type HeliusCluster = Omit<Cluster, "testnet">;
+export type HeliusCluster = Omit<Cluster, 'testnet'>;
 
 export interface HeliusEndpoints {
   api: string;
@@ -46,10 +46,10 @@ export type CollectionIdentifier = {
 
 export type CreateWebhookRequest = Omit<
   Webhook,
-  "webhookID" | "wallet" | "project"
+  'webhookID' | 'wallet' | 'project'
 >;
 export type EditWebhookRequest = Partial<
-  Omit<Webhook, "webhookID" | "wallet" | "project">
+  Omit<Webhook, 'webhookID' | 'wallet' | 'project'>
 >;
 
 export interface CreateCollectionWebhookRequest extends CreateWebhookRequest {
@@ -345,7 +345,7 @@ export interface MicroLamportPriorityFeeLevels {
 
 export interface GetPriorityFeeEstimateResponse {
   priorityFeeEstimate?: number;
-  priorityFeeLevels?: MicroLamportPriorityFeeLevels; 
+  priorityFeeLevels?: MicroLamportPriorityFeeLevels;
 }
 
-export type JitoRegion = "Default" | "NY" | "Amsterdam" | "Frankfurt" | "Tokyo";
+export type JitoRegion = 'Default' | 'NY' | 'Amsterdam' | 'Frankfurt' | 'Tokyo';

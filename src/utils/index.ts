@@ -1,1 +1,1 @@
-export * from "./get-helius-endpoints";
+export * from './get-helius-endpoints';

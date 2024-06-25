@@ -13,27 +13,27 @@ import {
   RevokeCollectionAuthorityRequest,
   HeliusCluster,
   HeliusEndpoints,
-} from "./types";
+} from './types';
 
-import axios, { type AxiosError } from "axios";
+import axios, { type AxiosError } from 'axios';
 import {
   Connection,
   PublicKey,
   Transaction,
   sendAndConfirmTransaction,
-} from "@solana/web3.js";
-import Irys from "@irys/sdk";
-import * as fs from "fs";
-import { getHeliusEndpoints } from "./utils";
-import { RpcClient } from "./RpcClient";
+} from '@solana/web3.js';
+import Irys from '@irys/sdk';
+import * as fs from 'fs';
+import { getHeliusEndpoints } from './utils';
+import { RpcClient } from './RpcClient';
 import {
   ApproveCollectionAuthorityInstructionAccounts,
   RevokeCollectionAuthorityInstructionAccounts,
   PROGRAM_ID as TOKEN_METADATA_PROGRAM_ID,
   createApproveCollectionAuthorityInstruction,
   createRevokeCollectionAuthorityInstruction,
-} from "@metaplex-foundation/mpl-token-metadata";
-import { mintApiAuthority } from "./utils/mintApi";
+} from '@metaplex-foundation/mpl-token-metadata';
+import { mintApiAuthority } from './utils/mintApi';
 
 /**
  * This is the base level class for interfacing with all Helius API methods.
@@ -72,20 +72,22 @@ export class Helius {
    */
   constructor(
     apiKey: string,
-    cluster: HeliusCluster = "mainnet-beta",
-    id: string = "helius-sdk",
-    url: string = "",
+    cluster: HeliusCluster = 'mainnet-beta',
+    id: string = 'helius-sdk',
+    url: string = ''
   ) {
     this.cluster = cluster;
     this.endpoints = getHeliusEndpoints(cluster);
 
-    if (apiKey !== "") {
+    if (apiKey !== '') {
       this.apiKey = apiKey;
-      this.connection = new Connection(`${this.endpoints.rpc}?api-key=${apiKey}`);
-    } else if (url !== "") {
+      this.connection = new Connection(
+        `${this.endpoints.rpc}?api-key=${apiKey}`
+      );
+    } else if (url !== '') {
       this.connection = new Connection(url);
     } else {
-      throw Error("either `apiKey` or `url` is required");
+      throw Error('either `apiKey` or `url` is required');
     }
 
     this.endpoint = this.connection.rpcEndpoint;
@@ -99,9 +101,7 @@ export class Helius {
    */
   async getAllWebhooks(): Promise<Webhook[]> {
     try {
-      const { data } = await axios.get(
-        this.getApiEndpoint(`/v0/webhooks`)
-      );
+      const { data } = await axios.get(this.getApiEndpoint(`/v0/webhooks`));
       return data;
     } catch (err: any | AxiosError) {
       if (axios.isAxiosError(err)) {
@@ -147,10 +147,9 @@ export class Helius {
     createWebhookRequest: CreateWebhookRequest
   ): Promise<Webhook> {
     try {
-      const { data } = await axios.post(
-        this.getApiEndpoint(`/v0/webhooks`),
-        { ...createWebhookRequest }
-      );
+      const { data } = await axios.post(this.getApiEndpoint(`/v0/webhooks`), {
+        ...createWebhookRequest,
+      });
       return data;
     } catch (err: any | AxiosError) {
       if (axios.isAxiosError(err)) {
@@ -171,9 +170,7 @@ export class Helius {
    */
   async deleteWebhook(webhookID: string): Promise<boolean> {
     try {
-      await axios.delete(
-        this.getApiEndpoint(`/v0/webhooks/${webhookID}`)
-      );
+      await axios.delete(this.getApiEndpoint(`/v0/webhooks/${webhookID}`));
       return true;
     } catch (err: any | AxiosError) {
       if (axios.isAxiosError(err)) {
@@ -261,7 +258,7 @@ export class Helius {
       const webhook = await this.getWebhookByID(webhookID);
       // Filter out the addresses to be removed
       const accountAddresses = webhook.accountAddresses.filter(
-        address => !addressesToRemove.includes(address)
+        (address) => !addressesToRemove.includes(address)
       );
       const editRequest: EditWebhookRequest = { accountAddresses };
       return this._editWebhook(webhookID, webhook, editRequest);
@@ -333,10 +330,10 @@ export class Helius {
         transactionTypes,
       };
       if (authHeader) {
-        payload["authHeader"] = authHeader;
+        payload['authHeader'] = authHeader;
       }
       if (webhookType) {
-        payload["webhookType"] = webhookType;
+        payload['webhookType'] = webhookType;
       }
 
       return await this.createWebhook({ ...payload });
@@ -370,10 +367,9 @@ export class Helius {
     }
 
     try {
-      const { data } = await axios.post(
-        this.getApiEndpoint(`/v1/mintlist`),
-        { ...request }
-      );
+      const { data } = await axios.post(this.getApiEndpoint(`/v1/mintlist`), {
+        ...request,
+      });
       return data;
     } catch (err: any | AxiosError) {
       if (axios.isAxiosError(err)) {
@@ -397,9 +393,9 @@ export class Helius {
     await this.handleImageUpload(mintApiRequest);
     try {
       const { data } = await axios.post(this.endpoint, {
-        jsonrpc: "2.0",
-        id: "helius-test",
-        method: "mintCompressedNft",
+        jsonrpc: '2.0',
+        id: 'helius-test',
+        method: 'mintCompressedNft',
         params: { ...mintApiRequest },
       });
       return data;
@@ -465,13 +461,13 @@ export class Helius {
         tx,
         [payerKeypair, updateAuthorityKeypair],
         {
-          commitment: "confirmed",
+          commitment: 'confirmed',
           skipPreflight: true,
         }
       );
       return sig;
     } catch (e) {
-      console.error("Failed to delegate collection authority: ", e);
+      console.error('Failed to delegate collection authority: ', e);
       throw e;
     }
   }
@@ -523,13 +519,13 @@ export class Helius {
         tx,
         [revokeAuthorityKeypair],
         {
-          commitment: "confirmed",
+          commitment: 'confirmed',
           skipPreflight: true,
         }
       );
       return sig;
     } catch (e) {
-      console.error("Failed to revoke collection authority: ", e);
+      console.error('Failed to revoke collection authority: ', e);
       throw e;
     }
   }
@@ -543,11 +539,13 @@ export class Helius {
   getApiEndpoint(path: string): string {
     // Check if the path starts with '/v0' or '/v1'
     if (!path.startsWith('/v0') && !path.startsWith('/v1')) {
-        throw new Error(`Invalid API path provided: ${path}. Path must start with '/v0' or '/v1'.`);
+      throw new Error(
+        `Invalid API path provided: ${path}. Path must start with '/v0' or '/v1'.`
+      );
     }
 
     if (!this.apiKey) {
-        throw new Error(`API key is not set`);
+      throw new Error(`API key is not set`);
     }
 
     // Construct and return the full API endpoint URL
@@ -585,12 +583,12 @@ export class Helius {
   private async handleImageUpload(mintApiRequest: MintApiRequest) {
     if (mintApiRequest.imagePath && mintApiRequest.imageUrl) {
       throw new Error(
-        "Cannot provide both imagePath and imageUrl. Please only provide one."
+        'Cannot provide both imagePath and imageUrl. Please only provide one.'
       );
     }
 
     if (mintApiRequest.imagePath && !mintApiRequest.walletPrivateKey) {
-      throw new Error("Must provide wallet privateKey if providing imagePath.");
+      throw new Error('Must provide wallet privateKey if providing imagePath.');
     }
 
     if (mintApiRequest.imagePath && mintApiRequest.walletPrivateKey) {
@@ -606,10 +604,10 @@ export class Helius {
   private async uploadImageToArweave(imagePath: string, privateKey: string) {
     const irys = new Irys({
       url:
-        this.cluster === "mainnet-beta"
-          ? "https://node2.irys.xyz"
-          : "https://devnet.irys.xyz",
-      token: "solana",
+        this.cluster === 'mainnet-beta'
+          ? 'https://node2.irys.xyz'
+          : 'https://devnet.irys.xyz',
+      token: 'solana',
       key: privateKey,
       config: {
         providerUrl: this.endpoint,
@@ -619,7 +617,7 @@ export class Helius {
     const stats = fs.statSync(imagePath);
     const fileSizeInBytes = stats.size;
     const fileSizeInKB = fileSizeInBytes / 1000;
-    if (this.cluster === "devnet" || fileSizeInKB >= 200) {
+    if (this.cluster === 'devnet' || fileSizeInKB >= 200) {
       // Uploads on node2 (mainnet) are free for files under 200KB
       const price = await irys.getPrice(fileSizeInBytes);
       await irys.fund(price, 1.1);
@@ -639,10 +637,10 @@ export class Helius {
   ) {
     const [collectionAuthRecordPda] = PublicKey.findProgramAddressSync(
       [
-        Buffer.from("metadata"),
+        Buffer.from('metadata'),
         TOKEN_METADATA_PROGRAM_ID.toBuffer(),
         collectionMint.toBuffer(),
-        Buffer.from("collection_authority"),
+        Buffer.from('collection_authority'),
         collectionAuthority.toBuffer(),
       ],
       TOKEN_METADATA_PROGRAM_ID
@@ -653,7 +651,7 @@ export class Helius {
   private getCollectionMetadataAccount(collectionMint: PublicKey) {
     const [collectionMetadataAccount] = PublicKey.findProgramAddressSync(
       [
-        Buffer.from("metadata", "utf8"),
+        Buffer.from('metadata', 'utf8'),
         TOKEN_METADATA_PROGRAM_ID.toBuffer(),
         collectionMint.toBuffer(),
       ],
