@@ -115,6 +115,19 @@ Provides methods for setting up, editing, and managing webhooks, crucial for lis
 - [`getAllWebhooks()`](#getAllWebhooks): Retrieves a list of all webhooks.
 - [`createCollectionWebhook()`](#createCollectionWebhook) Create a new collection webhook with the provided request.
 
+[**Smart Transactions**](https://docs.helius.dev/solana-rpc-nodes/sending-transactions-on-solana#sending-smart-transactions)
+- [`createSmartTransaction()`](#createSmartTransaction): Creates a smart transaction with the provided configuration
+- [`getComputeUnits()`](#getComputeUnits): Simulates a transaction to get the total compute units consumed
+- [`pollTransactionConfirmation()`](#pollTransactionConfirmation): Polls a transaction to check whether it has been confirmed
+- [`sendSmartTransaction()`](#sendSmartTransaction): Builds and sends an optimized transaction
+
+[**Jito Smart Transactions and Helper Methods**]()
+- [`addTipInstruction()`](#addTipInstruction): Adds a tip instruction as the last instruction given the provided instructions
+- [`createSmartTransactionWithTip()`](#createSmartTransactionWithTip): Creates a smart transaction with a Jito tip
+- [`getBundleStatuses()`](#getBundleStatuses): Gets the status of the provided bundles
+- [`sendJitoBundle()`](#sendJitoBundle): Sends a bundle of transactions to the Jito Block Engine
+- [`sendSmartTransactionWithTip()`](#sendSmartTransactionWithTip): Sends a smart transaction as a Jito bundle with a tip
+
 [**Helper methods**](#helper-methods)
 
 Offers additional tools for various Solana-related tasks like analyzing blockchain throughput and tracking stake accounts and SPL token holders.
@@ -124,7 +137,7 @@ Offers additional tools for various Solana-related tasks like analyzing blockcha
 - [`getStakeAccounts()`](#getStakeAccounts): Returns all the stake accounts for a given public key.
 - [`getTokenHolders()`](#getTokenHolders): Returns all the token accounts for a given mint address (ONLY FOR SPL TOKENS).
 - [`getPriorityFeeEstimate()`](#getPriorityFeeEstimate): Returns an estimated priority fee based on a set of predefined priority levels (percentiles).
-- [`sendSmartTransaction()`](#sendSmartTransaction): Builds and sends an optimized transaction
+
 
 ## DAS API (Digital Asset Standard)
 
@@ -667,7 +680,7 @@ console.log(response);
 ```
 
 ### sendSmartTransaction()
-This method builds and sends an optimized transaction, while handling its confirmation status. Whether the transaction skips preflight checks and how many times it is retried is configurable by the user. The following code snippet is an example of sending 0.5 SOL to a given public key, with an optimize transaction that skips preflight checks and retries twice, if necessary
+This method builds and sends an optimized transaction, while handling its confirmation status. Whether the transaction skips preflight checks and how many times it is retried is configurable by the user. The following code snippet is an example of sending 0.5 SOL to a given public key, with an optimize transaction that skips preflight checks:
 
 ```ts
 import { Helius } from "helius-sdk";
@@ -697,9 +710,94 @@ console.log(`Successful transfer: ${transactionSignature}`);
 ```
 
 ### createSmartTransaction()
-The smart transaction creation functionality has been abstracted out of `sendSmartTransaction` and is available with the `createSmartTransaction()` method. It can be called using the exact same parameters as `sendSmartTransaction` and will return either an optimized `Transaction` or `VersionedTransaction`:
+The smart transaction creation functionality has been abstracted out of `sendSmartTransaction` and is available with the `createSmartTransaction()` method. It takes in an array of instructions, signers, lookup tables, and an optional fee payer. It returns an object containing the smart transaction (i.e., `Transaction | VersionedTransaction`) as well as the `lastValidBlockHeight`:
+
 ```ts
-const transaction = await this.createSmartTransaction(instructions, signers, lookupTables, sendOptions);
+const { smartTransaction: transaction, lastValidBlockHeight } = await helius.rpc.createSmartTransaction(instructions, signers, lookupTables, feePayer);
+```
+
+### getComputeUnits()
+This method simulates a transaction to get the total compute units consumed. It takes in an array of instructions, a fee payer, and an array of lookup tables. It returns the compute units consumed, or null if unsuccessful:
+
+```ts
+const units = helius.rpc.getComputeUnits(instructions, payerKey, []);
+```
+
+### pollTransactionConfirmation()
+This method polls a transaction to check whether it has been confirmed. It takes in a `TransactionSignature` and checks whether it has been confirmed within the timeout period. Currently, this method has a 15 second timeout and a 5 second retry interval, so it polls 3 times over 15 seconds. It returns the confirmed transaction signature or an error if the confirmation times out:
+
+```ts
+let txSig = await helius.connection().sendRawTransaction(transaction.serialize(), {
+  skipPreflight: true,
+  ...sendOptions
+});
+
+return await helius.rpc.pollTransactionConfirmation(txSig);
+```
+
+### sendSmartTransactionWithTip()
+This method has the same functionality as `sendSmartTransaction`. However, it sends the optimized transaction as a bundle and includes a tip so it is processed by Jito's Block Engine. The following code snippet sends 0.05 SOL to a given public key with a Jito tip of 100k lamports using Jito's New York API URL:
+
+```ts
+import { Helius } from "helius-sdk";
+import {
+  Keypair,
+  SystemProgram,
+  LAMPORTS_PER_SOL,
+  TransactionInstruction,
+} from "@solana/web3.js";
+
+const helius = new Helius("YOUR_API_KEY");
+
+const fromKeypair = /* Your keypair goes here */;
+const fromPubkey = fromKeypair.publicKey;
+const toPubkey = /* The person we're sending 0.05 SOL to */;
+
+const instructions: TransactionInstruction[] = [
+  SystemProgram.transfer({
+    fromPubkey: fromPubkey,
+    toPubkey: toPubkey,
+    lamports: 0.05 * LAMPORTS_PER_SOL, 
+  }),
+];
+
+// Call the sendSmartTransactionWithTip function
+const bundleId = await helius.rpc.sendSmartTransactionWithTip(instructions, [keypair], address_lut, 100000, "NY");
+console.log(`Bundle sent successfully with ID: ${bundleId}`);
+```
+
+### createSmartTransactionWithTip()
+Similarly to `createSmartTransaction`, the smart transaction creation functionality for smart transactions with tips has been abstracted out of `sendSmartTransactionWithTip` and is available with the `createSmartTransactionWithTip` method. It takes in an array of instructions, signers, lookup tables, as well as a tip amount and an optional fee payer. The tip amount defaults to 1000 lamports — the minimum specified in [Jito's documentation](https://jito-labs.gitbook.io/mev/searcher-resources/bundles#tip-guidelines). It returns the serialized transaction as a string, and the `lastValidBlockHeight`. The reason we return the transaction as a string is because the `sendJitoBundle` method requires a serialzied transaction:
+
+```ts
+const { serializedTransaction, lastValidBlockHeight } = await this.createSmartTransactionWithTip(instructions, signers, lookupTables, tipAmount, feePayer);
+```
+
+### addTipInstruction()
+This method adds a tip instruction to the last instruction in the set of provided instructions. It is a transfer instruction that sends the specified amount of lamports from the fee payer to the designated tip account.
+
+```ts
+const randomTipAccount = JITO_TIP_ACCOUNTS[Math.floor(Math.random() * JITO_TIP_ACCOUNTS.length)];
+const tipAmount = 10000;
+
+helius.rpc.addTipInstruction(instructions, feePayer, randomTipAccount, tipAmount);
+```
+
+### sendJitoBundle()
+This method sends a bundle of transactions to the Jito Block Engine. It takes in an array of serialized transactions and a Jito Block Engine API URL. It returns the bundle ID as a string.
+
+```ts
+const jitoApiUrl = 'https://mainnet.block-engine.jito.wtf/api/v1/bundles';
+const bundleId = helius.rpc.sendJitoBundle([serializedTransactions], jitoApiUrl);
+```
+
+### getBundleStatuses()
+This method gets the status of Jito bundles. It takes in an array of bundle IDs and a Jito Block Engine API URL. It returns the status of the bundles.
+
+```ts
+const bundleIds = [ /* Bundle IDs */];
+const jitoApiUrl = 'https://mainnet.block-engine.jito.wtf/api/v1/bundles';
+const statuses = helius.rpc.getBundleStatuses(bundleIds, jitoApiUrl);
 ```
 
 ## helius.connection
