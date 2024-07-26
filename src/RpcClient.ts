@@ -742,7 +742,14 @@ export class RpcClient {
 
           const abortSignal = AbortSignal.timeout(15000);
           await this.connection.confirmTransaction(
-            { abortSignal, signature, ...blockhash },
+            {
+              abortSignal,
+              signature,
+              blockhash: blockhash.blockhash,
+              lastValidBlockHeight:
+                blockhash.lastValidBlockHeight +
+                sendOptions.lastValidBlockHeightOffset,
+            },
             commitment
           );
 
@@ -754,12 +761,7 @@ export class RpcClient {
 
           error = _error;
         }
-      } while (
-        !(error instanceof TransactionExpiredBlockheightExceededError) ||
-        (await this.connection.getBlockHeight()) <=
-          blockhash.lastValidBlockHeight +
-            sendOptions.lastValidBlockHeightOffset
-      );
+      } while (!(error instanceof TransactionExpiredBlockheightExceededError));
     } catch (error) {
       throw new Error(`Error sending smart transaction: ${error}`);
     }
