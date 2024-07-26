@@ -726,10 +726,12 @@ export class RpcClient {
 
       let error: Error;
 
-      // We will retry the transaction on TransactionExpiredBlockheightExceededErro
-      // until the set lastValidBlockHeightOffset is reached in case the transaction is
+      // We will retry the transaction on TransactionExpiredBlockheightExceededError
+      // until the lastValidBlockHeightOffset is reached in case the transaction is
       // included after the lastValidBlockHeight due to network latency or
       // to the leader not forwarding the transaction for a unknown reason
+      // Worst case scenario, it'll retry until the lastValidBlockHeightOffset is reached
+      // The tradeoff is better reliability at the cost of a possible longer confirmation time
       do {
         try {
           // signature does not change when it resends the same one
@@ -897,6 +899,7 @@ export class RpcClient {
    * @param {number} tipAmount - The amount of lamports to tip. Defaults to 1000
    * @param {JitoRegion} region - The Jito Block Engine region. Defaults to "Default" (i.e., https://mainnet.block-engine.jito.wtf)
    * @param {Signer} feePayer - Optional fee payer separate from the signers
+   * @param {number} lastValidBlockHeightOffset - The offset to add to lastValidBlockHeight. Defaults to 150
    * @returns {Promise<string>} - The bundle ID
    */
   async sendSmartTransactionWithTip(
@@ -905,8 +908,12 @@ export class RpcClient {
     lookupTables: AddressLookupTableAccount[] = [],
     tipAmount: number = 1000,
     region: JitoRegion = 'Default',
-    feePayer?: Signer
+    feePayer?: Signer,
+    lastValidBlockHeightOffset = 150
   ): Promise<string> {
+    if (lastValidBlockHeightOffset < 0)
+      throw new Error('lastValidBlockHeightOffset must be a positive integer');
+
     if (!signers.length) {
       throw new Error('The transaction must have at least one signer');
     }
@@ -938,7 +945,8 @@ export class RpcClient {
 
     while (
       Date.now() - startTime < timeout ||
-      (await this.connection.getBlockHeight()) <= blockhash.lastValidBlockHeight
+      (await this.connection.getBlockHeight()) <=
+        blockhash.lastValidBlockHeight + lastValidBlockHeightOffset
     ) {
       const bundleStatuses = await this.getBundleStatuses(
         [bundleId],
