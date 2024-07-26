@@ -690,7 +690,7 @@ export class RpcClient {
    * @param {TransactionInstruction[]} instructions - The transaction instructions
    * @param {Signer[]} signers - The transaction's signers. The first signer should be the fee payer
    * @param {AddressLookupTableAccount[]} lookupTables - The lookup tables to be included in a versioned transaction. Defaults to `[]`
-   * @param {SendOptions & { feePayer?: Signer }} sendOptions - Options for sending the transaction, including an optional feePayer. Defaults to `{ skipPreflight: false }`
+   * @param {SendOptions & { feePayer?: Signer; lastValidBlockHeightOffset?: number }} sendOptions - Options for sending the transaction, including an optional feePayer and lastValidBlockHeightOffset. Defaults to `{ skipPreflight: false; lastValidBlockheightOffset: 150 }`
    * @returns {Promise<TransactionSignature>} - The transaction signature
    */
   async sendSmartTransaction(
