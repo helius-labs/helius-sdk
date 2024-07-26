@@ -729,7 +729,7 @@ export class RpcClient {
       // We will retry the transaction on TransactionExpiredBlockheightExceededError
       // until the lastValidBlockHeightOffset is reached in case the transaction is
       // included after the lastValidBlockHeight due to network latency or
-      // to the leader not forwarding the transaction for a unknown reason
+      // to the leader not forwarding the transaction for an unknown reason
       // Worst case scenario, it'll retry until the lastValidBlockHeightOffset is reached
       // The tradeoff is better reliability at the cost of a possible longer confirmation time
       do {
