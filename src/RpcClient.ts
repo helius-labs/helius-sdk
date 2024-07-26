@@ -697,8 +697,14 @@ export class RpcClient {
     instructions: TransactionInstruction[],
     signers: Signer[],
     lookupTables: AddressLookupTableAccount[] = [],
-    sendOptions: SendOptions & { feePayer?: Signer } = { skipPreflight: false }
+    sendOptions: SendOptions & {
+      feePayer?: Signer;
+      lastValidBlockHeightOffset: number;
+    } = { skipPreflight: false, lastValidBlockHeightOffset: 150 }
   ): Promise<TransactionSignature> {
+    if (sendOptions.lastValidBlockHeightOffset < 0)
+      throw new Error('expiryBlockOffset must be a positive integer');
+
     try {
       // Create a smart transaction
       const { txBuff, blockhash, minContextSlot } =
@@ -720,9 +726,10 @@ export class RpcClient {
 
       let error: Error;
 
-      // Instead of polling the current block height, and comparing it to the last valid block height,
-      // we can exit the loop as soon as we get a TransactionExpiredBlockheightExceededError
-      // This is more efficient and less error-prone
+      // We will retry the transaction on TransactionExpiredBlockheightExceededErro
+      // until the set lastValidBlockHeightOffset is reached in case the transaction is
+      // included after the lastValidBlockHeight due to network latency or
+      // to the leader not forwarding the transaction for a unknown reason
       do {
         try {
           // signature does not change when it resends the same one
@@ -745,7 +752,12 @@ export class RpcClient {
 
           error = _error;
         }
-      } while (!(error instanceof TransactionExpiredBlockheightExceededError));
+      } while (
+        !(error instanceof TransactionExpiredBlockheightExceededError) ||
+        (await this.connection.getBlockHeight()) <=
+          blockhash.lastValidBlockHeight +
+            sendOptions.lastValidBlockHeightOffset
+      );
     } catch (error) {
       throw new Error(`Error sending smart transaction: ${error}`);
     }
