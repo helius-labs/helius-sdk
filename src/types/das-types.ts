@@ -348,11 +348,11 @@ export namespace DAS {
   }
 
   export type TokenType =
-    | 'Fungible'
-    | 'NonFungible'
-    | 'CompressedNft'
-    | 'RegularNft'
-    | 'All'
+    | 'fungible'
+    | 'nonFungible'
+    | 'compressedNft'
+    | 'regularNft'
+    | 'all'
     | (string & {});
 
   export interface MintExtensions {
