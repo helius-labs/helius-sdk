@@ -505,17 +505,17 @@ export enum TokenStandard {
 }
 
 export enum Interface {
-  V1NFT = "V1_NFT",
-  CUSTOM = "Custom",
-  V1PRINT = "V1_PRINT",
-  LEGACYNFT = "Legacy_NFT",
-  V2NFT = "V2_NFT",
-  FUNGIBLE_ASSET = "FungibleAsset",
-  IDENTITY = "Identity",
-  EXECUTABLE = "Executable",
-  PROGRAMMABLENFT = "ProgrammableNFT",
-  FUNGIBLE_TOKEN = "FungibleToken",
-  MPL_CORE_ASSET = "MplCoreAsset",
+  V1NFT = 'V1_NFT',
+  CUSTOM = 'Custom',
+  V1PRINT = 'V1_PRINT',
+  LEGACYNFT = 'Legacy_NFT',
+  V2NFT = 'V2_NFT',
+  FUNGIBLE_ASSET = 'FungibleAsset',
+  IDENTITY = 'Identity',
+  EXECUTABLE = 'Executable',
+  PROGRAMMABLENFT = 'ProgrammableNFT',
+  FUNGIBLE_TOKEN = 'FungibleToken',
+  MPL_CORE_ASSET = 'MplCoreAsset',
 }
 
 export enum OwnershipModel {
