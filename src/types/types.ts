@@ -1,4 +1,11 @@
-import type { Cluster, Keypair, TransactionError } from '@solana/web3.js';
+import type {
+  BlockhashWithExpiryBlockHeight,
+  Cluster,
+  Keypair,
+  Transaction,
+  TransactionError,
+  VersionedTransaction,
+} from '@solana/web3.js';
 
 import type {
   WebhookType,
@@ -14,6 +21,12 @@ import type {
 } from './enums';
 
 export type HeliusCluster = Omit<Cluster, 'testnet'>;
+
+export type SmartTransactionContext = {
+  transaction: Transaction | VersionedTransaction;
+  blockhash: BlockhashWithExpiryBlockHeight;
+  minContextSlot: number;
+};
 
 export interface HeliusEndpoints {
   api: string;
