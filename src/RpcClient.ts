@@ -715,14 +715,7 @@ export class RpcClient {
           sendOptions.feePayer
         );
 
-      const recdSendOptions: SendOptions = {
-        maxRetries: 0,
-        preflightCommitment: 'confirmed',
-        skipPreflight: sendOptions.skipPreflight,
-        minContextSlot,
-      };
-      const commitment =
-        sendOptions?.preflightCommitment || recdSendOptions.preflightCommitment;
+      const commitment = sendOptions?.preflightCommitment || 'confirmed';
 
       let error: Error;
 
@@ -738,7 +731,10 @@ export class RpcClient {
           const signature = await this.connection.sendRawTransaction(
             transaction.serialize(),
             {
-              ...recdSendOptions,
+              maxRetries: 0,
+              preflightCommitment: 'confirmed',
+              skipPreflight: sendOptions.skipPreflight,
+              minContextSlot,
               ...sendOptions,
             }
           );
