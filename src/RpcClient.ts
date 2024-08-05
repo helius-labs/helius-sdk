@@ -661,7 +661,7 @@ export class RpcClient {
       versionedTransaction.sign(allSigners);
 
       return {
-        txBuff: versionedTransaction.serialize(),
+        transaction: versionedTransaction,
         blockhash,
         minContextSlot,
       };
@@ -679,7 +679,7 @@ export class RpcClient {
     }
 
     return {
-      txBuff: legacyTransaction.serialize(),
+      transaction: legacyTransaction,
       blockhash,
       minContextSlot,
     };
@@ -707,7 +707,7 @@ export class RpcClient {
 
     try {
       // Create a smart transaction
-      const { txBuff, blockhash, minContextSlot } =
+      const { transaction, blockhash, minContextSlot } =
         await this.createSmartTransaction(
           instructions,
           signers,
@@ -735,10 +735,13 @@ export class RpcClient {
       do {
         try {
           // signature does not change when it resends the same one
-          const signature = await this.connection.sendRawTransaction(txBuff, {
-            ...recdSendOptions,
-            ...sendOptions,
-          });
+          const signature = await this.connection.sendRawTransaction(
+            transaction.serialize(),
+            {
+              ...recdSendOptions,
+              ...sendOptions,
+            }
+          );
 
           const abortSignal = AbortSignal.timeout(15000);
           await this.connection.confirmTransaction(
@@ -921,7 +924,7 @@ export class RpcClient {
     }
 
     // Create the smart transaction with tip based
-    const { txBuff, blockhash } = await this.createSmartTransactionWithTip(
+    const { transaction, blockhash } = await this.createSmartTransactionWithTip(
       instructions,
       signers,
       lookupTables,
@@ -929,7 +932,7 @@ export class RpcClient {
       feePayer
     );
 
-    const serializedTransaction = bs58.encode(txBuff);
+    const serializedTransaction = bs58.encode(transaction.serialize());
 
     // Get the Jito API URL for the specified region
     const jitoApiUrl = `${JITO_API_URLS[region]}/api/v1/bundles`;
