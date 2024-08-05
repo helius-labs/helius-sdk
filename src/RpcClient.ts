@@ -718,7 +718,7 @@ export class RpcClient {
       const recdSendOptions: SendOptions = {
         maxRetries: 0,
         preflightCommitment: 'confirmed',
-        skipPreflight: true,
+        skipPreflight: sendOptions.skipPreflight,
         minContextSlot,
       };
       const commitment =
