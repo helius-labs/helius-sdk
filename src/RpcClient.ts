@@ -600,7 +600,7 @@ export class RpcClient {
     }
 
     // Serialize the transaction
-    let serializedTransaction = bs58.encode(
+    const serializedTransaction = bs58.encode(
       isVersioned
         ? versionedTransaction!.serialize()
         : legacyTransaction!.serialize(serializeOptions)
