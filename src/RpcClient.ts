@@ -19,6 +19,7 @@ import {
   SendOptions,
   Signer,
   SystemProgram,
+  SerializeConfig,
 } from '@solana/web3.js';
 const bs58 = require('bs58');
 import axios from 'axios';
@@ -529,13 +530,15 @@ export class RpcClient {
    * @param {Signer[]} signers - The transaction's signers. The first signer should be the fee payer
    * @param {AddressLookupTableAccount[]} lookupTables - The lookup tables to be included in a versioned transaction. Defaults to `[]`
    * @param {Signer} feePayer - Optional fee payer separate from the signers
+   * @param {SerializeConfig} serializeOptions - Options for transaction serialization. This applies only to legacy transactions. Defaults to `{ requireALlSignatures = true, verifySignatures: true }`
    * @returns {Promise<{ smartTransaction: Transaction | VersionedTransaction, lastValidBlockHeight: number }>} - The transaction and the last valid block height
    */
   async createSmartTransaction(
     instructions: TransactionInstruction[],
     signers: Signer[],
     lookupTables: AddressLookupTableAccount[] = [],
-    feePayer?: Signer
+    feePayer?: Signer,
+    serializeOptions: SerializeConfig = { requireAllSignatures: true, verifySignatures: true },
   ): Promise<{
     smartTransaction: Transaction | VersionedTransaction;
     lastValidBlockHeight: number;
@@ -594,11 +597,15 @@ export class RpcClient {
     }
 
     // Serialize the transaction
-    const serializedTransaction = bs58.encode(
-      isVersioned
-        ? versionedTransaction!.serialize()
-        : legacyTransaction!.serialize()
-    );
+    let serializedTransaction: string;
+
+    if (isVersioned) {
+      // For versioned transactions, serialize() doesn't accept options
+      serializedTransaction = bs58.encode(versionedTransaction!.serialize());
+    } else {
+      // For legacy transactions, we can use the requireAllSignatures option
+      serializedTransaction = bs58.encode(legacyTransaction!.serialize(serializeOptions));
+    }
 
     // Get the priority fee estimate based on the serialized transaction
     const priorityFeeEstimateResponse = await this.getPriorityFeeEstimate({
