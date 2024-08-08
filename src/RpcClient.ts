@@ -538,7 +538,10 @@ export class RpcClient {
     signers: Signer[],
     lookupTables: AddressLookupTableAccount[] = [],
     feePayer?: Signer,
-    serializeOptions: SerializeConfig = { requireAllSignatures: true, verifySignatures: true },
+    serializeOptions: SerializeConfig = {
+      requireAllSignatures: true,
+      verifySignatures: true,
+    }
   ): Promise<{
     smartTransaction: Transaction | VersionedTransaction;
     lastValidBlockHeight: number;
@@ -597,15 +600,11 @@ export class RpcClient {
     }
 
     // Serialize the transaction
-    let serializedTransaction: string;
-
-    if (isVersioned) {
-      // For versioned transactions, serialize() doesn't accept options
-      serializedTransaction = bs58.encode(versionedTransaction!.serialize());
-    } else {
-      // For legacy transactions, we can use the requireAllSignatures option
-      serializedTransaction = bs58.encode(legacyTransaction!.serialize(serializeOptions));
-    }
+    let serializedTransaction = bs58.encode(
+      isVersioned
+        ? versionedTransaction!.serialize()
+        : legacyTransaction!.serialize(serializeOptions)
+    );
 
     // Get the priority fee estimate based on the serialized transaction
     const priorityFeeEstimateResponse = await this.getPriorityFeeEstimate({
