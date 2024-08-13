@@ -485,7 +485,6 @@ export class RpcClient {
     const rpcResponse = await this.connection.simulateTransaction(
       testTransaction,
       {
-        replaceRecentBlockhash: true,
         sigVerify: !!signers,
       }
     );
