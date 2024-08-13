@@ -20,8 +20,9 @@ import {
   Signer,
   SystemProgram,
   SerializeConfig,
+  TransactionExpiredBlockheightExceededError,
 } from '@solana/web3.js';
-const bs58 = require('bs58');
+import bs58 from 'bs58';
 import axios from 'axios';
 
 import { DAS } from './types/das-types';
@@ -32,6 +33,7 @@ import {
   JITO_API_URLS,
   JITO_TIP_ACCOUNTS,
   JitoRegion,
+  SmartTransactionContext,
 } from './types';
 
 export type SendAndConfirmTransactionResponse = {
@@ -188,7 +190,7 @@ export class RpcClient {
         }
       );
 
-      const result = response.data.result;
+      const { result } = response.data;
       return result as DAS.GetAssetResponse;
     } catch (error) {
       throw new Error(`Error in getAsset: ${error}`);
@@ -221,7 +223,7 @@ export class RpcClient {
         }
       );
 
-      const result = response.data.result;
+      const { result } = response.data;
       return result as DAS.GetRwaAssetResponse;
     } catch (error) {
       throw new Error(`Error in getRwaAsset: ${error}`);
@@ -251,6 +253,7 @@ export class RpcClient {
       throw new Error(`Error in getAssetBatch: ${error}`);
     }
   }
+
   /**
    * Get Asset proof.
    * @returns {Promise<DAS.GetAssetProofResponse>}
@@ -265,10 +268,10 @@ export class RpcClient {
         jsonrpc: '2.0',
         id: this.id,
         method: 'getAssetProof',
-        params: params,
+        params,
       });
 
-      const data = response.data;
+      const { data } = response;
       return data.result as DAS.GetAssetProofResponse;
     } catch (error) {
       throw new Error(`Error in getAssetProof: ${error}`);
@@ -289,10 +292,10 @@ export class RpcClient {
         jsonrpc: '2.0',
         id: this.id,
         method: 'getAssetsByGroup',
-        params: params,
+        params,
       });
 
-      const data = response.data;
+      const { data } = response;
       return data.result as DAS.GetAssetResponseList;
     } catch (error) {
       throw new Error(`Error in getAssetsByGroup: ${error}`);
@@ -313,10 +316,10 @@ export class RpcClient {
         jsonrpc: '2.0',
         id: this.id,
         method: 'getAssetsByOwner',
-        params: params,
+        params,
       });
 
-      const data = response.data;
+      const { data } = response;
       return data.result as DAS.GetAssetResponseList;
     } catch (error) {
       throw new Error(`Error in getAssetsByOwner: ${error}`);
@@ -337,10 +340,10 @@ export class RpcClient {
         jsonrpc: '2.0',
         id: this.id,
         method: 'getAssetsByCreator',
-        params: params,
+        params,
       });
 
-      const data = response.data;
+      const { data } = response;
       return data.result as DAS.GetAssetResponseList;
     } catch (error) {
       throw new Error(`Error in getAssetsByCreator: ${error}`);
@@ -361,10 +364,10 @@ export class RpcClient {
         jsonrpc: '2.0',
         id: this.id,
         method: 'getAssetsByAuthority',
-        params: params,
+        params,
       });
 
-      const data = response.data;
+      const { data } = response;
       return data.result as DAS.GetAssetResponseList;
     } catch (error) {
       throw new Error(`Error in getAssetsByAuthority: ${error}`);
@@ -385,10 +388,10 @@ export class RpcClient {
         jsonrpc: '2.0',
         id: this.id,
         method: 'searchAssets',
-        params: params,
+        params,
       });
 
-      const data = response.data;
+      const { data } = response;
       return data.result as DAS.GetAssetResponseList;
     } catch (error) {
       throw new Error(`Error in searchAssets: ${error}`);
@@ -409,10 +412,10 @@ export class RpcClient {
         jsonrpc: '2.0',
         id: this.id,
         method: 'getSignaturesForAsset',
-        params: params,
+        params,
       });
 
-      const data = response.data;
+      const { data } = response;
       return data.result as DAS.GetSignaturesForAssetResponse;
     } catch (error) {
       throw new Error(`Error in getSignaturesForAsset: ${error}`);
@@ -516,7 +519,7 @@ export class RpcClient {
 
         const status = await this.connection.getSignatureStatus(txtSig);
 
-        if (status?.value?.confirmationStatus === 'confirmed') {
+        if (status?.value?.confirmationStatus === 'confirmed' || status?.value?.confirmationStatus === 'finalized') {
           clearInterval(intervalId);
           resolve(txtSig);
         }
@@ -531,7 +534,7 @@ export class RpcClient {
    * @param {AddressLookupTableAccount[]} lookupTables - The lookup tables to be included in a versioned transaction. Defaults to `[]`
    * @param {Signer} feePayer - Optional fee payer separate from the signers
    * @param {SerializeConfig} serializeOptions - Options for transaction serialization. This applies only to legacy transactions. Defaults to `{ requireALlSignatures = true, verifySignatures: true }`
-   * @returns {Promise<{ smartTransaction: Transaction | VersionedTransaction, lastValidBlockHeight: number }>} - The transaction and the last valid block height
+   * @returns {Promise<SmartTransactionContext>} - The transaction with blockhash, blockheight and slot
    */
   async createSmartTransaction(
     instructions: TransactionInstruction[],
@@ -542,10 +545,7 @@ export class RpcClient {
       requireAllSignatures: true,
       verifySignatures: true,
     }
-  ): Promise<{
-    smartTransaction: Transaction | VersionedTransaction;
-    lastValidBlockHeight: number;
-  }> {
+  ): Promise<SmartTransactionContext> {
     if (!signers.length) {
       throw new Error('The transaction must have at least one signer');
     }
@@ -564,8 +564,11 @@ export class RpcClient {
 
     // For building the transaction
     const payerKey = feePayer ? feePayer.publicKey : signers[0].publicKey;
-    let { blockhash: recentBlockhash, lastValidBlockHeight } =
-      await this.connection.getLatestBlockhash();
+    const {
+      context: { slot: minContextSlot },
+      value: blockhash,
+    } = await this.connection.getLatestBlockhashAndContext();
+    const recentBlockhash = blockhash.blockhash;
 
     // Determine if we need to use a versioned transaction
     const isVersioned = lookupTables.length > 0;
@@ -575,9 +578,9 @@ export class RpcClient {
     // Build the initial transaction based on whether lookup tables are present
     if (isVersioned) {
       const v0Message = new TransactionMessage({
-        instructions: instructions,
-        payerKey: payerKey,
-        recentBlockhash: recentBlockhash,
+        instructions,
+        payerKey,
+        recentBlockhash,
       }).compileToV0Message(lookupTables);
 
       versionedTransaction = new VersionedTransaction(v0Message);
@@ -614,7 +617,7 @@ export class RpcClient {
       },
     });
 
-    const priorityFeeEstimate = priorityFeeEstimateResponse.priorityFeeEstimate;
+    const { priorityFeeEstimate } = priorityFeeEstimateResponse;
 
     if (!priorityFeeEstimate) {
       throw new Error('Priority fee estimate not available');
@@ -641,7 +644,7 @@ export class RpcClient {
     }
 
     // For very small transactions, such as simple transfers, default to 1k CUs
-    let customersCU = units < 1000 ? 1000 : Math.ceil(units * 1.1);
+    const customersCU = units < 1000 ? 1000 : Math.ceil(units * 1.1);
 
     const computeUnitsIx = ComputeBudgetProgram.setComputeUnitLimit({
       units: customersCU,
@@ -652,9 +655,9 @@ export class RpcClient {
     // Rebuild the transaction with the final instructions
     if (isVersioned) {
       const v0Message = new TransactionMessage({
-        instructions: instructions,
-        payerKey: payerKey,
-        recentBlockhash: recentBlockhash,
+        instructions,
+        payerKey,
+        recentBlockhash,
       }).compileToV0Message(lookupTables);
 
       versionedTransaction = new VersionedTransaction(v0Message);
@@ -662,22 +665,29 @@ export class RpcClient {
       const allSigners = feePayer ? [...signers, feePayer] : signers;
       versionedTransaction.sign(allSigners);
 
-      return { smartTransaction: versionedTransaction, lastValidBlockHeight };
-    } else {
-      legacyTransaction = new Transaction().add(...instructions);
-      legacyTransaction.recentBlockhash = recentBlockhash;
-      legacyTransaction.feePayer = payerKey;
-
-      for (const signer of signers) {
-        legacyTransaction.partialSign(signer);
-      }
-
-      if (feePayer) {
-        legacyTransaction.partialSign(feePayer);
-      }
-
-      return { smartTransaction: legacyTransaction, lastValidBlockHeight };
+      return {
+        transaction: versionedTransaction,
+        blockhash,
+        minContextSlot,
+      };
     }
+    legacyTransaction = new Transaction().add(...instructions);
+    legacyTransaction.recentBlockhash = recentBlockhash;
+    legacyTransaction.feePayer = payerKey;
+
+    for (const signer of signers) {
+      legacyTransaction.partialSign(signer);
+    }
+
+    if (feePayer) {
+      legacyTransaction.partialSign(feePayer);
+    }
+
+    return {
+      transaction: legacyTransaction,
+      blockhash,
+      minContextSlot,
+    };
   }
 
   /**
@@ -685,18 +695,24 @@ export class RpcClient {
    * @param {TransactionInstruction[]} instructions - The transaction instructions
    * @param {Signer[]} signers - The transaction's signers. The first signer should be the fee payer
    * @param {AddressLookupTableAccount[]} lookupTables - The lookup tables to be included in a versioned transaction. Defaults to `[]`
-   * @param {SendOptions & { feePayer?: Signer }} sendOptions - Options for sending the transaction, including an optional feePayer. Defaults to `{ skipPreflight: false }`
+   * @param {SendOptions & { feePayer?: Signer; lastValidBlockHeightOffset?: number }} sendOptions - Options for sending the transaction, including an optional feePayer and lastValidBlockHeightOffset. Defaults to `{ skipPreflight: false; lastValidBlockheightOffset: 150 }`
    * @returns {Promise<TransactionSignature>} - The transaction signature
    */
   async sendSmartTransaction(
     instructions: TransactionInstruction[],
     signers: Signer[],
     lookupTables: AddressLookupTableAccount[] = [],
-    sendOptions: SendOptions & { feePayer?: Signer } = { skipPreflight: false }
+    sendOptions: SendOptions & {
+      feePayer?: Signer;
+      lastValidBlockHeightOffset: number;
+    } = { skipPreflight: false, lastValidBlockHeightOffset: 150 }
   ): Promise<TransactionSignature> {
+    if (sendOptions.lastValidBlockHeightOffset < 0)
+      throw new Error('expiryBlockOffset must be a positive integer');
+
     try {
       // Create a smart transaction
-      const { smartTransaction: transaction, lastValidBlockHeight } =
+      const { transaction, blockhash, minContextSlot } =
         await this.createSmartTransaction(
           instructions,
           signers,
@@ -704,29 +720,52 @@ export class RpcClient {
           sendOptions.feePayer
         );
 
-      // Timeout of 60s. The transaction will be routed through our staked connections and should be confirmed by then
-      const timeout = 60000;
-      const startTime = Date.now();
-      let txtSig;
+      const commitment = sendOptions?.preflightCommitment || 'confirmed';
 
-      while (
-        Date.now() - startTime < timeout ||
-        (await this.connection.getBlockHeight()) <= lastValidBlockHeight
-      ) {
+      let error: Error;
+
+      // We will retry the transaction on TransactionExpiredBlockheightExceededError
+      // until the lastValidBlockHeightOffset is reached in case the transaction is
+      // included after the lastValidBlockHeight due to network latency or
+      // to the leader not forwarding the transaction for an unknown reason
+      // Worst case scenario, it'll retry until the lastValidBlockHeightOffset is reached
+      // The tradeoff is better reliability at the cost of a possible longer confirmation time
+      do {
         try {
-          txtSig = await this.connection.sendRawTransaction(
+          // signature does not change when it resends the same one
+          const signature = await this.connection.sendRawTransaction(
             transaction.serialize(),
             {
+              maxRetries: 0,
+              preflightCommitment: 'confirmed',
               skipPreflight: sendOptions.skipPreflight,
+              minContextSlot,
               ...sendOptions,
             }
           );
 
-          return await this.pollTransactionConfirmation(txtSig);
-        } catch (error) {
-          continue;
+          const abortSignal = AbortSignal.timeout(15000);
+          await this.connection.confirmTransaction(
+            {
+              abortSignal,
+              signature,
+              blockhash: blockhash.blockhash,
+              lastValidBlockHeight:
+                blockhash.lastValidBlockHeight +
+                sendOptions.lastValidBlockHeightOffset,
+            },
+            commitment
+          );
+
+          abortSignal.removeEventListener('abort', () => {});
+
+          return signature;
+        } catch (_error: any) {
+          if (!(_error instanceof Error)) error = new Error();
+
+          error = _error;
         }
-      }
+      } while (!(error instanceof TransactionExpiredBlockheightExceededError));
     } catch (error) {
       throw new Error(`Error sending smart transaction: ${error}`);
     }
@@ -773,7 +812,7 @@ export class RpcClient {
     lookupTables: AddressLookupTableAccount[] = [],
     tipAmount: number = 1000,
     feePayer?: Signer
-  ): Promise<{ serializedTransaction: string; lastValidBlockHeight: number }> {
+  ): Promise<SmartTransactionContext> {
     if (!signers.length) {
       throw new Error('The transaction must have at least one signer');
     }
@@ -786,19 +825,12 @@ export class RpcClient {
     const payerKey = feePayer ? feePayer.publicKey : signers[0].publicKey;
     this.addTipInstruction(instructions, payerKey, randomTipAccount, tipAmount);
 
-    const { smartTransaction, lastValidBlockHeight } =
-      await this.createSmartTransaction(
-        instructions,
-        signers,
-        lookupTables,
-        feePayer
-      );
-
-    // Return the serialized transaction
-    return {
-      serializedTransaction: bs58.encode(smartTransaction.serialize()),
-      lastValidBlockHeight,
-    };
+    return this.createSmartTransaction(
+      instructions,
+      signers,
+      lookupTables,
+      feePayer
+    );
   }
 
   /**
@@ -873,6 +905,7 @@ export class RpcClient {
    * @param {number} tipAmount - The amount of lamports to tip. Defaults to 1000
    * @param {JitoRegion} region - The Jito Block Engine region. Defaults to "Default" (i.e., https://mainnet.block-engine.jito.wtf)
    * @param {Signer} feePayer - Optional fee payer separate from the signers
+   * @param {number} lastValidBlockHeightOffset - The offset to add to lastValidBlockHeight. Defaults to 150
    * @returns {Promise<string>} - The bundle ID
    */
   async sendSmartTransactionWithTip(
@@ -881,24 +914,29 @@ export class RpcClient {
     lookupTables: AddressLookupTableAccount[] = [],
     tipAmount: number = 1000,
     region: JitoRegion = 'Default',
-    feePayer?: Signer
+    feePayer?: Signer,
+    lastValidBlockHeightOffset = 150
   ): Promise<string> {
+    if (lastValidBlockHeightOffset < 0)
+      throw new Error('lastValidBlockHeightOffset must be a positive integer');
+
     if (!signers.length) {
       throw new Error('The transaction must have at least one signer');
     }
 
     // Create the smart transaction with tip based
-    let { serializedTransaction, lastValidBlockHeight } =
-      await this.createSmartTransactionWithTip(
-        instructions,
-        signers,
-        lookupTables,
-        tipAmount,
-        feePayer
-      );
+    const { transaction, blockhash } = await this.createSmartTransactionWithTip(
+      instructions,
+      signers,
+      lookupTables,
+      tipAmount,
+      feePayer
+    );
+
+    const serializedTransaction = bs58.encode(transaction.serialize());
 
     // Get the Jito API URL for the specified region
-    const jitoApiUrl = JITO_API_URLS[region] + '/api/v1/bundles';
+    const jitoApiUrl = `${JITO_API_URLS[region]}/api/v1/bundles`;
 
     // Send the transaction as a Jito Bundle
     const bundleId = await this.sendJitoBundle(
@@ -913,7 +951,8 @@ export class RpcClient {
 
     while (
       Date.now() - startTime < timeout ||
-      (await this.connection.getBlockHeight()) <= lastValidBlockHeight
+      (await this.connection.getBlockHeight()) <=
+        blockhash.lastValidBlockHeight + lastValidBlockHeightOffset
     ) {
       const bundleStatuses = await this.getBundleStatuses(
         [bundleId],
@@ -954,7 +993,7 @@ export class RpcClient {
           jsonrpc: '2.0',
           id: this.id,
           method: 'getNftEditions',
-          params: params,
+          params,
         },
         {
           headers: { 'Content-Type': 'application/json' },
@@ -983,7 +1022,7 @@ export class RpcClient {
           jsonrpc: '2.0',
           id: this.id,
           method: 'getTokenAccounts',
-          params: params,
+          params,
         },
         {
           headers: { 'Content-Type': 'application/json' },
