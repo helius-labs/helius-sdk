@@ -324,6 +324,7 @@ export namespace DAS {
     amount?: number;
     delegated_amount?: number;
     frozen?: boolean;
+    token_extensions: any;
   }
 
   export interface GetTokenAccountsRequest {
