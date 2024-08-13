@@ -19,7 +19,6 @@ import {
   SendOptions,
   Signer,
   SystemProgram,
-  TransactionConfirmationStatus,
   TransactionExpiredBlockheightExceededError,
 } from '@solana/web3.js';
 import bs58 from 'bs58';
@@ -27,7 +26,6 @@ import axios from 'axios';
 
 import { DAS } from './types/das-types';
 import {
-  Address,
   GetPriorityFeeEstimateRequest,
   GetPriorityFeeEstimateResponse,
   JITO_API_URLS,
