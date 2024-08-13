@@ -519,7 +519,7 @@ export class RpcClient {
 
         const status = await this.connection.getSignatureStatus(txtSig);
 
-        if (status?.value?.confirmationStatus === 'confirmed') {
+        if (status?.value?.confirmationStatus === 'confirmed' || status?.value?.confirmationStatus === 'finalized') {
           clearInterval(intervalId);
           resolve(txtSig);
         }
