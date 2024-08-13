@@ -3,6 +3,7 @@ import type {
   Cluster,
   Keypair,
   Transaction,
+  TransactionConfirmationStatus,
   TransactionError,
   VersionedTransaction,
 } from '@solana/web3.js';
@@ -362,3 +363,11 @@ export interface GetPriorityFeeEstimateResponse {
 }
 
 export type JitoRegion = 'Default' | 'NY' | 'Amsterdam' | 'Frankfurt' | 'Tokyo';
+
+export type PollTransactionOptions = {
+  confirmationStatuses?: TransactionConfirmationStatus[];
+  // In milliseconds
+  timeout?: number; 
+  // In milliseconds
+  interval?: number;
+}
