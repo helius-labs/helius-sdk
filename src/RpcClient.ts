@@ -533,7 +533,7 @@ export class RpcClient {
    * @param {Signer[]} signers - The transaction's signers. The first signer should be the fee payer
    * @param {AddressLookupTableAccount[]} lookupTables - The lookup tables to be included in a versioned transaction. Defaults to `[]`
    * @param {Signer} feePayer - Optional fee payer separate from the signers
-   * @param {SerializeConfig} serializeOptions - Options for transaction serialization. This applies only to legacy transactions. Defaults to `{ requireALlSignatures = true, verifySignatures: true }`
+   * @param {SerializeConfig} serializeOptions - Options for transaction serialization. This applies only to legacy transactions. Defaults to `{ requireAllSignatures = true, verifySignatures: true }`
    * @returns {Promise<SmartTransactionContext>} - The transaction with blockhash, blockheight and slot
    */
   async createSmartTransaction(
