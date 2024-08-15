@@ -19,7 +19,7 @@ import {
   SendOptions,
   Signer,
   SystemProgram,
-  TransactionConfirmationStatus,
+  SerializeConfig,
   TransactionExpiredBlockheightExceededError,
 } from '@solana/web3.js';
 import bs58 from 'bs58';
@@ -533,13 +533,18 @@ export class RpcClient {
    * @param {Signer[]} signers - The transaction's signers. The first signer should be the fee payer
    * @param {AddressLookupTableAccount[]} lookupTables - The lookup tables to be included in a versioned transaction. Defaults to `[]`
    * @param {Signer} feePayer - Optional fee payer separate from the signers
+   * @param {SerializeConfig} serializeOptions - Options for transaction serialization. This applies only to legacy transactions. Defaults to `{ requireAllSignatures = true, verifySignatures: true }`
    * @returns {Promise<SmartTransactionContext>} - The transaction with blockhash, blockheight and slot
    */
   async createSmartTransaction(
     instructions: TransactionInstruction[],
     signers: Signer[],
     lookupTables: AddressLookupTableAccount[] = [],
-    feePayer?: Signer
+    feePayer?: Signer,
+    serializeOptions: SerializeConfig = {
+      requireAllSignatures: true,
+      verifySignatures: true,
+    }
   ): Promise<SmartTransactionContext> {
     if (!signers.length) {
       throw new Error('The transaction must have at least one signer');
@@ -601,7 +606,7 @@ export class RpcClient {
     const serializedTransaction = bs58.encode(
       isVersioned
         ? versionedTransaction!.serialize()
-        : legacyTransaction!.serialize()
+        : legacyTransaction!.serialize(serializeOptions)
     );
 
     // Get the priority fee estimate based on the serialized transaction
