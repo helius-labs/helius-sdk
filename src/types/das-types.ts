@@ -173,12 +173,24 @@ export namespace DAS {
     showUnverifiedCollections?: boolean;
     showCollectionMetadata?: boolean;
     showGrandTotal?: boolean;
+    showRawData?: boolean;
+    showFungible?: boolean;
+    requireFullIndex?: boolean;
+    showSystemMetadata?: boolean;
+    showZeroBalance?: boolean;
+    showClosedAccounts?: boolean;
   };
 
   // Display options for getAssetBatch do not include grand_total.
   export type GetAssetDisplayOptions = {
     showUnverifiedCollections?: boolean;
     showCollectionMetadata?: boolean;
+    showRawData?: boolean;
+    showFungible?: boolean;
+    requireFullIndex?: boolean;
+    showSystemMetadata?: boolean;
+    showNativeBalance?: boolean;
+    showInscription?: boolean;
   };
 
   // Ownership --
