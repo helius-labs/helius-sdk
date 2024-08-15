@@ -724,7 +724,7 @@ const units = helius.rpc.getComputeUnits(instructions, payerKey, []);
 ```
 
 ### pollTransactionConfirmation()
-This method polls a transaction to check whether it has been confirmed. It takes in a `TransactionSignature` and checks whether it has been confirmed within the timeout period. Currently, this method has a 15 second timeout and a 5 second retry interval, so it polls 3 times over 15 seconds. It returns the confirmed transaction signature or an error if the confirmation times out:
+This method polls a transaction to check whether it has been confirmed. It takes in a `TransactionSignature` and checks whether it has been confirmed within the timeout period. Currently, this method defaults to a 15 second timeout and a 5 second retry interval, so it polls 3 times over 15 seconds. However, with `PollTransactionOptions`, these values can be changed in addition to the confirmation status. It returns the confirmed transaction signature or an error if the confirmation times out:
 
 ```ts
 let txSig = await helius.connection().sendRawTransaction(transaction.serialize(), {

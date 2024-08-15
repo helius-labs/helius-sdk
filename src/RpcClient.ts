@@ -32,6 +32,7 @@ import {
   JITO_API_URLS,
   JITO_TIP_ACCOUNTS,
   JitoRegion,
+  PollTransactionOptions,
   SmartTransactionContext,
 } from './types';
 
@@ -496,33 +497,35 @@ export class RpcClient {
   /**
    * Poll a transaction to check whether it has been confirmed
    * @param {TransactionSignature} txtSig - The transaction signature
+   * @param {PollTransactionOptions} pollOptions - Optional parameters for polling
    * @returns {Promise<TransactionSignature>} - The confirmed transaction signature or an error if the confirmation times out
    */
   async pollTransactionConfirmation(
-    txtSig: TransactionSignature
+    txtSig: TransactionSignature,
+    pollOptions: PollTransactionOptions = {
+      confirmationStatuses: ["confirmed", "finalized"],
+      timeout: 15000,
+      interval: 5000
+    }
   ): Promise<TransactionSignature> {
-    // 15 second timeout
-    const timeout = 15000;
-    // 5 second retry interval
-    const interval = 5000;
     let elapsed = 0;
 
     return new Promise<TransactionSignature>((resolve, reject) => {
       const intervalId = setInterval(async () => {
-        elapsed += interval;
+        elapsed += pollOptions.interval!;
 
-        if (elapsed >= timeout) {
+        if (elapsed >= pollOptions.timeout!) {
           clearInterval(intervalId);
           reject(new Error(`Transaction ${txtSig}'s confirmation timed out`));
         }
 
         const status = await this.connection.getSignatureStatus(txtSig);
 
-        if (status?.value?.confirmationStatus === 'confirmed' || status?.value?.confirmationStatus === 'finalized') {
+        if (status?.value?.confirmationStatus && pollOptions.confirmationStatuses?.includes(status?.value?.confirmationStatus)) {
           clearInterval(intervalId);
           resolve(txtSig);
         }
-      }, interval);
+      }, pollOptions.interval);
     });
   }
 
