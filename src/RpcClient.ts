@@ -27,7 +27,6 @@ import axios from 'axios';
 
 import { DAS } from './types/das-types';
 import {
-  Address,
   GetPriorityFeeEstimateRequest,
   GetPriorityFeeEstimateResponse,
   JITO_API_URLS,

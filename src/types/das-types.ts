@@ -336,6 +336,8 @@ export namespace DAS {
     amount?: number;
     delegated_amount?: number;
     frozen?: boolean;
+    // TODO: Add proper typing for token extensions instead of using `any`
+    token_extensions: any;
   }
 
   export interface GetTokenAccountsRequest {
