@@ -43,7 +43,7 @@ const getAssetsByOwner = async () => {
 getAssetsByOwner();
 ```
 
-[![Try it out](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/edit/helius-node-js-sdk?file=index.js&view=editor)
+[![Try it out](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/edit/helius-node-js-sdk-xbw7t6?file=index.js)
 
 ## Handling errors
 
