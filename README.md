@@ -717,10 +717,10 @@ const { smartTransaction: transaction, lastValidBlockHeight } = await helius.rpc
 ```
 
 ### getComputeUnits()
-This method simulates a transaction to get the total compute units consumed. It takes in an array of instructions, a fee payer, and an array of lookup tables. It returns the compute units consumed, or null if unsuccessful:
+This method simulates a transaction to get the total compute units consumed. It takes in an array of instructions, a fee payer, an array of lookup tables, and an array of signers. It returns the compute units consumed, or null if unsuccessful:
 
 ```ts
-const units = helius.rpc.getComputeUnits(instructions, payerKey, []);
+const units = helius.rpc.getComputeUnits(instructions, payerKey, [], []);
 ```
 
 ### pollTransactionConfirmation()

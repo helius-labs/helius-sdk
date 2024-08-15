@@ -456,12 +456,14 @@ export class RpcClient {
    * @param {TransactionInstruction[]} instructions - The transaction instructions
    * @param {PublicKey} payer - The public key of the payer
    * @param {AddressLookupTableAccount[]} lookupTables - The address lookup tables
+   * @param {Signer[]} signers - Optional signers for the transaction
    * @returns {Promise<number | null>} - The compute units consumed, or null if unsuccessful
    */
   async getComputeUnits(
     instructions: TransactionInstruction[],
     payer: PublicKey,
-    lookupTables: AddressLookupTableAccount[]
+    lookupTables: AddressLookupTableAccount[],
+    signers?: Signer[]
   ): Promise<number | null> {
     const testInstructions = [
       ComputeBudgetProgram.setComputeUnitLimit({ units: 1_400_000 }),
@@ -476,11 +478,14 @@ export class RpcClient {
       }).compileToV0Message(lookupTables)
     );
 
+    if (signers) {
+      testTransaction.sign(signers);
+    }
+
     const rpcResponse = await this.connection.simulateTransaction(
       testTransaction,
       {
-        replaceRecentBlockhash: true,
-        sigVerify: false,
+        sigVerify: !!signers,
       }
     );
 
@@ -636,7 +641,8 @@ export class RpcClient {
     const units = await this.getComputeUnits(
       instructions,
       payerKey,
-      isVersioned ? lookupTables : []
+      isVersioned ? lookupTables : [],
+      signers
     );
 
     if (!units) {
