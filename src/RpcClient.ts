@@ -712,7 +712,7 @@ export class RpcClient {
     lookupTables: AddressLookupTableAccount[] = [],
     sendOptions: SendOptions & {
       feePayer?: Signer;
-      lastValidBlockHeightOffset: number;
+      lastValidBlockHeightOffset?: number;
     } = { skipPreflight: false, lastValidBlockHeightOffset: 150 }
   ): Promise<TransactionSignature> {
     if (sendOptions.lastValidBlockHeightOffset < 0)
