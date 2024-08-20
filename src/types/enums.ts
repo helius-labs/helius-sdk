@@ -585,11 +585,11 @@ export enum PriorityLevel {
 }
 
 export enum UiTransactionEncoding {
-  Binary = 'Binary',
-  Base64 = 'Base64',
-  Base58 = 'Base58',
-  Json = 'Json',
-  JsonParsed = 'JsonParsed',
+  Binary = 'binary',
+  Base64 = 'base64',
+  Base58 = 'base58',
+  Json = 'json',
+  JsonParsed = 'jsonParsed',
 }
 
 // https://jito-foundation.gitbook.io/mev/mev-payment-and-distribution/on-chain-addresses
