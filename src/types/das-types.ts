@@ -179,6 +179,7 @@ export namespace DAS {
     showSystemMetadata?: boolean;
     showZeroBalance?: boolean;
     showClosedAccounts?: boolean;
+    showNativeBalance?: boolean;
   };
 
   // Display options for getAssetBatch do not include grand_total.
