@@ -445,8 +445,15 @@ export class RpcClient {
         }
       );
 
+      if (response.data.error) {
+        throw new Error(`Error fetching priority fee estimate: ${JSON.stringify(response.data.error, null, 2)}`);
+      }
+  
       return response.data.result as GetPriorityFeeEstimateResponse;
     } catch (error) {
+      if (axios.isAxiosError(error) && error.response) {
+        throw new Error(`Error fetching priority fee estimate: ${JSON.stringify(error.response.data, null, 2)}`);
+      }
       throw new Error(`Error fetching priority fee estimate: ${error}`);
     }
   }
