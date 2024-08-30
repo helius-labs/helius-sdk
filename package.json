@@ -43,7 +43,7 @@
     "typescript": "^4.9.4"
   },
   "dependencies": {
-    "@irys/sdk": "^0.0.3",
+    "@irys/sdk": "^0.2.10",
     "@metaplex-foundation/mpl-token-metadata": "^2.5.2",
     "axios": "^1.2.3",
     "bs58": "^6.0.0"
