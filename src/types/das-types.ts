@@ -488,6 +488,7 @@ export namespace DAS {
   export interface PriceInfo {
     price_per_token: number;
     currency: string;
+    total_price?: number;
   }
   // End of DAS
 }
