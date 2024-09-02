@@ -722,7 +722,9 @@ export class RpcClient {
       lastValidBlockHeightOffset?: number;
     } = { skipPreflight: false, lastValidBlockHeightOffset: 150 }
   ): Promise<TransactionSignature> {
-    if (sendOptions.lastValidBlockHeightOffset < 0)
+    const lastValidBlockHeightOffset = sendOptions.lastValidBlockHeightOffset ?? 150;
+
+    if (lastValidBlockHeightOffset < 0)
       throw new Error('expiryBlockOffset must be a positive integer');
 
     try {
@@ -767,7 +769,7 @@ export class RpcClient {
               blockhash: blockhash.blockhash,
               lastValidBlockHeight:
                 blockhash.lastValidBlockHeight +
-                sendOptions.lastValidBlockHeightOffset,
+                lastValidBlockHeightOffset,
             },
             commitment
           );
