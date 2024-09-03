@@ -349,7 +349,7 @@ export interface GetPriorityFeeEstimateRequest {
 }
 
 export interface MicroLamportPriorityFeeLevels {
-  none: number;
+  min: number;
   low: number;
   medium: number;
   high: number;
