@@ -2,6 +2,9 @@ import type {
   BlockhashWithExpiryBlockHeight,
   Cluster,
   Keypair,
+  SendOptions,
+  SerializeConfig,
+  Signer,
   Transaction,
   TransactionConfirmationStatus,
   TransactionError,
@@ -370,4 +373,11 @@ export type PollTransactionOptions = {
   timeout?: number; 
   // In milliseconds
   interval?: number;
+}
+
+export interface SmartTransactionOptions extends SendOptions {
+  feePayer?: Signer;
+  lastValidBlockHeightOffset?: number;
+  priorityFeeCap?: number;
+  serializeOptions?: SerializeConfig;
 }
