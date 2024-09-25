@@ -4,7 +4,6 @@ export enum WebhookType {
   ENHANCED = 'enhanced',
   RAW = 'raw',
   DISCORD = 'discord',
-  ACCOUNT = 'account',
   ENHANCED_DEVNET = 'enhancedDevnet',
   RAW_DEVNET = 'rawDevnet',
   DISCORD_DEVNET = 'discordDevnet',
