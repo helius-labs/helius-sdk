@@ -739,6 +739,12 @@ export class RpcClient {
 
       const commitment = sendOptions?.preflightCommitment || 'confirmed';
 
+      const currentBlockHeight = await this.connection.getBlockHeight();
+      const lastValidBlockHeight = Math.min(
+        blockhash.lastValidBlockHeight,
+        currentBlockHeight + lastValidBlockHeightOffset
+      );
+
       let error: Error;
 
       // We will retry the transaction on TransactionExpiredBlockheightExceededError
@@ -767,9 +773,7 @@ export class RpcClient {
               abortSignal,
               signature,
               blockhash: blockhash.blockhash,
-              lastValidBlockHeight:
-                blockhash.lastValidBlockHeight +
-                lastValidBlockHeightOffset,
+              lastValidBlockHeight: lastValidBlockHeight,
             },
             commitment
           );
@@ -961,6 +965,12 @@ export class RpcClient {
       jitoApiUrl
     );
 
+    const currentBlockHeight = await this.connection.getBlockHeight();
+    const lastValidBlockHeight = Math.min(
+      blockhash.lastValidBlockHeight,
+      currentBlockHeight + lastValidBlockHeightOffset
+    );
+
     // Poll for confirmation status
     const timeout = 60000; // 60 second timeout
     const interval = 5000; // 5 second interval
@@ -968,8 +978,7 @@ export class RpcClient {
 
     while (
       Date.now() - startTime < timeout ||
-      (await this.connection.getBlockHeight()) <=
-        blockhash.lastValidBlockHeight + lastValidBlockHeightOffset
+      (await this.connection.getBlockHeight()) <= lastValidBlockHeight
     ) {
       const bundleStatuses = await this.getBundleStatuses(
         [bundleId],
