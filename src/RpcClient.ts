@@ -21,6 +21,7 @@ import {
   SystemProgram,
   SerializeConfig,
   TransactionExpiredBlockheightExceededError,
+  SendOptions as SolanaWebJsSendOptions,
 } from '@solana/web3.js';
 import bs58 from 'bs58';
 import axios from 'axios';
@@ -34,6 +35,7 @@ import {
   JitoRegion,
   PollTransactionOptions,
   SmartTransactionContext,
+  HeliusSendOptions,
 } from './types';
 
 export type SendAndConfirmTransactionResponse = {
@@ -1058,6 +1060,40 @@ export class RpcClient {
       return response.data.result as DAS.GetTokenAccountsResponse;
     } catch (error) {
       throw new Error(`Error in getTokenAccounts: ${error}`);
+    }
+  }
+
+  /**
+   * Send a transaction
+   * @param {Transaction} transaction - The transaction to send
+   * @param {HeliusSendOptions} options - Options for sending the transaction
+   * @returns {Promise<TransactionSignature>} - The transaction signature
+   */
+  async sendTransaction(
+    transaction: Transaction | VersionedTransaction,
+    options: HeliusSendOptions = {}
+  ): Promise<TransactionSignature> {
+    let rawTransaction: string;
+    if (transaction instanceof VersionedTransaction) {
+      rawTransaction = Buffer.from(transaction.serialize()).toString('base64');
+    } else {
+      rawTransaction = transaction.serialize().toString('base64');
+    }
+    try {
+      const url = `${this.connection.rpcEndpoint}`;
+      const response = await axios.post(url, {
+        jsonrpc: '2.0',
+        id: this.id,
+        method: 'sendTransaction',
+        params: [rawTransaction, options],
+      },
+      {
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      return response.data.result as TransactionSignature;
+    } catch (error) {
+      throw new Error(`Error sending transaction: ${error}`);
     }
   }
 }

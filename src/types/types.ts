@@ -6,6 +6,7 @@ import type {
   TransactionConfirmationStatus,
   TransactionError,
   VersionedTransaction,
+  SendOptions as SolanaWebJsSendOptions,
 } from '@solana/web3.js';
 
 import type {
@@ -370,4 +371,8 @@ export type PollTransactionOptions = {
   timeout?: number; 
   // In milliseconds
   interval?: number;
+}
+
+export interface HeliusSendOptions extends SolanaWebJsSendOptions {
+  validatorAcls?: string[];
 }
