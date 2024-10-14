@@ -1071,7 +1071,9 @@ export class RpcClient {
    */
   async sendTransaction(
     transaction: Transaction | VersionedTransaction,
-    options: HeliusSendOptions = {}
+    options: HeliusSendOptions = {
+      skipPreflight: true,
+    }
   ): Promise<TransactionSignature> {
     let rawTransaction: string;
     if (transaction instanceof VersionedTransaction) {
@@ -1079,17 +1081,25 @@ export class RpcClient {
     } else {
       rawTransaction = transaction.serialize().toString('base64');
     }
+
     try {
       const url = `${this.connection.rpcEndpoint}`;
-      const response = await axios.post(url, {
-        jsonrpc: '2.0',
-        id: this.id,
-        method: 'sendTransaction',
-        params: [rawTransaction, options],
-      },
-      {
-        headers: { 'Content-Type': 'application/json' },
-      });
+      const response = await axios.post(
+        url,
+        {
+          jsonrpc: '2.0',
+          id: this.id,
+          method: 'sendTransaction',
+          params: [rawTransaction, {encoding: 'base64', ...options}],
+        },
+        {
+          headers: { 'Content-Type': 'application/json' },
+        }
+      );
+
+      if (response.data.error) {
+        throw new Error(`RPC error: ${JSON.stringify(response.data.error)}`);
+      }
 
       return response.data.result as TransactionSignature;
     } catch (error) {
