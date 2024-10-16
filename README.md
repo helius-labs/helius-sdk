@@ -809,7 +809,7 @@ try {
     const response = await helius.rpc.sendTransaction(
         transaction,
         {
-            validatorAcls: ['https://helius-docs.s3.us-east-2.amazonaws.com/sfdp_rejects.json'],
+            validatorAcls: [SFDP_REJECTS_URL],
             skipPreflight: true,
         },
     );
