@@ -137,6 +137,7 @@ Offers additional tools for various Solana-related tasks like analyzing blockcha
 - [`getStakeAccounts()`](#getStakeAccounts): Returns all the stake accounts for a given public key.
 - [`getTokenHolders()`](#getTokenHolders): Returns all the token accounts for a given mint address (ONLY FOR SPL TOKENS).
 - [`getPriorityFeeEstimate()`](#getPriorityFeeEstimate): Returns an estimated priority fee based on a set of predefined priority levels (percentiles).
+- [`sendTransaction()`](#sendTransaction): Wrapper for `sendTransaction` RPC call that includes support for `validatorAcls` parameter.
 
 
 ## DAS API (Digital Asset Standard)
@@ -798,6 +799,23 @@ This method gets the status of Jito bundles. It takes in an array of bundle IDs 
 const bundleIds = [ /* Bundle IDs */];
 const jitoApiUrl = 'https://mainnet.block-engine.jito.wtf/api/v1/bundles';
 const statuses = helius.rpc.getBundleStatuses(bundleIds, jitoApiUrl);
+```
+
+### sendTransaction()
+This method behaves the same way as the standard `sendTransaction`, but adds support for `validatorAcls` JSON-based allow/denylists.
+
+```ts
+try {
+    const response = await helius.rpc.sendTransaction(
+        transaction,
+        {
+            validatorAcls: [SFDP_REJECTS_URL],
+            skipPreflight: true,
+        },
+    );
+} catch (error) {
+    console.error(error);
+}
 ```
 
 ## helius.connection
