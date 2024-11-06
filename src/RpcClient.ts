@@ -21,6 +21,7 @@ import {
   SystemProgram,
   SerializeConfig,
   TransactionExpiredBlockheightExceededError,
+  SendOptions as SolanaWebJsSendOptions,
 } from '@solana/web3.js';
 import bs58 from 'bs58';
 import axios from 'axios';
@@ -35,6 +36,7 @@ import {
   PollTransactionOptions,
   SmartTransactionContext,
   SmartTransactionOptions,
+  HeliusSendOptions,
 } from './types';
 
 export type SendAndConfirmTransactionResponse = {
@@ -764,6 +766,12 @@ export class RpcClient {
 
       const commitment = sendOptions?.preflightCommitment || 'confirmed';
 
+      const currentBlockHeight = await this.connection.getBlockHeight();
+      const lastValidBlockHeight = Math.min(
+        blockhash.lastValidBlockHeight,
+        currentBlockHeight + lastValidBlockHeightOffset
+      );
+
       let error: Error;
 
       // We will retry the transaction on TransactionExpiredBlockheightExceededError
@@ -792,9 +800,7 @@ export class RpcClient {
               abortSignal,
               signature,
               blockhash: blockhash.blockhash,
-              lastValidBlockHeight:
-                blockhash.lastValidBlockHeight +
-                lastValidBlockHeightOffset,
+              lastValidBlockHeight: lastValidBlockHeight,
             },
             commitment
           );
@@ -991,6 +997,12 @@ export class RpcClient {
       jitoApiUrl
     );
 
+    const currentBlockHeight = await this.connection.getBlockHeight();
+    const lastValidBlockHeight = Math.min(
+      blockhash.lastValidBlockHeight,
+      currentBlockHeight + lastValidBlockHeightOffset
+    );
+
     // Poll for confirmation status
     const timeout = 60000; // 60 second timeout
     const interval = 5000; // 5 second interval
@@ -998,8 +1010,7 @@ export class RpcClient {
 
     while (
       Date.now() - startTime < timeout ||
-      (await this.connection.getBlockHeight()) <=
-        blockhash.lastValidBlockHeight + lastValidBlockHeightOffset
+      (await this.connection.getBlockHeight()) <= lastValidBlockHeight
     ) {
       const bundleStatuses = await this.getBundleStatuses(
         [bundleId],
@@ -1079,6 +1090,50 @@ export class RpcClient {
       return response.data.result as DAS.GetTokenAccountsResponse;
     } catch (error) {
       throw new Error(`Error in getTokenAccounts: ${error}`);
+    }
+  }
+
+  /**
+   * Send a transaction
+   * @param {Transaction} transaction - The transaction to send
+   * @param {HeliusSendOptions} options - Options for sending the transaction
+   * @returns {Promise<TransactionSignature>} - The transaction signature
+   */
+  async sendTransaction(
+    transaction: Transaction | VersionedTransaction,
+    options: HeliusSendOptions = {
+      skipPreflight: true,
+    }
+  ): Promise<TransactionSignature> {
+    let rawTransaction: string;
+    if (transaction instanceof VersionedTransaction) {
+      rawTransaction = Buffer.from(transaction.serialize()).toString('base64');
+    } else {
+      rawTransaction = transaction.serialize().toString('base64');
+    }
+
+    try {
+      const url = `${this.connection.rpcEndpoint}`;
+      const response = await axios.post(
+        url,
+        {
+          jsonrpc: '2.0',
+          id: this.id,
+          method: 'sendTransaction',
+          params: [rawTransaction, {encoding: 'base64', ...options}],
+        },
+        {
+          headers: { 'Content-Type': 'application/json' },
+        }
+      );
+
+      if (response.data.error) {
+        throw new Error(`RPC error: ${JSON.stringify(response.data.error)}`);
+      }
+
+      return response.data.result as TransactionSignature;
+    } catch (error) {
+      throw new Error(`Error sending transaction: ${error}`);
     }
   }
 }

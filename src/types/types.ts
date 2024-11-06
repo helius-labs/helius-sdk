@@ -9,6 +9,7 @@ import type {
   TransactionConfirmationStatus,
   TransactionError,
   VersionedTransaction,
+  SendOptions as SolanaWebJsSendOptions,
 } from '@solana/web3.js';
 
 import type {
@@ -380,4 +381,8 @@ export interface SmartTransactionOptions extends SendOptions {
   lastValidBlockHeightOffset?: number;
   priorityFeeCap?: number;
   serializeOptions?: SerializeConfig;
+}
+
+export interface HeliusSendOptions extends SolanaWebJsSendOptions {
+  validatorAcls?: string[];
 }
