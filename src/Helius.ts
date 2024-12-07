@@ -13,6 +13,8 @@ import {
   RevokeCollectionAuthorityRequest,
   HeliusCluster,
   HeliusEndpoints,
+  ParseTransactionsRequest,
+  ParseTransactionsResponse,
 } from './types';
 
 import axios, { type AxiosError } from 'axios';
@@ -658,5 +660,34 @@ export class Helius {
       TOKEN_METADATA_PROGRAM_ID
     );
     return collectionMetadataAccount;
+  }
+
+  /**
+   * Parse transactions.
+   * @param {ParseTransactionsRequest} params - The request parameters
+   * @returns {Promise<ParseTransactionsResponse>} - Array of parsed transactions
+   * @throws {Error} If there was an error calling the endpoint or too many transactions to parse
+   */
+  async parseTransactions(
+    params: ParseTransactionsRequest
+  ): Promise<ParseTransactionsResponse> {
+    if (params.transactions.length > 100) {
+      throw new Error('The maximum number of transactions to parse is 100');
+    }
+
+    const response = await axios.post(
+      this.getApiEndpoint('/v0/transactions'),
+      {
+        ...params,
+      },
+      {
+        headers: { 'Content-Type': 'application/json' },
+      }
+    );
+    if (response.data.error) {
+      throw new Error(`RPC error: ${JSON.stringify(response.data.error)}`);
+    }
+
+    return response.data as ParseTransactionsResponse;
   }
 }

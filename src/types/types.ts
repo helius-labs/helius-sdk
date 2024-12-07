@@ -376,3 +376,9 @@ export type PollTransactionOptions = {
 export interface HeliusSendOptions extends SolanaWebJsSendOptions {
   validatorAcls?: string[];
 }
+
+export interface ParseTransactionsRequest {
+  transactions: string[];
+}
+
+export type ParseTransactionsResponse = EnrichedTransaction[];
