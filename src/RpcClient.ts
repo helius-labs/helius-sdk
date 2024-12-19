@@ -35,6 +35,7 @@ import {
   JitoRegion,
   PollTransactionOptions,
   SmartTransactionContext,
+  SmartTransactionOptions,
   HeliusSendOptions,
 } from './types';
 
@@ -548,23 +549,31 @@ export class RpcClient {
    * @param {TransactionInstruction[]} instructions - The transaction instructions
    * @param {Signer[]} signers - The transaction's signers. The first signer should be the fee payer
    * @param {AddressLookupTableAccount[]} lookupTables - The lookup tables to be included in a versioned transaction. Defaults to `[]`
-   * @param {Signer} feePayer - Optional fee payer separate from the signers
-   * @param {SerializeConfig} serializeOptions - Options for transaction serialization. This applies only to legacy transactions. Defaults to `{ requireAllSignatures = true, verifySignatures: true }`
+   * @param {SmartTransactionOptions} options - Options for customizing the transaction, including an optional fee payer separate from the signers, a 
+   * maximum priority fee to be paid in microlamports, and options for transaction serialization which are only applicable to legacy transactions
+   * 
    * @returns {Promise<SmartTransactionContext>} - The transaction with blockhash, blockheight and slot
+   * 
+   * @throws {Error} If there are issues with constructing the transaction, fetching priority fees, or computing units
    */
   async createSmartTransaction(
     instructions: TransactionInstruction[],
     signers: Signer[],
     lookupTables: AddressLookupTableAccount[] = [],
-    feePayer?: Signer,
-    serializeOptions: SerializeConfig = {
-      requireAllSignatures: true,
-      verifySignatures: true,
-    }
+    options: SmartTransactionOptions = {},
   ): Promise<SmartTransactionContext> {
     if (!signers.length) {
       throw new Error('The transaction must have at least one signer');
     }
+
+    const {
+      feePayer,
+      serializeOptions = {
+        requireAllSignatures: true,
+        verifySignatures: true,
+      },
+      priorityFeeCap,
+    } = options;
 
     // Check if any of the instructions provided set the compute unit price and/or limit, and throw an error if true
     const existingComputeBudgetInstructions = instructions.filter(
@@ -639,9 +648,15 @@ export class RpcClient {
       throw new Error('Priority fee estimate not available');
     }
 
+    // Adjust priority fee based on the cap
+    let adjustedPriorityFee = priorityFeeEstimate;
+    if (priorityFeeCap !== undefined) {
+      adjustedPriorityFee = Math.min(priorityFeeEstimate, priorityFeeCap);
+    }
+
     // Add the compute unit price instruction with the estimated fee
     const computeBudgetIx = ComputeBudgetProgram.setComputeUnitPrice({
-      microLamports: priorityFeeEstimate,
+      microLamports: adjustedPriorityFee,
     });
 
     instructions.unshift(computeBudgetIx);
@@ -712,19 +727,29 @@ export class RpcClient {
    * @param {TransactionInstruction[]} instructions - The transaction instructions
    * @param {Signer[]} signers - The transaction's signers. The first signer should be the fee payer
    * @param {AddressLookupTableAccount[]} lookupTables - The lookup tables to be included in a versioned transaction. Defaults to `[]`
-   * @param {SendOptions & { feePayer?: Signer; lastValidBlockHeightOffset?: number }} sendOptions - Options for sending the transaction, including an optional feePayer and lastValidBlockHeightOffset. Defaults to `{ skipPreflight: false; lastValidBlockheightOffset: 150 }`
+   * @param {SmartTransactionOptions} [sendOptions={}] - Options for customizing the transaction sending process, including whether to skip preflight checks, 
+   * the commitment level for preflight, the offset for the last valid block height, an optional fee payer separate from the signers, a maximum fee to be
+   * paid in microlamports, max retries, and the minimum slot context
+   * 
    * @returns {Promise<TransactionSignature>} - The transaction signature
+   * 
+   * @throws {Error} If the transaction fails to confirm within the specified parameters
    */
   async sendSmartTransaction(
     instructions: TransactionInstruction[],
     signers: Signer[],
     lookupTables: AddressLookupTableAccount[] = [],
-    sendOptions: SendOptions & {
-      feePayer?: Signer;
-      lastValidBlockHeightOffset?: number;
-    } = { skipPreflight: false, lastValidBlockHeightOffset: 150 }
+    sendOptions: SmartTransactionOptions = {}
   ): Promise<TransactionSignature> {
-    const lastValidBlockHeightOffset = sendOptions.lastValidBlockHeightOffset ?? 150;
+    const {
+      lastValidBlockHeightOffset = 150,
+      skipPreflight = false,
+      preflightCommitment = 'confirmed',
+      maxRetries,
+      minContextSlot,
+      feePayer,
+      priorityFeeCap,
+    } = sendOptions;
 
     if (lastValidBlockHeightOffset < 0)
       throw new Error('expiryBlockOffset must be a positive integer');
@@ -736,7 +761,7 @@ export class RpcClient {
           instructions,
           signers,
           lookupTables,
-          sendOptions.feePayer
+          sendOptions
         );
 
       const commitment = sendOptions?.preflightCommitment || 'confirmed';
@@ -826,15 +851,18 @@ export class RpcClient {
    * @param {Signer[]} signers - The transaction's signers. The first signer should be the fee payer if a separate one isn't provided
    * @param {AddressLookupTableAccount[]} lookupTables - The lookup tables to be included. Defaults to `[]`
    * @param {number} tipAmount - The amount of lamports to tip. Defaults to 1000
-   * @param {Signer} feePayer - Optional fee payer separate from the signers
+   * @param {SmartTransactionOptions} options - Additional options for customizing the transaction (see `createSmartTransaction`)
+   * 
    * @returns {Promise<{ serializedTransaction: string, lastValidBlockHeight: number }>} - The serialized transaction
+   * 
+   * @throws {Error} If there are issues with constructing the transaction or fetching the priority fees
    */
   async createSmartTransactionWithTip(
     instructions: TransactionInstruction[],
     signers: Signer[],
     lookupTables: AddressLookupTableAccount[] = [],
     tipAmount: number = 1000,
-    feePayer?: Signer
+    options: SmartTransactionOptions = {}
   ): Promise<SmartTransactionContext> {
     if (!signers.length) {
       throw new Error('The transaction must have at least one signer');
@@ -845,14 +873,14 @@ export class RpcClient {
       JITO_TIP_ACCOUNTS[Math.floor(Math.random() * JITO_TIP_ACCOUNTS.length)];
 
     // Set the fee payer and add the tip instruction
-    const payerKey = feePayer ? feePayer.publicKey : signers[0].publicKey;
+    const payerKey = options.feePayer ? options.feePayer.publicKey : signers[0].publicKey;
     this.addTipInstruction(instructions, payerKey, randomTipAccount, tipAmount);
 
     return this.createSmartTransaction(
       instructions,
       signers,
       lookupTables,
-      feePayer
+      options,
     );
   }
 
@@ -927,9 +955,11 @@ export class RpcClient {
    * @param {AddressLookupTableAccount[]} lookupTables - The lookup tables to be included. Defaults to `[]`
    * @param {number} tipAmount - The amount of lamports to tip. Defaults to 1000
    * @param {JitoRegion} region - The Jito Block Engine region. Defaults to "Default" (i.e., https://mainnet.block-engine.jito.wtf)
-   * @param {Signer} feePayer - Optional fee payer separate from the signers
-   * @param {number} lastValidBlockHeightOffset - The offset to add to lastValidBlockHeight. Defaults to 150
-   * @returns {Promise<string>} - The bundle ID
+   * @param {SmartTransactionOptions} options - Options for customizing the transaction and bundle sending
+   * 
+   * @returns {Promise<string>} - The bundle ID of the sent transaction
+   * 
+   * @throws {Error} If the bundle fails to confirm within the specified parameters
    */
   async sendSmartTransactionWithTip(
     instructions: TransactionInstruction[],
@@ -937,9 +967,9 @@ export class RpcClient {
     lookupTables: AddressLookupTableAccount[] = [],
     tipAmount: number = 1000,
     region: JitoRegion = 'Default',
-    feePayer?: Signer,
-    lastValidBlockHeightOffset = 150
+    options: SmartTransactionOptions = {}
   ): Promise<string> {
+    const lastValidBlockHeightOffset = options.lastValidBlockHeightOffset ?? 150;
     if (lastValidBlockHeightOffset < 0)
       throw new Error('lastValidBlockHeightOffset must be a positive integer');
 
@@ -953,7 +983,7 @@ export class RpcClient {
       signers,
       lookupTables,
       tipAmount,
-      feePayer
+      options,
     );
 
     const serializedTransaction = bs58.encode(transaction.serialize());
