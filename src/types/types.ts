@@ -386,3 +386,9 @@ export interface SmartTransactionOptions extends SendOptions {
 export interface HeliusSendOptions extends SolanaWebJsSendOptions {
   validatorAcls?: string[];
 }
+
+export interface ParseTransactionsRequest {
+  transactions: string[];
+}
+
+export type ParseTransactionsResponse = EnrichedTransaction[];
