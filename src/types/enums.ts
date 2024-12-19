@@ -551,6 +551,7 @@ export enum Context {
 }
 
 export enum AssetSortBy {
+  Id = 'id',
   Created = 'created',
   Updated = 'updated',
   RecentAction = 'recent_action',

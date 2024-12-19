@@ -57,8 +57,9 @@ export namespace DAS {
 
   // searchAssets
   export interface SearchAssetsRequest {
-    page: number; // starts at 1
+    page?: number; // starts at 1
     limit?: number;
+    cursor?: string;
     before?: string;
     after?: string;
     creatorAddress?: string;
@@ -149,7 +150,8 @@ export namespace DAS {
     grand_total?: number;
     total: number;
     limit: number;
-    page: number;
+    page?: number;
+    cursor?: string;
     items: GetAssetResponse[];
   };
   export interface GetAssetProofResponse {
