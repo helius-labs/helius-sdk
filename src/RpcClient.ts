@@ -1175,10 +1175,8 @@ export class RpcClient {
   ): Promise<JupiterSwapResult> {
     try {
       // Set default parameters
-      const slippageBps = params.slippageBps ?? 50; // Default 0.5%
+      const slippageBps = params.slippageBps ?? 50;
       const wrapUnwrapSOL = params.wrapUnwrapSOL ?? true;
-      const maxRetries = params.maxRetries ?? 2;
-      const skipPreflight = params.skipPreflight ?? true;
 
       // Get Jupiter quote
       const quoteResponse = await axios.get(
@@ -1211,33 +1209,20 @@ export class RpcClient {
         throw new Error('Failed to get swap transaction');
       }
 
-      // Deserialize and sign the transaction
+      // Deserialize transaction
       const swapTransactionBuf = Buffer.from(
         swapResponse.data.swapTransaction,
         'base64'
       );
       const transaction = VersionedTransaction.deserialize(swapTransactionBuf);
 
-      // Sign the transaction if the wallet is a Signer
+      // Sign the transaction
       transaction.sign([signer]);
 
-      // Get the latest blockhash and execute
-      const { blockhash, lastValidBlockHeight } =
-        await this.getLatestBlockhash();
-      const rawTransaction = transaction.serialize();
-
-      const signature = await this.connection.sendRawTransaction(
-        rawTransaction,
-        {
-          skipPreflight,
-          maxRetries,
-        }
-      );
-
-      await this.connection.confirmTransaction({
-        blockhash,
-        lastValidBlockHeight,
-        signature,
+      // Send the transaction
+      const signature = await this.sendTransaction(transaction, {
+        skipPreflight: true,
+        maxRetries: 3,
       });
 
       return {
