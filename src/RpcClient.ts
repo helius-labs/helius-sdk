@@ -1157,21 +1157,21 @@ export class RpcClient {
    * @example
    * ```typescript
    * // Swap 0.01 SOL to USDC
-   * const result = await helius.rpc.executeJupiterSwap(wallet, {
+   * const result = await helius.rpc.executeJupiterSwap({
    *   inputMint: 'So11111111111111111111111111111111111111112',  // SOL
    *   outputMint: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',  // USDC
    *   amount: 10000000,  // 0.01 SOL
    *   slippageBps: 50,   // 0.5% slippage
-   * });
+   * }, wallet);
    * ```
    *
-   * @param wallet - The wallet that will execute the swap
    * @param params - Swap parameters (inputMint, outputMint, amount, slippageBps)
+   * @param signer - The wallet that will execute the swap
    * @returns Swap result with signature and amounts
    */
   async executeJupiterSwap(
-    wallet: Signer,
-    params: JupiterSwapParams
+    params: JupiterSwapParams,
+    signer: Signer
   ): Promise<JupiterSwapResult> {
     try {
       // Set default parameters
@@ -1197,7 +1197,7 @@ export class RpcClient {
         'https://quote-api.jup.ag/v6/swap',
         {
           quoteResponse: quoteResponse.data,
-          userPublicKey: wallet.publicKey.toString(),
+          userPublicKey: signer.publicKey.toString(),
           wrapAndUnwrapSol: wrapUnwrapSOL,
         },
         {
@@ -1219,7 +1219,7 @@ export class RpcClient {
       const transaction = VersionedTransaction.deserialize(swapTransactionBuf);
 
       // Sign the transaction if the wallet is a Signer
-      transaction.sign([wallet]);
+      transaction.sign([signer]);
 
       // Get the latest blockhash and execute
       const { blockhash, lastValidBlockHeight } =
