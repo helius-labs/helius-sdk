@@ -399,8 +399,6 @@ export interface JupiterSwapParams {
   amount: number;
   maxDynamicSlippageBps?: number;
   wrapUnwrapSOL?: boolean;
-  maxRetries?: number;
-  skipPreflight?: boolean;
 }
 
 export interface JupiterSwapResult {
