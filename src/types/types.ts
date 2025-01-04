@@ -397,7 +397,7 @@ export interface JupiterSwapParams {
   inputMint: string;
   outputMint: string;
   amount: number;
-  slippageBps?: number;
+  maxDynamicSlippageBps?: number;
   wrapUnwrapSOL?: boolean;
   maxRetries?: number;
   skipPreflight?: boolean;

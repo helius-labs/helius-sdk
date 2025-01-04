@@ -1156,16 +1156,16 @@ export class RpcClient {
    *
    * @example
    * ```typescript
-   * // Swap 0.01 SOL to USDC
+   * // Swap 0.01 SOL to USDC with custom max dynamic slippage of 2%
    * const result = await helius.rpc.executeJupiterSwap({
    *   inputMint: 'So11111111111111111111111111111111111111112',  // SOL
    *   outputMint: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',  // USDC
    *   amount: 10000000,  // 0.01 SOL
-   *   slippageBps: 50,   // 0.5% slippage
+   *   maxDynamicSlippageBps: 200, // 2% maximum dynamic slippage
    * }, wallet);
    * ```
    *
-   * @param params - Swap parameters (inputMint, outputMint, amount, slippageBps)
+   * @param params - Swap parameters (inputMint, outputMint, amount, maxDynamicSlippageBps)
    * @param signer - The wallet that will execute the swap
    * @returns Swap result with signature and amounts
    */
@@ -1175,15 +1175,14 @@ export class RpcClient {
   ): Promise<JupiterSwapResult> {
     try {
       // Set default parameters
-      const slippageBps = params.slippageBps ?? 50;
       const wrapUnwrapSOL = params.wrapUnwrapSOL ?? true;
+      const maxDynamicSlippageBps = params.maxDynamicSlippageBps ?? 300; // Default to 3%
 
       // Get Jupiter quote
       const quoteResponse = await axios.get(
         `https://quote-api.jup.ag/v6/quote?inputMint=${params.inputMint}\
 &outputMint=${params.outputMint}\
-&amount=${params.amount}\
-&slippageBps=${slippageBps}`
+&amount=${params.amount}`
       );
 
       if (!quoteResponse.data) {
@@ -1197,6 +1196,9 @@ export class RpcClient {
           quoteResponse: quoteResponse.data,
           userPublicKey: signer.publicKey.toString(),
           wrapAndUnwrapSol: wrapUnwrapSOL,
+          dynamicComputeUnitLimit: true, // allow dynamic compute limit instead of max 1,400,000
+          prioritizationFeeLamports: 'auto',
+          dynamicSlippage: { maxBps: maxDynamicSlippageBps }, // Use user-provided or default max slippage
         },
         {
           headers: {
@@ -1222,7 +1224,7 @@ export class RpcClient {
       // Send the transaction
       const signature = await this.sendTransaction(transaction, {
         skipPreflight: true,
-        maxRetries: 3,
+        maxRetries: 0,
       });
 
       return {
