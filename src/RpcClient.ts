@@ -37,6 +37,8 @@ import {
   SmartTransactionContext,
   SmartTransactionOptions,
   HeliusSendOptions,
+  JupiterSwapParams,
+  JupiterSwapResult,
 } from './types';
 
 export type SendAndConfirmTransactionResponse = {
@@ -449,13 +451,17 @@ export class RpcClient {
       );
 
       if (response.data.error) {
-        throw new Error(`Error fetching priority fee estimate: ${JSON.stringify(response.data.error, null, 2)}`);
+        throw new Error(
+          `Error fetching priority fee estimate: ${JSON.stringify(response.data.error, null, 2)}`
+        );
       }
-  
+
       return response.data.result as GetPriorityFeeEstimateResponse;
     } catch (error) {
       if (axios.isAxiosError(error) && error.response) {
-        throw new Error(`Error fetching priority fee estimate: ${JSON.stringify(error.response.data, null, 2)}`);
+        throw new Error(
+          `Error fetching priority fee estimate: ${JSON.stringify(error.response.data, null, 2)}`
+        );
       }
       throw new Error(`Error fetching priority fee estimate: ${error}`);
     }
@@ -518,9 +524,9 @@ export class RpcClient {
   async pollTransactionConfirmation(
     txtSig: TransactionSignature,
     pollOptions: PollTransactionOptions = {
-      confirmationStatuses: ["confirmed", "finalized"],
+      confirmationStatuses: ['confirmed', 'finalized'],
       timeout: 15000,
-      interval: 5000
+      interval: 5000,
     }
   ): Promise<TransactionSignature> {
     let elapsed = 0;
@@ -536,7 +542,12 @@ export class RpcClient {
 
         const status = await this.connection.getSignatureStatus(txtSig);
 
-        if (status?.value?.confirmationStatus && pollOptions.confirmationStatuses?.includes(status?.value?.confirmationStatus)) {
+        if (
+          status?.value?.confirmationStatus &&
+          pollOptions.confirmationStatuses?.includes(
+            status?.value?.confirmationStatus
+          )
+        ) {
           clearInterval(intervalId);
           resolve(txtSig);
         }
@@ -549,18 +560,18 @@ export class RpcClient {
    * @param {TransactionInstruction[]} instructions - The transaction instructions
    * @param {Signer[]} signers - The transaction's signers. The first signer should be the fee payer
    * @param {AddressLookupTableAccount[]} lookupTables - The lookup tables to be included in a versioned transaction. Defaults to `[]`
-   * @param {SmartTransactionOptions} options - Options for customizing the transaction, including an optional fee payer separate from the signers, a 
+   * @param {SmartTransactionOptions} options - Options for customizing the transaction, including an optional fee payer separate from the signers, a
    * maximum priority fee to be paid in microlamports, and options for transaction serialization which are only applicable to legacy transactions
-   * 
+   *
    * @returns {Promise<SmartTransactionContext>} - The transaction with blockhash, blockheight and slot
-   * 
+   *
    * @throws {Error} If there are issues with constructing the transaction, fetching priority fees, or computing units
    */
   async createSmartTransaction(
     instructions: TransactionInstruction[],
     signers: Signer[],
     lookupTables: AddressLookupTableAccount[] = [],
-    options: SmartTransactionOptions = {},
+    options: SmartTransactionOptions = {}
   ): Promise<SmartTransactionContext> {
     if (!signers.length) {
       throw new Error('The transaction must have at least one signer');
@@ -727,12 +738,12 @@ export class RpcClient {
    * @param {TransactionInstruction[]} instructions - The transaction instructions
    * @param {Signer[]} signers - The transaction's signers. The first signer should be the fee payer
    * @param {AddressLookupTableAccount[]} lookupTables - The lookup tables to be included in a versioned transaction. Defaults to `[]`
-   * @param {SmartTransactionOptions} [sendOptions={}] - Options for customizing the transaction sending process, including whether to skip preflight checks, 
+   * @param {SmartTransactionOptions} [sendOptions={}] - Options for customizing the transaction sending process, including whether to skip preflight checks,
    * the commitment level for preflight, the offset for the last valid block height, an optional fee payer separate from the signers, a maximum fee to be
    * paid in microlamports, max retries, and the minimum slot context
-   * 
+   *
    * @returns {Promise<TransactionSignature>} - The transaction signature
-   * 
+   *
    * @throws {Error} If the transaction fails to confirm within the specified parameters
    */
   async sendSmartTransaction(
@@ -852,9 +863,9 @@ export class RpcClient {
    * @param {AddressLookupTableAccount[]} lookupTables - The lookup tables to be included. Defaults to `[]`
    * @param {number} tipAmount - The amount of lamports to tip. Defaults to 1000
    * @param {SmartTransactionOptions} options - Additional options for customizing the transaction (see `createSmartTransaction`)
-   * 
+   *
    * @returns {Promise<{ serializedTransaction: string, lastValidBlockHeight: number }>} - The serialized transaction
-   * 
+   *
    * @throws {Error} If there are issues with constructing the transaction or fetching the priority fees
    */
   async createSmartTransactionWithTip(
@@ -873,14 +884,16 @@ export class RpcClient {
       JITO_TIP_ACCOUNTS[Math.floor(Math.random() * JITO_TIP_ACCOUNTS.length)];
 
     // Set the fee payer and add the tip instruction
-    const payerKey = options.feePayer ? options.feePayer.publicKey : signers[0].publicKey;
+    const payerKey = options.feePayer
+      ? options.feePayer.publicKey
+      : signers[0].publicKey;
     this.addTipInstruction(instructions, payerKey, randomTipAccount, tipAmount);
 
     return this.createSmartTransaction(
       instructions,
       signers,
       lookupTables,
-      options,
+      options
     );
   }
 
@@ -956,9 +969,9 @@ export class RpcClient {
    * @param {number} tipAmount - The amount of lamports to tip. Defaults to 1000
    * @param {JitoRegion} region - The Jito Block Engine region. Defaults to "Default" (i.e., https://mainnet.block-engine.jito.wtf)
    * @param {SmartTransactionOptions} options - Options for customizing the transaction and bundle sending
-   * 
+   *
    * @returns {Promise<string>} - The bundle ID of the sent transaction
-   * 
+   *
    * @throws {Error} If the bundle fails to confirm within the specified parameters
    */
   async sendSmartTransactionWithTip(
@@ -969,7 +982,8 @@ export class RpcClient {
     region: JitoRegion = 'Default',
     options: SmartTransactionOptions = {}
   ): Promise<string> {
-    const lastValidBlockHeightOffset = options.lastValidBlockHeightOffset ?? 150;
+    const lastValidBlockHeightOffset =
+      options.lastValidBlockHeightOffset ?? 150;
     if (lastValidBlockHeightOffset < 0)
       throw new Error('lastValidBlockHeightOffset must be a positive integer');
 
@@ -983,7 +997,7 @@ export class RpcClient {
       signers,
       lookupTables,
       tipAmount,
-      options,
+      options
     );
 
     const serializedTransaction = bs58.encode(transaction.serialize());
@@ -1120,7 +1134,7 @@ export class RpcClient {
           jsonrpc: '2.0',
           id: this.id,
           method: 'sendTransaction',
-          params: [rawTransaction, {encoding: 'base64', ...options}],
+          params: [rawTransaction, { encoding: 'base64', ...options }],
         },
         {
           headers: { 'Content-Type': 'application/json' },
@@ -1134,6 +1148,99 @@ export class RpcClient {
       return response.data.result as TransactionSignature;
     } catch (error) {
       throw new Error(`Error sending transaction: ${error}`);
+    }
+  }
+
+  /**
+   * Execute a token swap using Jupiter Exchange
+   *
+   * @example
+   * ```typescript
+   * // Swap 0.01 SOL to USDC with custom max dynamic slippage of 2%
+   * const result = await helius.rpc.executeJupiterSwap({
+   *   inputMint: 'So11111111111111111111111111111111111111112',  // SOL
+   *   outputMint: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',  // USDC
+   *   amount: 10000000,  // 0.01 SOL
+   *   maxDynamicSlippageBps: 200, // 2% maximum dynamic slippage
+   * }, wallet);
+   * ```
+   *
+   * @param params - Swap parameters (inputMint, outputMint, amount, maxDynamicSlippageBps)
+   * @param signer - The wallet that will execute the swap
+   * @returns Swap result with signature and amounts
+   */
+  async executeJupiterSwap(
+    params: JupiterSwapParams,
+    signer: Signer
+  ): Promise<JupiterSwapResult> {
+    try {
+      // Set default parameters
+      const wrapUnwrapSOL = params.wrapUnwrapSOL ?? true;
+      const maxDynamicSlippageBps = params.maxDynamicSlippageBps ?? 300; // Default to 3%
+
+      // Get Jupiter quote
+      const quoteResponse = await axios.get(
+        `https://quote-api.jup.ag/v6/quote?inputMint=${params.inputMint}\
+&outputMint=${params.outputMint}\
+&amount=${params.amount}`
+      );
+
+      if (!quoteResponse.data) {
+        throw new Error('Failed to get Jupiter quote');
+      }
+
+      // Get swap transaction
+      const swapResponse = await axios.post(
+        'https://quote-api.jup.ag/v6/swap',
+        {
+          quoteResponse: quoteResponse.data,
+          userPublicKey: signer.publicKey.toString(),
+          wrapAndUnwrapSol: wrapUnwrapSOL,
+          dynamicComputeUnitLimit: true, // allow dynamic compute limit instead of max 1,400,000
+          prioritizationFeeLamports: 'auto',
+          dynamicSlippage: { maxBps: maxDynamicSlippageBps }, // Use user-provided or default max slippage
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      if (!swapResponse.data?.swapTransaction) {
+        throw new Error('Failed to get swap transaction');
+      }
+
+      // Deserialize transaction
+      const swapTransactionBuf = Buffer.from(
+        swapResponse.data.swapTransaction,
+        'base64'
+      );
+      const transaction = VersionedTransaction.deserialize(swapTransactionBuf);
+
+      // Sign the transaction
+      transaction.sign([signer]);
+
+      // Send the transaction
+      const signature = await this.sendTransaction(transaction, {
+        skipPreflight: true,
+        maxRetries: 0,
+      });
+
+      return {
+        signature,
+        success: true,
+        inputAmount: params.amount,
+        outputAmount: Number(quoteResponse.data.otherAmountThreshold),
+      };
+    } catch (error) {
+      console.error('Jupiter swap error:', error);
+      return {
+        signature: '',
+        success: false,
+        error:
+          error instanceof Error ? error.message : 'Unknown error occurred',
+      };
     }
   }
 }

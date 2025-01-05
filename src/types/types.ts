@@ -371,10 +371,10 @@ export type JitoRegion = 'Default' | 'NY' | 'Amsterdam' | 'Frankfurt' | 'Tokyo';
 export type PollTransactionOptions = {
   confirmationStatuses?: TransactionConfirmationStatus[];
   // In milliseconds
-  timeout?: number; 
+  timeout?: number;
   // In milliseconds
   interval?: number;
-}
+};
 
 export interface SmartTransactionOptions extends SendOptions {
   feePayer?: Signer;
@@ -392,3 +392,19 @@ export interface ParseTransactionsRequest {
 }
 
 export type ParseTransactionsResponse = EnrichedTransaction[];
+
+export interface JupiterSwapParams {
+  inputMint: string;
+  outputMint: string;
+  amount: number;
+  maxDynamicSlippageBps?: number;
+  wrapUnwrapSOL?: boolean;
+}
+
+export interface JupiterSwapResult {
+  signature: string;
+  success: boolean;
+  error?: string;
+  inputAmount?: number;
+  outputAmount?: number;
+}

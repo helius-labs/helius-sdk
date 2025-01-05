@@ -138,6 +138,7 @@ Offers additional tools for various Solana-related tasks like analyzing blockcha
 - [`getTokenHolders()`](#getTokenHolders): Returns all the token accounts for a given mint address (ONLY FOR SPL TOKENS).
 - [`getPriorityFeeEstimate()`](#getPriorityFeeEstimate): Returns an estimated priority fee based on a set of predefined priority levels (percentiles).
 - [`sendTransaction()`](#sendTransaction): Wrapper for `sendTransaction` RPC call that includes support for `validatorAcls` parameter.
+- [`executeJupiterSwap()`](#executeJupiterSwap): Execute a token swap using Jupiter Exchange with automatic priority fee estimation and compute unit calculation. The method also includes dynamic slippage protection that automatically adjusts based on market conditions.
 
 
 ## DAS API (Digital Asset Standard)
@@ -817,6 +818,33 @@ try {
     console.error(error);
 }
 ```
+
+### executeJupiterSwap()
+
+Execute a token swap using Jupiter Exchange with automatic priority fee estimation and compute unit calculation. The method also includes dynamic slippage protection that automatically adjusts based on market conditions.
+
+```typescript
+import { Helius } from "helius-sdk";
+import { Keypair } from "@solana/web3.js";
+
+const helius = new Helius("YOUR_API_KEY");
+
+// Swap 0.5 USDC to SOL with 2% maximum dynamic slippage
+const swapParams = {
+  inputMint: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v', // USDC
+  outputMint: 'So11111111111111111111111111111111111111112', // SOL
+  amount: 500000, // 0.5 USDC (USDC has 6 decimals)
+  maxDynamicSlippageBps: 200, // Optional: 2% maximum dynamic slippage (default is 3%)
+};
+
+const result = await helius.rpc.executeJupiterSwap(swapParams, wallet);
+```
+
+The method automatically:
+- Calculates optimal compute units for the transaction
+- Estimates and sets appropriate priority fees
+- Uses Jupiter's dynamic slippage protection (configurable via `maxDynamicSlippageBps`)
+
 
 ## helius.connection
 
