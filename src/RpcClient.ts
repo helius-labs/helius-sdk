@@ -118,9 +118,6 @@ export class RpcClient {
         {
           filters: [
             {
-              dataSize: 200,
-            },
-            {
               memcmp: {
                 offset: 44,
                 bytes: wallet,
