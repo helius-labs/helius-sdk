@@ -153,6 +153,7 @@ export namespace DAS {
     page?: number;
     cursor?: string;
     items: GetAssetResponse[];
+    nativeBalance?: NativeBalanceInfo;
   };
   export interface GetAssetProofResponse {
     root: string;
@@ -266,6 +267,13 @@ export namespace DAS {
     files?: Files;
     metadata: Metadata;
     links?: Links;
+  }
+
+  // Native balance
+  export type NativeBalanceInfo = {
+    lamports: number;
+    price_per_sol: number;
+    total_price: number;
   }
 
   // FILE --
