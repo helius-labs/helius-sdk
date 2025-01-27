@@ -384,6 +384,7 @@ export interface SmartTransactionOptions extends SendOptions {
   serializeOptions?: SerializeConfig;
   pollTimeoutMs?: number;
   pollIntervalMs?: number;
+  pollChunkMs?: number;
 }
 
 export interface HeliusSendOptions extends SolanaWebJsSendOptions {
