@@ -520,11 +520,7 @@ export class RpcClient {
    */
   async pollTransactionConfirmation(
     txtSig: TransactionSignature,
-    pollOptions: PollTransactionOptions = {
-      confirmationStatuses: ['confirmed', 'finalized'],
-      timeout: 15000,
-      interval: 5000,
-    }
+    pollOptions: PollTransactionOptions = {}
   ): Promise<TransactionSignature> {
     const {
       confirmationStatuses = ['confirmed', 'finalized'],
