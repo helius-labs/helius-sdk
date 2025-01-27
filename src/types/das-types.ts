@@ -274,7 +274,7 @@ export namespace DAS {
     lamports: number;
     price_per_sol: number;
     total_price: number;
-  }
+  };
 
   // FILE --
   export interface File {

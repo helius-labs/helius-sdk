@@ -520,36 +520,74 @@ export class RpcClient {
    */
   async pollTransactionConfirmation(
     txtSig: TransactionSignature,
-    pollOptions: PollTransactionOptions = {
-      confirmationStatuses: ['confirmed', 'finalized'],
-      timeout: 15000,
-      interval: 5000,
-    }
+    pollOptions: PollTransactionOptions = {}
   ): Promise<TransactionSignature> {
-    let elapsed = 0;
+    const {
+      confirmationStatuses = ['confirmed', 'finalized'],
+      timeout = 60000,
+      interval = 2000,
+      lastValidBlockHeight,
+    } = pollOptions;
 
-    return new Promise<TransactionSignature>((resolve, reject) => {
-      const intervalId = setInterval(async () => {
-        elapsed += pollOptions.interval!;
+    if (lastValidBlockHeight) {
+      const currentHeight = await this.connection.getBlockHeight();
 
-        if (elapsed >= pollOptions.timeout!) {
-          clearInterval(intervalId);
-          reject(new Error(`Transaction ${txtSig}'s confirmation timed out`));
+      if (lastValidBlockHeight - currentHeight > 150) {
+        throw new Error(
+          `Provided lastValidBlockHeight (${lastValidBlockHeight}) is more than 150 blocks from the current chain height (${currentHeight})`
+        );
+      }
+    }
+
+    const startTime = Date.now();
+
+    while (true) {
+      if (Date.now() - startTime > timeout) {
+        throw new Error(
+          `Transaction ${txtSig} not confirmed within ${timeout}ms`
+        );
+      }
+
+      if (lastValidBlockHeight) {
+        const currentHeight = await this.connection.getBlockHeight();
+
+        if (currentHeight > lastValidBlockHeight) {
+          const finalStatus = await this.connection.getSignatureStatus(txtSig);
+          if (
+            finalStatus?.value?.confirmationStatus &&
+            confirmationStatuses.includes(finalStatus.value.confirmationStatus)
+          ) {
+            // The tx was confirmed at the boundary
+            return txtSig;
+          }
+          throw new Error(
+            `Block height has exceeded lastValidBlockHeight for tx ${txtSig}, and it was not found in a confirmed block.`
+          );
+        }
+      }
+
+      const status = await this.connection.getSignatureStatus(txtSig);
+
+      if (status?.value) {
+        const { confirmationStatus, err } = status.value;
+
+        if (err) {
+          throw new Error(
+            `Transaction ${txtSig} failed on-chain with error: ${JSON.stringify(err)}`
+          );
         }
 
-        const status = await this.connection.getSignatureStatus(txtSig);
-
+        // If confirmed or finalized, we can stop
         if (
-          status?.value?.confirmationStatus &&
-          pollOptions.confirmationStatuses?.includes(
-            status?.value?.confirmationStatus
-          )
+          confirmationStatus &&
+          confirmationStatuses.includes(confirmationStatus)
         ) {
-          clearInterval(intervalId);
-          resolve(txtSig);
+          return txtSig;
         }
-      }, pollOptions.interval);
-    });
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, interval));
+    }
   }
 
   /**
@@ -757,6 +795,9 @@ export class RpcClient {
       minContextSlot,
       feePayer,
       priorityFeeCap,
+      pollTimeoutMs = 60000,
+      pollIntervalMs = 2000,
+      pollChunkMs = 10000,
     } = sendOptions;
 
     if (lastValidBlockHeightOffset < 0)
@@ -772,63 +813,70 @@ export class RpcClient {
           sendOptions
         );
 
-      const commitment = sendOptions?.preflightCommitment || 'confirmed';
-
       const currentBlockHeight = await this.connection.getBlockHeight();
       const lastValidBlockHeight = Math.min(
         blockhash.lastValidBlockHeight,
         currentBlockHeight + lastValidBlockHeightOffset
       );
+      const serializedTx = transaction.serialize();
+      const startTime = Date.now();
+      let attemptCount = 0;
+      let signature: string;
 
-      let error: Error;
+      while (true) {
+        if (Date.now() - startTime > pollTimeoutMs) {
+          throw new Error(`Transaction not confirmed after ${pollTimeoutMs}`);
+        }
 
-      // We will retry the transaction on TransactionExpiredBlockheightExceededError
-      // until the lastValidBlockHeightOffset is reached in case the transaction is
-      // included after the lastValidBlockHeight due to network latency or
-      // to the leader not forwarding the transaction for an unknown reason
-      // Worst case scenario, it'll retry until the lastValidBlockHeightOffset is reached
-      // The tradeoff is better reliability at the cost of a possible longer confirmation time
-      do {
+        attemptCount++;
+
         try {
-          // signature does not change when it resends the same one
-          const signature = await this.connection.sendRawTransaction(
-            transaction.serialize(),
+          signature = await this.connection.sendRawTransaction(serializedTx, {
+            skipPreflight,
+            preflightCommitment,
+            maxRetries,
+          });
+        } catch (sendError) {
+          console.warn(
+            `sendRawTransaction attempt ${attemptCount} failed: ${sendError}`
+          );
+
+          await new Promise((resolve) => setTimeout(resolve, pollIntervalMs));
+          continue;
+        }
+
+        try {
+          const confirmedSig = await this.pollTransactionConfirmation(
+            signature,
             {
-              maxRetries: 0,
-              preflightCommitment: 'confirmed',
-              skipPreflight: sendOptions.skipPreflight,
-              minContextSlot,
-              ...sendOptions,
+              timeout: pollChunkMs,
+              interval: pollIntervalMs,
+              confirmationStatuses: ['confirmed', 'finalized'],
+              lastValidBlockHeight,
             }
           );
 
-          const abortSignal = AbortSignal.timeout(15000);
-          await this.connection.confirmTransaction(
-            {
-              abortSignal,
-              signature,
-              blockhash: blockhash.blockhash,
-              lastValidBlockHeight: lastValidBlockHeight,
-            },
-            commitment
+          return confirmedSig;
+        } catch (pollError: any) {
+          // If it's a block-height or on-chain error, throw immediately
+          if (
+            pollError.message.includes('Block height has exceeded') ||
+            pollError.message.includes('failed on-chain')
+          ) {
+            throw pollError;
+          }
+
+          console.warn(
+            `pollTransactionConfirmation timed out, attempt #${attemptCount}. Retrying...`
           );
 
-          abortSignal.removeEventListener('abort', () => {});
-
-          return signature;
-        } catch (_error: any) {
-          if (!(_error instanceof Error)) error = new Error();
-
-          error = _error;
+          await new Promise((resolve) => setTimeout(resolve, pollIntervalMs));
+          continue;
         }
-      } while (!(error instanceof TransactionExpiredBlockheightExceededError));
+      }
     } catch (error) {
       throw new Error(`Error sending smart transaction: ${error}`);
     }
-
-    throw new Error(
-      'Transaction failed to confirm within lastValidBlockHeight'
-    );
   }
 
   /**
