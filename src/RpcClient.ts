@@ -526,30 +526,67 @@ export class RpcClient {
       interval: 5000,
     }
   ): Promise<TransactionSignature> {
-    let elapsed = 0;
+    const {
+      confirmationStatuses = ["confirmed", "finalized"],
+      timeout = 60000,
+      interval = 2000,
+      lastValidBlockHeight,
+    } = pollOptions;
 
-    return new Promise<TransactionSignature>((resolve, reject) => {
-      const intervalId = setInterval(async () => {
-        elapsed += pollOptions.interval!;
+    if (lastValidBlockHeight) {
+      const currentHeight = await this.connection.getBlockHeight();
 
-        if (elapsed >= pollOptions.timeout!) {
-          clearInterval(intervalId);
-          reject(new Error(`Transaction ${txtSig}'s confirmation timed out`));
+      if (lastValidBlockHeight - currentHeight > 150) {
+        throw new Error(
+          `Provided lastValidBlockHeight (${lastValidBlockHeight}) is more than 150 blocks from the current chain height (${currentHeight})`
+        );
+      }
+    }
+
+    const startTime = Date.now();
+
+    while (true) {
+      if (Date.now() - startTime > timeout) {
+        throw new Error(`Transaction ${txtSig} not confirmed within ${timeout}ms`);
+      }
+
+      if (lastValidBlockHeight) {
+        const currentHeight = await this.connection.getBlockHeight();
+
+        if (currentHeight > lastValidBlockHeight) {
+          const finalStatus = await this.connection.getSignatureStatus(txtSig);
+          if (
+            finalStatus?.value?.confirmationStatus &&
+            confirmationStatuses.includes(finalStatus.value.confirmationStatus)
+          ) {
+            // The tx was confirmed at the boundary
+            return txtSig;
+          }
+          throw new Error(
+            `Block height has exceeded lastValidBlockHeight for tx ${txtSig}, and it was not found in a confirmed block.`
+          );
         }
+      }
+  
+      const status = await this.connection.getSignatureStatus(txtSig);
 
-        const status = await this.connection.getSignatureStatus(txtSig);
-
-        if (
-          status?.value?.confirmationStatus &&
-          pollOptions.confirmationStatuses?.includes(
-            status?.value?.confirmationStatus
-          )
-        ) {
-          clearInterval(intervalId);
-          resolve(txtSig);
+      if (status?.value) {
+        const { confirmationStatus, err } = status.value;
+  
+        if (err) {
+          throw new Error(
+            `Transaction ${txtSig} failed on-chain with error: ${JSON.stringify(err)}`
+          );
         }
-      }, pollOptions.interval);
-    });
+  
+        // If confirmed or finalized, we can stop
+        if (confirmationStatus && confirmationStatuses.includes(confirmationStatus)) {
+          return txtSig;
+        }
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, interval));
+    }
   }
 
   /**

@@ -374,6 +374,7 @@ export type PollTransactionOptions = {
   timeout?: number;
   // In milliseconds
   interval?: number;
+  lastValidBlockHeight?: number;
 };
 
 export interface SmartTransactionOptions extends SendOptions {
@@ -381,6 +382,8 @@ export interface SmartTransactionOptions extends SendOptions {
   lastValidBlockHeightOffset?: number;
   priorityFeeCap?: number;
   serializeOptions?: SerializeConfig;
+  pollTimeoutMs?: number;
+  pollIntervalMs?: number;
 }
 
 export interface HeliusSendOptions extends SolanaWebJsSendOptions {
