@@ -1,45 +1,42 @@
 import {
-  BlockhashWithExpiryBlockHeight,
-  VersionedTransaction,
-  AddressLookupTableAccount,
-  Transaction,
-  TransactionMessage,
-  TransactionInstruction,
-  TransactionSignature,
-  Commitment,
-  PublicKey,
   AccountInfo,
+  AddressLookupTableAccount,
+  Blockhash,
+  BlockhashWithExpiryBlockHeight,
+  Commitment,
+  ComputeBudgetProgram,
+  Connection,
   GetLatestBlockhashConfig,
+  ParsedAccountData,
+  PublicKey,
   RpcResponseAndContext,
   SignatureResult,
-  Blockhash,
-  Connection,
-  ParsedAccountData,
-  ComputeBudgetProgram,
-  SendOptions,
   Signer,
   SystemProgram,
-  SerializeConfig,
-  TransactionExpiredBlockheightExceededError,
-  SendOptions as SolanaWebJsSendOptions,
+  Transaction,
+  TransactionInstruction,
+  TransactionMessage,
+  TransactionSignature,
+  VersionedTransaction,
 } from '@solana/web3.js';
-import bs58 from 'bs58';
 import axios from 'axios';
+import bs58 from 'bs58';
 
-import { DAS } from './types/das-types';
 import {
+  CreateSmartTransactionOptions,
   GetPriorityFeeEstimateRequest,
   GetPriorityFeeEstimateResponse,
+  HeliusSendOptions,
   JITO_API_URLS,
   JITO_TIP_ACCOUNTS,
   JitoRegion,
-  PollTransactionOptions,
-  SmartTransactionContext,
-  SmartTransactionOptions,
-  HeliusSendOptions,
   JupiterSwapParams,
   JupiterSwapResult,
+  PollTransactionOptions,
+  SendSmartTransactionOptions,
+  SmartTransactionContext,
 } from './types';
+import { DAS } from './types/das-types';
 
 export type SendAndConfirmTransactionResponse = {
   signature: TransactionSignature;
@@ -595,8 +592,10 @@ export class RpcClient {
    * @param {TransactionInstruction[]} instructions - The transaction instructions
    * @param {Signer[]} signers - The transaction's signers. The first signer should be the fee payer
    * @param {AddressLookupTableAccount[]} lookupTables - The lookup tables to be included in a versioned transaction. Defaults to `[]`
-   * @param {SmartTransactionOptions} options - Options for customizing the transaction, including an optional fee payer separate from the signers, a
-   * maximum priority fee to be paid in microlamports, and options for transaction serialization which are only applicable to legacy transactions
+   * @param {CreateSmartTransactionOptions} options - Options for customizing the transaction creation process. Includes:
+   *   - `feePayer` (Signer, optional): Override fee payer (defaults to first signer).
+   *   - `serializeOptions` (SerializeConfig, optional): Custom serialization options for the transaction.
+   *   - `priorityFeeCap` (number, optional): Maximum priority fee to pay in microlamports (for fee estimation capping).
    *
    * @returns {Promise<SmartTransactionContext>} - The transaction with blockhash, blockheight and slot
    *
@@ -606,7 +605,7 @@ export class RpcClient {
     instructions: TransactionInstruction[],
     signers: Signer[],
     lookupTables: AddressLookupTableAccount[] = [],
-    options: SmartTransactionOptions = {}
+    options: CreateSmartTransactionOptions = {}
   ): Promise<SmartTransactionContext> {
     if (!signers.length) {
       throw new Error('The transaction must have at least one signer');
@@ -772,10 +771,19 @@ export class RpcClient {
    * Build and send an optimized transaction, and handle its confirmation status
    * @param {TransactionInstruction[]} instructions - The transaction instructions
    * @param {Signer[]} signers - The transaction's signers. The first signer should be the fee payer
-   * @param {AddressLookupTableAccount[]} lookupTables - The lookup tables to be included in a versioned transaction. Defaults to `[]`
-   * @param {SmartTransactionOptions} [sendOptions={}] - Options for customizing the transaction sending process, including whether to skip preflight checks,
-   * the commitment level for preflight, the offset for the last valid block height, an optional fee payer separate from the signers, a maximum fee to be
-   * paid in microlamports, max retries, and the minimum slot context
+   * @param {AddressLookupTableAccount[]} [lookupTables=[]] - The lookup tables to be included in a versioned transaction
+   * @param {SendSmartTransactionOptions} [sendOptions={}] - Options for customizing the transaction sending process. Includes:
+   *   - `lastValidBlockHeightOffset` (number, optional, default=150): Offset added to current block height to compute expiration. Must be positive.
+   *   - `pollTimeoutMs` (number, optional, default=60000): Total timeout (ms) for confirmation polling.
+   *   - `pollIntervalMs` (number, optional, default=2000): Interval (ms) between polling attempts.
+   *   - `pollChunkMs` (number, optional, default=10000): Timeout (ms) for each individual polling chunk.
+   *   - `skipPreflight` (boolean, optional, default=false): Skip preflight transaction checks if true.
+   *   - `preflightCommitment` (Commitment, optional, default='confirmed'): Commitment level for preflight checks.
+   *   - `maxRetries` (number, optional): Maximum number of retries for sending the transaction.
+   *   - `minContextSlot` (number, optional): Minimum slot at which to fetch blockhash (prevents stale blockhash usage).
+   *   - `feePayer` (Signer, optional): Override fee payer (defaults to first signer).
+   *   - `priorityFeeCap` (number, optional): Maximum priority fee to pay in microlamports (for fee estimation capping).
+   *   - `serializeOptions` (SerializeConfig, optional): Custom serialization options for the transaction.
    *
    * @returns {Promise<TransactionSignature>} - The transaction signature
    *
@@ -785,19 +793,16 @@ export class RpcClient {
     instructions: TransactionInstruction[],
     signers: Signer[],
     lookupTables: AddressLookupTableAccount[] = [],
-    sendOptions: SmartTransactionOptions = {}
+    sendOptions: SendSmartTransactionOptions = {}
   ): Promise<TransactionSignature> {
     const {
       lastValidBlockHeightOffset = 150,
-      skipPreflight = false,
-      preflightCommitment = 'confirmed',
-      maxRetries,
-      minContextSlot,
-      feePayer,
-      priorityFeeCap,
       pollTimeoutMs = 60000,
       pollIntervalMs = 2000,
       pollChunkMs = 10000,
+      skipPreflight = false,
+      preflightCommitment = 'confirmed',
+      maxRetries,
     } = sendOptions;
 
     if (lastValidBlockHeightOffset < 0)
@@ -805,13 +810,12 @@ export class RpcClient {
 
     try {
       // Create a smart transaction
-      const { transaction, blockhash, minContextSlot } =
-        await this.createSmartTransaction(
-          instructions,
-          signers,
-          lookupTables,
-          sendOptions
-        );
+      const { transaction, blockhash } = await this.createSmartTransaction(
+        instructions,
+        signers,
+        lookupTables,
+        sendOptions
+      );
 
       const currentBlockHeight = await this.connection.getBlockHeight();
       const lastValidBlockHeight = Math.min(
@@ -918,7 +922,7 @@ export class RpcClient {
     signers: Signer[],
     lookupTables: AddressLookupTableAccount[] = [],
     tipAmount: number = 1000,
-    options: SmartTransactionOptions = {}
+    options: CreateSmartTransactionOptions = {}
   ): Promise<SmartTransactionContext> {
     if (!signers.length) {
       throw new Error('The transaction must have at least one signer');
@@ -1025,7 +1029,7 @@ export class RpcClient {
     lookupTables: AddressLookupTableAccount[] = [],
     tipAmount: number = 1000,
     region: JitoRegion = 'Default',
-    options: SmartTransactionOptions = {}
+    options: SendSmartTransactionOptions = {}
   ): Promise<string> {
     const lastValidBlockHeightOffset =
       options.lastValidBlockHeightOffset ?? 150;
