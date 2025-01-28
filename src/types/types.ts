@@ -5,24 +5,24 @@ import type {
   SendOptions,
   SerializeConfig,
   Signer,
+  SendOptions as SolanaWebJsSendOptions,
   Transaction,
   TransactionConfirmationStatus,
   TransactionError,
-  VersionedTransaction,
-  SendOptions as SolanaWebJsSendOptions,
+  VersionedTransaction
 } from '@solana/web3.js';
 
 import type {
-  WebhookType,
-  TokenStandard,
-  TransactionType,
-  Source,
-  ProgramName,
-  TransactionContext,
-  TxnStatus,
   AccountWebhookEncoding,
   PriorityLevel,
+  ProgramName,
+  Source,
+  TokenStandard,
+  TransactionContext,
+  TransactionType,
+  TxnStatus,
   UiTransactionEncoding,
+  WebhookType,
 } from './enums';
 
 export type HeliusCluster = Omit<Cluster, 'testnet'>;
@@ -377,13 +377,32 @@ export type PollTransactionOptions = {
   lastValidBlockHeight?: number;
 };
 
-export interface SmartTransactionOptions extends SendOptions {
+/**
+ * Options for sending transactions with Helius
+ */
+export interface CreateSmartTransactionOptions {
+  /** Optional separate fee payer. If not provided, the first signer will be used */
   feePayer?: Signer;
-  lastValidBlockHeightOffset?: number;
+  /** Maximum priority fee (in microlamports) to pay for the transaction */
   priorityFeeCap?: number;
+  /** Options for serializing legacy transactions:
+   * - requireAllSignatures: Requires all signatures to be present (default: true)
+   * - verifySignatures: Verifies provided signatures (default: true)
+   */
   serializeOptions?: SerializeConfig;
+}
+
+/**
+ * Options for sending transactions with Helius
+ */
+export interface SendSmartTransactionOptions extends CreateSmartTransactionOptions, SendOptions {
+  /** Number of blocks after the current block height that the transaction remains valid */
+  lastValidBlockHeightOffset?: number;
+  /** Maximum time in milliseconds to wait for transaction confirmation */
   pollTimeoutMs?: number;
+  /** Time in milliseconds to wait between confirmation status checks */
   pollIntervalMs?: number;
+  /** Time in milliseconds for each polling attempt before retrying transaction */
   pollChunkMs?: number;
 }
 
