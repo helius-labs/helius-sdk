@@ -1229,18 +1229,18 @@ export class RpcClient {
 
       // Get Jupiter quote
       const quoteResponse = await axios.get(
-        `https://quote-api.jup.ag/v6/quote?inputMint=${params.inputMint}\
+        `https://api.jup.ag/swap/v1/quote
+?inputMint=${params.inputMint}\
 &outputMint=${params.outputMint}\
 &amount=${params.amount}`
       );
-
       if (!quoteResponse.data) {
         throw new Error('Failed to get Jupiter quote');
       }
 
       // Get swap transaction
       const swapResponse = await axios.post(
-        'https://quote-api.jup.ag/v6/swap',
+        'https://api.jup.ag/swap/v1/swap',
         {
           quoteResponse: quoteResponse.data,
           userPublicKey: signer.publicKey.toString(),
@@ -1255,7 +1255,6 @@ export class RpcClient {
           },
         }
       );
-
       if (!swapResponse.data?.swapTransaction) {
         throw new Error('Failed to get swap transaction');
       }
