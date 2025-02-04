@@ -7,12 +7,12 @@ export function getHeliusEndpoints(cluster: HeliusCluster): HeliusEndpoints {
   switch (cluster) {
     case 'devnet':
       return {
-        api: 'https://api-devnet.helius-rpc.com',
+        api: 'https://api-devnet.helius.xyz',
         rpc: 'https://devnet.helius-rpc.com',
       };
     case 'mainnet-beta':
       return {
-        api: 'https://api-mainnet.helius-rpc.com',
+        api: 'https://api.helius.xyz',
         rpc: 'https://mainnet.helius-rpc.com',
       };
     default:
