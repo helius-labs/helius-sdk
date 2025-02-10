@@ -384,11 +384,11 @@ export class Helius {
 
   /**
    * Mints a cNFT via Helius Mint API
-   * 
+   *
    * @deprecated This method is deprecated. The built-in image upload functionality has been removed.
    *             Please supply a pre-uploaded image URL using the imageUrl field in your MintApiRequest.
    *             Please refer to ZK Compression for all future compression-related work: https://docs.helius.dev/zk-compression-and-photon-api/what-is-zk-compression-on-solana
-  * 
+   *
    * @param {MintApiRequest} mintApiRequest - the request object containing the mint information
    * @returns {Promise<MintApiResponse>} a promise that resolves to the mint response object
    */
@@ -397,7 +397,7 @@ export class Helius {
   ): Promise<MintApiResponse> {
     if (mintApiRequest.imagePath || mintApiRequest.walletPrivateKey) {
       console.warn(
-        "Deprecated: imagePath and walletPrivateKey are no longer supported. Please supply a pre-uploaded image URL using imageUrl."
+        'Deprecated: imagePath and walletPrivateKey are no longer supported. Please supply a pre-uploaded image URL using imageUrl.'
       );
     }
 
