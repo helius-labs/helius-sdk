@@ -9,7 +9,7 @@ import type {
   Transaction,
   TransactionConfirmationStatus,
   TransactionError,
-  VersionedTransaction
+  VersionedTransaction,
 } from '@solana/web3.js';
 
 import type {
@@ -267,7 +267,13 @@ export interface MintApiRequest {
     trait_type: string;
     value: string;
   }[];
+  /**
+   * @deprecated Use imageUrl instead. This field is no longer used.
+   */
   imagePath?: string;
+  /**
+   * @deprecated Remove walletPrivateKey; image uploads are no longer supported.
+   */
   walletPrivateKey?: string;
 }
 
@@ -395,7 +401,9 @@ export interface CreateSmartTransactionOptions {
 /**
  * Options for sending transactions with Helius
  */
-export interface SendSmartTransactionOptions extends CreateSmartTransactionOptions, SendOptions {
+export interface SendSmartTransactionOptions
+  extends CreateSmartTransactionOptions,
+    SendOptions {
   /** Number of blocks after the current block height that the transaction remains valid */
   lastValidBlockHeightOffset?: number;
   /** Maximum time in milliseconds to wait for transaction confirmation */

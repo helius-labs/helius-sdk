@@ -9,7 +9,7 @@
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "build": "tsc",
-    "prepare": "npm run build",
+    "prepare": "pnpm run build",
     "lint": "eslint \"{src,tests}/**/*.{js,ts}\"",
     "format": "prettier --write 'src/**/*.{js,ts,json,md}'"
   },
@@ -28,10 +28,10 @@
     "@types/axios": "^0.14.0",
     "@types/bs58": "^4.0.4",
     "@types/jest": "^29.5.12",
-    "@typescript-eslint/eslint-plugin": "^3.9.0",
-    "@typescript-eslint/parser": "^3.9.0",
+    "@typescript-eslint/eslint-plugin": "^8.24.0",
+    "@typescript-eslint/parser": "^8.24.0",
     "eslint": "^8.0.0",
-    "eslint-config-airbnb-base": "^14.2.0",
+    "eslint-config-airbnb-base": "^15.0.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-import": "^2.29.1",
     "eslint-plugin-prettier": "^5.1.3",
@@ -40,10 +40,9 @@
     "prettier": "^3.3.2",
     "ts-jest": "^29.1.2",
     "ts-node": "^10.9.2",
-    "typescript": "^4.9.4"
+    "typescript": "^5.7.3"
   },
   "dependencies": {
-    "@irys/sdk": "^0.2.10",
     "@metaplex-foundation/mpl-token-metadata": "^2.5.2",
     "axios": "^1.2.3",
     "bs58": "^6.0.0"
