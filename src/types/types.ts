@@ -267,7 +267,13 @@ export interface MintApiRequest {
     trait_type: string;
     value: string;
   }[];
+  /**
+   * @deprecated Use imageUrl instead. This field is no longer used.
+   */
   imagePath?: string;
+  /**
+   * @deprecated Remove walletPrivateKey; image uploads are no longer supported.
+   */
   walletPrivateKey?: string;
 }
 
