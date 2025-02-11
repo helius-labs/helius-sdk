@@ -886,11 +886,11 @@ export class RpcClient {
 
   /**
    * Creates a smart transaction using a wallet adapter's signing functionality
-   * 
+   *
    * Instead of requiring signers, this method accepts a signTransaction function, which is
    * provided by wallet adapters
-   * 
-   * 
+   *
+   *
    * @param {TransactionInstruction[]} instructions - The transaction instructions
    * @param {PublicKey} payer - The public key that will pay for the transaction
    * @param {SignerWalletAdapterProps['signTransaction']} signTransaction - A function (from the wallet adapter) to sign the transaction
@@ -908,7 +908,7 @@ export class RpcClient {
     payer: PublicKey,
     signTransaction: SignerWalletAdapterProps['signTransaction'],
     lookupTables: AddressLookupTableAccount[] = [],
-    options: CreateSmartTransactionOptions = {},
+    options: CreateSmartTransactionOptions = {}
   ): Promise<SmartTransactionContext> {
     const {
       feePayer,
@@ -918,9 +918,10 @@ export class RpcClient {
       },
       priorityFeeCap,
     } = options;
-    
-    const existingComputeBudgetInstructions = instructions.filter((instruction) =>
-      instruction.programId.equals(ComputeBudgetProgram.programId)
+
+    const existingComputeBudgetInstructions = instructions.filter(
+      (instruction) =>
+        instruction.programId.equals(ComputeBudgetProgram.programId)
     );
 
     if (existingComputeBudgetInstructions.length > 0) {
@@ -932,7 +933,10 @@ export class RpcClient {
     // Determine the fee payer key (override if provided)
     const payerKey = feePayer ? feePayer.publicKey : payer;
 
-    const { context: { slot: minContextSlot }, value: blockhash } = await this.connection.getLatestBlockhashAndContext();
+    const {
+      context: { slot: minContextSlot },
+      value: blockhash,
+    } = await this.connection.getLatestBlockhashAndContext();
     const recentBlockhash = blockhash.blockhash;
     const isVersioned = lookupTables.length > 0;
 
@@ -986,15 +990,23 @@ export class RpcClient {
     instructions.unshift(computeBudgetPriceIx);
 
     // Simulate the tx to get the CUs consumed
-    const units = await this.getComputeUnits(instructions, payerKey, lookupTables);
+    const units = await this.getComputeUnits(
+      instructions,
+      payerKey,
+      lookupTables
+    );
 
     if (!units) {
-      throw new Error('Error fetching compute units for the instructions provided');
+      throw new Error(
+        'Error fetching compute units for the instructions provided'
+      );
     }
 
     // For very small transactions, default to 1,000 CUs; otherwise, add a 10% margin
     const customersCU = units < 1000 ? 1000 : Math.ceil(units * 1.1);
-    const computeUnitsIx = ComputeBudgetProgram.setComputeUnitLimit({ units: customersCU });
+    const computeUnitsIx = ComputeBudgetProgram.setComputeUnitLimit({
+      units: customersCU,
+    });
     instructions.unshift(computeUnitsIx);
 
     // Rebuild the final unsigned tx
@@ -1011,10 +1023,10 @@ export class RpcClient {
       transaction.recentBlockhash = recentBlockhash;
       transaction.feePayer = payerKey;
     }
-    
+
     // Use the wallet adapter's signTransaction function to sign the tx
     const signedTransaction = await signTransaction(transaction);
-    
+
     return {
       transaction: signedTransaction,
       blockhash,
@@ -1024,10 +1036,10 @@ export class RpcClient {
 
   /**
    * Sends a smart transaction using a wallet adatpers's signing functionality
-   * 
+   *
    * This method builds an unsigned transaction by calling `createSmartTransactionWithWalletAdapter`, and then
    * sends it via `sendRawTransaction` and polls for confirmation
-   * 
+   *
    * @param {TransactionInstruction[]} instructions - The transaction instructions
    * @param {PublicKey} payer - The public key that will pay for the transaction
    * @param {SignerWalletAdapterProps['signTransaction']} signTransaction - A function (from the wallet adapter) to sign the transaction
@@ -1065,42 +1077,43 @@ export class RpcClient {
       preflightCommitment = 'confirmed',
       maxRetries,
     } = sendOptions;
-  
+
     if (lastValidBlockHeightOffset < 0) {
       throw new Error('lastValidBlockHeightOffset must be a positive integer');
     }
 
     try {
       // Create the smart tx using the wallet adapter's `signTransaction` function
-      const { transaction, blockhash } = await this.createSmartTransactionWithWalletAdapter(
-        instructions,
-        payer,
-        signTransaction,
-        lookupTables,
-        sendOptions
-      );
-  
+      const { transaction, blockhash } =
+        await this.createSmartTransactionWithWalletAdapter(
+          instructions,
+          payer,
+          signTransaction,
+          lookupTables,
+          sendOptions
+        );
+
       // Calculate the last valid block height
       const currentBlockHeight = await this.connection.getBlockHeight();
       const lastValidBlockHeight = Math.min(
         blockhash.lastValidBlockHeight,
         currentBlockHeight + lastValidBlockHeightOffset
       );
-  
+
       // Serialize the signed tx
       const serializedTx = transaction.serialize();
 
       const startTime = Date.now();
       let attemptCount = 0;
       let signature: string;
-  
+
       // Attempt to send and confirm the tx
       while (true) {
         if (Date.now() - startTime > pollTimeoutMs) {
           throw new Error(`Transaction not confirmed after ${pollTimeoutMs}ms`);
         }
         attemptCount++;
-  
+
         try {
           signature = await this.connection.sendRawTransaction(serializedTx, {
             skipPreflight,
@@ -1108,18 +1121,23 @@ export class RpcClient {
             maxRetries,
           });
         } catch (sendError) {
-          console.warn(`sendRawTransaction attempt ${attemptCount} failed: ${sendError}`);
+          console.warn(
+            `sendRawTransaction attempt ${attemptCount} failed: ${sendError}`
+          );
           await new Promise((resolve) => setTimeout(resolve, pollIntervalMs));
           continue;
         }
-  
+
         try {
-          const confirmedSig = await this.pollTransactionConfirmation(signature, {
-            timeout: pollChunkMs,
-            interval: pollIntervalMs,
-            confirmationStatuses: ['confirmed', 'finalized'],
-            lastValidBlockHeight,
-          });
+          const confirmedSig = await this.pollTransactionConfirmation(
+            signature,
+            {
+              timeout: pollChunkMs,
+              interval: pollIntervalMs,
+              confirmationStatuses: ['confirmed', 'finalized'],
+              lastValidBlockHeight,
+            }
+          );
           return confirmedSig;
         } catch (pollError: any) {
           // Immediately throw we exceed the block height or the tx fails on-chain
@@ -1130,14 +1148,18 @@ export class RpcClient {
             throw pollError;
           }
 
-          console.warn(`pollTransactionConfirmation timed out, attempt #${attemptCount}. Retrying...`);
+          console.warn(
+            `pollTransactionConfirmation timed out, attempt #${attemptCount}. Retrying...`
+          );
 
           await new Promise((resolve) => setTimeout(resolve, pollIntervalMs));
           continue;
         }
       }
     } catch (error) {
-      throw new Error(`Error sending smart transaction with wallet adapter: ${error}`);
+      throw new Error(
+        `Error sending smart transaction with wallet adapter: ${error}`
+      );
     }
   }
 
