@@ -44,6 +44,7 @@
   },
   "dependencies": {
     "@metaplex-foundation/mpl-token-metadata": "^2.5.2",
+    "@solana/wallet-adapter-base": "^0.9.23",
     "axios": "^1.2.3",
     "bs58": "^6.0.0"
   }
