@@ -19,6 +19,7 @@ import {
   TransactionSignature,
   VersionedTransaction,
 } from '@solana/web3.js';
+import { SignerWalletAdapterProps } from '@solana/wallet-adapter-base';
 import axios from 'axios';
 import bs58 from 'bs58';
 
@@ -881,6 +882,144 @@ export class RpcClient {
     } catch (error) {
       throw new Error(`Error sending smart transaction: ${error}`);
     }
+  }
+
+  /**
+   * Creates a smart transaction using a wallet adapter's signing functionality
+   * 
+   * Instead of requiring signers, this method accepts a signTransaction function, which is
+   * provided by wallet adapters
+   * 
+   * 
+   * @param {TransactionInstruction[]} instructions - The transaction instructions
+   * @param {PublicKey} payer - The public key that will pay for the transaction
+   * @param {SignerWalletAdapterProps['signTransaction']} - A function (from the wallet adapter) to sign the transaction
+   * @param {AddressLookupTableAccount[]} lookupTables - The lookup tables to be included in a versioned transaction. Defaults to `[]`
+   * @param {CreateSmartTransactionOptions} options - Options for customizing the transaction creation process. Includes:
+   *   - `feePayer` (Signer, optional): Override fee payer (defaults to first signer).
+   *   - `serializeOptions` (SerializeConfig, optional): Custom serialization options for the transaction.
+   *   - `priorityFeeCap` (number, optional): Maximum priority fee to pay in microlamports (for fee estimation capping).
+   * @returns {Promise<SmartTransactionContext>} - The transaction with blockhash, blockheight and slot
+   *
+   * @throws {Error} If there are issues with constructing the transaction, fetching priority fees, or computing units
+   */
+  async createSmartTransactionWithWalletAdapter(
+    instructions: TransactionInstruction[],
+    payer: PublicKey,
+    signTransaction: SignerWalletAdapterProps['signTransaction'],
+    lookupTables: AddressLookupTableAccount[] = [],
+    options: CreateSmartTransactionOptions = {},
+  ): Promise<SmartTransactionContext> {
+    const {
+      feePayer,
+      serializeOptions = {
+        requireAllSignatures: true,
+        verifySignatures: true,
+      },
+      priorityFeeCap,
+    } = options;
+    
+    const existingComputeBudgetInstructions = instructions.filter((instruction) =>
+      instruction.programId.equals(ComputeBudgetProgram.programId)
+    );
+
+    if (existingComputeBudgetInstructions.length > 0) {
+      throw new Error(
+        'Cannot provide instructions that set the compute unit price and/or limit'
+      );
+    }
+
+    // Determine the fee payer key (override if provided)
+    const payerKey = feePayer ? feePayer.publicKey : payer;
+
+    const { context: { slot: minContextSlot }, value: blockhash } = await this.connection.getLatestBlockhashAndContext();
+    const recentBlockhash = blockhash.blockhash;
+    const isVersioned = lookupTables.length > 0;
+
+    // Build the initial unsigned tx
+    let transaction: Transaction | VersionedTransaction;
+
+    if (isVersioned) {
+      const v0Message = new TransactionMessage({
+        instructions,
+        payerKey,
+        recentBlockhash,
+      }).compileToV0Message(lookupTables);
+      transaction = new VersionedTransaction(v0Message);
+    } else {
+      transaction = new Transaction().add(...instructions);
+      transaction.recentBlockhash = recentBlockhash;
+      transaction.feePayer = payerKey;
+    }
+
+    // Serialize the unsigned tx
+    const serializedTransaction = bs58.encode(
+      isVersioned
+        ? (transaction as VersionedTransaction).serialize()
+        : (transaction as Transaction).serialize({
+            requireAllSignatures: false,
+            verifySignatures: false,
+          })
+    );
+
+    // Get priority fee estimate
+    const priorityFeeResponse = await this.getPriorityFeeEstimate({
+      transaction: serializedTransaction,
+      options: { recommended: true },
+    });
+    const { priorityFeeEstimate } = priorityFeeResponse;
+
+    if (!priorityFeeEstimate) {
+      throw new Error('Priority fee estimate not available');
+    }
+
+    // Adjust priority fee based on the cap
+    let adjustedPriorityFee = priorityFeeEstimate;
+
+    if (priorityFeeCap !== undefined) {
+      adjustedPriorityFee = Math.min(priorityFeeEstimate, priorityFeeCap);
+    }
+
+    const computeBudgetPriceIx = ComputeBudgetProgram.setComputeUnitPrice({
+      microLamports: adjustedPriorityFee,
+    });
+    instructions.unshift(computeBudgetPriceIx);
+
+    // Simulate the tx to get the CUs consumed
+    const units = await this.getComputeUnits(instructions, payerKey, lookupTables);
+
+    if (!units) {
+      throw new Error('Error fetching compute units for the instructions provided');
+    }
+
+    // For very small transactions, default to 1,000 CUs; otherwise, add a 10% margin
+    const customersCU = units < 1000 ? 1000 : Math.ceil(units * 1.1);
+    const computeUnitsIx = ComputeBudgetProgram.setComputeUnitLimit({ units: customersCU });
+    instructions.unshift(computeUnitsIx);
+
+    // Rebuild the final unsigned tx
+    if (isVersioned) {
+      const v0Message = new TransactionMessage({
+        instructions,
+        payerKey,
+        recentBlockhash,
+      }).compileToV0Message(lookupTables);
+
+      transaction = new VersionedTransaction(v0Message);
+    } else {
+      transaction = new Transaction().add(...instructions);
+      transaction.recentBlockhash = recentBlockhash;
+      transaction.feePayer = payerKey;
+    }
+    
+    // Use the wallet adapter's signTransaction function to sign the tx
+    const signedTransaction = await signTransaction(transaction);
+    
+    return {
+      transaction: signedTransaction,
+      blockhash,
+      minContextSlot,
+    };
   }
 
   /**
