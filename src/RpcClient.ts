@@ -893,7 +893,7 @@ export class RpcClient {
    * 
    * @param {TransactionInstruction[]} instructions - The transaction instructions
    * @param {PublicKey} payer - The public key that will pay for the transaction
-   * @param {SignerWalletAdapterProps['signTransaction']} - A function (from the wallet adapter) to sign the transaction
+   * @param {SignerWalletAdapterProps['signTransaction']} signTransaction - A function (from the wallet adapter) to sign the transaction
    * @param {AddressLookupTableAccount[]} lookupTables - The lookup tables to be included in a versioned transaction. Defaults to `[]`
    * @param {CreateSmartTransactionOptions} options - Options for customizing the transaction creation process. Includes:
    *   - `feePayer` (Signer, optional): Override fee payer (defaults to first signer).
@@ -1020,6 +1020,125 @@ export class RpcClient {
       blockhash,
       minContextSlot,
     };
+  }
+
+  /**
+   * Sends a smart transaction using a wallet adatpers's signing functionality
+   * 
+   * This method builds an unsigned transaction by calling `createSmartTransactionWithWalletAdapter`, and then
+   * sends it via `sendRawTransaction` and polls for confirmation
+   * 
+   * @param {TransactionInstruction[]} instructions - The transaction instructions
+   * @param {PublicKey} payer - The public key that will pay for the transaction
+   * @param {SignerWalletAdapterProps['signTransaction']} signTransaction - A function (from the wallet adapter) to sign the transaction
+   * @param {AddressLookupTableAccount[]} lookupTables - The lookup tables to be included in a versioned transaction. Defaults to `[]`
+   * @param {SendSmartTransactionOptions} [sendOptions={}] - Options for customizing the transaction sending process. Includes:
+   *   - `lastValidBlockHeightOffset` (number, optional, default=150): Offset added to current block height to compute expiration. Must be positive.
+   *   - `pollTimeoutMs` (number, optional, default=60000): Total timeout (ms) for confirmation polling.
+   *   - `pollIntervalMs` (number, optional, default=2000): Interval (ms) between polling attempts.
+   *   - `pollChunkMs` (number, optional, default=10000): Timeout (ms) for each individual polling chunk.
+   *   - `skipPreflight` (boolean, optional, default=false): Skip preflight transaction checks if true.
+   *   - `preflightCommitment` (Commitment, optional, default='confirmed'): Commitment level for preflight checks.
+   *   - `maxRetries` (number, optional): Maximum number of retries for sending the transaction.
+   *   - `minContextSlot` (number, optional): Minimum slot at which to fetch blockhash (prevents stale blockhash usage).
+   *   - `feePayer` (Signer, optional): Override fee payer (defaults to first signer, but we override here since we're using the wallet adapter).
+   *   - `priorityFeeCap` (number, optional): Maximum priority fee to pay in microlamports (for fee estimation capping).
+   *   - `serializeOptions` (SerializeConfig, optional): Custom serialization options for the transaction.
+   *
+   * @returns {Promise<TransactionSignature>} - The transaction signature
+   *
+   * @throws {Error} If the transaction fails to confirm within the specified parameters
+   */
+  async sendSmartTransactionWithWalletAdapter(
+    instructions: TransactionInstruction[],
+    payer: PublicKey,
+    signTransaction: SignerWalletAdapterProps['signTransaction'],
+    lookupTables: AddressLookupTableAccount[] = [],
+    sendOptions: SendSmartTransactionOptions = {}
+  ): Promise<TransactionSignature> {
+    const {
+      lastValidBlockHeightOffset = 150,
+      pollTimeoutMs = 60000,
+      pollIntervalMs = 2000,
+      pollChunkMs = 10000,
+      skipPreflight = false,
+      preflightCommitment = 'confirmed',
+      maxRetries,
+    } = sendOptions;
+  
+    if (lastValidBlockHeightOffset < 0) {
+      throw new Error('lastValidBlockHeightOffset must be a positive integer');
+    }
+
+    try {
+      // Create the smart tx using the wallet adapter's `signTransaction` function
+      const { transaction, blockhash } = await this.createSmartTransactionWithWalletAdapter(
+        instructions,
+        payer,
+        signTransaction,
+        lookupTables,
+        sendOptions
+      );
+  
+      // Calculate the last valid block height
+      const currentBlockHeight = await this.connection.getBlockHeight();
+      const lastValidBlockHeight = Math.min(
+        blockhash.lastValidBlockHeight,
+        currentBlockHeight + lastValidBlockHeightOffset
+      );
+  
+      // Serialize the signed tx
+      const serializedTx = transaction.serialize();
+
+      const startTime = Date.now();
+      let attemptCount = 0;
+      let signature: string;
+  
+      // Attempt to send and confirm the tx
+      while (true) {
+        if (Date.now() - startTime > pollTimeoutMs) {
+          throw new Error(`Transaction not confirmed after ${pollTimeoutMs}ms`);
+        }
+        attemptCount++;
+  
+        try {
+          signature = await this.connection.sendRawTransaction(serializedTx, {
+            skipPreflight,
+            preflightCommitment,
+            maxRetries,
+          });
+        } catch (sendError) {
+          console.warn(`sendRawTransaction attempt ${attemptCount} failed: ${sendError}`);
+          await new Promise((resolve) => setTimeout(resolve, pollIntervalMs));
+          continue;
+        }
+  
+        try {
+          const confirmedSig = await this.pollTransactionConfirmation(signature, {
+            timeout: pollChunkMs,
+            interval: pollIntervalMs,
+            confirmationStatuses: ['confirmed', 'finalized'],
+            lastValidBlockHeight,
+          });
+          return confirmedSig;
+        } catch (pollError: any) {
+          // Immediately throw we exceed the block height or the tx fails on-chain
+          if (
+            pollError.message.includes('Block height has exceeded') ||
+            pollError.message.includes('failed on-chain')
+          ) {
+            throw pollError;
+          }
+
+          console.warn(`pollTransactionConfirmation timed out, attempt #${attemptCount}. Retrying...`);
+
+          await new Promise((resolve) => setTimeout(resolve, pollIntervalMs));
+          continue;
+        }
+      }
+    } catch (error) {
+      throw new Error(`Error sending smart transaction with wallet adapter: ${error}`);
+    }
   }
 
   /**
