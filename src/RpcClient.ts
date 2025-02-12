@@ -19,6 +19,7 @@ import {
   TransactionSignature,
   VersionedTransaction,
 } from '@solana/web3.js';
+import { SignerWalletAdapterProps } from '@solana/wallet-adapter-base';
 import axios from 'axios';
 import bs58 from 'bs58';
 
@@ -880,6 +881,285 @@ export class RpcClient {
       }
     } catch (error) {
       throw new Error(`Error sending smart transaction: ${error}`);
+    }
+  }
+
+  /**
+   * Creates a smart transaction using a wallet adapter's signing functionality
+   *
+   * Instead of requiring signers, this method accepts a signTransaction function, which is
+   * provided by wallet adapters
+   *
+   *
+   * @param {TransactionInstruction[]} instructions - The transaction instructions
+   * @param {PublicKey} payer - The public key that will pay for the transaction
+   * @param {SignerWalletAdapterProps['signTransaction']} signTransaction - A function (from the wallet adapter) to sign the transaction
+   * @param {AddressLookupTableAccount[]} lookupTables - The lookup tables to be included in a versioned transaction. Defaults to `[]`
+   * @param {CreateSmartTransactionOptions} options - Options for customizing the transaction creation process. Includes:
+   *   - `feePayer` (Signer, optional): Override fee payer (defaults to first signer).
+   *   - `serializeOptions` (SerializeConfig, optional): Custom serialization options for the transaction.
+   *   - `priorityFeeCap` (number, optional): Maximum priority fee to pay in microlamports (for fee estimation capping).
+   * @returns {Promise<SmartTransactionContext>} - The transaction with blockhash, blockheight and slot
+   *
+   * @throws {Error} If there are issues with constructing the transaction, fetching priority fees, or computing units
+   */
+  async createSmartTransactionWithWalletAdapter(
+    instructions: TransactionInstruction[],
+    payer: PublicKey,
+    signTransaction: SignerWalletAdapterProps['signTransaction'],
+    lookupTables: AddressLookupTableAccount[] = [],
+    options: CreateSmartTransactionOptions = {}
+  ): Promise<SmartTransactionContext> {
+    const {
+      feePayer,
+      serializeOptions = {
+        requireAllSignatures: true,
+        verifySignatures: true,
+      },
+      priorityFeeCap,
+    } = options;
+
+    const existingComputeBudgetInstructions = instructions.filter(
+      (instruction) =>
+        instruction.programId.equals(ComputeBudgetProgram.programId)
+    );
+
+    if (existingComputeBudgetInstructions.length > 0) {
+      throw new Error(
+        'Cannot provide instructions that set the compute unit price and/or limit'
+      );
+    }
+
+    // Determine the fee payer key (override if provided)
+    const payerKey = feePayer ? feePayer.publicKey : payer;
+
+    const {
+      context: { slot: minContextSlot },
+      value: blockhash,
+    } = await this.connection.getLatestBlockhashAndContext();
+    const recentBlockhash = blockhash.blockhash;
+    const isVersioned = lookupTables.length > 0;
+
+    // Build the initial unsigned tx
+    let transaction: Transaction | VersionedTransaction;
+
+    if (isVersioned) {
+      const v0Message = new TransactionMessage({
+        instructions,
+        payerKey,
+        recentBlockhash,
+      }).compileToV0Message(lookupTables);
+      transaction = new VersionedTransaction(v0Message);
+    } else {
+      transaction = new Transaction().add(...instructions);
+      transaction.recentBlockhash = recentBlockhash;
+      transaction.feePayer = payerKey;
+    }
+
+    // Serialize the unsigned tx
+    const serializedTransaction = bs58.encode(
+      isVersioned
+        ? (transaction as VersionedTransaction).serialize()
+        : (transaction as Transaction).serialize({
+            requireAllSignatures: false,
+            verifySignatures: false,
+          })
+    );
+
+    // Get priority fee estimate
+    const priorityFeeResponse = await this.getPriorityFeeEstimate({
+      transaction: serializedTransaction,
+      options: { recommended: true },
+    });
+    const { priorityFeeEstimate } = priorityFeeResponse;
+
+    if (!priorityFeeEstimate) {
+      throw new Error('Priority fee estimate not available');
+    }
+
+    // Adjust priority fee based on the cap
+    let adjustedPriorityFee = priorityFeeEstimate;
+
+    if (priorityFeeCap !== undefined) {
+      adjustedPriorityFee = Math.min(priorityFeeEstimate, priorityFeeCap);
+    }
+
+    const computeBudgetPriceIx = ComputeBudgetProgram.setComputeUnitPrice({
+      microLamports: adjustedPriorityFee,
+    });
+    instructions.unshift(computeBudgetPriceIx);
+
+    // Simulate the tx to get the CUs consumed
+    const units = await this.getComputeUnits(
+      instructions,
+      payerKey,
+      lookupTables
+    );
+
+    if (!units) {
+      throw new Error(
+        'Error fetching compute units for the instructions provided'
+      );
+    }
+
+    // For very small transactions, default to 1,000 CUs; otherwise, add a 10% margin
+    const customersCU = units < 1000 ? 1000 : Math.ceil(units * 1.1);
+    const computeUnitsIx = ComputeBudgetProgram.setComputeUnitLimit({
+      units: customersCU,
+    });
+    instructions.unshift(computeUnitsIx);
+
+    // Rebuild the final unsigned tx
+    if (isVersioned) {
+      const v0Message = new TransactionMessage({
+        instructions,
+        payerKey,
+        recentBlockhash,
+      }).compileToV0Message(lookupTables);
+
+      transaction = new VersionedTransaction(v0Message);
+    } else {
+      transaction = new Transaction().add(...instructions);
+      transaction.recentBlockhash = recentBlockhash;
+      transaction.feePayer = payerKey;
+    }
+
+    // Use the wallet adapter's signTransaction function to sign the tx
+    const signedTransaction = await signTransaction(transaction);
+
+    return {
+      transaction: signedTransaction,
+      blockhash,
+      minContextSlot,
+    };
+  }
+
+  /**
+   * Sends a smart transaction using a wallet adatpers's signing functionality
+   *
+   * This method builds an unsigned transaction by calling `createSmartTransactionWithWalletAdapter`, and then
+   * sends it via `sendRawTransaction` and polls for confirmation
+   *
+   * @param {TransactionInstruction[]} instructions - The transaction instructions
+   * @param {PublicKey} payer - The public key that will pay for the transaction
+   * @param {SignerWalletAdapterProps['signTransaction']} signTransaction - A function (from the wallet adapter) to sign the transaction
+   * @param {AddressLookupTableAccount[]} lookupTables - The lookup tables to be included in a versioned transaction. Defaults to `[]`
+   * @param {SendSmartTransactionOptions} [sendOptions={}] - Options for customizing the transaction sending process. Includes:
+   *   - `lastValidBlockHeightOffset` (number, optional, default=150): Offset added to current block height to compute expiration. Must be positive.
+   *   - `pollTimeoutMs` (number, optional, default=60000): Total timeout (ms) for confirmation polling.
+   *   - `pollIntervalMs` (number, optional, default=2000): Interval (ms) between polling attempts.
+   *   - `pollChunkMs` (number, optional, default=10000): Timeout (ms) for each individual polling chunk.
+   *   - `skipPreflight` (boolean, optional, default=false): Skip preflight transaction checks if true.
+   *   - `preflightCommitment` (Commitment, optional, default='confirmed'): Commitment level for preflight checks.
+   *   - `maxRetries` (number, optional): Maximum number of retries for sending the transaction.
+   *   - `minContextSlot` (number, optional): Minimum slot at which to fetch blockhash (prevents stale blockhash usage).
+   *   - `feePayer` (Signer, optional): Override fee payer (defaults to first signer, but we override here since we're using the wallet adapter).
+   *   - `priorityFeeCap` (number, optional): Maximum priority fee to pay in microlamports (for fee estimation capping).
+   *   - `serializeOptions` (SerializeConfig, optional): Custom serialization options for the transaction.
+   *
+   * @returns {Promise<TransactionSignature>} - The transaction signature
+   *
+   * @throws {Error} If the transaction fails to confirm within the specified parameters
+   */
+  async sendSmartTransactionWithWalletAdapter(
+    instructions: TransactionInstruction[],
+    payer: PublicKey,
+    signTransaction: SignerWalletAdapterProps['signTransaction'],
+    lookupTables: AddressLookupTableAccount[] = [],
+    sendOptions: SendSmartTransactionOptions = {}
+  ): Promise<TransactionSignature> {
+    const {
+      lastValidBlockHeightOffset = 150,
+      pollTimeoutMs = 60000,
+      pollIntervalMs = 2000,
+      pollChunkMs = 10000,
+      skipPreflight = false,
+      preflightCommitment = 'confirmed',
+      maxRetries,
+    } = sendOptions;
+
+    if (lastValidBlockHeightOffset < 0) {
+      throw new Error('lastValidBlockHeightOffset must be a positive integer');
+    }
+
+    try {
+      // Create the smart tx using the wallet adapter's `signTransaction` function
+      const { transaction, blockhash } =
+        await this.createSmartTransactionWithWalletAdapter(
+          instructions,
+          payer,
+          signTransaction,
+          lookupTables,
+          sendOptions
+        );
+
+      // Calculate the last valid block height
+      const currentBlockHeight = await this.connection.getBlockHeight();
+      const lastValidBlockHeight = Math.min(
+        blockhash.lastValidBlockHeight,
+        currentBlockHeight + lastValidBlockHeightOffset
+      );
+
+      // Serialize the signed tx
+      const serializedTx = transaction.serialize();
+
+      const startTime = Date.now();
+      let attemptCount = 0;
+      let signature: string;
+
+      // Attempt to send and confirm the tx
+      while (true) {
+        if (Date.now() - startTime > pollTimeoutMs) {
+          throw new Error(`Transaction not confirmed after ${pollTimeoutMs}ms`);
+        }
+        attemptCount++;
+
+        try {
+          signature = await this.connection.sendRawTransaction(serializedTx, {
+            skipPreflight,
+            preflightCommitment,
+            maxRetries,
+          });
+        } catch (sendError) {
+          console.warn(
+            `sendRawTransaction attempt ${attemptCount} failed: ${sendError}`
+          );
+          await new Promise((resolve) => setTimeout(resolve, pollIntervalMs));
+          continue;
+        }
+
+        try {
+          const confirmedSig = await this.pollTransactionConfirmation(
+            signature,
+            {
+              timeout: pollChunkMs,
+              interval: pollIntervalMs,
+              confirmationStatuses: ['confirmed', 'finalized'],
+              lastValidBlockHeight,
+            }
+          );
+          return confirmedSig;
+        } catch (pollError: any) {
+          // Immediately throw we exceed the block height or the tx fails on-chain
+          if (
+            pollError.message.includes('Block height has exceeded') ||
+            pollError.message.includes('failed on-chain')
+          ) {
+            throw pollError;
+          }
+
+          console.warn(
+            `pollTransactionConfirmation timed out, attempt #${attemptCount}. Retrying...`
+          );
+
+          await new Promise((resolve) => setTimeout(resolve, pollIntervalMs));
+          continue;
+        }
+      }
+    } catch (error) {
+      throw new Error(
+        `Error sending smart transaction with wallet adapter: ${error}`
+      );
     }
   }
 
