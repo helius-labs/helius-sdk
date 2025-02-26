@@ -141,7 +141,7 @@ Offers additional tools for various Solana-related tasks like analyzing blockcha
 - [`getTokenHolders()`](#getTokenHolders): Returns all the token accounts for a given mint address (ONLY FOR SPL TOKENS).
 - [`getPriorityFeeEstimate()`](#getPriorityFeeEstimate): Returns an estimated priority fee based on a set of predefined priority levels (percentiles).
 - [`sendTransaction()`](#sendTransaction): Wrapper for `sendTransaction` RPC call that includes support for `validatorAcls` parameter.
-- [`executeJupiterSwap()`](#executeJupiterSwap): Execute a token swap using Jupiter Exchange with automatic priority fee estimation and compute unit calculation. The method also includes dynamic slippage protection that automatically adjusts based on market conditions.
+- [`executeJupiterSwap()`](#executeJupiterSwap): Execute a token swap using Jupiter Exchange with automatic transaction optimizations including priority fees, compute unit calculation, and reliable transaction confirmation.
 
 ## DAS API (Digital Asset Standard)
 
@@ -877,7 +877,7 @@ try {
 
 ### executeJupiterSwap()
 
-Execute a token swap using Jupiter Exchange with automatic priority fee estimation and compute unit calculation. The method also includes dynamic slippage protection that automatically adjusts based on market conditions.
+Execute a token swap using Jupiter Exchange with automatic transaction optimizations including priority fees, compute unit calculation, and reliable transaction confirmation.
 
 ```typescript
 import { Helius } from 'helius-sdk';
@@ -885,22 +885,30 @@ import { Keypair } from '@solana/web3.js';
 
 const helius = new Helius('YOUR_API_KEY');
 
-// Swap 0.5 USDC to SOL with 2% maximum dynamic slippage
-const swapParams = {
-  inputMint: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v', // USDC
-  outputMint: 'So11111111111111111111111111111111111111112', // SOL
-  amount: 500000, // 0.5 USDC (USDC has 6 decimals)
-  maxDynamicSlippageBps: 200, // Optional: 2% maximum dynamic slippage (default is 3%)
-};
+// Swap SOL to USDC with transaction landing optimizations
+const result = await helius.rpc.executeJupiterSwap({
+  inputMint: 'So11111111111111111111111111111111111111112', // SOL
+  outputMint: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v', // USDC
+  amount: 10000000, // 0.01 SOL (SOL has 9 decimals)
+  slippageBps: 50, // 0.5% slippage tolerance
+  restrictIntermediateTokens: true, // Improves pricing
+  priorityLevel: 'high', // Options: 'low', 'medium', 'high', 'very_high'
+  maxPriorityFeeLamports: 1000000, // Caps priority fee at 0.001 SOL
+  skipPreflight: true, // Skip preflight checks
+  confirmationCommitment: 'confirmed' // Wait for confirmation
+}, wallet);
 
-const result = await helius.rpc.executeJupiterSwap(swapParams, wallet);
+if (result.success && result.confirmed) {
+  console.log(`Received ${result.outputAmount} USDC, tx: ${result.signature}`);
+}
 ```
 
-The method automatically:
-
-- Calculates optimal compute units for the transaction
-- Estimates and sets appropriate priority fees
-- Uses Jupiter's dynamic slippage protection (configurable via `maxDynamicSlippageBps`)
+Key features:
+- Automatic compute unit and priority fee calculation
+- Transaction retry logic during network congestion
+- Slippage tolerance and route optimization
+- Transaction confirmation tracking
+- Returns detailed swap information including output amounts, minimums, and explorer URLs
 
 ## helius.connection
 
