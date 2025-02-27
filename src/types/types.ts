@@ -428,8 +428,14 @@ export interface JupiterSwapParams {
   inputMint: string;
   outputMint: string;
   amount: number;
-  maxDynamicSlippageBps?: number;
+  slippageBps?: number;
+  restrictIntermediateTokens?: boolean;
   wrapUnwrapSOL?: boolean;
+  priorityLevel?: 'low' | 'medium' | 'high' | 'veryHigh' | 'unsafeMax';
+  maxPriorityFeeLamports?: number;
+  skipPreflight?: boolean;
+  maxRetries?: number;
+  confirmationCommitment?: 'processed' | 'confirmed' | 'finalized';
 }
 
 export interface JupiterSwapResult {
@@ -438,4 +444,11 @@ export interface JupiterSwapResult {
   error?: string;
   inputAmount?: number;
   outputAmount?: number;
+  minimumOutputAmount?: number;
+  lastValidBlockHeight?: number;
+  prioritizationFeeLamports?: number;
+  computeUnitLimit?: number;
+  confirmed?: boolean;
+  confirmationStatus?: string;
+  explorerUrl?: string;
 }

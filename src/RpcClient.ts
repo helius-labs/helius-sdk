@@ -1481,22 +1481,59 @@ export class RpcClient {
   }
 
   /**
-   * Execute a token swap using Jupiter Exchange
+   * Execute a token swap using Jupiter Exchange with optimized transaction sending
    *
    * @example
    * ```typescript
-   * // Swap 0.01 SOL to USDC with custom max dynamic slippage of 2%
+   * // Basic swap: 0.01 SOL to USDC with default settings
    * const result = await helius.rpc.executeJupiterSwap({
    *   inputMint: 'So11111111111111111111111111111111111111112',  // SOL
    *   outputMint: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',  // USDC
    *   amount: 10000000,  // 0.01 SOL
-   *   maxDynamicSlippageBps: 200, // 2% maximum dynamic slippage
+   * }, wallet);
+   * 
+   * // Advanced swap with custom settings for better transaction landing
+   * const advancedResult = await helius.rpc.executeJupiterSwap({
+   *   inputMint: 'So11111111111111111111111111111111111111112',
+   *   outputMint: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',
+   *   amount: 10000000,
+   *   slippageBps: 50,                       // 0.5% slippage
+   *   priorityLevel: 'veryHigh',             // High priority for congestion
+   *   maxPriorityFeeLamports: 2000000,       // Max 0.002 SOL for priority fee
+   *   skipPreflight: true,                   // Skip preflight checks
+   *   maxRetries: 3,                         // Retry sending 3 times if needed
+   *   confirmationCommitment: 'finalized',   // Wait for finalization
    * }, wallet);
    * ```
    *
-   * @param params - Swap parameters (inputMint, outputMint, amount, maxDynamicSlippageBps)
-   * @param signer - The wallet that will execute the swap
-   * @returns Swap result with signature and amounts
+   * @param params - Swap parameters object with the following properties:
+   *   - `inputMint` - Input token mint address
+   *   - `outputMint` - Output token mint address
+   *   - `amount` - Amount of input tokens to swap (in smallest units)
+   *   - `slippageBps` - Maximum allowed slippage in basis points (1 bp = 0.01%, default: 50)
+   *   - `restrictIntermediateTokens` - Whether to restrict intermediate tokens (default: true)
+   *   - `wrapUnwrapSOL` - Whether to auto-wrap/unwrap SOL (default: true)
+   *   - `priorityLevel` - Priority level for transaction ('low', 'medium', 'high', 'veryHigh', 'unsafeMax', default: 'high')
+   *   - `maxPriorityFeeLamports` - Maximum priority fee in lamports (default: 1000000)
+   *   - `skipPreflight` - Whether to skip preflight transaction checks (default: true)
+   *   - `maxRetries` - Maximum number of retries when sending transaction (default: 0)
+   *   - `confirmationCommitment` - Commitment level for confirming transaction ('processed', 'confirmed', 'finalized', default: 'confirmed')
+   * 
+   * @param signer - The wallet that will execute and pay for the swap
+   * 
+   * @returns Swap result with the following properties:
+   *   - `signature` - Transaction signature (empty if failed)
+   *   - `success` - Whether the swap succeeded
+   *   - `error` - Error message if swap failed
+   *   - `inputAmount` - Amount of tokens swapped (in smallest units)
+   *   - `outputAmount` - Amount of tokens received (in smallest units)
+   *   - `minimumOutputAmount` - Minimum amount guaranteed with slippage (in smallest units)
+   *   - `lastValidBlockHeight` - Last valid block height for the transaction
+   *   - `prioritizationFeeLamports` - Actual priority fee used
+   *   - `computeUnitLimit` - Compute unit limit set for the transaction
+   *   - `confirmed` - Whether transaction was confirmed
+   *   - `confirmationStatus` - Confirmation status of transaction
+   *   - `explorerUrl` - URL to view transaction on Solscan
    */
   async executeJupiterSwap(
     params: JupiterSwapParams,
@@ -1505,43 +1542,60 @@ export class RpcClient {
     try {
       // Set default parameters
       const wrapUnwrapSOL = params.wrapUnwrapSOL ?? true;
-      const maxDynamicSlippageBps = params.maxDynamicSlippageBps ?? 300; // Default to 3%
+      const slippageBps = params.slippageBps ?? 50; // Default to 0.5%
+      const restrictIntermediateTokens = params.restrictIntermediateTokens ?? true;
+      const priorityLevel = params.priorityLevel ?? 'high';
+      const maxPriorityFeeLamports = params.maxPriorityFeeLamports ?? 1000000; // Default 0.001 SOL
+      const maxRetries = params.maxRetries ?? 0;
+      const skipPreflight = params.skipPreflight ?? true;
+      const confirmationCommitment = params.confirmationCommitment ?? 'confirmed';
 
-      // Get Jupiter quote
-      const quoteResponse = await axios.get(
-        `https://api.jup.ag/swap/v1/quote
-?inputMint=${params.inputMint}\
-&outputMint=${params.outputMint}\
-&amount=${params.amount}`
-      );
-      if (!quoteResponse.data) {
+      // Get Jupiter quote using fetch API with updated parameters
+      const quoteUrl = new URL('https://api.jup.ag/swap/v1/quote');
+      quoteUrl.searchParams.append('inputMint', params.inputMint);
+      quoteUrl.searchParams.append('outputMint', params.outputMint);
+      quoteUrl.searchParams.append('amount', params.amount.toString());
+      quoteUrl.searchParams.append('slippageBps', slippageBps.toString());
+      quoteUrl.searchParams.append('restrictIntermediateTokens', restrictIntermediateTokens.toString());
+      
+      const quoteResponse = await (await fetch(quoteUrl.toString())).json();
+      
+      if (!quoteResponse) {
         throw new Error('Failed to get Jupiter quote');
       }
 
-      // Get swap transaction
-      const swapResponse = await axios.post(
-        'https://api.jup.ag/swap/v1/swap',
-        {
-          quoteResponse: quoteResponse.data,
-          userPublicKey: signer.publicKey.toString(),
-          wrapAndUnwrapSol: wrapUnwrapSOL,
-          dynamicComputeUnitLimit: true, // allow dynamic compute limit instead of max 1,400,000
-          prioritizationFeeLamports: 'auto',
-          dynamicSlippage: { maxBps: maxDynamicSlippageBps }, // Use user-provided or default max slippage
-        },
-        {
+      // Get swap transaction with optimizations for transaction landing
+      const swapResponse = await (
+        await fetch('https://api.jup.ag/swap/v1/swap', {
+          method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-        }
-      );
-      if (!swapResponse.data?.swapTransaction) {
+          body: JSON.stringify({
+            quoteResponse,
+            userPublicKey: signer.publicKey.toString(),
+            wrapAndUnwrapSol: wrapUnwrapSOL,
+            
+            // Transaction landing optimizations
+            dynamicComputeUnitLimit: true,
+            dynamicSlippage: true,
+            prioritizationFeeLamports: {
+              priorityLevelWithMaxLamports: {
+                maxLamports: maxPriorityFeeLamports,
+                priorityLevel: priorityLevel
+              }
+            }
+          })
+        })
+      ).json();
+
+      if (!swapResponse?.swapTransaction) {
         throw new Error('Failed to get swap transaction');
       }
 
-      // Deserialize transaction
+      // Deserialize transaction from base64 format
       const swapTransactionBuf = Buffer.from(
-        swapResponse.data.swapTransaction,
+        swapResponse.swapTransaction,
         'base64'
       );
       const transaction = VersionedTransaction.deserialize(swapTransactionBuf);
@@ -1549,17 +1603,38 @@ export class RpcClient {
       // Sign the transaction
       transaction.sign([signer]);
 
-      // Send the transaction
-      const signature = await this.sendTransaction(transaction, {
-        skipPreflight: true,
-        maxRetries: 0,
-      });
+      // Serialize to binary format for sending
+      const serializedTransaction = transaction.serialize();
 
+      // Send the transaction with options for better landing
+      const signature = await this.connection.sendRawTransaction(
+        serializedTransaction, 
+        {
+          skipPreflight,
+          maxRetries,
+        }
+      );
+
+      // Confirm the transaction and check for errors
+      const confirmation = await this.connection.confirmTransaction(
+        signature,
+        confirmationCommitment
+      );
+
+      // Return detailed result with confirmation status
       return {
         signature,
-        success: true,
+        success: confirmation.value.err ? false : true,
+        error: confirmation.value.err ? JSON.stringify(confirmation.value.err) : undefined,
         inputAmount: params.amount,
-        outputAmount: Number(quoteResponse.data.otherAmountThreshold),
+        outputAmount: Number(quoteResponse.outAmount),
+        minimumOutputAmount: Number(quoteResponse.otherAmountThreshold),
+        lastValidBlockHeight: swapResponse.lastValidBlockHeight,
+        prioritizationFeeLamports: swapResponse.prioritizationFeeLamports,
+        computeUnitLimit: swapResponse.computeUnitLimit,
+        confirmed: confirmation.value.err ? false : true,
+        confirmationStatus: confirmation.context.slot ? 'confirmed' : undefined,
+        explorerUrl: `https://explorer.solana.com/tx/${signature}`
       };
     } catch (error) {
       console.error('Jupiter swap error:', error);
