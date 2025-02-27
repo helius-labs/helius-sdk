@@ -1634,7 +1634,7 @@ export class RpcClient {
         computeUnitLimit: swapResponse.computeUnitLimit,
         confirmed: confirmation.value.err ? false : true,
         confirmationStatus: confirmation.context.slot ? 'confirmed' : undefined,
-        explorerUrl: `https://solscan.io/tx/${signature}`
+        explorerUrl: `https://explorer.solana.com/tx/${signature}`
       };
     } catch (error) {
       console.error('Jupiter swap error:', error);
