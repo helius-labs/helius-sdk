@@ -25,7 +25,7 @@ import type {
   WebhookType,
 } from './enums';
 
-export type HeliusCluster = Omit<Cluster, 'testnet'>;
+export type HeliusCluster = Exclude<Cluster, 'testnet'>;
 
 export type SmartTransactionContext = {
   transaction: Transaction | VersionedTransaction;
