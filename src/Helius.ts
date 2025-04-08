@@ -101,7 +101,7 @@ export class Helius {
    */
   async getAllWebhooks(): Promise<Webhook[]> {
     try {
-      const { data } = await axios.get(this.getApiEndpoint(`/v0/webhooks`));
+      const { data } = await axios.get(this.getWebhookApiEndpoint(`/v0/webhooks`));
       return data;
     } catch (err: any | AxiosError) {
       if (axios.isAxiosError(err)) {
@@ -123,7 +123,7 @@ export class Helius {
   async getWebhookByID(webhookID: string): Promise<Webhook> {
     try {
       const { data } = await axios.get(
-        this.getApiEndpoint(`/v0/webhooks/${webhookID}`)
+        this.getWebhookApiEndpoint(`/v0/webhooks/${webhookID}`)
       );
       return data;
     } catch (err: any | AxiosError) {
@@ -147,7 +147,7 @@ export class Helius {
     createWebhookRequest: CreateWebhookRequest
   ): Promise<Webhook> {
     try {
-      const { data } = await axios.post(this.getApiEndpoint(`/v0/webhooks`), {
+      const { data } = await axios.post(this.getWebhookApiEndpoint(`/v0/webhooks`), {
         ...createWebhookRequest,
       });
       return data;
@@ -170,7 +170,7 @@ export class Helius {
    */
   async deleteWebhook(webhookID: string): Promise<boolean> {
     try {
-      await axios.delete(this.getApiEndpoint(`/v0/webhooks/${webhookID}`));
+      await axios.delete(this.getWebhookApiEndpoint(`/v0/webhooks/${webhookID}`));
       return true;
     } catch (err: any | AxiosError) {
       if (axios.isAxiosError(err)) {
@@ -562,6 +562,26 @@ export class Helius {
     return `${this.endpoints.api}${path}?api-key=${this.apiKey}`;
   }
 
+  /**
+   * Get the webhook API endpoint for the specified path.
+   * @param path - The API path to append to the base endpoint.
+   * @returns The full URL to the API endpoint including the API key.
+   * @throws Error if the path is not valid.
+   */
+  private getWebhookApiEndpoint(path: string): string {
+    if (!this.apiKey) {
+      throw new Error(`API key is not set`);
+    }
+  
+    if (!path.startsWith('/v0')) {
+      throw new Error(
+        `Invalid webhook API path provided: ${path}. Path must start with '/v0'.`
+      );
+    }
+  
+    return `https://api.helius.xyz${path}?api-key=${this.apiKey}`;
+  }
+
   private async _editWebhook(
     webhookID: string,
     existingWebhook: Webhook,
@@ -584,7 +604,7 @@ export class Helius {
     };
 
     const { data } = await axios.put(
-      this.getApiEndpoint(`/v0/webhooks/${webhookID}`),
+      this.getWebhookApiEndpoint(`/v0/webhooks/${webhookID}`),
       editRequest
     );
     return data;
