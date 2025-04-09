@@ -875,6 +875,19 @@ export class RpcClient {
             `pollTransactionConfirmation timed out, attempt #${attemptCount}. Retrying...`
           );
 
+          const status = await this.connection.getSignatureStatus(signature);
+          if (status?.value?.confirmationStatus && !status.value.err) {
+            const { confirmationStatus } = status.value;
+
+            if (["confirmed", "finalized"].includes(confirmationStatus)) {
+              console.info(
+                `Transaction ${signature} was confirmed despite a polling failure. Returning successful now`
+              );
+
+              return signature;
+            }
+          }
+
           await new Promise((resolve) => setTimeout(resolve, pollIntervalMs));
           continue;
         }
@@ -1151,6 +1164,19 @@ export class RpcClient {
           console.warn(
             `pollTransactionConfirmation timed out, attempt #${attemptCount}. Retrying...`
           );
+
+          const status = await this.connection.getSignatureStatus(signature);
+          if (status?.value?.confirmationStatus && !status.value.err) {
+            const { confirmationStatus } = status.value;
+
+            if (["confirmed", "finalized"].includes(confirmationStatus)) {
+              console.info(
+                `Transaction ${signature} was confirmed despite a polling failure. Returning successful now`
+              );
+
+              return signature;
+            }
+          }
 
           await new Promise((resolve) => setTimeout(resolve, pollIntervalMs));
           continue;
