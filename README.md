@@ -94,9 +94,19 @@ Comprehensive and performant API for tokens, NFTs, and compressed NFTs on Solana
 - [`getTokenAccounts()`](#getTokenAccounts): Get information about all token accounts for a specific mint or a specific owner.
 - [`getNftEditions()`](#getNftEditions): Get information about all the edition NFTs for a specific master NFT
 
+[**Staking**](#staking)
+
+The easiest way to stake with Helius programmatically.
+
+- [`createStakeTransaction()`](#createstaketransaction): Generate a transaction to create + delegate a new stake account to the Helius validator.
+- [`createUnstakeTransaction()`](#createunstaketransaction): Generate a transaction to deactivate a stake account.
+- [`getHeliusStakeAccounts()`](#getheliusstakeaccounts): Return all stake accounts delegated to the Helius validator for a given wallet.
+
 [**Mint API**](#mint-api)
 
 The easiest way to mint compressed NFTs at scale.
+
+Note, this API has been deprecated and the relevant methods will be removed in a future release. Please refer to [ZK Compression](https://docs.helius.dev/zk-compression-and-photon-api/what-is-zk-compression-on-solana) for all future compression-related work
 
 - [`mintCompressedNft()`](#mintCompressedNft): Mint a new compressed NFT.
 - [`delegateCollectionAuthority()`](#delegatecollectionauthority-and-revokecollectionauthority): Delegates collection authority to a new address.
@@ -323,6 +333,37 @@ const response = await helius.rpc.getNftEditions({
 });
 
 console.log(response);
+```
+
+## Staking
+
+The easiest way to manage your stake with Helius. These methods allow you to:
+- Generate transactions users can sign and send themselves
+- Manage staking UX flows directly on your dApp or backend
+- Target the number one validator on Solana for commission-free staking
+
+### createStakeTransaction
+Create and delegate a new stake account (unsigned transaction).
+```ts
+const { serializedTx, stakeAccountPubkey } = await helius.rpc.createStakeTransaction(
+  ownerPubkey,
+  1.5 // Amount in SOL (excluding rent exemption)
+);
+```
+
+### createUnstakeTransaction
+Deactivate a stake account (unsigned transaction).
+```ts
+const serializedTx = await helius.rpc.createUnstakeTransaction(
+  ownerPubkey,
+  stakeAccountPubkey
+);
+```
+
+### getHeliusStakeAccounts
+Fetch all stake accounts delegated to the Helius validator for a given wallet.
+```ts
+const heliusStakeAccounts = await helius.rpc.getHeliusStakeAccounts(walletAddress);
 ```
 
 ## Mint

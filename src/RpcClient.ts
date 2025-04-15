@@ -1,17 +1,21 @@
 import {
   AccountInfo,
   AddressLookupTableAccount,
+  Authorized,
   Blockhash,
   BlockhashWithExpiryBlockHeight,
   Commitment,
   ComputeBudgetProgram,
   Connection,
   GetLatestBlockhashConfig,
+  Keypair,
+  LAMPORTS_PER_SOL,
   ParsedAccountData,
   PublicKey,
   RpcResponseAndContext,
   SignatureResult,
   Signer,
+  StakeProgram,
   SystemProgram,
   Transaction,
   TransactionInstruction,
@@ -38,6 +42,7 @@ import {
   SmartTransactionContext,
 } from './types';
 import { DAS } from './types/das-types';
+import { HELIUS_VALIDATOR_PUBKEY } from './constants';
 
 export type SendAndConfirmTransactionResponse = {
   signature: TransactionSignature;
@@ -1671,5 +1676,104 @@ export class RpcClient {
           error instanceof Error ? error.message : 'Unknown error occurred',
       };
     }
+  }
+  
+  /**
+   * Generate an unsigned, serialized transaction to create and delegate a new stake account with the Helius validator 
+   * This transaction must be signed by the funder's wallet before sending
+   *
+   * @param {PublicKey} owner - The wallet that will fund and authorize the stake
+   * @param {number} amountSol - The amount of SOL to stake (excluding rent exemption)
+   * @returns {Promise<{ serializedTx: string, stakeAccountPubkey: PublicKey }>}
+   */
+  async createStakeTransaction(
+    owner: PublicKey,
+    amountSol: number
+  ): Promise<{ serializedTx: string; stakeAccountPubkey: PublicKey }> {
+    const rentExempt = await this.connection.getMinimumBalanceForRentExemption(StakeProgram.space);
+    const lamports = amountSol * LAMPORTS_PER_SOL + rentExempt;
+    const stakeAccount = Keypair.generate();
+
+    const transaction = StakeProgram.createAccount({
+      fromPubkey: owner,
+      stakePubkey: stakeAccount.publicKey,
+      lamports,
+      authorized: new Authorized(owner, owner),
+    });
+
+    transaction.add(
+      StakeProgram.delegate({
+        stakePubkey: stakeAccount.publicKey,
+        authorizedPubkey: owner,
+        votePubkey: HELIUS_VALIDATOR_PUBKEY,
+      })
+    );
+
+    const { blockhash, lastValidBlockHeight } = await this.connection.getLatestBlockhash();
+    transaction.recentBlockhash = blockhash;
+    transaction.lastValidBlockHeight = lastValidBlockHeight;
+    transaction.feePayer = owner;
+
+    transaction.partialSign(stakeAccount);
+
+    const serializedTx = bs58.encode(
+      transaction.serialize({ requireAllSignatures: false })
+    );
+
+    return {
+      serializedTx,
+      stakeAccountPubkey: stakeAccount.publicKey,
+    };
+  }
+
+  /**
+   * Create an unsigned transaction to deactivate a stake account
+   * @param {PublicKey} owner - The wallet that authorized the stake
+   * @param {PublicKey} stakeAccountPubkey - The stake account to deactivate
+   * @returns {Promise<string>} - Base58 serialized unsigned transaction
+   */
+  async createUnstakeTransaction(
+    owner: PublicKey,
+    stakeAccountPubkey: PublicKey
+  ): Promise<string> {
+    const transaction = StakeProgram.deactivate({
+      authorizedPubkey: owner,
+      stakePubkey: stakeAccountPubkey,
+    });
+
+    const { blockhash, lastValidBlockHeight } = await this.connection.getLatestBlockhash();
+    transaction.recentBlockhash = blockhash;
+    transaction.lastValidBlockHeight = lastValidBlockHeight;
+    transaction.feePayer = owner;
+
+    return bs58.encode(transaction.serialize({ requireAllSignatures: false }));
+  }
+
+  /**
+   * Fetch all stake accounts owned by a wallet and delegated to Helius
+   * @param {string} wallet - The base58-encoded wallet address
+   * @returns {Promise<any[]>} - The stake accounts delegated to Helius
+   */
+  async getHeliusStakeAccounts(wallet: string): Promise<any[]> {
+    const allStakeAccounts = await this.connection.getParsedProgramAccounts(
+      StakeProgram.programId,
+      {
+        filters: [
+          {
+            memcmp: {
+              offset: 44,
+              bytes: wallet,
+            },
+          },
+        ],
+      }
+    );
+
+    return allStakeAccounts.filter(
+      (acc) =>
+        'parsed' in acc.account.data &&
+        acc.account.data.parsed?.info?.stake?.delegation?.voter ===
+          HELIUS_VALIDATOR_PUBKEY.toBase58()
+    );
   }
 }
