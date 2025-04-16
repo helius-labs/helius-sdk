@@ -141,7 +141,7 @@ Provides methods for setting up, editing, and managing webhooks, crucial for lis
 - [`sendJitoBundle()`](https://github.com/helius-labs/helius-sdk/blob/main/examples/EXAMPLES_OVERVIEW.md#sendjitobundle): Sends a bundle of transactions to the Jito Block Engine
 - [`sendSmartTransactionWithTip()`](https://github.com/helius-labs/helius-sdk/blob/main/examples/EXAMPLES_OVERVIEW.md#sendsmarttransactionwithtip): Sends a smart transaction as a Jito bundle with a tip
 
-[**Helper methods**](https://github.com/helius-labs/helius-sdk/blob/main/examples/EXAMPLES_OVERVIEW.md#helper-methods)
+[**Helper Methods**](https://github.com/helius-labs/helius-sdk/blob/main/examples/EXAMPLES_OVERVIEW.md#helper-methods)
 
 Offers additional tools for various Solana-related tasks like analyzing blockchain throughput and tracking stake accounts and SPL token holders.
 
