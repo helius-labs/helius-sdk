@@ -133,7 +133,7 @@ Provides methods for setting up, editing, and managing webhooks, crucial for lis
 - [`pollTransactionConfirmation()`](https://github.com/helius-labs/helius-sdk/blob/main/examples/EXAMPLES_OVERVIEW.md#polltransactionconfirmation): Polls a transaction to check whether it has been confirmed
 - [`sendSmartTransaction()`](https://github.com/helius-labs/helius-sdk/blob/main/examples/EXAMPLES_OVERVIEW.md#sendsmarttransaction): Builds and sends an optimized transaction
 
-**Jito Smart Transactions and Helper Methods**
+[**Jito Smart Transactions and Helper Methods**](https://github.com/helius-labs/helius-sdk/blob/main/examples/EXAMPLES_OVERVIEW.md#jito-smart-transactions-and-helper-methods)
 
 - [`addTipInstruction()`](https://github.com/helius-labs/helius-sdk/blob/main/examples/EXAMPLES_OVERVIEW.md#addtipinstruction): Adds a tip instruction as the last instruction given the provided instructions
 - [`createSmartTransactionWithTip()`](https://github.com/helius-labs/helius-sdk/blob/main/examples/EXAMPLES_OVERVIEW.md#createsmarttransactionwithtip): Creates a smart transaction with a Jito tip
