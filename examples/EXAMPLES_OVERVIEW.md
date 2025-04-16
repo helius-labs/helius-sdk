@@ -216,6 +216,8 @@ const heliusStakeAccounts = await helius.rpc.getHeliusStakeAccounts(walletAddres
 
 To read more about the easiest way to mint cNFTs on Solana, see [our docs](https://docs.helius.dev/compression-and-das-api/mint-api).
 
+Note, this API has been deprecated and the relevant methods will be removed in a future release. Please refer to [ZK Compression](https://docs.helius.dev/zk-compression-and-photon-api/what-is-zk-compression-on-solana) for all future compression-related work
+
 ### mintCompressedNft()
 
 To mint a compressed NFT, simply call the `mintCompressedNft` method and pass in your NFT data. [This](https://xray.helius.xyz/token/UJA7Dguu6VeG3W73AyaDYQiPR9Jw9vx3XXi6CYrN224?network=mainnet) is what the mint will look like in the explorer.
@@ -254,34 +256,6 @@ const response = await helius.mintCompressedNft({
   sellerFeeBasisPoints: 6900,
 });
 console.log(response.result);
-```
-
-If you want the SDK to handle the image upload, you can do so by passing in the `imagePath` and `walletPrivatekey` fields. `imagePath` is the relative path to the image, and `walletPrivatekey` is the private key of the wallet that'll pay for the image upload to Arweave.
-
-```ts
-import { Helius } from 'helius-sdk';
-
-const helius = new Helius('YOUR_API_KEY');
-const response = await helius.mintCompressedNft({
-  name: 'Aggron',
-  symbol: 'AGNFT',
-  owner: 'OWNER_WALLET_ADDRESS',
-  description:
-    'Aggron is a powerful Steel/Rock-type Pokémon known for its iron defense.',
-  attributes: [
-    {
-      trait_type: 'Type',
-      value: 'Steel/Rock',
-    },
-    {
-      trait_type: 'Power',
-      value: 'High',
-    },
-  ],
-  externalUrl: 'https://www.pokemon.com/us/pokedex/aggron',
-  imagePath: '../images/aagron.png',
-  walletPrivatekey: 'YOUR_WALLET_PRIVATE_KEY',
-});
 ```
 
 ### delegateCollectionAuthority() and revokeCollectionAuthority()
@@ -455,14 +429,14 @@ helius.removeAddressesFromWebhook('your-webhook-id-here', [
 ]);
 ```
 
-### getAllWebhooks()
+### deleteWebhook()
 
 ```ts
 import { Helius } from 'helius-sdk';
 
 const helius = new Helius('YOUR_API_KEY');
 
-helius.getAllWebhooks();
+helius.deleteWebhook('<webhook-id-here>'); // returns a boolean
 ```
 
 ### getWebhookByID()
@@ -475,14 +449,14 @@ const helius = new Helius('YOUR_API_KEY');
 helius.getWebhookByID('<webhook-id-here>');
 ```
 
-### deleteWebhook()
+### getAllWebhooks()
 
 ```ts
 import { Helius } from 'helius-sdk';
 
 const helius = new Helius('YOUR_API_KEY');
 
-helius.deleteWebhook('<webhook-id-here>'); // returns a boolean
+helius.getAllWebhooks();
 ```
 
 ### createCollectionWebhook()
@@ -505,6 +479,186 @@ helius.createCollectionWebhook({
 ```
 
 Note that the Collections.ABC enum references the collection query for this collection. It is just a convenience enum so that developers don't have to figure out whether to use firstVerifiedCreator or the Metaplex Certified Collection address. If you already know it for your collection, please make a PR.
+
+## Smart Transactions
+
+### createSmartTransaction()
+
+The smart transaction creation functionality has been abstracted out of `sendSmartTransaction` and is available with the `createSmartTransaction()` method. It takes in an array of instructions, signers, lookup tables, and an optional fee payer. It returns an object containing the smart transaction (i.e., `Transaction | VersionedTransaction`) as well as the `lastValidBlockHeight`:
+
+```ts
+const { smartTransaction: transaction, lastValidBlockHeight } =
+  await helius.rpc.createSmartTransaction(
+    instructions,
+    signers,
+    lookupTables,
+    feePayer
+  );
+```
+
+### getComputeUnits()
+
+This method simulates a transaction to get the total compute units consumed. It takes in an array of instructions, a fee payer, an array of lookup tables, and an array of signers. It returns the compute units consumed, or null if unsuccessful:
+
+```ts
+const units = helius.rpc.getComputeUnits(instructions, payerKey, [], []);
+```
+
+### pollTransactionConfirmation()
+
+This method polls a transaction to check whether it has been confirmed. It takes in a `TransactionSignature` and checks whether it has been confirmed within the timeout period. Currently, this method defaults to a 15 second timeout and a 5 second retry interval, so it polls 3 times over 15 seconds. However, with `PollTransactionOptions`, these values can be changed in addition to the confirmation status. It returns the confirmed transaction signature or an error if the confirmation times out:
+
+```ts
+let txSig = await helius
+  .connection()
+  .sendRawTransaction(transaction.serialize(), {
+    skipPreflight: true,
+    ...sendOptions,
+  });
+
+return await helius.rpc.pollTransactionConfirmation(txSig);
+```
+
+### sendSmartTransaction()
+
+This method builds and sends an optimized transaction, while handling its confirmation status. Whether the transaction skips preflight checks and how many times it is retried is configurable by the user.
+
+**Arguments:**
+
+- `instructions: TransactionInstruction[]` - Array of instructions to be executed in the transaction
+- `signers: Signer[]` - Array of signers for the transaction. The first signer is used as the fee payer unless specified otherwise
+- `lookupTables: AddressLookupTableAccount[]` - (Optional) Array of lookup tables for versioned transactions. Defaults to `[]`
+- `options: SendSmartTransactionOptions` - (Optional) Configuration options:
+  - `lastValidBlockHeightOffset` (number, optional, default=150): Offset added to current block height to compute expiration. Must be positive.
+  - `pollTimeoutMs` (number, optional, default=60000): Total timeout (ms) for confirmation polling.
+  - `pollIntervalMs` (number, optional, default=2000): Interval (ms) between polling attempts.
+  - `pollChunkMs` (number, optional, default=10000): Timeout (ms) for each individual polling chunk.
+  - `skipPreflight` (boolean, optional, default=false): Skip preflight transaction checks if true.
+  - `preflightCommitment` (Commitment, optional, default='confirmed'): Commitment level for preflight checks.
+  - `maxRetries` (number, optional): Maximum number of retries for sending the transaction.
+  - `minContextSlot` (number, optional): Minimum slot at which to fetch blockhash (prevents stale blockhash usage).
+  - `feePayer` (Signer, optional): Override fee payer (defaults to first signer).
+  - `priorityFeeCap` (number, optional): Maximum priority fee to pay in microlamports (for fee estimation capping).
+  - `serializeOptions` (SerializeConfig, optional): Custom serialization options for the transaction.
+
+The following code snippet is an example of sending 0.5 SOL to a given public key, with an optimized transaction that skips preflight checks:
+
+```ts
+import { Helius } from "helius-sdk";
+import {
+  Keypair,
+  SystemProgram,
+  LAMPORTS_PER_SOL,
+  TransactionInstruction,
+} from "@solana/web3.js";
+
+const helius = new Helius("YOUR_API_KEY");
+
+const fromKeypair = /* Your keypair goes here */;
+const fromPubkey = fromKeypair.publicKey;
+const toPubkey = /* The person we're sending 0.5 SOL to */;
+
+const instructions: TransactionInstruction[] = [
+  SystemProgram.transfer({
+    fromPubkey: fromPubkey,
+    toPubkey: toPubkey,
+    lamports: 0.5 * LAMPORTS_PER_SOL,
+  }),
+];
+
+const transactionSignature = await helius.rpc.sendSmartTransaction(instructions, [fromKeypair], [], { skipPreflight: true });
+console.log(`Successful transfer: ${transactionSignature}`);
+```
+
+## Jito Smart Transactions and Helper Methods
+
+### addTipInstruction()
+
+This method adds a tip instruction to the last instruction in the set of provided instructions. It is a transfer instruction that sends the specified amount of lamports from the fee payer to the designated tip account.
+
+```ts
+const randomTipAccount =
+  JITO_TIP_ACCOUNTS[Math.floor(Math.random() * JITO_TIP_ACCOUNTS.length)];
+const tipAmount = 10000;
+
+helius.rpc.addTipInstruction(
+  instructions,
+  feePayer,
+  randomTipAccount,
+  tipAmount
+);
+```
+
+### createSmartTransactionWithTip()
+
+Similarly to `createSmartTransaction`, the smart transaction creation functionality for smart transactions with tips has been abstracted out of `sendSmartTransactionWithTip` and is available with the `createSmartTransactionWithTip` method. It takes in an array of instructions, signers, lookup tables, as well as a tip amount and an optional fee payer. The tip amount defaults to 1000 lamports — the minimum specified in [Jito's documentation](https://jito-labs.gitbook.io/mev/searcher-resources/bundles#tip-guidelines). It returns the serialized transaction as a string, and the `lastValidBlockHeight`. The reason we return the transaction as a string is because the `sendJitoBundle` method requires a serialzied transaction:
+
+```ts
+const { serializedTransaction, lastValidBlockHeight } =
+  await this.createSmartTransactionWithTip(
+    instructions,
+    signers,
+    lookupTables,
+    tipAmount,
+    feePayer
+  );
+```
+
+### getBundleStatuses()
+
+This method gets the status of Jito bundles. It takes in an array of bundle IDs and a Jito Block Engine API URL. It returns the status of the bundles.
+
+```ts
+const bundleIds = [
+  /* Bundle IDs */
+];
+const jitoApiUrl = 'https://mainnet.block-engine.jito.wtf/api/v1/bundles';
+const statuses = helius.rpc.getBundleStatuses(bundleIds, jitoApiUrl);
+```
+
+### sendJitoBundle()
+
+This method sends a bundle of transactions to the Jito Block Engine. It takes in an array of serialized transactions and a Jito Block Engine API URL. It returns the bundle ID as a string.
+
+```ts
+const jitoApiUrl = 'https://mainnet.block-engine.jito.wtf/api/v1/bundles';
+const bundleId = helius.rpc.sendJitoBundle(
+  [serializedTransactions],
+  jitoApiUrl
+);
+```
+
+### sendSmartTransactionWithTip()
+
+This method has the same functionality as `sendSmartTransaction`. However, it sends the optimized transaction as a bundle and includes a tip so it is processed by Jito's Block Engine. The following code snippet sends 0.05 SOL to a given public key with a Jito tip of 100k lamports using Jito's New York API URL:
+
+```ts
+import { Helius } from "helius-sdk";
+import {
+  Keypair,
+  SystemProgram,
+  LAMPORTS_PER_SOL,
+  TransactionInstruction,
+} from "@solana/web3.js";
+
+const helius = new Helius("YOUR_API_KEY");
+
+const fromKeypair = /* Your keypair goes here */;
+const fromPubkey = fromKeypair.publicKey;
+const toPubkey = /* The person we're sending 0.05 SOL to */;
+
+const instructions: TransactionInstruction[] = [
+  SystemProgram.transfer({
+    fromPubkey: fromPubkey,
+    toPubkey: toPubkey,
+    lamports: 0.05 * LAMPORTS_PER_SOL,
+  }),
+];
+
+// Call the sendSmartTransactionWithTip function
+const bundleId = await helius.rpc.sendSmartTransactionWithTip(instructions, [keypair], address_lut, 100000, "NY");
+console.log(`Bundle sent successfully with ID: ${bundleId}`);
+```
 
 ## Helper methods
 
@@ -569,182 +723,6 @@ const response = await helius.rpc.getPriorityFeeEstimate({
 });
 
 console.log(response);
-```
-
-### sendSmartTransaction()
-
-This method builds and sends an optimized transaction, while handling its confirmation status. Whether the transaction skips preflight checks and how many times it is retried is configurable by the user.
-
-**Arguments:**
-
-- `instructions: TransactionInstruction[]` - Array of instructions to be executed in the transaction
-- `signers: Signer[]` - Array of signers for the transaction. The first signer is used as the fee payer unless specified otherwise
-- `lookupTables: AddressLookupTableAccount[]` - (Optional) Array of lookup tables for versioned transactions. Defaults to `[]`
-- `options: SendSmartTransactionOptions` - (Optional) Configuration options:
-  - `lastValidBlockHeightOffset` (number, optional, default=150): Offset added to current block height to compute expiration. Must be positive.
-  - `pollTimeoutMs` (number, optional, default=60000): Total timeout (ms) for confirmation polling.
-  - `pollIntervalMs` (number, optional, default=2000): Interval (ms) between polling attempts.
-  - `pollChunkMs` (number, optional, default=10000): Timeout (ms) for each individual polling chunk.
-  - `skipPreflight` (boolean, optional, default=false): Skip preflight transaction checks if true.
-  - `preflightCommitment` (Commitment, optional, default='confirmed'): Commitment level for preflight checks.
-  - `maxRetries` (number, optional): Maximum number of retries for sending the transaction.
-  - `minContextSlot` (number, optional): Minimum slot at which to fetch blockhash (prevents stale blockhash usage).
-  - `feePayer` (Signer, optional): Override fee payer (defaults to first signer).
-  - `priorityFeeCap` (number, optional): Maximum priority fee to pay in microlamports (for fee estimation capping).
-  - `serializeOptions` (SerializeConfig, optional): Custom serialization options for the transaction.
-
-The following code snippet is an example of sending 0.5 SOL to a given public key, with an optimized transaction that skips preflight checks:
-
-```ts
-import { Helius } from "helius-sdk";
-import {
-  Keypair,
-  SystemProgram,
-  LAMPORTS_PER_SOL,
-  TransactionInstruction,
-} from "@solana/web3.js";
-
-const helius = new Helius("YOUR_API_KEY");
-
-const fromKeypair = /* Your keypair goes here */;
-const fromPubkey = fromKeypair.publicKey;
-const toPubkey = /* The person we're sending 0.5 SOL to */;
-
-const instructions: TransactionInstruction[] = [
-  SystemProgram.transfer({
-    fromPubkey: fromPubkey,
-    toPubkey: toPubkey,
-    lamports: 0.5 * LAMPORTS_PER_SOL,
-  }),
-];
-
-const transactionSignature = await helius.rpc.sendSmartTransaction(instructions, [fromKeypair], [], { skipPreflight: true });
-console.log(`Successful transfer: ${transactionSignature}`);
-```
-
-### createSmartTransaction()
-
-The smart transaction creation functionality has been abstracted out of `sendSmartTransaction` and is available with the `createSmartTransaction()` method. It takes in an array of instructions, signers, lookup tables, and an optional fee payer. It returns an object containing the smart transaction (i.e., `Transaction | VersionedTransaction`) as well as the `lastValidBlockHeight`:
-
-```ts
-const { smartTransaction: transaction, lastValidBlockHeight } =
-  await helius.rpc.createSmartTransaction(
-    instructions,
-    signers,
-    lookupTables,
-    feePayer
-  );
-```
-
-### getComputeUnits()
-
-This method simulates a transaction to get the total compute units consumed. It takes in an array of instructions, a fee payer, an array of lookup tables, and an array of signers. It returns the compute units consumed, or null if unsuccessful:
-
-```ts
-const units = helius.rpc.getComputeUnits(instructions, payerKey, [], []);
-```
-
-### pollTransactionConfirmation()
-
-This method polls a transaction to check whether it has been confirmed. It takes in a `TransactionSignature` and checks whether it has been confirmed within the timeout period. Currently, this method defaults to a 15 second timeout and a 5 second retry interval, so it polls 3 times over 15 seconds. However, with `PollTransactionOptions`, these values can be changed in addition to the confirmation status. It returns the confirmed transaction signature or an error if the confirmation times out:
-
-```ts
-let txSig = await helius
-  .connection()
-  .sendRawTransaction(transaction.serialize(), {
-    skipPreflight: true,
-    ...sendOptions,
-  });
-
-return await helius.rpc.pollTransactionConfirmation(txSig);
-```
-
-### sendSmartTransactionWithTip()
-
-This method has the same functionality as `sendSmartTransaction`. However, it sends the optimized transaction as a bundle and includes a tip so it is processed by Jito's Block Engine. The following code snippet sends 0.05 SOL to a given public key with a Jito tip of 100k lamports using Jito's New York API URL:
-
-```ts
-import { Helius } from "helius-sdk";
-import {
-  Keypair,
-  SystemProgram,
-  LAMPORTS_PER_SOL,
-  TransactionInstruction,
-} from "@solana/web3.js";
-
-const helius = new Helius("YOUR_API_KEY");
-
-const fromKeypair = /* Your keypair goes here */;
-const fromPubkey = fromKeypair.publicKey;
-const toPubkey = /* The person we're sending 0.05 SOL to */;
-
-const instructions: TransactionInstruction[] = [
-  SystemProgram.transfer({
-    fromPubkey: fromPubkey,
-    toPubkey: toPubkey,
-    lamports: 0.05 * LAMPORTS_PER_SOL,
-  }),
-];
-
-// Call the sendSmartTransactionWithTip function
-const bundleId = await helius.rpc.sendSmartTransactionWithTip(instructions, [keypair], address_lut, 100000, "NY");
-console.log(`Bundle sent successfully with ID: ${bundleId}`);
-```
-
-### createSmartTransactionWithTip()
-
-Similarly to `createSmartTransaction`, the smart transaction creation functionality for smart transactions with tips has been abstracted out of `sendSmartTransactionWithTip` and is available with the `createSmartTransactionWithTip` method. It takes in an array of instructions, signers, lookup tables, as well as a tip amount and an optional fee payer. The tip amount defaults to 1000 lamports — the minimum specified in [Jito's documentation](https://jito-labs.gitbook.io/mev/searcher-resources/bundles#tip-guidelines). It returns the serialized transaction as a string, and the `lastValidBlockHeight`. The reason we return the transaction as a string is because the `sendJitoBundle` method requires a serialzied transaction:
-
-```ts
-const { serializedTransaction, lastValidBlockHeight } =
-  await this.createSmartTransactionWithTip(
-    instructions,
-    signers,
-    lookupTables,
-    tipAmount,
-    feePayer
-  );
-```
-
-### addTipInstruction()
-
-This method adds a tip instruction to the last instruction in the set of provided instructions. It is a transfer instruction that sends the specified amount of lamports from the fee payer to the designated tip account.
-
-```ts
-const randomTipAccount =
-  JITO_TIP_ACCOUNTS[Math.floor(Math.random() * JITO_TIP_ACCOUNTS.length)];
-const tipAmount = 10000;
-
-helius.rpc.addTipInstruction(
-  instructions,
-  feePayer,
-  randomTipAccount,
-  tipAmount
-);
-```
-
-### sendJitoBundle()
-
-This method sends a bundle of transactions to the Jito Block Engine. It takes in an array of serialized transactions and a Jito Block Engine API URL. It returns the bundle ID as a string.
-
-```ts
-const jitoApiUrl = 'https://mainnet.block-engine.jito.wtf/api/v1/bundles';
-const bundleId = helius.rpc.sendJitoBundle(
-  [serializedTransactions],
-  jitoApiUrl
-);
-```
-
-### getBundleStatuses()
-
-This method gets the status of Jito bundles. It takes in an array of bundle IDs and a Jito Block Engine API URL. It returns the status of the bundles.
-
-```ts
-const bundleIds = [
-  /* Bundle IDs */
-];
-const jitoApiUrl = 'https://mainnet.block-engine.jito.wtf/api/v1/bundles';
-const statuses = helius.rpc.getBundleStatuses(bundleIds, jitoApiUrl);
 ```
 
 ### sendTransaction()

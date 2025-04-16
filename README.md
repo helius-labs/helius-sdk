@@ -78,77 +78,77 @@ If you encounter any of these errors, refer to the Helius documentation for furt
 
 Our SDK is designed to give you a seamless experience when building on Solana. We've separated the core functionality into various segments.
 
-[**DAS API**](#das-api-digital-asset-standard)
+[**DAS API**](https://github.com/helius-labs/helius-sdk/blob/main/examples/EXAMPLES_OVERVIEW.md#das-api-digital-asset-standard)
 
 Comprehensive and performant API for tokens, NFTs, and compressed NFTs on Solana.
 
-- [`getAsset()`](#getAsset): Get an asset by its ID.
-- [`getAssetBatch()`](#getAssetBatch): Get multiple assets by ID (up to 1k).
-- [`getSignaturesForAsset()`](#getSignaturesForAsset): Get a list of transaction signatures related to a compressed asset.
-- [`searchAssets()`](#searchAssets): Search for assets by a variety of parameters. Very useful for token-gating!
-- [`getAssetProof()`](#getAssetProof): Get a Merkle proof for a compressed asset by its ID.
-- [`getAssetsByOwner()`](#getAssetsByOwner): Get a list of assets owned by an address. This is the fastest way to get all the NFTs and fungible tokens that are owned by a wallet on Solana.
-- [`getAssetsByGroup()`](#getAssetsByGroup): Get a list of assets by a group key and value. This endpoint is very useful for getting the mint list for NFT Collections.
-- [`getAssetsByCreator()`](#getAssetsByCreator): Get a list of assets created by an address.
-- [`getAssetsByAuthority()`](#getAssetsByAuthority): Get a list of assets with a specific authority.
-- [`getTokenAccounts()`](#getTokenAccounts): Get information about all token accounts for a specific mint or a specific owner.
-- [`getNftEditions()`](#getNftEditions): Get information about all the edition NFTs for a specific master NFT
+- [`getAsset()`](https://github.com/helius-labs/helius-sdk/blob/main/examples/EXAMPLES_OVERVIEW.md#getasset): Get an asset by its ID.
+- [`getAssetBatch()`](https://github.com/helius-labs/helius-sdk/blob/main/examples/EXAMPLES_OVERVIEW.md#getassetbatch): Get multiple assets by ID (up to 1k).
+- [`getSignaturesForAsset()`](https://github.com/helius-labs/helius-sdk/blob/main/examples/EXAMPLES_OVERVIEW.md#getsignaturesforasset): Get a list of transaction signatures related to a compressed asset.
+- [`searchAssets()`](https://github.com/helius-labs/helius-sdk/blob/main/examples/EXAMPLES_OVERVIEW.md#searchassets): Search for assets by a variety of parameters. Very useful for token-gating!
+- [`getAssetProof()`](https://github.com/helius-labs/helius-sdk/blob/main/examples/EXAMPLES_OVERVIEW.md#getassetproof): Get a Merkle proof for a compressed asset by its ID.
+- [`getAssetsByOwner()`](https://github.com/helius-labs/helius-sdk/blob/main/examples/EXAMPLES_OVERVIEW.md#getassetsbyowner): Get a list of assets owned by an address. This is the fastest way to get all the NFTs and fungible tokens that are owned by a wallet on Solana.
+- [`getAssetsByGroup()`](https://github.com/helius-labs/helius-sdk/blob/main/examples/EXAMPLES_OVERVIEW.md#getassetsbygroup): Get a list of assets by a group key and value. This endpoint is very useful for getting the mint list for NFT Collections.
+- [`getAssetsByCreator()`](https://github.com/helius-labs/helius-sdk/blob/main/examples/EXAMPLES_OVERVIEW.md#getassetsbycreator): Get a list of assets created by an address.
+- [`getAssetsByAuthority()`](https://github.com/helius-labs/helius-sdk/blob/main/examples/EXAMPLES_OVERVIEW.md#getassetsbyauthority): Get a list of assets with a specific authority.
+- [`getTokenAccounts()`](https://github.com/helius-labs/helius-sdk/blob/main/examples/EXAMPLES_OVERVIEW.md#gettokenaccounts): Get information about all token accounts for a specific mint or a specific owner.
+- [`getNftEditions()`](https://github.com/helius-labs/helius-sdk/blob/main/examples/EXAMPLES_OVERVIEW.md#getnfteditions): Get information about all the edition NFTs for a specific master NFT
 
-[**Staking**](#staking)
+[**Staking**](https://github.com/helius-labs/helius-sdk/blob/main/examples/EXAMPLES_OVERVIEW.md#staking)
 
 The easiest way to stake with Helius programmatically.
 
-- [`createStakeTransaction()`](#createstaketransaction): Generate a transaction to create + delegate a new stake account to the Helius validator.
-- [`createUnstakeTransaction()`](#createunstaketransaction): Generate a transaction to deactivate a stake account.
-- [`getHeliusStakeAccounts()`](#getheliusstakeaccounts): Return all stake accounts delegated to the Helius validator for a given wallet.
+- [`createStakeTransaction()`](https://github.com/helius-labs/helius-sdk/blob/main/examples/EXAMPLES_OVERVIEW.md#createstaketransaction): Generate a transaction to create + delegate a new stake account to the Helius validator.
+- [`createUnstakeTransaction()`](https://github.com/helius-labs/helius-sdk/blob/main/examples/EXAMPLES_OVERVIEW.md#createunstaketransaction): Generate a transaction to deactivate a stake account.
+- [`getHeliusStakeAccounts()`](https://github.com/helius-labs/helius-sdk/blob/main/examples/EXAMPLES_OVERVIEW.md#getheliusstakeaccounts): Return all stake accounts delegated to the Helius validator for a given wallet.
 
-[**Mint API**](#mint-api)
+[**Mint API**](https://github.com/helius-labs/helius-sdk/blob/main/examples/EXAMPLES_OVERVIEW.md#mint)
 
 The easiest way to mint compressed NFTs at scale.
 
 Note, this API has been deprecated and the relevant methods will be removed in a future release. Please refer to [ZK Compression](https://docs.helius.dev/zk-compression-and-photon-api/what-is-zk-compression-on-solana) for all future compression-related work
 
-- [`mintCompressedNft()`](#mintCompressedNft): Mint a new compressed NFT.
-- [`delegateCollectionAuthority()`](#delegatecollectionauthority-and-revokecollectionauthority): Delegates collection authority to a new address.
-- [`revokeCollectionAuthority()`](#delegatecollectionauthority-and-revokecollectionauthority): Revokes collection authority from an address.
-- [`getMintlist()`](#getMintlist) Get all the tokens for an NFT collection.
+- [`mintCompressedNft()`](https://github.com/helius-labs/helius-sdk/blob/main/examples/EXAMPLES_OVERVIEW.md#mintcompressednft): Mint a new compressed NFT.
+- [`delegateCollectionAuthority()`](https://github.com/helius-labs/helius-sdk/blob/main/examples/EXAMPLES_OVERVIEW.md#delegatecollectionauthority-and-revokecollectionauthority): Delegates collection authority to a new address.
+- [`revokeCollectionAuthority()`](https://github.com/helius-labs/helius-sdk/blob/main/examples/EXAMPLES_OVERVIEW.md#delegatecollectionauthority-and-revokecollectionauthority): Revokes collection authority from an address.
+- [`getMintlist()`](https://github.com/helius-labs/helius-sdk/blob/main/examples/EXAMPLES_OVERVIEW.md#getmintlist) Get all the tokens for an NFT collection.
 
-[**Webhooks**](#webhooks)
+[**Webhooks**](https://github.com/helius-labs/helius-sdk/blob/main/examples/EXAMPLES_OVERVIEW.md#webhooks)
 
 Provides methods for setting up, editing, and managing webhooks, crucial for listening to on-chain Solana events (e.g., sales, listings, swaps) and triggering actions when these events happen.
 
-- [`createWebhook()`](#createWebhook): Creates a new webhook with the provided request.
-- [`editWebhook()`](#editWebhook): Edits an existing webhook by its ID with the provided request.
-- [`appendAddressesToWebhook()`](#appendAddressesToWebhook): Append new addresses to an existing webhook.
-- [`removeAddressesFromWebhook()`](#removeAddressesFromWebhook): Remove addresses from an existing webhook.
-- [`deleteWebhook()`](#deleteWebhook): Deletes a webhook by its ID.
-- [`getWebhookByID()`](#getWebhookByID): Retrieves a single webhook by its ID.
-- [`getAllWebhooks()`](#getAllWebhooks): Retrieves a list of all webhooks.
-- [`createCollectionWebhook()`](#createCollectionWebhook) Create a new collection webhook with the provided request.
+- [`createWebhook()`](https://github.com/helius-labs/helius-sdk/blob/main/examples/EXAMPLES_OVERVIEW.md#createwebhook): Creates a new webhook with the provided request.
+- [`editWebhook()`](https://github.com/helius-labs/helius-sdk/blob/main/examples/EXAMPLES_OVERVIEW.md#editwebhook): Edits an existing webhook by its ID with the provided request.
+- [`appendAddressesToWebhook()`](https://github.com/helius-labs/helius-sdk/blob/main/examples/EXAMPLES_OVERVIEW.md#appendaddressestowebhook): Append new addresses to an existing webhook.
+- [`removeAddressesFromWebhook()`](https://github.com/helius-labs/helius-sdk/blob/main/examples/EXAMPLES_OVERVIEW.md#removeaddressesfromwebhook): Remove addresses from an existing webhook.
+- [`deleteWebhook()`](https://github.com/helius-labs/helius-sdk/blob/main/examples/EXAMPLES_OVERVIEW.md#deletewebhook): Deletes a webhook by its ID.
+- [`getWebhookByID()`](https://github.com/helius-labs/helius-sdk/blob/main/examples/EXAMPLES_OVERVIEW.md#getwebhookbyid): Retrieves a single webhook by its ID.
+- [`getAllWebhooks()`](https://github.com/helius-labs/helius-sdk/blob/main/examples/EXAMPLES_OVERVIEW.md#getallwebhooks): Retrieves a list of all webhooks.
+- [`createCollectionWebhook()`](https://github.com/helius-labs/helius-sdk/blob/main/examples/EXAMPLES_OVERVIEW.md#createcollectionwebhook) Create a new collection webhook with the provided request.
 
 [**Smart Transactions**](https://docs.helius.dev/solana-rpc-nodes/sending-transactions-on-solana#sending-smart-transactions)
 
-- [`createSmartTransaction()`](#createSmartTransaction): Creates a smart transaction with the provided configuration
-- [`getComputeUnits()`](#getComputeUnits): Simulates a transaction to get the total compute units consumed
-- [`pollTransactionConfirmation()`](#pollTransactionConfirmation): Polls a transaction to check whether it has been confirmed
-- [`sendSmartTransaction()`](#sendSmartTransaction): Builds and sends an optimized transaction
+- [`createSmartTransaction()`](https://github.com/helius-labs/helius-sdk/blob/main/examples/EXAMPLES_OVERVIEW.md#createsmarttransaction): Creates a smart transaction with the provided configuration
+- [`getComputeUnits()`](https://github.com/helius-labs/helius-sdk/blob/main/examples/EXAMPLES_OVERVIEW.md#getcomputeunits): Simulates a transaction to get the total compute units consumed
+- [`pollTransactionConfirmation()`](https://github.com/helius-labs/helius-sdk/blob/main/examples/EXAMPLES_OVERVIEW.md#polltransactionconfirmation): Polls a transaction to check whether it has been confirmed
+- [`sendSmartTransaction()`](https://github.com/helius-labs/helius-sdk/blob/main/examples/EXAMPLES_OVERVIEW.md#sendsmarttransaction): Builds and sends an optimized transaction
 
-[**Jito Smart Transactions and Helper Methods**]()
+[**Jito Smart Transactions and Helper Methods**](https://github.com/helius-labs/helius-sdk/blob/main/examples/EXAMPLES_OVERVIEW.md#jito-smart-transactions-and-helper-methods)
 
-- [`addTipInstruction()`](#addTipInstruction): Adds a tip instruction as the last instruction given the provided instructions
-- [`createSmartTransactionWithTip()`](#createSmartTransactionWithTip): Creates a smart transaction with a Jito tip
-- [`getBundleStatuses()`](#getBundleStatuses): Gets the status of the provided bundles
-- [`sendJitoBundle()`](#sendJitoBundle): Sends a bundle of transactions to the Jito Block Engine
-- [`sendSmartTransactionWithTip()`](#sendSmartTransactionWithTip): Sends a smart transaction as a Jito bundle with a tip
+- [`addTipInstruction()`](https://github.com/helius-labs/helius-sdk/blob/main/examples/EXAMPLES_OVERVIEW.md#addtipinstruction): Adds a tip instruction as the last instruction given the provided instructions
+- [`createSmartTransactionWithTip()`](https://github.com/helius-labs/helius-sdk/blob/main/examples/EXAMPLES_OVERVIEW.md#createsmarttransactionwithtip): Creates a smart transaction with a Jito tip
+- [`getBundleStatuses()`](https://github.com/helius-labs/helius-sdk/blob/main/examples/EXAMPLES_OVERVIEW.md#getbundlestatuses): Gets the status of the provided bundles
+- [`sendJitoBundle()`](https://github.com/helius-labs/helius-sdk/blob/main/examples/EXAMPLES_OVERVIEW.md#sendjitobundle): Sends a bundle of transactions to the Jito Block Engine
+- [`sendSmartTransactionWithTip()`](https://github.com/helius-labs/helius-sdk/blob/main/examples/EXAMPLES_OVERVIEW.md#sendsmarttransactionwithtip): Sends a smart transaction as a Jito bundle with a tip
 
-[**Helper methods**](#helper-methods)
+[**Helper Methods**](https://github.com/helius-labs/helius-sdk/blob/main/examples/EXAMPLES_OVERVIEW.md#helper-methods)
 
 Offers additional tools for various Solana-related tasks like analyzing blockchain throughput and tracking stake accounts and SPL token holders.
 
-- [`getCurrentTPS()`](#getCurrentTPS): Returns the current transactions per second (TPS) rate — including voting transactions.
-- [`airdrop()`](#airdrop): Request an allocation of lamports to the specified address
-- [`getStakeAccounts()`](#getStakeAccounts): Returns all the stake accounts for a given public key.
-- [`getTokenHolders()`](#getTokenHolders): Returns all the token accounts for a given mint address (ONLY FOR SPL TOKENS).
-- [`getPriorityFeeEstimate()`](#getPriorityFeeEstimate): Returns an estimated priority fee based on a set of predefined priority levels (percentiles).
-- [`sendTransaction()`](#sendTransaction): Wrapper for `sendTransaction` RPC call that includes support for `validatorAcls` parameter.
-- [`executeJupiterSwap()`](#executeJupiterSwap): Execute a token swap using Jupiter Exchange with automatic transaction optimizations including priority fees, compute unit calculation, and reliable transaction confirmation.
+- [`getCurrentTPS()`](https://github.com/helius-labs/helius-sdk/blob/main/examples/EXAMPLES_OVERVIEW.md#getcurrenttps): Returns the current transactions per second (TPS) rate — including voting transactions.
+- [`airdrop()`](https://github.com/helius-labs/helius-sdk/blob/main/examples/EXAMPLES_OVERVIEW.md#airdrop): Request an allocation of lamports to the specified address
+- [`getStakeAccounts()`](https://github.com/helius-labs/helius-sdk/blob/main/examples/EXAMPLES_OVERVIEW.md#getstakeaccounts): Returns all the stake accounts for a given public key.
+- [`getTokenHolders()`](https://github.com/helius-labs/helius-sdk/blob/main/examples/EXAMPLES_OVERVIEW.md#gettokenholders): Returns all the token accounts for a given mint address (ONLY FOR SPL TOKENS).
+- [`getPriorityFeeEstimate()`](https://github.com/helius-labs/helius-sdk/blob/main/examples/EXAMPLES_OVERVIEW.md#getpriorityfeeestimate): Returns an estimated priority fee based on a set of predefined priority levels (percentiles).
+- [`sendTransaction()`](https://github.com/helius-labs/helius-sdk/blob/main/examples/EXAMPLES_OVERVIEW.md#sendtransaction): Wrapper for `sendTransaction` RPC call that includes support for `validatorAcls` parameter.
+- [`executeJupiterSwap()`](https://github.com/helius-labs/helius-sdk/blob/main/examples/EXAMPLES_OVERVIEW.md#executejupiterswap): Execute a token swap using Jupiter Exchange with automatic transaction optimizations including priority fees, compute unit calculation, and reliable transaction confirmation.
