@@ -1564,7 +1564,7 @@ export class RpcClient {
    *   - `computeUnitLimit` - Compute unit limit set for the transaction
    *   - `confirmed` - Whether transaction was confirmed
    *   - `confirmationStatus` - Confirmation status of transaction
-   *   - `explorerUrl` - URL to view transaction on Solscan
+   *   - `explorerUrl` - URL to view transaction on Orb
    */
   async executeJupiterSwap(
     params: JupiterSwapParams,
@@ -1665,7 +1665,7 @@ export class RpcClient {
         computeUnitLimit: swapResponse.computeUnitLimit,
         confirmed: confirmation.value.err ? false : true,
         confirmationStatus: confirmation.context.slot ? 'confirmed' : undefined,
-        explorerUrl: `https://explorer.solana.com/tx/${signature}`
+        explorerUrl: `https://orb.helius.dev/tx/${signature}`
       };
     } catch (error) {
       console.error('Jupiter swap error:', error);
