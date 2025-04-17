@@ -100,6 +100,11 @@ The easiest way to stake with Helius programmatically.
 
 - [`createStakeTransaction()`](https://github.com/helius-labs/helius-sdk/blob/main/examples/EXAMPLES_OVERVIEW.md#createstaketransaction): Generate a transaction to create + delegate a new stake account to the Helius validator.
 - [`createUnstakeTransaction()`](https://github.com/helius-labs/helius-sdk/blob/main/examples/EXAMPLES_OVERVIEW.md#createunstaketransaction): Generate a transaction to deactivate a stake account.
+- [`createWithdrawTransaction()`](https://github.com/helius-labs/helius-sdk/blob/main/examples/EXAMPLES_OVERVIEW.md#createwithdrawtransaction): Generate a transaction to withdraw lamports from a stake account (after cooldown).
+- [`getStakeInstructions()`](https://github.com/helius-labs/helius-sdk/blob/main/examples/EXAMPLES_OVERVIEW.md#getstakeinstructions): Return only the instructions for creating and delegating a stake account.
+- [`getUnstakeInstruction()`](https://github.com/helius-labs/helius-sdk/blob/main/examples/EXAMPLES_OVERVIEW.md#getunstakeinstruction): Return the instruction to deactivate a stake account.
+- [`getWithdrawInstruction()`](https://github.com/helius-labs/helius-sdk/blob/main/examples/EXAMPLES_OVERVIEW.md#getwithdrawinstruction): Return the instruction to withdraw lamports from a stake account.
+- [`getWithdrawableAmount()`](https://github.com/helius-labs/helius-sdk/blob/main/examples/EXAMPLES_OVERVIEW.md#getwithdrawableamount): Determine how many lamports are withdrawable (with optional rent-exempt inclusion).
 - [`getHeliusStakeAccounts()`](https://github.com/helius-labs/helius-sdk/blob/main/examples/EXAMPLES_OVERVIEW.md#getheliusstakeaccounts): Return all stake accounts delegated to the Helius validator for a given wallet.
 
 [**Mint API**](https://github.com/helius-labs/helius-sdk/blob/main/examples/EXAMPLES_OVERVIEW.md#mint)

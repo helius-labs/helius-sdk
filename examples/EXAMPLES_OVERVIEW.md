@@ -206,6 +206,49 @@ const serializedTx = await helius.rpc.createUnstakeTransaction(
 );
 ```
 
+### createWithdrawTransaction
+Withdraw from a stake account after cooldown (unsigned transaction).
+```ts
+const serializedTx = await helius.rpc.createWithdrawTransaction(
+  ownerPubkey,
+  stakeAccountPubkey,
+  destinationPubkey,
+  lamportsToWithdraw
+);
+```
+
+### getStakeInstructions
+Return only the instructions for creating and delegating a stake account.
+```ts
+const { instructions, stakeAccount } = await helius.rpc.getStakeInstructions(
+  ownerPubkey,
+  1.5 // Amount in SOL (excluding rent exemption)
+);
+```
+
+### getUnstakeInstruction
+Return a single instruction to deactivate a stake account.
+```ts
+const ix = helius.rpc.getUnstakeInstruction(ownerPubkey, stakeAccountPubkey);
+```
+
+### getWithdrawableAmount
+Returns how many lamports are withdrawable (optional rent-exempt inclusion).
+```ts
+const withdrawable = await helius.rpc.getWithdrawableAmount(stakeAccountPubkey, true);
+```
+
+### getWithdrawInstruction
+Return a single instruction to withdraw from a stake account.
+```ts
+const ix = helius.rpc.getWithdrawInstruction(
+  ownerPubkey,
+  stakeAccountPubkey,
+  destinationPubkey,
+  lamportsToWithdraw
+);
+```
+
 ### getHeliusStakeAccounts
 Fetch all stake accounts delegated to the Helius validator for a given wallet.
 ```ts
