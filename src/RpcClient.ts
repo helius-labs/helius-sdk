@@ -884,7 +884,7 @@ export class RpcClient {
           if (status?.value?.confirmationStatus && !status.value.err) {
             const { confirmationStatus } = status.value;
 
-            if (["confirmed", "finalized"].includes(confirmationStatus)) {
+            if (['confirmed', 'finalized'].includes(confirmationStatus)) {
               console.info(
                 `Transaction ${signature} was confirmed despite a polling failure. Returning successful now`
               );
@@ -1174,7 +1174,7 @@ export class RpcClient {
           if (status?.value?.confirmationStatus && !status.value.err) {
             const { confirmationStatus } = status.value;
 
-            if (["confirmed", "finalized"].includes(confirmationStatus)) {
+            if (['confirmed', 'finalized'].includes(confirmationStatus)) {
               console.info(
                 `Transaction ${signature} was confirmed despite a polling failure. Returning successful now`
               );
@@ -1522,7 +1522,7 @@ export class RpcClient {
    *   outputMint: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',  // USDC
    *   amount: 10000000,  // 0.01 SOL
    * }, wallet);
-   * 
+   *
    * // Advanced swap with custom settings for better transaction landing
    * const advancedResult = await helius.rpc.executeJupiterSwap({
    *   inputMint: 'So11111111111111111111111111111111111111112',
@@ -1549,9 +1549,9 @@ export class RpcClient {
    *   - `skipPreflight` - Whether to skip preflight transaction checks (default: true)
    *   - `maxRetries` - Maximum number of retries when sending transaction (default: 0)
    *   - `confirmationCommitment` - Commitment level for confirming transaction ('processed', 'confirmed', 'finalized', default: 'confirmed')
-   * 
+   *
    * @param signer - The wallet that will execute and pay for the swap
-   * 
+   *
    * @returns Swap result with the following properties:
    *   - `signature` - Transaction signature (empty if failed)
    *   - `success` - Whether the swap succeeded
@@ -1574,12 +1574,14 @@ export class RpcClient {
       // Set default parameters
       const wrapUnwrapSOL = params.wrapUnwrapSOL ?? true;
       const slippageBps = params.slippageBps ?? 50; // Default to 0.5%
-      const restrictIntermediateTokens = params.restrictIntermediateTokens ?? true;
+      const restrictIntermediateTokens =
+        params.restrictIntermediateTokens ?? true;
       const priorityLevel = params.priorityLevel ?? 'high';
       const maxPriorityFeeLamports = params.maxPriorityFeeLamports ?? 1000000; // Default 0.001 SOL
       const maxRetries = params.maxRetries ?? 0;
       const skipPreflight = params.skipPreflight ?? true;
-      const confirmationCommitment = params.confirmationCommitment ?? 'confirmed';
+      const confirmationCommitment =
+        params.confirmationCommitment ?? 'confirmed';
 
       // Get Jupiter quote using fetch API with updated parameters
       const quoteUrl = new URL('https://api.jup.ag/swap/v1/quote');
@@ -1587,10 +1589,13 @@ export class RpcClient {
       quoteUrl.searchParams.append('outputMint', params.outputMint);
       quoteUrl.searchParams.append('amount', params.amount.toString());
       quoteUrl.searchParams.append('slippageBps', slippageBps.toString());
-      quoteUrl.searchParams.append('restrictIntermediateTokens', restrictIntermediateTokens.toString());
-      
+      quoteUrl.searchParams.append(
+        'restrictIntermediateTokens',
+        restrictIntermediateTokens.toString()
+      );
+
       const quoteResponse = await (await fetch(quoteUrl.toString())).json();
-      
+
       if (!quoteResponse) {
         throw new Error('Failed to get Jupiter quote');
       }
@@ -1606,17 +1611,17 @@ export class RpcClient {
             quoteResponse,
             userPublicKey: signer.publicKey.toString(),
             wrapAndUnwrapSol: wrapUnwrapSOL,
-            
+
             // Transaction landing optimizations
             dynamicComputeUnitLimit: true,
             dynamicSlippage: true,
             prioritizationFeeLamports: {
               priorityLevelWithMaxLamports: {
                 maxLamports: maxPriorityFeeLamports,
-                priorityLevel: priorityLevel
-              }
-            }
-          })
+                priorityLevel: priorityLevel,
+              },
+            },
+          }),
         })
       ).json();
 
@@ -1639,7 +1644,7 @@ export class RpcClient {
 
       // Send the transaction with options for better landing
       const signature = await this.connection.sendRawTransaction(
-        serializedTransaction, 
+        serializedTransaction,
         {
           skipPreflight,
           maxRetries,
@@ -1656,7 +1661,9 @@ export class RpcClient {
       return {
         signature,
         success: confirmation.value.err ? false : true,
-        error: confirmation.value.err ? JSON.stringify(confirmation.value.err) : undefined,
+        error: confirmation.value.err
+          ? JSON.stringify(confirmation.value.err)
+          : undefined,
         inputAmount: params.amount,
         outputAmount: Number(quoteResponse.outAmount),
         minimumOutputAmount: Number(quoteResponse.otherAmountThreshold),
@@ -1665,7 +1672,7 @@ export class RpcClient {
         computeUnitLimit: swapResponse.computeUnitLimit,
         confirmed: confirmation.value.err ? false : true,
         confirmationStatus: confirmation.context.slot ? 'confirmed' : undefined,
-        explorerUrl: `https://orb.helius.dev/tx/${signature}`
+        explorerUrl: `https://orb.helius.dev/tx/${signature}`,
       };
     } catch (error) {
       console.error('Jupiter swap error:', error);
@@ -1677,9 +1684,9 @@ export class RpcClient {
       };
     }
   }
-  
+
   /**
-   * Generate an unsigned, serialized transaction to create and delegate a new stake account with the Helius validator 
+   * Generate an unsigned, serialized transaction to create and delegate a new stake account with the Helius validator
    * This transaction must be signed by the funder's wallet before sending
    *
    * @param {PublicKey} owner - The wallet that will fund and authorize the stake
@@ -1690,7 +1697,9 @@ export class RpcClient {
     owner: PublicKey,
     amountSol: number
   ): Promise<{ serializedTx: string; stakeAccountPubkey: PublicKey }> {
-    const rentExempt = await this.connection.getMinimumBalanceForRentExemption(StakeProgram.space);
+    const rentExempt = await this.connection.getMinimumBalanceForRentExemption(
+      StakeProgram.space
+    );
     const lamports = amountSol * LAMPORTS_PER_SOL + rentExempt;
     const stakeAccount = Keypair.generate();
 
@@ -1709,7 +1718,8 @@ export class RpcClient {
       })
     );
 
-    const { blockhash, lastValidBlockHeight } = await this.connection.getLatestBlockhash();
+    const { blockhash, lastValidBlockHeight } =
+      await this.connection.getLatestBlockhash();
     transaction.recentBlockhash = blockhash;
     transaction.lastValidBlockHeight = lastValidBlockHeight;
     transaction.feePayer = owner;
@@ -1741,7 +1751,40 @@ export class RpcClient {
       stakePubkey: stakeAccountPubkey,
     });
 
-    const { blockhash, lastValidBlockHeight } = await this.connection.getLatestBlockhash();
+    const { blockhash, lastValidBlockHeight } =
+      await this.connection.getLatestBlockhash();
+    transaction.recentBlockhash = blockhash;
+    transaction.lastValidBlockHeight = lastValidBlockHeight;
+    transaction.feePayer = owner;
+
+    return bs58.encode(transaction.serialize({ requireAllSignatures: false }));
+  }
+
+  /**
+   * Create an unsigned transaction to withdraw lamports from a stake account
+   * This must be called **after** the cooldown period (i.e., once the stake is inactive).
+   *
+   * @param {PublicKey} owner - The wallet that authorized the stake
+   * @param {PublicKey} stakeAccountPubkey - The stake account to withdraw from
+   * @param {PublicKey} destination - The wallet that will receive the withdrawn SOL
+   * @param {number} amountLamports - The amount of lamports to withdraw
+   * @returns {Promise<string>} - Base58 serialized unsigned transaction
+   */
+  async createWithdrawTransaction(
+    owner: PublicKey,
+    stakeAccountPubkey: PublicKey,
+    destination: PublicKey,
+    amountLamports: number
+  ): Promise<string> {
+    const transaction = StakeProgram.withdraw({
+      stakePubkey: stakeAccountPubkey,
+      authorizedPubkey: owner,
+      toPubkey: destination,
+      lamports: amountLamports,
+    });
+
+    const { blockhash, lastValidBlockHeight } =
+      await this.connection.getLatestBlockhash();
     transaction.recentBlockhash = blockhash;
     transaction.lastValidBlockHeight = lastValidBlockHeight;
     transaction.feePayer = owner;
@@ -1775,5 +1818,147 @@ export class RpcClient {
         acc.account.data.parsed?.info?.stake?.delegation?.voter ===
           HELIUS_VALIDATOR_PUBKEY.toBase58()
     );
+  }
+
+  /**
+   * Get the amount of lamports that can be withdrawn from a stake account
+   *
+   * This checks whether the account is fully inactive (i.e., deactivated and cooled down),
+   * and subtracts the rent-exempt minimum balance if applicable
+   *
+   * If `includeRentExempt` is `true`, it returns the entire balance, allowing the user to
+   * close the stake account
+   *
+   * @param {PublicKey} stakeAccountPubkey - The stake account to inspect
+   * @param {boolean} [includeRentExempt=false] - Whether to include the rent-exempt reserve in the amount
+   * @returns {Promise<number>} - The number of lamports available for withdrawal (0 if none)
+   */
+  async getWithdrawableAmount(
+    stakeAccountPubkey: PublicKey,
+    includeRentExempt: boolean = false
+  ): Promise<number> {
+    const accountInfo =
+      await this.connection.getParsedAccountInfo(stakeAccountPubkey);
+
+    if (!accountInfo || !accountInfo.value) {
+      throw new Error('Stake account not found');
+    }
+
+    const parsed = accountInfo.value.data as ParsedAccountData;
+    const info = parsed.parsed.info;
+    const lamports = accountInfo.value.lamports;
+
+    // If it's not a stake account
+    if (!info?.meta || (!info?.stake && info?.meta?.type !== 'initialized')) {
+      throw new Error('Not a valid stake account');
+    }
+
+    // Deactivation epoch check (active stake accounts are set to u64's max value)
+    const U64_MAX = '18446744073709551615';
+    const deactivationEpoch = parseInt(
+      info?.stake?.delegation?.deactivationEpoch ?? U64_MAX
+    );
+    const currentEpoch = await this.connection
+      .getEpochInfo()
+      .then((e) => e.epoch);
+
+    // If still active (not yet cooled down), return 0
+    if (deactivationEpoch > currentEpoch) return 0;
+
+    if (includeRentExempt) return lamports;
+
+    const rentExempt = await this.connection.getMinimumBalanceForRentExemption(
+      StakeProgram.space
+    );
+    return Math.max(0, lamports - rentExempt);
+  }
+
+  /**
+   * Generate instructions to create and delegate a new stake account with Helius
+   *
+   * @param {PublicKey} owner - The wallet that will fund and authorize the stake
+   * @param {number} amountSol - The amount of SOL to stake (excluding rent exemption)
+   * @returns {Promise<{ instructions: TransactionInstruction[], stakeAccount: Keypair }>}
+   */
+  async getStakeInstructions(
+    owner: PublicKey,
+    amountSol: number
+  ): Promise<{
+    instructions: TransactionInstruction[];
+    stakeAccount: Keypair;
+  }> {
+    const rentExempt = await this.connection.getMinimumBalanceForRentExemption(
+      StakeProgram.space
+    );
+    const lamports = amountSol * LAMPORTS_PER_SOL + rentExempt;
+    const stakeAccount = Keypair.generate();
+
+    const createStakeTx = StakeProgram.createAccount({
+      fromPubkey: owner,
+      stakePubkey: stakeAccount.publicKey,
+      lamports,
+      authorized: new Authorized(owner, owner),
+    });
+
+    const delegateTx = StakeProgram.delegate({
+      stakePubkey: stakeAccount.publicKey,
+      authorizedPubkey: owner,
+      votePubkey: HELIUS_VALIDATOR_PUBKEY,
+    });
+
+    const instructions = [
+      ...createStakeTx.instructions,
+      ...delegateTx.instructions,
+    ];
+
+    return {
+      instructions,
+      stakeAccount,
+    };
+  }
+
+  /**
+   * Generate an instruction to deactivate a stake account
+   *
+   * @param {PublicKey} owner - The wallet that authorized the stake
+   * @param {PublicKey} stakeAccountPubkey - The stake account to deactivate
+   * @returns {TransactionInstruction}
+   */
+  getUnstakeInstruction(
+    owner: PublicKey,
+    stakeAccountPubkey: PublicKey
+  ): TransactionInstruction {
+    return StakeProgram.deactivate({
+      authorizedPubkey: owner,
+      stakePubkey: stakeAccountPubkey,
+    }).instructions[0];
+  }
+
+  /**
+   * Generate an instruction to withdraw lamports from a stake account
+   *
+   * This should only be called **after** the stake account has been deactivated
+   * and the cooldown period (~2 epochs) has completed
+   *
+   * If you withdraw the full balance, the stake account can be closed
+   *
+   * @param {PublicKey} owner - The wallet that authorized the stake and can withdraw
+   * @param {PublicKey} stakeAccountPubkey - The stake account to withdraw from
+   * @param {PublicKey} destination - The account that will receive the withdrawn lamports
+   * @param {number} amountLamports - The amount of lamports to withdraw
+   * @returns {TransactionInstruction} - The instruction to include in a transaction
+   */
+  getWithdrawInstruction(
+    owner: PublicKey,
+    stakeAccountPubkey: PublicKey,
+    destination: PublicKey,
+    amountLamports: number
+  ): TransactionInstruction {
+    return StakeProgram.withdraw({
+      stakePubkey: stakeAccountPubkey,
+      authorizedPubkey: owner,
+      toPubkey: destination,
+      lamports: amountLamports,
+    }).instructions[0];
   }
 }
