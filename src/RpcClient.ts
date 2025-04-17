@@ -1750,6 +1750,38 @@ export class RpcClient {
   }
 
   /**
+ * Create an unsigned transaction to withdraw lamports from a stake account
+ * This must be called **after** the cooldown period (i.e., once the stake is inactive).
+ *
+ * @param {PublicKey} owner - The wallet that authorized the stake
+ * @param {PublicKey} stakeAccountPubkey - The stake account to withdraw from
+ * @param {PublicKey} destination - The wallet that will receive the withdrawn SOL
+ * @param {number} amountLamports - The amount of lamports to withdraw
+ * @returns {Promise<string>} - Base58 serialized unsigned transaction
+ */
+async createWithdrawTransaction(
+  owner: PublicKey,
+  stakeAccountPubkey: PublicKey,
+  destination: PublicKey,
+  amountLamports: number
+): Promise<string> {
+  const transaction = StakeProgram.withdraw({
+    stakePubkey: stakeAccountPubkey,
+    authorizedPubkey: owner,
+    toPubkey: destination,
+    lamports: amountLamports,
+  });
+
+  const { blockhash, lastValidBlockHeight } = await this.connection.getLatestBlockhash();
+  transaction.recentBlockhash = blockhash;
+  transaction.lastValidBlockHeight = lastValidBlockHeight;
+  transaction.feePayer = owner;
+
+  return bs58.encode(transaction.serialize({ requireAllSignatures: false }));
+}
+
+
+  /**
    * Fetch all stake accounts owned by a wallet and delegated to Helius
    * @param {string} wallet - The base58-encoded wallet address
    * @returns {Promise<any[]>} - The stake accounts delegated to Helius
@@ -1776,4 +1808,131 @@ export class RpcClient {
           HELIUS_VALIDATOR_PUBKEY.toBase58()
     );
   }
+  
+
+  /**
+ * Get the amount of lamports that can be withdrawn from a stake account
+ *
+ * This checks whether the account is fully inactive (i.e., deactivated and cooled down),
+ * and subtracts the rent-exempt minimum balance if applicable
+ * 
+ * If `includeRentExempt` is `true`, it returns the entire balance, allowing the user to
+ * close the stake account
+ *
+ * @param {PublicKey} stakeAccountPubkey - The stake account to inspect
+ * @param {boolean} [includeRentExempt=false] - Whether to include the rent-exempt reserve in the amount
+ * @returns {Promise<number>} - The number of lamports available for withdrawal (0 if none)
+ */
+async getWithdrawableAmount(stakeAccountPubkey: PublicKey, includeRentExempt: boolean = false): Promise<number> {
+  const accountInfo = await this.connection.getParsedAccountInfo(stakeAccountPubkey);
+
+  if (!accountInfo || !accountInfo.value) {
+    throw new Error('Stake account not found');
+  }
+
+  const parsed = accountInfo.value.data as ParsedAccountData;
+  const info = parsed.parsed.info;
+  const lamports = accountInfo.value.lamports;
+
+  // If it's not a stake account
+  if (!info?.meta || (!info?.stake && info?.meta?.type !== 'initialized')) {
+    throw new Error('Not a valid stake account');
+  }
+
+  // Deactivation epoch check (active stake accounts are set to u64's max value)
+  const U64_MAX = '18446744073709551615';
+  const deactivationEpoch = parseInt(info?.stake?.delegation?.deactivationEpoch ?? U64_MAX);
+  const currentEpoch = await this.connection.getEpochInfo().then((e) => e.epoch);
+
+  // If still active (not yet cooled down), return 0
+  if (deactivationEpoch > currentEpoch) return 0;
+
+  if (includeRentExempt) return lamports;
+
+  const rentExempt = await this.connection.getMinimumBalanceForRentExemption(StakeProgram.space);
+  return Math.max(0, lamports - rentExempt);
+}
+
+  /**
+ * Generate instructions to create and delegate a new stake account with Helius
+ *
+ * @param {PublicKey} owner - The wallet that will fund and authorize the stake
+ * @param {number} amountSol - The amount of SOL to stake (excluding rent exemption)
+ * @returns {Promise<{ instructions: TransactionInstruction[], stakeAccount: Keypair }>}
+ */
+async getStakeInstructions(
+  owner: PublicKey,
+  amountSol: number
+): Promise<{ instructions: TransactionInstruction[]; stakeAccount: Keypair }> {
+  const rentExempt = await this.connection.getMinimumBalanceForRentExemption(StakeProgram.space);
+  const lamports = amountSol * LAMPORTS_PER_SOL + rentExempt;
+  const stakeAccount = Keypair.generate();
+
+  const createStakeTx = StakeProgram.createAccount({
+    fromPubkey: owner,
+    stakePubkey: stakeAccount.publicKey,
+    lamports,
+    authorized: new Authorized(owner, owner),
+  });
+
+  const delegateTx = StakeProgram.delegate({
+    stakePubkey: stakeAccount.publicKey,
+    authorizedPubkey: owner,
+    votePubkey: HELIUS_VALIDATOR_PUBKEY,
+  });
+
+  const instructions = [...createStakeTx.instructions, ...delegateTx.instructions];
+
+  return {
+    instructions,
+    stakeAccount,
+  };
+}
+
+/**
+ * Generate an instruction to deactivate a stake account
+ *
+ * @param {PublicKey} owner - The wallet that authorized the stake
+ * @param {PublicKey} stakeAccountPubkey - The stake account to deactivate
+ * @returns {TransactionInstruction}
+ */
+getUnstakeInstruction(
+  owner: PublicKey,
+  stakeAccountPubkey: PublicKey
+): TransactionInstruction {
+  return StakeProgram.deactivate({
+    authorizedPubkey: owner,
+    stakePubkey: stakeAccountPubkey,
+  }).instructions[0];
+}
+
+/**
+ * Generate an instruction to withdraw lamports from a stake account
+ *
+ * This should only be called **after** the stake account has been deactivated
+ * and the cooldown period (~2 epochs) has completed
+ *
+ * If you withdraw the full balance, the stake account can be closed
+ *
+ * @param {PublicKey} owner - The wallet that authorized the stake and can withdraw
+ * @param {PublicKey} stakeAccountPubkey - The stake account to withdraw from
+ * @param {PublicKey} destination - The account that will receive the withdrawn lamports
+ * @param {number} amountLamports - The amount of lamports to withdraw
+ * @returns {TransactionInstruction} - The instruction to include in a transaction
+ */
+getWithdrawInstruction(
+  owner: PublicKey,
+  stakeAccountPubkey: PublicKey,
+  destination: PublicKey,
+  amountLamports: number
+): TransactionInstruction {
+  return StakeProgram.withdraw({
+    stakePubkey: stakeAccountPubkey,
+    authorizedPubkey: owner,
+    toPubkey: destination,
+    lamports: amountLamports,
+  }).instructions[0];
+}
+
+
 }
