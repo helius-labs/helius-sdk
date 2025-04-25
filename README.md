@@ -11,7 +11,7 @@ API reference documentation is available at [docs.helius.dev](https://docs.heliu
 
 ## Contributions
 
-Interested in contributing to the Helius Rust SDK? Read the following [contributions guide](https://github.com/helius-labs/helius-sdk/blob/main/CONTRIBUTING.md) before opening up a pull request!
+Interested in contributing? Read the following [contributions guide...](https://github.com/helius-labs/helius-sdk/blob/main/CONTRIBUTING.md).
 
 ## Installation
 
