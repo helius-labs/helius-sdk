@@ -2,48 +2,67 @@
 
 Thank you for considering contributing to the Helius Node.js SDK and related repositories. We appreciate your time and effort. This document outlines how you can contribute to the project.
 
-## Table of Contents
+## Style Guide
 
-- [Contributing to the Helius Node.js SDK](#contributing-to-the-helius-nodejs-sdk)
-  - [Table of Contents](#table-of-contents)
-  - [How Can I Contribute?](#how-can-i-contribute)
-    - [Reporting Bugs](#reporting-bugs)
-    - [Suggesting Enhancements](#suggesting-enhancements)
-    - [Pull Requests](#pull-requests)
-  - [Development Setup](#development-setup)
-  - [Coding Standards](#coding-standards)
-  - [Submitting Pull Requests](#submitting-pull-requests)
+To maintain a clean and consistent codebase, please adhere to  these conventions:
 
-## How Can I Contribute?
+- File Naming: Use `camelCase` or `kebab-case`, consistent with the rest of the codebase.
+- Entry Files: Prefer meaningful filenames over generic ones like `index.ts`, unless used as module boundaries.
+- Type Safety: We use TypeScript—ensure all new code is strongly typed.
+- Formatting & Linting: Run `pnpm format` and `pnpm lint` before committing to ensure code style consistency.
+- Documentation: Update documentation if your changes affect how the SDK is used.
+- Testing: Add or update unit tests for any new or modified functionality using our test suite.
 
-### Reporting Bugs
+## Pull Requests
 
-If you find a bug, please ensure the bug was not already reported by searching on GitHub under [Issues](https://github.com/helius-labs/helius-sdk/issues).
+Pull Requests are the best way to propose changes to the SDK. We actively welcome all contributions! To contribute:
 
-If you're unable to find an open issue addressing the problem, [open a new one](https://github.com/helius-labs/helius-sdk/issues/new). Be sure to include a **title and clear description**, as much relevant information as possible, and a **code sample or an executable test case** demonstrating the expected behavior that is not occurring.
+- Fork the repository and create your branch from main
+- Make your changes in a clearly scoped branch (e.g., `feat/my-feature`, `fix/bug-description`)
+- Add or update tests for new functionality
+- Ensure all checks pass by running:
 
-### Suggesting Enhancements
+```bash
+pnpm build
+pnpm test
+```
 
-Enhancement suggestions are tracked as GitHub issues. Create an issue on this repository providing the following information:
+- Format and lint your code:
 
-- **Use case:** Describe the problem you're trying to solve and why the enhancement would help.
-- **Proposal:** Clearly outline the suggested enhancement.
-- **Alternatives:** List any alternative solutions or features you've considered.
-- **Additional context:** Add any other context or screenshots about the feature request here.
+```bash
+pnpm format
+pnpm lint
+```
 
-### Pull Requests
+- Open a pull request with a clear description and reference any related issues
 
-We welcome pull requests for bug fixes, enhancements, and documentation improvements.
+### Good Pull Request Titles
+
+- `fix(paginator): Correct offset behavior in getTransactions`
+- `feat(wallets): Add support for bulk wallet queries`
+- `docs(auth): Update example for environment setup`
+
+### Avoid Titles Like
+
+- `fix #1234`
+- `update code`
+- `misc changes`
+
+### Related Issues
+
+If your pull request addresses an open issue, please mention it in the description (e.g., `Closes #1234`).
 
 ## Development Setup
 
-1.  **Fork the repository:** Click the "Fork" button on the top right of the [repository page](https://github.com/helius-labs/helius-sdk).
-2.  **Clone your fork:**
+To set up your development environment:
+
+1. **Fork the repository:** Click the "Fork" button on the top right of the [repository page](https://github.com/helius-labs/helius-sdk).
+2. **Clone your fork:**
     ```bash
     git clone https://github.com/YOUR_USERNAME/helius-sdk.git
     cd helius-sdk
     ```
-3.  **Install dependencies:** We use `pnpm` for package management.
+3. **Install dependencies:** We use `pnpm` for package management.
     ```bash
     # Install pnpm if you don't have it (requires Node.js)
     npm install -g pnpm
@@ -51,11 +70,11 @@ We welcome pull requests for bug fixes, enhancements, and documentation improvem
     # Install project dependencies
     pnpm install
     ```
-4.  **Build the project:**
+4. **Build the project:**
     ```bash
     pnpm build
     ```
-5.  **Run tests:**
+5. **Run tests:**
     ```bash
     pnpm test
     ```
@@ -64,22 +83,10 @@ We welcome pull requests for bug fixes, enhancements, and documentation improvem
     git checkout -b feature/your-feature-name # or fix/your-bug-fix-name
     ```
 
-## Coding Standards
+## License
 
-- **Code Style:** Please follow the existing code style. We use Prettier and ESLint for code formatting and linting. Run `pnpm lint` and `pnpm format` before committing.
-- **Types:** Ensure strong typing using TypeScript. Add TSDoc comments for public functions and types.
-- **Tests:** Add unit tests for any new features or bug fixes. Ensure all tests pass (`pnpm test`).
-- **Commit Messages:** Follow conventional commit message standards if possible (e.g., `feat: add new endpoint`, `fix: resolve issue with pagination`).
+By contributing, you agree that your code will be licensed under the MIT License, the same as this repository. For full details, see the [LICENSE](https://github.com/helius-labs/helius-sdk/blob/main/LINCENSE) file.
 
-## Submitting Pull Requests
+## Thank You!
 
-1.  Commit your changes with clear commit messages.
-2.  Push your branch to your fork:
-    ```bash
-    git push origin feature/your-feature-name
-    ```
-3.  Open a pull request against the `main` branch of the `helius-labs/helius-sdk` repository.
-4.  Provide a clear description of the problem and solution. Include the relevant issue number if applicable.
-5.  Ensure all status checks pass.
-
-The maintainers will review your pull request and provide feedback. Thank you for your contribution!
+We deeply appreciate your effort in making the Helius Node.js SDK better. Your contributions help power better tools for everyone in the ecosystem.
