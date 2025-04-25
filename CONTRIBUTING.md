@@ -18,6 +18,14 @@ To maintain a clean and consistent codebase, please adhere to  these conventions
 Pull Requests are the best way to propose changes to the SDK. We actively welcome all contributions! To contribute:
 
 - Fork the repository and create your branch from main
+- Install dependencies, use `pnpm` for package management.
+    ```bash
+    # Install pnpm if you don't have it (requires Node.js)
+    npm install -g pnpm
+
+    # Install project dependencies
+    pnpm install
+    ```
 - Make your changes in a clearly scoped branch (e.g., `feat/my-feature`, `fix/bug-description`)
 - Add or update tests for new functionality
 - Ensure all checks pass by running:
@@ -51,37 +59,6 @@ pnpm lint
 ### Related Issues
 
 If your pull request addresses an open issue, please mention it in the description (e.g., `Closes #1234`).
-
-## Development Setup
-
-To set up your development environment:
-
-1. **Fork the repository:** Click the "Fork" button on the top right of the [repository page](https://github.com/helius-labs/helius-sdk).
-2. **Clone your fork:**
-    ```bash
-    git clone https://github.com/YOUR_USERNAME/helius-sdk.git
-    cd helius-sdk
-    ```
-3. **Install dependencies:** We use `pnpm` for package management.
-    ```bash
-    # Install pnpm if you don't have it (requires Node.js)
-    npm install -g pnpm
-
-    # Install project dependencies
-    pnpm install
-    ```
-4. **Build the project:**
-    ```bash
-    pnpm build
-    ```
-5. **Run tests:**
-    ```bash
-    pnpm test
-    ```
-6.  **Create a branch for your changes:**
-    ```bash
-    git checkout -b feature/your-feature-name # or fix/your-bug-fix-name
-    ```
 
 ## License
 
