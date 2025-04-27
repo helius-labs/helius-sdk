@@ -9,6 +9,10 @@ The Helius Node.js library provides access to the Helius API from JavaScript/Typ
 
 API reference documentation is available at [docs.helius.dev](https://docs.helius.dev).
 
+## Contributions
+
+Interested in contributing? Read the following [contributions guide...](https://github.com/helius-labs/helius-sdk/blob/main/CONTRIBUTING.md).
+
 ## Installation
 
 Using npm:
