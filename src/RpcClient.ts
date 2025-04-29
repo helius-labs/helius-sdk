@@ -1964,16 +1964,17 @@ export class RpcClient {
   }
 
   /**
-   * Broadcasts a fully signed smart transaction (object or serialized) and polls for its confirmation.
+   * Broadcasts a fully signed transaction (object or serialized) and polls for its confirmation
    *
-   * Automatically extracts the recentBlockhash if a Transaction is passed.
+   * Automatically extracts the recentBlockhash if a `Transaction` is passed
    *
-   * @param {SignedTransactionInput} transaction - Fully signed transaction (object or serialized).
-   * @param {SendSmartTransactionOptions} [options={}] - Options for customizing the send and confirmation process.
+   * @param {SignedTransactionInput} transaction - Fully signed transaction (object or serialized)
+   * @param {SendSmartTransactionOptions} [options={}] - Options for customizing the send and confirmation process
    *
-   * @returns {Promise<TransactionSignature>} - Resolves with the transaction signature once confirmed.
+   * @returns {Promise<TransactionSignature>} - Resolves with the transaction signature once confirmed
    *
-   * @throws {Error} If the transaction fails to confirm within the timeout, fails on-chain, or exceeds block height.
+   * @throws {Error} If the transaction fails to confirm within the timeout, fails on-chain, `lastValidBlockHeightOffset` is negative, 
+   * or the blockhash exceeds the block height
    */
   async broadcastTransaction(
     transaction: SignedTransactionInput,
