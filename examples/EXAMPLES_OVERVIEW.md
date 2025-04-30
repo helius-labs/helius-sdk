@@ -783,6 +783,40 @@ try {
 }
 ```
 
+### broadcastTransaction()
+This method broadcasts a fully signed transaction and polls for its confirmation, regardless of whether it's an object or serialized. If
+a `Transaction` is passed in then we automatically extract the `recentBlockhash`. In the example below, we build a versioned transaction,
+serialize it to a buffer, and then broadcast the transaction.
+
+```typescript
+async function main() {
+    // Build a versioned transaction
+    const { blockhash } = await helius.connection.getLatestBlockhash();
+  
+    const messageV0 = new TransactionMessage({
+      payerKey: payer.publicKey,
+      recentBlockhash: blockhash,
+      instructions: [
+        SystemProgram.transfer({
+          fromPubkey: payer.publicKey,
+          toPubkey: recipient,
+          lamports: 1000,
+        }),
+      ],
+    }).compileToV0Message();
+  
+    const vtx = new VersionedTransaction(messageV0);
+  vtx.sign([payer]);
+
+  // Serialize to Buffer
+  const serializedBuffer = Buffer.from(vtx.serialize());
+
+  // Broadcast
+  const signature = await helius.rpc.broadcastTransaction(serializedBuffer);
+  console.log('Broadcast serialized (Buffer) signature:', signature);
+  }
+```
+
 ### executeJupiterSwap()
 
 Execute a token swap using Jupiter Exchange with automatic transaction optimizations including priority fees, compute unit calculation, and reliable transaction confirmation.
