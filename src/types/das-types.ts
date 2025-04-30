@@ -9,7 +9,6 @@ import {
   RoyaltyModel,
   UseMethods,
 } from './enums';
-import { FullRwaAccount } from './types';
 
 export namespace DAS {
   // getAssetsByOwner //
@@ -97,10 +96,6 @@ export namespace DAS {
     id: string;
     displayOptions?: GetAssetDisplayOptions;
   };
-  // getRwaAsset
-  export type GetRwaAssetRequest = {
-    id: string;
-  };
   // getAssetProof
   export type GetAssetProofRequest = {
     id: string;
@@ -141,10 +136,6 @@ export namespace DAS {
     burnt: boolean;
     mint_extensions?: MintExtensions;
     token_info?: TokenInfo;
-  };
-  // RWA Asset Response
-  export type GetRwaAssetResponse = {
-    items: FullRwaAccount;
   };
   export type GetAssetResponseList = {
     grand_total?: number;
