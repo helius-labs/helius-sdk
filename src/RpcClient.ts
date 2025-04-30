@@ -39,6 +39,7 @@ import {
   JupiterSwapResult,
   PollTransactionOptions,
   SendSmartTransactionOptions,
+  SignedTransactionInput,
   SmartTransactionContext,
 } from './types';
 import { DAS } from './types/das-types';
@@ -1960,5 +1961,139 @@ export class RpcClient {
       toPubkey: destination,
       lamports: amountLamports,
     }).instructions[0];
+  }
+
+  /**
+   * Broadcasts a fully signed transaction (object or serialized) and polls for its confirmation
+   *
+   * Automatically extracts the recentBlockhash if a `Transaction` is passed
+   *
+   * @param {SignedTransactionInput} transaction - Fully signed transaction (object or serialized)
+   * @param {SendSmartTransactionOptions} [options={}] - Options for customizing the send and confirmation process
+   *
+   * @returns {Promise<TransactionSignature>} - Resolves with the transaction signature once confirmed
+   *
+   * @throws {Error} If the transaction fails to confirm within the timeout, fails on-chain, `lastValidBlockHeightOffset` is negative, 
+   * or the blockhash exceeds the block height
+   */
+  async broadcastTransaction(
+    transaction: SignedTransactionInput,
+    options: SendSmartTransactionOptions = {}
+  ): Promise<string> {
+    const {
+      lastValidBlockHeightOffset = 150,
+      pollTimeoutMs = 60000,
+      pollIntervalMs = 2000,
+      pollChunkMs = 10000,
+      skipPreflight = true,
+      preflightCommitment = 'confirmed',
+      maxRetries = 0,
+    } = options;
+
+    if (lastValidBlockHeightOffset < 0) {
+      throw new Error('lastValidBlockHeightOffset must be a positive integer');
+    }
+
+    let serializedTx: Buffer;
+    let recentBlockhash: string | undefined;
+
+    try {
+      if (transaction instanceof Transaction) {
+        serializedTx = transaction.serialize();
+        recentBlockhash = transaction.recentBlockhash;
+      } else if (transaction instanceof VersionedTransaction) {
+        serializedTx = Buffer.from(transaction.serialize());
+        recentBlockhash = transaction.message.recentBlockhash;
+      } else if (Buffer.isBuffer(transaction)) {
+        serializedTx = transaction;
+        recentBlockhash = undefined; // Cannot extract
+      } else if (typeof transaction === 'string') {
+        serializedTx = Buffer.from(transaction, 'base64');
+        recentBlockhash = undefined; // Cannot extract
+      } else {
+        throw new Error('Unsupported transaction input type.');
+      }
+
+      // Fallback to latest blockhash info if none is present
+      if (!recentBlockhash) {
+        console.warn(
+          'No recentBlockhash found in serialized transaction; using latest blockhash info'
+        );
+      }
+
+      const blockhashInfo =
+        await this.connection.getLatestBlockhash(preflightCommitment);
+      const currentBlockHeight = await this.connection.getBlockHeight();
+      const lastValidBlockHeight = Math.min(
+        blockhashInfo.lastValidBlockHeight,
+        currentBlockHeight + lastValidBlockHeightOffset
+      );
+
+      const startTime = Date.now();
+      let attemptCount = 0;
+      let signature: string;
+
+      while (true) {
+        if (Date.now() - startTime > pollTimeoutMs) {
+          throw new Error(`Transaction not confirmed after ${pollTimeoutMs}ms`);
+        }
+
+        attemptCount++;
+
+        try {
+          signature = await this.connection.sendRawTransaction(serializedTx, {
+            skipPreflight,
+            preflightCommitment,
+            maxRetries,
+          });
+        } catch (sendError) {
+          console.warn(
+            `sendRawTransaction attempt ${attemptCount} failed: ${sendError}`
+          );
+          await new Promise((resolve) => setTimeout(resolve, pollIntervalMs));
+          continue;
+        }
+
+        try {
+          const confirmedSig = await this.pollTransactionConfirmation(
+            signature,
+            {
+              timeout: pollChunkMs,
+              interval: pollIntervalMs,
+              confirmationStatuses: ['confirmed', 'finalized'],
+              lastValidBlockHeight,
+            }
+          );
+          return confirmedSig;
+        } catch (pollError: any) {
+          if (
+            pollError.message.includes('Block height has exceeded') ||
+            pollError.message.includes('failed on-chain')
+          ) {
+            throw pollError;
+          }
+
+          console.warn(
+            `pollTransactionConfirmation timed out, attempt #${attemptCount}. Retrying...`
+          );
+
+          const status = await this.connection.getSignatureStatus(signature);
+          if (status?.value?.confirmationStatus && !status.value.err) {
+            const { confirmationStatus } = status.value;
+            if (['confirmed', 'finalized'].includes(confirmationStatus)) {
+              console.info(
+                `Transaction ${signature} was confirmed despite polling failure. Returning successful`
+              );
+              return signature;
+            }
+          }
+
+          await new Promise((resolve) => setTimeout(resolve, pollIntervalMs));
+          continue;
+        }
+      }
+    } catch (error) {
+      throw new Error(`Error broadcasting signed smart transaction: ${error}`);
+    }
   }
 }

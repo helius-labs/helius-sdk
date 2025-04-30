@@ -452,3 +452,9 @@ export interface JupiterSwapResult {
   confirmationStatus?: string;
   explorerUrl?: string;
 }
+
+export type SignedTransactionInput =
+| Transaction
+| VersionedTransaction
+| Buffer
+| string;
