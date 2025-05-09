@@ -1774,7 +1774,7 @@ export class RpcClient {
       pollTimeoutMs = 60000,
       pollIntervalMs = 2000,
       pollChunkMs = 10000,
-      skipPreflight = true,
+      skipPreflight = false,
       preflightCommitment = 'confirmed',
       maxRetries = 0,
     } = options;
