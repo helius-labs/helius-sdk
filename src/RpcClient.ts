@@ -769,102 +769,15 @@ export class RpcClient {
     lookupTables: AddressLookupTableAccount[] = [],
     sendOptions: SendSmartTransactionOptions = {}
   ): Promise<TransactionSignature> {
-    const {
-      lastValidBlockHeightOffset = 150,
-      pollTimeoutMs = 60000,
-      pollIntervalMs = 2000,
-      pollChunkMs = 10000,
-      skipPreflight = false,
-      preflightCommitment = 'confirmed',
-      maxRetries,
-    } = sendOptions;
-
-    if (lastValidBlockHeightOffset < 0)
-      throw new Error('expiryBlockOffset must be a positive integer');
-
     try {
-      // Create a smart transaction
-      const { transaction, blockhash } = await this.createSmartTransaction(
+      const { transaction } = await this.createSmartTransaction(
         instructions,
         signers,
         lookupTables,
-        sendOptions
+        sendOptions,
       );
-
-      const currentBlockHeight = await this.connection.getBlockHeight();
-      const lastValidBlockHeight = Math.min(
-        blockhash.lastValidBlockHeight,
-        currentBlockHeight + lastValidBlockHeightOffset
-      );
-      const serializedTx = transaction.serialize();
-      const startTime = Date.now();
-      let attemptCount = 0;
-      let signature: string;
-
-      while (true) {
-        if (Date.now() - startTime > pollTimeoutMs) {
-          throw new Error(`Transaction not confirmed after ${pollTimeoutMs}`);
-        }
-
-        attemptCount++;
-
-        try {
-          signature = await this.connection.sendRawTransaction(serializedTx, {
-            skipPreflight,
-            preflightCommitment,
-            maxRetries,
-          });
-        } catch (sendError) {
-          console.warn(
-            `sendRawTransaction attempt ${attemptCount} failed: ${sendError}`
-          );
-
-          await new Promise((resolve) => setTimeout(resolve, pollIntervalMs));
-          continue;
-        }
-
-        try {
-          const confirmedSig = await this.pollTransactionConfirmation(
-            signature,
-            {
-              timeout: pollChunkMs,
-              interval: pollIntervalMs,
-              confirmationStatuses: ['confirmed', 'finalized'],
-              lastValidBlockHeight,
-            }
-          );
-
-          return confirmedSig;
-        } catch (pollError: any) {
-          // If it's a block-height or on-chain error, throw immediately
-          if (
-            pollError.message.includes('Block height has exceeded') ||
-            pollError.message.includes('failed on-chain')
-          ) {
-            throw pollError;
-          }
-
-          console.warn(
-            `pollTransactionConfirmation timed out, attempt #${attemptCount}. Retrying...`
-          );
-
-          const status = await this.connection.getSignatureStatus(signature);
-          if (status?.value?.confirmationStatus && !status.value.err) {
-            const { confirmationStatus } = status.value;
-
-            if (['confirmed', 'finalized'].includes(confirmationStatus)) {
-              console.info(
-                `Transaction ${signature} was confirmed despite a polling failure. Returning successful now`
-              );
-
-              return signature;
-            }
-          }
-
-          await new Promise((resolve) => setTimeout(resolve, pollIntervalMs));
-          continue;
-        }
-      }
+  
+      return this.broadcastTransaction(transaction, sendOptions);
     } catch (error) {
       throw new Error(`Error sending smart transaction: ${error}`);
     }
@@ -1054,107 +967,16 @@ export class RpcClient {
     lookupTables: AddressLookupTableAccount[] = [],
     sendOptions: SendSmartTransactionOptions = {}
   ): Promise<TransactionSignature> {
-    const {
-      lastValidBlockHeightOffset = 150,
-      pollTimeoutMs = 60000,
-      pollIntervalMs = 2000,
-      pollChunkMs = 10000,
-      skipPreflight = false,
-      preflightCommitment = 'confirmed',
-      maxRetries,
-    } = sendOptions;
-
-    if (lastValidBlockHeightOffset < 0) {
-      throw new Error('lastValidBlockHeightOffset must be a positive integer');
-    }
-
     try {
-      // Create the smart tx using the wallet adapter's `signTransaction` function
-      const { transaction, blockhash } =
-        await this.createSmartTransactionWithWalletAdapter(
-          instructions,
-          payer,
-          signTransaction,
-          lookupTables,
-          sendOptions
-        );
-
-      // Calculate the last valid block height
-      const currentBlockHeight = await this.connection.getBlockHeight();
-      const lastValidBlockHeight = Math.min(
-        blockhash.lastValidBlockHeight,
-        currentBlockHeight + lastValidBlockHeightOffset
+      const { transaction } = await this.createSmartTransactionWithWalletAdapter(
+        instructions,
+        payer,
+        signTransaction,
+        lookupTables,
+        sendOptions,
       );
-
-      // Serialize the signed tx
-      const serializedTx = transaction.serialize();
-
-      const startTime = Date.now();
-      let attemptCount = 0;
-      let signature: string;
-
-      // Attempt to send and confirm the tx
-      while (true) {
-        if (Date.now() - startTime > pollTimeoutMs) {
-          throw new Error(`Transaction not confirmed after ${pollTimeoutMs}ms`);
-        }
-        attemptCount++;
-
-        try {
-          signature = await this.connection.sendRawTransaction(serializedTx, {
-            skipPreflight,
-            preflightCommitment,
-            maxRetries,
-          });
-        } catch (sendError) {
-          console.warn(
-            `sendRawTransaction attempt ${attemptCount} failed: ${sendError}`
-          );
-          await new Promise((resolve) => setTimeout(resolve, pollIntervalMs));
-          continue;
-        }
-
-        try {
-          const confirmedSig = await this.pollTransactionConfirmation(
-            signature,
-            {
-              timeout: pollChunkMs,
-              interval: pollIntervalMs,
-              confirmationStatuses: ['confirmed', 'finalized'],
-              lastValidBlockHeight,
-            }
-          );
-          return confirmedSig;
-        } catch (pollError: any) {
-          // Immediately throw we exceed the block height or the tx fails on-chain
-          if (
-            pollError.message.includes('Block height has exceeded') ||
-            pollError.message.includes('failed on-chain')
-          ) {
-            throw pollError;
-          }
-
-          console.warn(
-            `pollTransactionConfirmation timed out, attempt #${attemptCount}. Retrying...`
-          );
-
-          const status = await this.connection.getSignatureStatus(signature);
-          if (status?.value?.confirmationStatus && !status.value.err) {
-            const { confirmationStatus } = status.value;
-
-            if (['confirmed', 'finalized'].includes(confirmationStatus)) {
-              console.info(
-                `Transaction ${signature} was confirmed despite a polling failure. Returning successful now`
-              );
-
-              return signature;
-            }
-          }
-
-          await new Promise((resolve) => setTimeout(resolve, pollIntervalMs));
-          continue;
-        }
-      }
+  
+      return this.broadcastTransaction(transaction, sendOptions);
     } catch (error) {
       throw new Error(
         `Error sending smart transaction with wallet adapter: ${error}`
@@ -1952,7 +1774,7 @@ export class RpcClient {
       pollTimeoutMs = 60000,
       pollIntervalMs = 2000,
       pollChunkMs = 10000,
-      skipPreflight = true,
+      skipPreflight = false,
       preflightCommitment = 'confirmed',
       maxRetries = 0,
     } = options;
