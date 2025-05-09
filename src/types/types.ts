@@ -70,25 +70,6 @@ export type EditWebhookRequest = Partial<
   Omit<Webhook, 'webhookID' | 'wallet' | 'project'>
 >;
 
-export interface CreateCollectionWebhookRequest extends CreateWebhookRequest {
-  collectionQuery: CollectionIdentifier;
-}
-
-export interface MintlistResponse {
-  result: MintlistItem[];
-  paginationToken: string;
-}
-
-export type MintlistRequest = {
-  query: CollectionIdentifier;
-  options?: HeliusOptions;
-};
-
-export interface MintlistItem {
-  mint: string;
-  name: string;
-}
-
 export interface RawTokenAmount {
   tokenAmount: string;
   decimals: number;
