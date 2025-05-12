@@ -476,7 +476,7 @@ export class Helius {
     existingWebhook: Webhook,
     editWebhookRequest: EditWebhookRequest
   ): Promise<Webhook> {
-    const editRequest: EditWebhookRequest = {
+    const body: EditWebhookRequest = {
       webhookURL: editWebhookRequest.webhookURL ?? existingWebhook.webhookURL,
       transactionTypes:
         editWebhookRequest.transactionTypes ?? existingWebhook.transactionTypes,
@@ -484,19 +484,37 @@ export class Helius {
         editWebhookRequest.accountAddresses ?? existingWebhook.accountAddresses,
       accountAddressOwners:
         editWebhookRequest.accountAddressOwners ??
-        existingWebhook.accountAddressOwners,
+        existingWebhook.accountAddressOwners ??
+        [],
       webhookType:
         editWebhookRequest.webhookType ?? existingWebhook.webhookType,
-      authHeader: editWebhookRequest.authHeader ?? existingWebhook.authHeader,
+      authHeader:
+        editWebhookRequest.authHeader ?? existingWebhook.authHeader ?? '',
       txnStatus: editWebhookRequest.txnStatus ?? existingWebhook.txnStatus,
       encoding: editWebhookRequest.encoding ?? existingWebhook.encoding,
     };
 
-    const { data } = await axios.put(
-      this.getWebhookApiEndpoint(`/v0/webhooks/${webhookID}`),
-      editRequest
+    Object.keys(body).forEach(
+      (k) => (body as any)[k] === undefined && delete (body as any)[k]
     );
-    return data;
+
+    try {
+      const { data } = await axios.put(
+        this.getWebhookApiEndpoint(`/v0/webhooks/${webhookID}`),
+        body,
+        { headers: { 'Content-Type': 'application/json' } }
+      );
+      return data as Webhook;
+    } catch (err: unknown) {
+      if (axios.isAxiosError(err)) {
+        const error =
+          typeof err.response?.data === 'string'
+            ? err.response.data
+            : JSON.stringify(err.response?.data);
+        throw new Error(`Error during _editWebhook: ${error}`);
+      }
+      throw err;
+    }
   }
 
   private getCollectionAuthorityRecord(
