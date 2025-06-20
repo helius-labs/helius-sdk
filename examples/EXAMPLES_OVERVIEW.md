@@ -827,17 +827,29 @@ import { Keypair } from '@solana/web3.js';
 
 const helius = new Helius('YOUR_API_KEY');
 
-// Swap SOL to USDC with transaction landing optimizations
+// Standard swap with Jupiter's optimizations
 const result = await helius.rpc.executeJupiterSwap({
   inputMint: 'So11111111111111111111111111111111111111112', // SOL
   outputMint: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v', // USDC
   amount: 10000000, // 0.01 SOL (SOL has 9 decimals)
   slippageBps: 50, // 0.5% slippage tolerance
   restrictIntermediateTokens: true, // Improves pricing
-  priorityLevel: 'high', // Options: 'low', 'medium', 'high', 'very_high'
+  priorityLevel: 'high', // Options: 'low', 'medium', 'high', 'veryHigh', 'unsafeMax'
   maxPriorityFeeLamports: 1000000, // Caps priority fee at 0.001 SOL
   skipPreflight: true, // Skip preflight checks
   confirmationCommitment: 'confirmed' // Wait for confirmation
+}, wallet);
+
+// Enhanced swap with Smart Transactions (recommended for better reliability)
+const smartResult = await helius.rpc.executeJupiterSwap({
+  inputMint: 'So11111111111111111111111111111111111111112', // SOL
+  outputMint: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v', // USDC
+  amount: 10000000, // 0.01 SOL
+  slippageBps: 50, // 0.5% slippage tolerance
+  useSmartTransaction: true, // Use Smart Transactions for better reliability
+  maxPriorityFeeLamports: 1000000, // Max priority fee for Smart Transactions
+  skipPreflight: true,
+  confirmationCommitment: 'confirmed'
 }, wallet);
 
 if (result.success && result.confirmed) {
@@ -846,11 +858,18 @@ if (result.success && result.confirmed) {
 ```
 
 Key features:
+- **Smart Transactions Support**: Set `useSmartTransaction: true` for enhanced reliability during network congestion
 - Automatic compute unit and priority fee calculation
-- Transaction retry logic during network congestion
+- Transaction retry logic during network congestion  
 - Slippage tolerance and route optimization
 - Transaction confirmation tracking
 - Returns detailed swap information including output amounts, minimums, and explorer URLs
+
+**Smart Transactions Benefits:**
+- Automatic priority fee optimization based on real-time network conditions
+- Built-in retry logic during network congestion
+- Enhanced transaction confirmation tracking
+- Better success rates during high network activity
 
 ## helius.connection
 

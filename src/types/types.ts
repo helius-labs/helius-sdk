@@ -374,6 +374,23 @@ export interface JupiterSwapParams {
   skipPreflight?: boolean;
   maxRetries?: number;
   confirmationCommitment?: 'processed' | 'confirmed' | 'finalized';
+  useSmartTransaction?: boolean;
+}
+
+export interface JupiterPriorityFeeLamports {
+  priorityLevelWithMaxLamports: {
+    maxLamports: number;
+    priorityLevel: 'low' | 'medium' | 'high' | 'veryHigh' | 'unsafeMax';
+  };
+}
+
+export interface JupiterSwapRequestBody {
+  quoteResponse: any;
+  userPublicKey: string;
+  wrapAndUnwrapSol: boolean;
+  dynamicComputeUnitLimit?: boolean;
+  dynamicSlippage?: boolean;
+  prioritizationFeeLamports?: JupiterPriorityFeeLamports;
 }
 
 export interface JupiterSwapResult {
@@ -392,7 +409,7 @@ export interface JupiterSwapResult {
 }
 
 export type SignedTransactionInput =
-| Transaction
-| VersionedTransaction
-| Buffer
-| string;
+  | Transaction
+  | VersionedTransaction
+  | Buffer
+  | string;

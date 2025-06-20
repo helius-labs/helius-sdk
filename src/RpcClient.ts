@@ -36,6 +36,7 @@ import {
   JITO_TIP_ACCOUNTS,
   JitoRegion,
   JupiterSwapParams,
+  JupiterSwapRequestBody,
   JupiterSwapResult,
   PollTransactionOptions,
   SendSmartTransactionOptions,
@@ -774,9 +775,9 @@ export class RpcClient {
         instructions,
         signers,
         lookupTables,
-        sendOptions,
+        sendOptions
       );
-  
+
       return this.broadcastTransaction(transaction, sendOptions);
     } catch (error) {
       throw new Error(`Error sending smart transaction: ${error}`);
@@ -968,14 +969,15 @@ export class RpcClient {
     sendOptions: SendSmartTransactionOptions = {}
   ): Promise<TransactionSignature> {
     try {
-      const { transaction } = await this.createSmartTransactionWithWalletAdapter(
-        instructions,
-        payer,
-        signTransaction,
-        lookupTables,
-        sendOptions,
-      );
-  
+      const { transaction } =
+        await this.createSmartTransactionWithWalletAdapter(
+          instructions,
+          payer,
+          signTransaction,
+          lookupTables,
+          sendOptions
+        );
+
       return this.broadcastTransaction(transaction, sendOptions);
     } catch (error) {
       throw new Error(
@@ -1339,6 +1341,7 @@ export class RpcClient {
    *   - `skipPreflight` - Whether to skip preflight transaction checks (default: true)
    *   - `maxRetries` - Maximum number of retries when sending transaction (default: 0)
    *   - `confirmationCommitment` - Commitment level for confirming transaction ('processed', 'confirmed', 'finalized', default: 'confirmed')
+   *   - `useSmartTransaction` - Whether to use Helius Smart Transactions for improved reliability (default: false)
    *
    * @param signer - The wallet that will execute and pay for the swap
    *
@@ -1372,6 +1375,7 @@ export class RpcClient {
       const skipPreflight = params.skipPreflight ?? true;
       const confirmationCommitment =
         params.confirmationCommitment ?? 'confirmed';
+      const useSmartTransaction = params.useSmartTransaction ?? false;
 
       // Get Jupiter quote using fetch API with updated parameters
       const quoteUrl = new URL('https://api.jup.ag/swap/v1/quote');
@@ -1391,27 +1395,32 @@ export class RpcClient {
       }
 
       // Get swap transaction with optimizations for transaction landing
+      const swapRequestBody: JupiterSwapRequestBody = {
+        quoteResponse,
+        userPublicKey: signer.publicKey.toString(),
+        wrapAndUnwrapSol: wrapUnwrapSOL,
+      };
+
+      // Only add Jupiter's transaction optimizations if not using Smart Transactions
+      // Smart Transactions will handle priority fees and compute units automatically
+      if (!useSmartTransaction) {
+        swapRequestBody.dynamicComputeUnitLimit = true;
+        swapRequestBody.dynamicSlippage = true;
+        swapRequestBody.prioritizationFeeLamports = {
+          priorityLevelWithMaxLamports: {
+            maxLamports: maxPriorityFeeLamports,
+            priorityLevel: priorityLevel,
+          },
+        };
+      }
+
       const swapResponse = await (
         await fetch('https://api.jup.ag/swap/v1/swap', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({
-            quoteResponse,
-            userPublicKey: signer.publicKey.toString(),
-            wrapAndUnwrapSol: wrapUnwrapSOL,
-
-            // Transaction landing optimizations
-            dynamicComputeUnitLimit: true,
-            dynamicSlippage: true,
-            prioritizationFeeLamports: {
-              priorityLevelWithMaxLamports: {
-                maxLamports: maxPriorityFeeLamports,
-                priorityLevel: priorityLevel,
-              },
-            },
-          }),
+          body: JSON.stringify(swapRequestBody),
         })
       ).json();
 
@@ -1426,26 +1435,57 @@ export class RpcClient {
       );
       const transaction = VersionedTransaction.deserialize(swapTransactionBuf);
 
-      // Sign the transaction
-      transaction.sign([signer]);
+      let signature: string;
+      let confirmation: any;
 
-      // Serialize to binary format for sending
-      const serializedTransaction = transaction.serialize();
+      if (useSmartTransaction) {
+        // Use Smart Transactions for improved reliability
+        const message = TransactionMessage.decompile(transaction.message);
+        const instructions = message.instructions;
 
-      // Send the transaction with options for better landing
-      const signature = await this.connection.sendRawTransaction(
-        serializedTransaction,
-        {
-          skipPreflight,
-          maxRetries,
-        }
-      );
+        // Use Smart Transactions with the extracted instructions
+        // Note: We pass empty lookup tables since the instructions are already decompiled
+        signature = await this.sendSmartTransaction(
+          instructions,
+          [signer],
+          [], // Empty lookup tables since instructions are already resolved
+          {
+            skipPreflight,
+            maxRetries,
+            priorityFeeCap: maxPriorityFeeLamports,
+            pollTimeoutMs: 60000,
+            pollIntervalMs: 2000,
+          }
+        );
 
-      // Confirm the transaction and check for errors
-      const confirmation = await this.connection.confirmTransaction(
-        signature,
-        confirmationCommitment
-      );
+        // For Smart Transactions, we need to get confirmation status
+        confirmation = await this.connection.confirmTransaction(
+          signature,
+          confirmationCommitment
+        );
+      } else {
+        // Use the original approach for backward compatibility
+        // Sign the transaction
+        transaction.sign([signer]);
+
+        // Serialize to binary format for sending
+        const serializedTransaction = transaction.serialize();
+
+        // Send the transaction with options for better landing
+        signature = await this.connection.sendRawTransaction(
+          serializedTransaction,
+          {
+            skipPreflight,
+            maxRetries,
+          }
+        );
+
+        // Confirm the transaction and check for errors
+        confirmation = await this.connection.confirmTransaction(
+          signature,
+          confirmationCommitment
+        );
+      }
 
       // Return detailed result with confirmation status
       return {
@@ -1762,7 +1802,7 @@ export class RpcClient {
    *
    * @returns {Promise<TransactionSignature>} - Resolves with the transaction signature once confirmed
    *
-   * @throws {Error} If the transaction fails to confirm within the timeout, fails on-chain, `lastValidBlockHeightOffset` is negative, 
+   * @throws {Error} If the transaction fails to confirm within the timeout, fails on-chain, `lastValidBlockHeightOffset` is negative,
    * or the blockhash exceeds the block height
    */
   async broadcastTransaction(
