@@ -1,6 +1,7 @@
 import {
   Webhook,
   CreateWebhookRequest,
+  CreateCollectionWebhookRequest,
   EditWebhookRequest,
   MintApiRequest,
   MintApiResponse,
@@ -97,7 +98,9 @@ export class Helius {
    */
   async getAllWebhooks(): Promise<Webhook[]> {
     try {
-      const { data } = await axios.get(this.getWebhookApiEndpoint(`/v0/webhooks`));
+      const { data } = await axios.get(
+        this.getWebhookApiEndpoint(`/v0/webhooks`)
+      );
       return data;
     } catch (err: any | AxiosError) {
       if (axios.isAxiosError(err)) {
@@ -143,9 +146,12 @@ export class Helius {
     createWebhookRequest: CreateWebhookRequest
   ): Promise<Webhook> {
     try {
-      const { data } = await axios.post(this.getWebhookApiEndpoint(`/v0/webhooks`), {
-        ...createWebhookRequest,
-      });
+      const { data } = await axios.post(
+        this.getWebhookApiEndpoint(`/v0/webhooks`),
+        {
+          ...createWebhookRequest,
+        }
+      );
       return data;
     } catch (err: any | AxiosError) {
       if (axios.isAxiosError(err)) {
@@ -159,6 +165,50 @@ export class Helius {
   }
 
   /**
+   * Creates a new collection webhook with the provided request
+   * @param {CreateCollectionWebhookRequest} createCollectionWebhookRequest - the request object containing the collection webhook information
+   * @returns {Promise<Webhook>} a promise that resolves to the created webhook object
+   * @throws {Error} if there is an error calling the webhooks endpoint or if the response contains an error
+   */
+  async createCollectionWebhook(
+    createCollectionWebhookRequest: CreateCollectionWebhookRequest
+  ): Promise<Webhook> {
+    try {
+      const {
+        collectionQuery,
+        accountAddresses = [],
+        ...rest
+      } = createCollectionWebhookRequest;
+
+      // Combine collection addresses with any additional account addresses
+      const allAccountAddresses = [
+        ...accountAddresses,
+        ...(collectionQuery.firstVerifiedCreators || []),
+        ...(collectionQuery.verifiedCollectionAddresses || []),
+      ];
+
+      const webhookRequest: CreateWebhookRequest = {
+        ...rest,
+        accountAddresses: allAccountAddresses,
+      };
+
+      const { data } = await axios.post(
+        this.getWebhookApiEndpoint(`/v0/webhooks`),
+        webhookRequest
+      );
+      return data;
+    } catch (err: any | AxiosError) {
+      if (axios.isAxiosError(err)) {
+        throw new Error(
+          `error during createCollectionWebhook: ${err.response?.data.error || err}`
+        );
+      } else {
+        throw new Error(`error during createCollectionWebhook: ${err}`);
+      }
+    }
+  }
+
+  /**
    * Deletes a webhook by its ID
    * @param {string} webhookID - the ID of the webhook to delete
    * @returns {Promise<boolean>} a promise that resolves to true if the webhook was successfully deleted, or false otherwise
@@ -166,7 +216,9 @@ export class Helius {
    */
   async deleteWebhook(webhookID: string): Promise<boolean> {
     try {
-      await axios.delete(this.getWebhookApiEndpoint(`/v0/webhooks/${webhookID}`));
+      await axios.delete(
+        this.getWebhookApiEndpoint(`/v0/webhooks/${webhookID}`)
+      );
       return true;
     } catch (err: any | AxiosError) {
       if (axios.isAxiosError(err)) {
@@ -461,13 +513,13 @@ export class Helius {
     if (!this.apiKey) {
       throw new Error(`API key is not set`);
     }
-  
+
     if (!path.startsWith('/v0')) {
       throw new Error(
         `Invalid webhook API path provided: ${path}. Path must start with '/v0'.`
       );
     }
-  
+
     return `https://api.helius.xyz${path}?api-key=${this.apiKey}`;
   }
 
