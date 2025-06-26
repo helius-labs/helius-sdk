@@ -1374,7 +1374,7 @@ export class RpcClient {
         params.confirmationCommitment ?? 'confirmed';
 
       // Get Jupiter quote using fetch API with updated parameters
-      const quoteUrl = new URL('https://api.jup.ag/swap/v1/quote');
+      const quoteUrl = new URL('https://lite-api.jup.ag/swap/v1/quote');
       quoteUrl.searchParams.append('inputMint', params.inputMint);
       quoteUrl.searchParams.append('outputMint', params.outputMint);
       quoteUrl.searchParams.append('amount', params.amount.toString());
@@ -1384,39 +1384,59 @@ export class RpcClient {
         restrictIntermediateTokens.toString()
       );
 
-      const quoteResponse = await (await fetch(quoteUrl.toString())).json();
+      const quoteResponseRaw = await fetch(quoteUrl.toString());
+      if (!quoteResponseRaw.ok) {
+        throw new Error(`Jupiter quote API error: ${quoteResponseRaw.status} ${quoteResponseRaw.statusText}`);
+      }
+      const quoteResponse = await quoteResponseRaw.json();
 
       if (!quoteResponse) {
         throw new Error('Failed to get Jupiter quote');
       }
 
-      // Get swap transaction with optimizations for transaction landing
-      const swapResponse = await (
-        await fetch('https://api.jup.ag/swap/v1/swap', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            quoteResponse,
-            userPublicKey: signer.publicKey.toString(),
-            wrapAndUnwrapSol: wrapUnwrapSOL,
+      // Check for quote errors
+      if (quoteResponse.error) {
+        throw new Error(`Jupiter quote error: ${quoteResponse.error}`);
+      }
 
-            // Transaction landing optimizations
-            dynamicComputeUnitLimit: true,
-            dynamicSlippage: true,
-            prioritizationFeeLamports: {
-              priorityLevelWithMaxLamports: {
-                maxLamports: maxPriorityFeeLamports,
-                priorityLevel: priorityLevel,
-              },
+      // Get swap transaction with optimizations for transaction landing
+      const swapResponseRaw = await fetch('https://lite-api.jup.ag/swap/v1/swap', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          quoteResponse,
+          userPublicKey: signer.publicKey.toString(),
+          wrapAndUnwrapSol: wrapUnwrapSOL,
+
+          // Transaction landing optimizations
+          dynamicComputeUnitLimit: true,
+          dynamicSlippage: true,
+          prioritizationFeeLamports: {
+            priorityLevelWithMaxLamports: {
+              maxLamports: maxPriorityFeeLamports,
+              priorityLevel: priorityLevel,
             },
-          }),
-        })
-      ).json();
+          },
+        }),
+      });
+
+      if (!swapResponseRaw.ok) {
+        const errorText = await swapResponseRaw.text();
+        throw new Error(`Jupiter swap API error: ${swapResponseRaw.status} ${swapResponseRaw.statusText} - ${errorText}`);
+      }
+
+      const swapResponse = await swapResponseRaw.json();
+
+      // Enhanced error handling for swap response
+      if (swapResponse.error) {
+        throw new Error(`Jupiter swap error: ${swapResponse.error}`);
+      }
 
       if (!swapResponse?.swapTransaction) {
-        throw new Error('Failed to get swap transaction');
+        console.error('Swap response:', JSON.stringify(swapResponse, null, 2));
+        throw new Error('Failed to get swap transaction - response missing swapTransaction field');
       }
 
       // Deserialize transaction from base64 format
