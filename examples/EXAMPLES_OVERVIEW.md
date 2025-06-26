@@ -834,7 +834,7 @@ const result = await helius.rpc.executeJupiterSwap({
   amount: 10000000, // 0.01 SOL (SOL has 9 decimals)
   slippageBps: 50, // 0.5% slippage tolerance
   restrictIntermediateTokens: true, // Improves pricing
-  priorityLevel: 'high', // Options: 'low', 'medium', 'high', 'very_high'
+  priorityLevel: 'high', // Options: 'medium' (25th percentile), 'high' (50th percentile), 'veryHigh' (75th percentile)
   maxPriorityFeeLamports: 1000000, // Caps priority fee at 0.001 SOL
   skipPreflight: true, // Skip preflight checks
   confirmationCommitment: 'confirmed' // Wait for confirmation

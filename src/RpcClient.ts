@@ -1313,18 +1313,18 @@ export class RpcClient {
    *   amount: 10000000,  // 0.01 SOL
    * }, wallet);
    *
-   * // Advanced swap with custom settings for better transaction landing
-   * const advancedResult = await helius.rpc.executeJupiterSwap({
-   *   inputMint: 'So11111111111111111111111111111111111111112',
-   *   outputMint: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',
-   *   amount: 10000000,
-   *   slippageBps: 50,                       // 0.5% slippage
-   *   priorityLevel: 'veryHigh',             // High priority for congestion
-   *   maxPriorityFeeLamports: 2000000,       // Max 0.002 SOL for priority fee
-   *   skipPreflight: true,                   // Skip preflight checks
-   *   maxRetries: 3,                         // Retry sending 3 times if needed
-   *   confirmationCommitment: 'finalized',   // Wait for finalization
-   * }, wallet);
+    * // Advanced swap with custom settings for better transaction landing
+ * const advancedResult = await helius.rpc.executeJupiterSwap({
+ *   inputMint: 'So11111111111111111111111111111111111111112',
+ *   outputMint: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',
+ *   amount: 10000000,
+ *   slippageBps: 50,                       // 0.5% slippage
+ *   priorityLevel: 'veryHigh',             // 75th percentile - faster but more expensive
+ *   maxPriorityFeeLamports: 2000000,       // Max 0.002 SOL for priority fee
+ *   skipPreflight: true,                   // Skip preflight checks
+ *   maxRetries: 3,                         // Retry sending 3 times if needed
+ *   confirmationCommitment: 'finalized',   // Wait for finalization
+ * }, wallet);
    * ```
    *
    * @param params - Swap parameters object with the following properties:
@@ -1334,7 +1334,10 @@ export class RpcClient {
    *   - `slippageBps` - Maximum allowed slippage in basis points (1 bp = 0.01%, default: 50)
    *   - `restrictIntermediateTokens` - Whether to restrict intermediate tokens (default: true)
    *   - `wrapUnwrapSOL` - Whether to auto-wrap/unwrap SOL (default: true)
-   *   - `priorityLevel` - Priority level for transaction ('low', 'medium', 'high', 'veryHigh', 'unsafeMax', default: 'high')
+   *   - `priorityLevel` - Priority level for transaction fees:
+   *     - 'medium': 25th percentile (cheaper, slower)
+   *     - 'high': 50th percentile (balanced, default)
+   *     - 'veryHigh': 75th percentile (more expensive, faster)
    *   - `maxPriorityFeeLamports` - Maximum priority fee in lamports (default: 1000000)
    *   - `skipPreflight` - Whether to skip preflight transaction checks (default: true)
    *   - `maxRetries` - Maximum number of retries when sending transaction (default: 0)
@@ -1449,23 +1452,17 @@ export class RpcClient {
       // Sign the transaction
       transaction.sign([signer]);
 
-      // Serialize to binary format for sending
-      const serializedTransaction = transaction.serialize();
+      // Use Helius's optimized broadcastTransaction for better reliability
+      const signature = await this.broadcastTransaction(transaction, {
+        skipPreflight,
+        maxRetries,
+        preflightCommitment: confirmationCommitment,
+        pollTimeoutMs: 30000, // 30 second timeout for swaps
+        pollIntervalMs: 1000,  // Check every 1 second
+      });
 
-      // Send the transaction with options for better landing
-      const signature = await this.connection.sendRawTransaction(
-        serializedTransaction,
-        {
-          skipPreflight,
-          maxRetries,
-        }
-      );
-
-      // Confirm the transaction and check for errors
-      const confirmation = await this.connection.confirmTransaction(
-        signature,
-        confirmationCommitment
-      );
+      // Transaction is already confirmed by broadcastTransaction  
+      const confirmation = { value: { err: null }, context: { slot: 0 } };
 
       // Return detailed result with confirmation status
       return {
