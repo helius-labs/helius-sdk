@@ -163,8 +163,6 @@ export class Helius {
     }
   }
 
-
-
   /**
    * Deletes a webhook by its ID
    * @param {string} webhookID - the ID of the webhook to delete
