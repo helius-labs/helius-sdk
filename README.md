@@ -133,7 +133,7 @@ Provides methods for setting up, editing, and managing webhooks, crucial for lis
 - [`deleteWebhook()`](https://github.com/helius-labs/helius-sdk/blob/main/examples/EXAMPLES_OVERVIEW.md#deletewebhook): Deletes a webhook by its ID.
 - [`getWebhookByID()`](https://github.com/helius-labs/helius-sdk/blob/main/examples/EXAMPLES_OVERVIEW.md#getwebhookbyid): Retrieves a single webhook by its ID.
 - [`getAllWebhooks()`](https://github.com/helius-labs/helius-sdk/blob/main/examples/EXAMPLES_OVERVIEW.md#getallwebhooks): Retrieves a list of all webhooks.
-- [`createCollectionWebhook()`](https://github.com/helius-labs/helius-sdk/blob/main/examples/EXAMPLES_OVERVIEW.md#createcollectionwebhook) Create a new collection webhook with the provided request.
+
 
 [**Smart Transactions**](https://docs.helius.dev/solana-rpc-nodes/sending-transactions-on-solana#sending-smart-transactions)
 

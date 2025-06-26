@@ -66,6 +66,9 @@ export type CreateWebhookRequest = Omit<
   Webhook,
   'webhookID' | 'wallet' | 'project'
 >;
+
+
+
 export type EditWebhookRequest = Partial<
   Omit<Webhook, 'webhookID' | 'wallet' | 'project'>
 >;
@@ -397,7 +400,7 @@ export interface JupiterSwapResult {
 }
 
 export type SignedTransactionInput =
-| Transaction
-| VersionedTransaction
-| Buffer
-| string;
+  | Transaction
+  | VersionedTransaction
+  | Buffer
+  | string;

@@ -774,9 +774,9 @@ export class RpcClient {
         instructions,
         signers,
         lookupTables,
-        sendOptions,
+        sendOptions
       );
-  
+
       return this.broadcastTransaction(transaction, sendOptions);
     } catch (error) {
       throw new Error(`Error sending smart transaction: ${error}`);
@@ -968,14 +968,15 @@ export class RpcClient {
     sendOptions: SendSmartTransactionOptions = {}
   ): Promise<TransactionSignature> {
     try {
-      const { transaction } = await this.createSmartTransactionWithWalletAdapter(
-        instructions,
-        payer,
-        signTransaction,
-        lookupTables,
-        sendOptions,
-      );
-  
+      const { transaction } =
+        await this.createSmartTransactionWithWalletAdapter(
+          instructions,
+          payer,
+          signTransaction,
+          lookupTables,
+          sendOptions
+        );
+
       return this.broadcastTransaction(transaction, sendOptions);
     } catch (error) {
       throw new Error(
@@ -1779,7 +1780,7 @@ export class RpcClient {
    *
    * @returns {Promise<TransactionSignature>} - Resolves with the transaction signature once confirmed
    *
-   * @throws {Error} If the transaction fails to confirm within the timeout, fails on-chain, `lastValidBlockHeightOffset` is negative, 
+   * @throws {Error} If the transaction fails to confirm within the timeout, fails on-chain, `lastValidBlockHeightOffset` is negative,
    * or the blockhash exceeds the block height
    */
   async broadcastTransaction(
