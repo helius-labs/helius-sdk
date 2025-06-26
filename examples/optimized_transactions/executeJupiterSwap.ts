@@ -13,7 +13,7 @@ async function main() {
       amount: 10_000_000, // 0.01 SOL (9 decimals)
       slippageBps: 50, // 0.5% slippage
       restrictIntermediateTokens: true,
-      priorityLevel: "high", // 'low' | 'medium' | 'high' | 'very_high'
+      priorityLevel: "high", // 'medium' (25th percentile) | 'high' (50th percentile) | 'veryHigh' (75th percentile)
       maxPriorityFeeLamports: 1_000_000, // 0.001 SOL
       skipPreflight: true,
       confirmationCommitment: "confirmed",

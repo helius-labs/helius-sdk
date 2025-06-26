@@ -369,7 +369,12 @@ export interface JupiterSwapParams {
   slippageBps?: number;
   restrictIntermediateTokens?: boolean;
   wrapUnwrapSOL?: boolean;
-  priorityLevel?: 'low' | 'medium' | 'high' | 'veryHigh' | 'unsafeMax';
+  /** Priority level for transaction fees:
+   * - 'medium': 25th percentile
+   * - 'high': 50th percentile  
+   * - 'veryHigh': 75th percentile
+   */
+  priorityLevel?: 'medium' | 'high' | 'veryHigh';
   maxPriorityFeeLamports?: number;
   skipPreflight?: boolean;
   maxRetries?: number;
