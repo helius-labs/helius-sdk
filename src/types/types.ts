@@ -67,13 +67,7 @@ export type CreateWebhookRequest = Omit<
   'webhookID' | 'wallet' | 'project'
 >;
 
-export type CreateCollectionWebhookRequest = Omit<
-  CreateWebhookRequest,
-  'accountAddresses'
-> & {
-  collectionQuery: CollectionIdentifier;
-  accountAddresses?: string[];
-};
+
 
 export type EditWebhookRequest = Partial<
   Omit<Webhook, 'webhookID' | 'wallet' | 'project'>

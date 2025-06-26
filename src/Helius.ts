@@ -1,7 +1,6 @@
 import {
   Webhook,
   CreateWebhookRequest,
-  CreateCollectionWebhookRequest,
   EditWebhookRequest,
   MintApiRequest,
   MintApiResponse,
@@ -164,49 +163,7 @@ export class Helius {
     }
   }
 
-  /**
-   * Creates a new collection webhook with the provided request
-   * @param {CreateCollectionWebhookRequest} createCollectionWebhookRequest - the request object containing the collection webhook information
-   * @returns {Promise<Webhook>} a promise that resolves to the created webhook object
-   * @throws {Error} if there is an error calling the webhooks endpoint or if the response contains an error
-   */
-  async createCollectionWebhook(
-    createCollectionWebhookRequest: CreateCollectionWebhookRequest
-  ): Promise<Webhook> {
-    try {
-      const {
-        collectionQuery,
-        accountAddresses = [],
-        ...rest
-      } = createCollectionWebhookRequest;
 
-      // Combine collection addresses with any additional account addresses
-      const allAccountAddresses = [
-        ...accountAddresses,
-        ...(collectionQuery.firstVerifiedCreators || []),
-        ...(collectionQuery.verifiedCollectionAddresses || []),
-      ];
-
-      const webhookRequest: CreateWebhookRequest = {
-        ...rest,
-        accountAddresses: allAccountAddresses,
-      };
-
-      const { data } = await axios.post(
-        this.getWebhookApiEndpoint(`/v0/webhooks`),
-        webhookRequest
-      );
-      return data;
-    } catch (err: any | AxiosError) {
-      if (axios.isAxiosError(err)) {
-        throw new Error(
-          `error during createCollectionWebhook: ${err.response?.data.error || err}`
-        );
-      } else {
-        throw new Error(`error during createCollectionWebhook: ${err}`);
-      }
-    }
-  }
 
   /**
    * Deletes a webhook by its ID
