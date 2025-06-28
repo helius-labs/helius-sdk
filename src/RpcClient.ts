@@ -1315,18 +1315,18 @@ export class RpcClient {
    *   amount: 10000000,  // 0.01 SOL
    * }, wallet);
    *
-   * // Advanced swap with custom settings for better transaction landing
-   * const advancedResult = await helius.rpc.executeJupiterSwap({
-   *   inputMint: 'So11111111111111111111111111111111111111112',
-   *   outputMint: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',
-   *   amount: 10000000,
-   *   slippageBps: 50,                       // 0.5% slippage
-   *   priorityLevel: 'veryHigh',             // High priority for congestion
-   *   maxPriorityFeeLamports: 2000000,       // Max 0.002 SOL for priority fee
-   *   skipPreflight: true,                   // Skip preflight checks
-   *   maxRetries: 3,                         // Retry sending 3 times if needed
-   *   confirmationCommitment: 'finalized',   // Wait for finalization
-   * }, wallet);
+    * // Advanced swap with custom settings for better transaction landing
+ * const advancedResult = await helius.rpc.executeJupiterSwap({
+ *   inputMint: 'So11111111111111111111111111111111111111112',
+ *   outputMint: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',
+ *   amount: 10000000,
+ *   slippageBps: 50,                       // 0.5% slippage
+ *   priorityLevel: 'veryHigh',             // 75th percentile - faster but more expensive
+ *   maxPriorityFeeLamports: 2000000,       // Max 0.002 SOL for priority fee
+ *   skipPreflight: true,                   // Skip preflight checks
+ *   maxRetries: 3,                         // Retry sending 3 times if needed
+ *   confirmationCommitment: 'finalized',   // Wait for finalization
+ * }, wallet);
    * ```
    *
    * @param params - Swap parameters object with the following properties:
@@ -1336,7 +1336,12 @@ export class RpcClient {
    *   - `slippageBps` - Maximum allowed slippage in basis points (1 bp = 0.01%, default: 50)
    *   - `restrictIntermediateTokens` - Whether to restrict intermediate tokens (default: true)
    *   - `wrapUnwrapSOL` - Whether to auto-wrap/unwrap SOL (default: true)
-   *   - `priorityLevel` - Priority level for transaction ('low', 'medium', 'high', 'veryHigh', 'unsafeMax', default: 'high')
+   *   - `priorityLevel` - Priority level for transaction fees:
+   *     - 'low': 10th percentile (cheapest, slowest)
+   *     - 'medium': 25th percentile (cheaper, slower)
+   *     - 'high': 50th percentile (balanced, default)
+   *     - 'veryHigh': 75th percentile (more expensive, faster)
+   *     - 'unsafeMax': 95th percentile (highest priority, use with caution)
    *   - `maxPriorityFeeLamports` - Maximum priority fee in lamports (default: 1000000)
    *   - `skipPreflight` - Whether to skip preflight transaction checks (default: true)
    *   - `maxRetries` - Maximum number of retries when sending transaction (default: 0)
@@ -1378,7 +1383,7 @@ export class RpcClient {
       const useSmartTransaction = params.useSmartTransaction ?? false;
 
       // Get Jupiter quote using fetch API with updated parameters
-      const quoteUrl = new URL('https://api.jup.ag/swap/v1/quote');
+      const quoteUrl = new URL('https://lite-api.jup.ag/swap/v1/quote');
       quoteUrl.searchParams.append('inputMint', params.inputMint);
       quoteUrl.searchParams.append('outputMint', params.outputMint);
       quoteUrl.searchParams.append('amount', params.amount.toString());
@@ -1388,10 +1393,19 @@ export class RpcClient {
         restrictIntermediateTokens.toString()
       );
 
-      const quoteResponse = await (await fetch(quoteUrl.toString())).json();
+      const quoteResponseRaw = await fetch(quoteUrl.toString());
+      if (!quoteResponseRaw.ok) {
+        throw new Error(`Jupiter quote API error: ${quoteResponseRaw.status} ${quoteResponseRaw.statusText}`);
+      }
+      const quoteResponse = await quoteResponseRaw.json();
 
       if (!quoteResponse) {
         throw new Error('Failed to get Jupiter quote');
+      }
+
+      // Check for quote errors
+      if (quoteResponse.error) {
+        throw new Error(`Jupiter quote error: ${quoteResponse.error}`);
       }
 
       // Get swap transaction with optimizations for transaction landing
@@ -1414,18 +1428,29 @@ export class RpcClient {
         };
       }
 
-      const swapResponse = await (
-        await fetch('https://api.jup.ag/swap/v1/swap', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(swapRequestBody),
-        })
-      ).json();
+      const swapResponseRaw = await fetch('https://lite-api.jup.ag/swap/v1/swap', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(swapRequestBody),
+      });
+
+      if (!swapResponseRaw.ok) {
+        const errorText = await swapResponseRaw.text();
+        throw new Error(`Jupiter swap API error: ${swapResponseRaw.status} ${swapResponseRaw.statusText} - ${errorText}`);
+      }
+
+      const swapResponse = await swapResponseRaw.json();
+
+      // Enhanced error handling for swap response
+      if (swapResponse.error) {
+        throw new Error(`Jupiter swap error: ${swapResponse.error}`);
+      }
 
       if (!swapResponse?.swapTransaction) {
-        throw new Error('Failed to get swap transaction');
+        console.error('Swap response:', JSON.stringify(swapResponse, null, 2));
+        throw new Error('Failed to get swap transaction - response missing swapTransaction field');
       }
 
       // Deserialize transaction from base64 format
@@ -1464,27 +1489,20 @@ export class RpcClient {
           confirmationCommitment
         );
       } else {
-        // Use the original approach for backward compatibility
-        // Sign the transaction
+        // Sign the transaction before broadcasting
         transaction.sign([signer]);
 
-        // Serialize to binary format for sending
-        const serializedTransaction = transaction.serialize();
+        // Use Helius's optimized broadcastTransaction for better reliability
+        signature = await this.broadcastTransaction(transaction, {
+          skipPreflight,
+          maxRetries,
+          preflightCommitment: confirmationCommitment,
+          pollTimeoutMs: 30000, // 30 second timeout for swaps
+          pollIntervalMs: 1000,  // Check every 1 second
+        });
 
-        // Send the transaction with options for better landing
-        signature = await this.connection.sendRawTransaction(
-          serializedTransaction,
-          {
-            skipPreflight,
-            maxRetries,
-          }
-        );
-
-        // Confirm the transaction and check for errors
-        confirmation = await this.connection.confirmTransaction(
-          signature,
-          confirmationCommitment
-        );
+        // Transaction is already confirmed by broadcastTransaction  
+        confirmation = { value: { err: null }, context: { slot: 0 } };
       }
 
       // Return detailed result with confirmation status

@@ -66,6 +66,7 @@ export type CreateWebhookRequest = Omit<
   Webhook,
   'webhookID' | 'wallet' | 'project'
 >;
+
 export type EditWebhookRequest = Partial<
   Omit<Webhook, 'webhookID' | 'wallet' | 'project'>
 >;
@@ -369,6 +370,13 @@ export interface JupiterSwapParams {
   slippageBps?: number;
   restrictIntermediateTokens?: boolean;
   wrapUnwrapSOL?: boolean;
+  /** Priority level for transaction fees:
+   * - 'low': 10th percentile (cheapest, slowest)
+   * - 'medium': 25th percentile
+   * - 'high': 50th percentile  
+   * - 'veryHigh': 75th percentile
+   * - 'unsafeMax': 95th percentile (highest priority, use with caution)
+   */
   priorityLevel?: 'low' | 'medium' | 'high' | 'veryHigh' | 'unsafeMax';
   maxPriorityFeeLamports?: number;
   skipPreflight?: boolean;

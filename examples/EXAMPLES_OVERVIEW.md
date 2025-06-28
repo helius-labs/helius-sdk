@@ -502,26 +502,7 @@ const helius = new Helius('YOUR_API_KEY');
 helius.getAllWebhooks();
 ```
 
-### createCollectionWebhook()
 
-```ts
-import {
-  // collections dict
-  Collections,
-  Helius,
-} from 'helius-sdk';
-
-const helius = new Helius('YOUR_API_KEY');
-
-helius.createCollectionWebhook({
-  collectionQuery: Collections.ABC,
-  transactionTypes: [Types.TransactionType.ANY],
-  webhookType: Types.WebhookType.DISCORD,
-  webhookURL: 'https://discord.com/api/webhooks/your-discord-token-here',
-});
-```
-
-Note that the Collections.ABC enum references the collection query for this collection. It is just a convenience enum so that developers don't have to figure out whether to use firstVerifiedCreator or the Metaplex Certified Collection address. If you already know it for your collection, please make a PR.
 
 ## Smart Transactions
 
@@ -834,7 +815,7 @@ const result = await helius.rpc.executeJupiterSwap({
   amount: 10000000, // 0.01 SOL (SOL has 9 decimals)
   slippageBps: 50, // 0.5% slippage tolerance
   restrictIntermediateTokens: true, // Improves pricing
-  priorityLevel: 'high', // Options: 'low', 'medium', 'high', 'veryHigh', 'unsafeMax'
+  priorityLevel: 'high', // Options: 'low', 'medium' (25th percentile), 'high' (50th percentile), 'veryHigh' (75th percentile), 'unsafeMax'
   maxPriorityFeeLamports: 1000000, // Caps priority fee at 0.001 SOL
   skipPreflight: true, // Skip preflight checks
   confirmationCommitment: 'confirmed' // Wait for confirmation
