@@ -1,12 +1,12 @@
 ## Project Context
 
-The Helius SDK is a Node.js library that provides seamless access to various Helius APIs for interacting with the Solana. The codebase is written in TypeScript, leverages @solana/web3.js for blockchain operations, Jest for testing, and uses pnpm for dependency management. It is designed to offer robust, modular, and high-performance tooling for developers building on Solana.
+The Helius SDK is a Node.js library that provides seamless access to various Helius APIs for interacting with the Solana. The codebase is written in TypeScript, leverages @solana/kit for blockchain operations, Jest for testing, and uses pnpm for dependency management. It is designed to offer robust, modular, and high-performance tooling for developers building on Solana.
 
 ## Coding Guidelines
 
 - **Node.js & Architecture:**  
   - Follow best practices for Node.js development and maintain a modular code structure.
-  - Organize functionality into clear segments (e.g., DAS API, Mint API, Webhooks, Smart Transactions, and Helper Methods).
+  - Organize functionality into clear segments (e.g., DAS API, Webhooks, Smart Transactions, and Helper Methods).
 
 - **TypeScript & Code Quality:**  
   - Enforce strict TypeScript typing with well-defined interfaces.
@@ -15,13 +15,14 @@ The Helius SDK is a Node.js library that provides seamless access to various Hel
   - Use `const` by default; use `let` only when reassignment is necessary.
   - Use async/await for all asynchronous operations and wrap them in try/catch blocks.
   - Assume that thrown objects are instances of `Error`—do not throw non-Error objects.
+  - Use double quotes (" ") for all string literals; single quotes (' ') should be avoided except in JSON strings or when escaping. 
 
 - **Documentation & Comments:**  
   - Include clear JSDoc comments for public methods and modules.
   - Maintain inline examples and usage notes for more complex interactions.
 
 - **Blockchain & API Integration:**  
-  - Use @solana/web3.js for all interactions with Solana.
+  - Use @solana/kit for all interactions with Solana.
   - Integrate with the Helius API correctly, ensuring proper authentication and robust error handling.
   - Use asynchronous patterns consistently and handle network or blockchain errors comprehensively.
 
