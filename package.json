@@ -2,6 +2,7 @@
   "name": "helius-sdk",
   "version": "2.0.0",
   "description": "A Helius Node.js SDK for building the future of Solana",
+  "type": "module",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
   "exports": {
@@ -11,6 +12,7 @@
     "./rpc/wrapAutoSend": "./dist/rpc/wrapAutoSend.js",
     "./package.json": "./package.json"
   },
+  "sideEffects": false,
   "scripts": {
     "test": "jest",
     "test:watch": "jest --watch",
