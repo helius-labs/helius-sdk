@@ -10,7 +10,9 @@
     "prettier/prettier": "error",
     "import/extensions": "off",
     "no-console": "error",
-    "@typescript-eslint/no-unused-vars": "error"
+    "@typescript-eslint/no-unused-vars": "error",
+    "prefer-arrow-callback": "error",
+    "quotes": ["error", "double", { "avoidEscape": true }]
   },
   "env": {
     "node": true,
