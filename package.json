@@ -4,14 +4,22 @@
   "description": "A Helius Node.js SDK for building the future of Solana",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
+  "exports": {
+    "./rpc": "./dist/rpc/index.js",
+    "./full": "./dist/rpc/full.js",
+    "./rpc/methods/*": "./dist/rpc/methods/*.js",
+    "./rpc/wrapAutoSend": "./dist/rpc/wrapAutoSend.js",
+    "./package.json": "./package.json"
+  },
   "scripts": {
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
-    "build": "tsc",
+    "build": "rollup -c",
     "prepare": "pnpm run build",
     "lint": "eslint --ext .ts,.tsx src",
-    "format": "prettier --write 'src/**/*.{js,ts,json,md}'"
+    "format": "prettier --write 'src/**/*.{js,ts,json,md}'",
+    "check-bundle": "agadoo dist && bundlemon"
   },
   "keywords": [
     "helius",
@@ -40,6 +48,7 @@
     "eslint-config-prettier": "^10.1.5",
     "eslint-plugin-import": "^2.32.0",
     "eslint-plugin-prettier": "^5.5.1",
+    "glob": "^11.0.3",
     "jest": "^30.0.4",
     "prettier": "^3.6.2",
     "rollup": "^4.44.2",
