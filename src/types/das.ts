@@ -1,0 +1,300 @@
+export enum Interface {
+  V1NFT = "V1_NFT",
+  Custom = "Custom",
+  V1PRINT = "V1_PRINT",
+  LegacyNFT = "Legacy_NFT",
+  V2NFT = "V2_NFT",
+  FungibleAsset = "FungibleAsset",
+  Identity = "Identity",
+  Executable = "Executable",
+  ProgrammableNFT = "ProgrammableNFT",
+  FungibleToken = "FungibleToken",
+  MplCoreAsset = "MplCoreAsset",
+}
+
+export enum OwnershipModel {
+  Single = "single",
+  Token = "token",
+}
+
+export enum RoyaltyModel {
+  Creators = "creators",
+  Fanout = "fanout",
+  Single = "single",
+}
+
+export enum Scope {
+  Full = "full",
+  Royalty = "royalty",
+  Metadata = "metadata",
+  Extension = "extension",
+}
+
+export enum UseMethods {
+  Burn = "Burn",
+  Single = "Single",
+  Multiple = "Multiple",
+}
+
+export enum Context {
+  WalletDefault = "wallet-default",
+  WebDesktop = "web-desktop",
+  WebMobile = "web-mobile",
+  AppMobile = "app-mobile",
+  AppDesktop = "app-desktop",
+  App = "app",
+  Vr = "vr",
+}
+
+export type TokenType =
+  | "fungible"
+  | "nonFungible"
+  | "compressedNft"
+  | "regularNft"
+  | "all"
+  | (string & {});
+
+export interface Asset {
+  interface: Interface;
+  id: string;
+  content?: Content; 
+  authorities?: Authorities[]; 
+  compression?: Compression; 
+  grouping?: Grouping[]; 
+  royalty?: Royalty; 
+  ownership: Ownership; 
+  creators?: Creators[]; 
+  uses?: Uses; 
+  supply?: Supply; 
+  mutable: boolean;
+  burnt: boolean;
+  mint_extensions?: MintExtensions;
+  token_info?: TokenInfo;
+}
+
+export interface Ownership {
+  frozen: boolean;
+  delegated: boolean;
+  delegate?: string;
+  ownership_model: OwnershipModel;
+  owner: string;
+}
+
+export interface Supply {
+  print_max_supply: number;
+  print_current_supply: number;
+  edition_nonce?: number;
+}
+
+export interface Uses {
+  use_method: UseMethods;
+  remaining: number;
+  total: number;
+}
+
+export interface Creators {
+  address: string;
+  share: number;
+  verified: boolean;
+}
+
+export interface Royalty {
+  royalty_model: RoyaltyModel;
+  target?: string;
+  percent: number;
+  basis_points: number;
+  primary_sale_happened: boolean;
+  locked: boolean;
+}
+
+export interface Grouping {
+  group_key: string;
+  group_value: string;
+  verified?: boolean;
+  collection_metadata?: CollectionMetadata;
+}
+
+export interface CollectionMetadata {
+  name?: string;
+  symbol?: string;
+  image?: string;
+  description?: string;
+  external_url?: string;
+}
+
+export interface Authorities {
+  address: string;
+  scopes: Scope[];
+}
+
+export interface Content {
+  $schema: string;
+  json_uri: string;
+  files?: File[]; 
+  metadata: Metadata;
+  links?: Links;
+}
+
+export type Links = {
+    external_url?: string;
+    image?: string;
+    animation_url?: string;
+  };
+
+export interface File {
+  uri?: string;
+  mime?: string;
+  cdn_uri?: string;
+  quality?: FileQuality;
+  contexts?: Context[];
+}
+
+export interface FileQuality {
+  schema: string;
+}
+
+export interface Metadata {
+  attributes?: Attribute[];
+  description: string;
+  name: string;
+  symbol: string;
+  token_standard?: TokenType;
+}
+
+export interface Attribute {
+  value: string;
+  trait_type: string;
+}
+
+export interface Compression {
+  eligible: boolean;
+  compressed: boolean;
+  data_hash: string;
+  creator_hash: string;
+  asset_hash: string;
+  tree: string;
+  seq: number;
+  leaf_id: number;
+}
+
+export interface MintExtensions {
+  confidential_transfer_mint?: ConfidentialTransferMint;
+  confidential_transfer_fee_config?: ConfidentialTransferFeeConfig;
+  transfer_fee_config?: TransferFeeConfig;
+  metadata_pointer?: MetadataPointer;
+  mint_close_authority?: MintCloseAuthority;
+  permanent_delegate?: PermanentDelegate;
+  transfer_hook?: TransferHook;
+  interest_bearing_config?: InterestBearingConfig;
+  default_account_state?: DefaultAccountState;
+  confidential_transfer_account?: ConfidentialTransferAccount;
+  metadata?: MintExtensionMetadata;
+}
+
+export interface ConfidentialTransferMint {
+  authority: string;
+  auto_approve_new_accounts: boolean;
+  auditor_elgamal_pubkey: string;
+}
+
+export interface ConfidentialTransferFeeConfig {
+  authority: string;
+  withdraw_withheld_authority_elgamal_pubkey: string;
+  harvest_to_mint_enabled: boolean;
+  withheld_amount: string;
+}
+
+export interface TransferFeeConfig {
+  transfer_fee_config_authority: string;
+  withdraw_withheld_authority: string;
+  withheld_amount: number;
+  older_transfer_fee: OlderTransferFee;
+  newer_transfer_fee: NewTransferFee;
+}
+
+export interface OlderTransferFee {
+  epoch: string;
+  maximum_fee: string;
+  transfer_fee_basis_points: string;
+}
+
+export interface NewTransferFee {
+  epoch: string;
+}
+
+export interface MetadataPointer {
+  authority: string;
+  metadata_address: string;
+}
+
+export interface MintCloseAuthority {
+  close_authority: string;
+}
+
+export interface PermanentDelegate {
+  delegate: string;
+}
+
+export interface TransferHook {
+  authority: string;
+  programId: string;
+}
+
+export interface InterestBearingConfig {
+  rate_authority: string;
+  initialization_timestamp: number;
+  pre_update_average_rate: number;
+  last_update_timestamp: number;
+  current_rate: number;
+}
+
+export interface DefaultAccountState {
+  state: string;
+}
+
+export interface ConfidentialTransferAccount {
+  approved: boolean;
+  elgamal_pubkey: string;
+  pending_balance_lo: string;
+  pending_balance_hi: string;
+  available_balance: string;
+  decryptable_available_balance: string;
+  allow_confidential_credits: boolean;
+  allow_non_confidential_credits: boolean;
+  pending_balance_credit_counter: number;
+  maximum_pending_balance_credit_counter: number;
+  expected_pending_balance_credit_counter: number;
+  actual_pending_balance_credit_counter: number;
+}
+
+export interface MintExtensionMetadata {
+  updateAuthority: string;
+  mint: string;
+  name: string;
+  symbol: string;
+  uri: string;
+  additionalMetadata: AdditionalMetadata;
+}
+
+export interface AdditionalMetadata {
+  key: string;
+  value: string;
+}
+
+export interface TokenInfo {
+  symbol?: string;
+  balance?: number;
+  supply?: number;
+  decimals?: number;
+  token_program?: string;
+  associated_token_address?: string;
+  price_info?: PriceInfo;
+  mint_authority?: string;
+  freeze_authority?: string;
+}
+
+export interface PriceInfo {
+  price_per_token: number;
+  currency: string;
+  total_price?: number;
+}
