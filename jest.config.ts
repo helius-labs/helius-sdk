@@ -7,7 +7,7 @@ const config: Config = {
     testMatch: ["**/__tests__/**/*.ts", "**/*.test.ts"],
     moduleFileExtensions: ["ts", "js", "json"],
     transform: {
-        "^.+\\.ts$": "ts-jest"
+        "^.+\\.ts$": ["ts-jest", { tsconfig: "<rootDir>/tsconfig.json" }]
     },
     globals: {
         "ts-jest": {

@@ -5,10 +5,13 @@ const isPending = (x: unknown): x is PendingRpcRequest<any> => {
 };
 
 export const wrapAutoSend = <T extends Rpc<any>>(raw: T): T => {
+    const added = new Map<string | symbol, any>();
+    
     return new Proxy(raw, {
         get(target, prop, receiver) {
+            if (added.has(prop)) return added.get(prop);
+            
             const value = Reflect.get(target, prop, receiver);
-
             if (typeof value !== "function") return value;
 
             return (...args: unknown[]) => {
@@ -16,5 +19,14 @@ export const wrapAutoSend = <T extends Rpc<any>>(raw: T): T => {
                 return isPending(result) ? result.send() : result;
             };
         },
+
+        set(_target, prop, value) {
+            added.set(prop, value)
+            return true;
+        },
+
+        has(target, prop) {
+            return added.has(prop) || Reflect.has(target, prop);
+        }
     }) as T;
 };

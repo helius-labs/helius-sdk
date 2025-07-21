@@ -1,5 +1,9 @@
-import { createSolanaRpc } from "@solana/kit";
+import { createDefaultRpcTransport, createRpc, createSolanaRpcApi, DEFAULT_RPC_CONFIG } from '@solana/kit';
 import { wrapAutoSend } from "./wrapAutoSend";
+
+// import type { HeliusRpcApi } from './heliusRpcApi';
+import { customApiWrapper } from './customApiWrapper';
+
 
 interface HeliusRpcOptions {
     apiKey: string;
@@ -8,9 +12,21 @@ interface HeliusRpcOptions {
 }
 
 export const createHeliusRpc = ({ apiKey, network = "mainnet", autoSend = true }: HeliusRpcOptions) => {
-    const baseUrl = `https://${network}.helius-rpc.com`;
+    const baseUrl = `https://${network}.helius-rpc.com/`;
     const url = `${baseUrl}?api-key=${apiKey}`;
-    const rpc = createSolanaRpc(url);
 
-    return autoSend ? wrapAutoSend(rpc) : rpc;
+    const baseApi = createSolanaRpcApi(DEFAULT_RPC_CONFIG);
+    const customApi = customApiWrapper(baseApi);
+    
+    // const api = createSolanaRpcApi<HeliusRpcApi>(DEFAULT_RPC_CONFIG);
+    const transport = createDefaultRpcTransport({
+        url
+    });
+
+    let rpc = createRpc({ api: customApi, transport });
+    if (autoSend) {
+        rpc = wrapAutoSend(rpc);
+    }
+
+    return rpc;
 };

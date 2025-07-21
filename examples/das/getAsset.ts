@@ -1,23 +1,26 @@
-import { Helius } from "../../src"; // Replace with helius-sdk in a production setting
+// Replace imports in a production setting
+import { createHeliusRpc } from "../../src/rpc/index";
+import { createHeliusRpcFull } from "../../src/rpc/full";
 
-async function main() {
-  const helius = new Helius('YOUR_API_KEY');
+(async () => {
+  const apiKey = ""; // From Helius dashboard
+  const assetId = "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263"; // Example BONK mint
 
-  const response = await helius.rpc.getAsset({
-    id: 'F9Lw3ki3hJ7PF9HQXsBzoY8GyE6sPoEZZdXJBsTTD2rk',
-    displayOptions: {
-      showCollectionMetadata: true,
-    },
-  });
+  // Full factory with 
+  const fullRpc = createHeliusRpcFull({ apiKey });
+  try {
+    const assetFull = await fullRpc.getAsset({ id: assetId, options: { showFungible: true }});
+    console.log("Asset from full RPC:", assetFull);
+  } catch (error) {
+    console.error("Error with full RPC:", error);
+  }
 
-  const collectionNames = response.grouping?.map(
-    (g: any) => g.collection_metadata?.name
-  );
-
-  console.log(collectionNames);
-}
-
-main().catch((err) => {
-  console.error('Example failed:', err);
-  process.exit(1);
-});
+  // Slim factory
+  let slimRpc = createHeliusRpc({ apiKey });
+  try {
+    const assetSlim = await slimRpc.getAsset(assetId);
+    console.log("Asset from slim RPC:", assetSlim);
+  } catch (error) {
+    console.error("Error with slim RPC:", error);
+  }
+})();
