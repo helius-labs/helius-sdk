@@ -9,11 +9,6 @@ const config: Config = {
     transform: {
         "^.+\\.ts$": ["ts-jest", { tsconfig: "<rootDir>/tsconfig.json" }]
     },
-    globals: {
-        "ts-jest": {
-            tsconfig: "<rootDir>/tsconfig.json"
-        }
-    },
     clearMocks: true,
     verbose: true,
     collectCoverage: true,
