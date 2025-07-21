@@ -73,6 +73,49 @@ describe("getAsset Tests", () => {
     });
   });
 
+  it("Successfully fetches an asset with options", async () => {
+    const mockAsset: Asset = {
+      interface: Interface.FungibleToken,
+      id: "kyber-crystal-1138",
+      content: {
+        $schema: "jedi-metadata",
+        json_uri: "https://starwars.com/kyber.json",
+        metadata: {
+          name: "Kyber Crystal",
+          description: "Power source for lightsabers, a rare Force-attuned crystal",
+          attributes: [{ trait_type: "Rarity", value: "Legendary" }],
+          symbol: "KYBER",
+          token_standard: "Fungible",
+        },
+        links: {
+          image: "https://starwars.com/kyber-crystal.png",
+        },
+      },
+      ownership: {
+        frozen: false,
+        delegated: false,
+        ownership_model: OwnershipModel.Single,
+        owner: "lukeskywalker.sol",
+      },
+      mutable: true,
+      burnt: false,
+      token_info: {
+        supply: 1000000000,
+        decimals: 9,
+        token_program: "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+      },
+    };
+
+    mockRequest.mockResolvedValue({ result: mockAsset });
+    const result = await rpc.getAsset({ id: "kyber-crystal-1138", options: { showFungible: true } });
+
+    expect(result).toEqual(mockAsset);
+    expect(mockRequest).toHaveBeenCalledWith("getAsset", {
+      id: "kyber-crystal-1138",
+      options: { showFungible: true },
+    });
+  });
+
   it("Handles RPC errors", async () => {
     mockRequest.mockResolvedValue({
       jsonrpc: "2.0",
