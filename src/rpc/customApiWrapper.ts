@@ -25,7 +25,7 @@ export const customApiWrapper = (baseApi: RpcApi<SolanaRpcApi>) => {
               const response = await config.transport({
                 payload: {
                   jsonrpc: "2.0",
-                  id: "custom-id", // Can use UUID if needed
+                  id: "custom-id",
                   method: request.methodName,
                   params: request.params,
                 },
@@ -40,5 +40,5 @@ export const customApiWrapper = (baseApi: RpcApi<SolanaRpcApi>) => {
       // Delegate to base API for standard methods
       return Reflect.get(target, p);
     },
-  }) as RpcApi<HeliusRpcApi>; // Cast to full type
+  }) as RpcApi<HeliusRpcApi>;
 };
