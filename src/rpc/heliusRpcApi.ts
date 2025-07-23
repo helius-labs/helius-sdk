@@ -1,9 +1,12 @@
 import type { PendingRpcRequest, SolanaRpcApi } from "@solana/kit";
 
-import type { GetAssetApi, GetPriorityFeeEstimateApi, GetAssetBatchApi } from "./methods";
-import { GetAssetProofApi } from "./methods/getAssetProof";
+import type { GetAssetProofApi } from "./methods/getAssetProof";
+import type { GetAssetApi } from "./methods/getAsset";
+import type { GetPriorityFeeEstimateApi } from "./methods/getPriorityFeeEstimate";
+import type { GetAssetBatchApi } from "./methods/getAssetBatch";
+import { GetAssetProofBatchApi } from "./methods/getAssetProofBatch";
 
-export type HeliusCustomApi = GetAssetApi & GetPriorityFeeEstimateApi & GetAssetBatchApi & GetAssetProofApi;
+export type HeliusCustomApi = GetAssetApi & GetPriorityFeeEstimateApi & GetAssetBatchApi & GetAssetProofApi & GetAssetProofBatchApi;
 
 export type HeliusRpcApi = SolanaRpcApi & HeliusCustomApi;
 

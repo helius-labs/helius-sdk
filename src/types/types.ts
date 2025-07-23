@@ -432,3 +432,9 @@ export interface GetAssetProofResponse {
   tree_id: string;
   burnt?: any;
 }
+
+  export type GetAssetProofBatchRequest = {
+    ids: string[];
+  };
+
+  export type GetAssetProofBatchResponse = GetAssetProofResponse[];
