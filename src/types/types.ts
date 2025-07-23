@@ -10,7 +10,7 @@ import type {
   TransactionConfirmationStatus,
   TransactionError,
   VersionedTransaction,
-} from '@solana/web3.js';
+} from "@solana/web3.js";
 
 import type {
   AccountWebhookEncoding,
@@ -23,10 +23,10 @@ import type {
   TxnStatus,
   UiTransactionEncoding,
   WebhookType,
-} from './enums';
-import { Asset } from './das';
+} from "./enums";
+import { Asset } from "./das";
 
-export type HeliusCluster = Exclude<Cluster, 'testnet'>;
+export type HeliusCluster = Exclude<Cluster, "testnet">;
 
 export type SmartTransactionContext = {
   transaction: Transaction | VersionedTransaction;
@@ -65,10 +65,10 @@ export type CollectionIdentifier = {
 
 export type CreateWebhookRequest = Omit<
   Webhook,
-  'webhookID' | 'wallet' | 'project'
+  "webhookID" | "wallet" | "project"
 >;
 export type EditWebhookRequest = Partial<
-  Omit<Webhook, 'webhookID' | 'wallet' | 'project'>
+  Omit<Webhook, "webhookID" | "wallet" | "project">
 >;
 
 export interface RawTokenAmount {
@@ -311,7 +311,7 @@ export interface GetPriorityFeeEstimateResponse {
   priorityFeeLevels?: MicroLamportPriorityFeeLevels;
 }
 
-export type JitoRegion = 'Default' | 'NY' | 'Amsterdam' | 'Frankfurt' | 'Tokyo';
+export type JitoRegion = "Default" | "NY" | "Amsterdam" | "Frankfurt" | "Tokyo";
 
 export type PollTransactionOptions = {
   confirmationStatuses?: TransactionConfirmationStatus[];
@@ -370,11 +370,11 @@ export interface JupiterSwapParams {
   slippageBps?: number;
   restrictIntermediateTokens?: boolean;
   wrapUnwrapSOL?: boolean;
-  priorityLevel?: 'low' | 'medium' | 'high' | 'veryHigh' | 'unsafeMax';
+  priorityLevel?: "low" | "medium" | "high" | "veryHigh" | "unsafeMax";
   maxPriorityFeeLamports?: number;
   skipPreflight?: boolean;
   maxRetries?: number;
-  confirmationCommitment?: 'processed' | 'confirmed' | 'finalized';
+  confirmationCommitment?: "processed" | "confirmed" | "finalized";
 }
 
 export interface JupiterSwapResult {
@@ -393,13 +393,42 @@ export interface JupiterSwapResult {
 }
 
 export type SignedTransactionInput =
-| Transaction
-| VersionedTransaction
-| Buffer
-| string;
+  | Transaction
+  | VersionedTransaction
+  | Buffer
+  | string;
 
-export type GetAssetRequest = { id: string; options?: { showFungible?: boolean, showUnverifiedCollections?: boolean, showCollectionMetadata?: boolean, showInscription?: boolean } };
+export type GetAssetRequest = {
+  id: string;
+  options?: {
+    showFungible?: boolean;
+    showUnverifiedCollections?: boolean;
+    showCollectionMetadata?: boolean;
+    showInscription?: boolean;
+  };
+};
 export type GetAssetResponse = Asset;
 
-export type GetAssetBatchRequest = { ids: string[]; options?: { showFungible?: boolean, showUnverifiedCollections?: boolean, showCollectionMetadata?: boolean, showInscription?: boolean } };
+export type GetAssetBatchRequest = {
+  ids: string[];
+  options?: {
+    showFungible?: boolean;
+    showUnverifiedCollections?: boolean;
+    showCollectionMetadata?: boolean;
+    showInscription?: boolean;
+  };
+};
 export type GetAssetBatchResponse = Asset[];
+
+export type GetAssetProofRequest = {
+  id: string;
+};
+
+export interface GetAssetProofResponse {
+  root: string;
+  proof: Array<string>;
+  node_index: number;
+  leaf: string;
+  tree_id: string;
+  burnt?: any;
+}
