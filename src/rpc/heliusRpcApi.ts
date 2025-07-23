@@ -1,8 +1,8 @@
 import type { PendingRpcRequest, SolanaRpcApi } from "@solana/kit";
 
-import type { GetAssetApi, GetPriorityFeeEstimateApi } from "./methods";
+import type { GetAssetApi, GetPriorityFeeEstimateApi, GetAssetBatchApi } from "./methods";
 
-export type HeliusCustomApi = GetAssetApi & GetPriorityFeeEstimateApi;
+export type HeliusCustomApi = GetAssetApi & GetPriorityFeeEstimateApi & GetAssetBatchApi;
 
 export type HeliusRpcApi = SolanaRpcApi & HeliusCustomApi;
 

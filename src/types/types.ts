@@ -400,3 +400,6 @@ export type SignedTransactionInput =
 
 export type GetAssetRequest = { id: string; options?: { showFungible?: boolean, showUnverifiedCollections?: boolean, showCollectionMetadata?: boolean, showInscription?: boolean } };
 export type GetAssetResponse = Asset;
+
+export type GetAssetBatchRequest = { ids: string[]; options?: { showFungible?: boolean, showUnverifiedCollections?: boolean, showCollectionMetadata?: boolean, showInscription?: boolean } };
+export type GetAssetBatchResponse = Asset[];
