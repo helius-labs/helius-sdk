@@ -398,5 +398,5 @@ export type SignedTransactionInput =
 | Buffer
 | string;
 
-export type GetAssetRequest = { id: string; options?: { showFungible?: boolean } };
+export type GetAssetRequest = { id: string; options?: { showFungible?: boolean, showUnverifiedCollections?: boolean, showCollectionMetadata?: boolean, showInscription?: boolean } };
 export type GetAssetResponse = Asset;
