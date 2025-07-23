@@ -1,6 +1,7 @@
 import { createDefaultRpcTransport, createRpc, createSolanaRpcApi, DEFAULT_RPC_CONFIG } from '@solana/kit';
 import { wrapAutoSend } from "./wrapAutoSend";
 import { customApiWrapper } from './customApiWrapper';
+import { ResolvedHeliusRpcApi } from './heliusRpcApi';
 
 
 interface HeliusRpcOptions {
@@ -24,5 +25,5 @@ export const createHelius = ({ apiKey, network = "mainnet", autoSend = true }: H
         rpc = wrapAutoSend(rpc);
     }
 
-    return rpc;
+    return rpc as unknown as ResolvedHeliusRpcApi;
 };

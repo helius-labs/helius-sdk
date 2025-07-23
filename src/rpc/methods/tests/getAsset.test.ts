@@ -1,6 +1,6 @@
 import type { Asset } from "../../../types/das";
 import { Interface, OwnershipModel } from "../../../types/das";
-import { createHeliusRpc } from "../..";
+import { createHelius } from "../..";
 
 const mockRequest = jest.fn();
 
@@ -29,11 +29,11 @@ jest.mock("@solana/kit", () => ({
 }));
 
 describe("getAsset Tests", () => {
-  let rpc: ReturnType<typeof createHeliusRpc>;
+  let rpc: ReturnType<typeof createHelius>;
 
   beforeEach(() => {
     jest.clearAllMocks();
-    rpc = createHeliusRpc({ apiKey: "test-key" });
+    rpc = createHelius({ apiKey: "test-key" });
   });
 
   it("Successfully fetches an asset by its ID", async () => {
@@ -65,7 +65,7 @@ describe("getAsset Tests", () => {
     };
 
     mockRequest.mockResolvedValue({ result: mockAsset });
-    const result = await rpc.getAsset("kyber-crystal-1138");
+    const result = await rpc.getAsset({ id: "kyber-crystal-1138" });
 
     expect(result).toEqual(mockAsset);
     expect(mockRequest).toHaveBeenCalledWith("getAsset", {
@@ -123,6 +123,6 @@ describe("getAsset Tests", () => {
       error: { code: -32602, message: "Invalid params" },
     });
 
-    await expect(rpc.getAsset("invalid-id")).rejects.toThrow(/Invalid params/);
+    await expect(rpc.getAsset({ id: "invalid-id" })).rejects.toThrow(/Invalid params/);
   });
 });

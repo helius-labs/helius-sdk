@@ -7,7 +7,8 @@ export default {
     input: [
         "src/rpc/index.ts", // Slim factory (core RPC, no helpers)
         "src/rpc/full.ts", // Full factory (with all helpers)
-        ...globSync("src/rpc/methods/*.ts") // Individual methods for cherry-picking
+        ...globSync("src/rpc/methods/*.ts"), // Individual methods for cherry-picking
+        ...globSync("src/transactions/*.ts"), 
     ],
     output: {
         dir: "dist",

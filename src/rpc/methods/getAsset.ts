@@ -1,6 +1,6 @@
-import type { Asset } from "../../types/das";
+import { PendingRpcRequest } from "@solana/kit";
+import { GetAssetRequest, GetAssetResponse } from "../../types";
 
 export type GetAssetApi = {
-    getAsset(id: string): Asset;
-    getAsset(args: { id: string; options?: { showFungible?: boolean } }): Asset;
+    getAsset(params: GetAssetRequest): PendingRpcRequest<GetAssetResponse>;
 };  

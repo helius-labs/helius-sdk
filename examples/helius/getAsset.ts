@@ -7,7 +7,7 @@ import { createHelius } from "../../src/rpc/index";
 
   let rpc = createHelius({ apiKey });
   try {
-    const assetSlim = await rpc.getAsset(assetId);
+    const assetSlim = await rpc.getAsset({ id: assetId });
     console.log("Asset from RPC:", assetSlim);
   } catch (error) {
     console.error("Error with RPC:", error);

@@ -24,6 +24,7 @@ import type {
   UiTransactionEncoding,
   WebhookType,
 } from './enums';
+import { Asset } from './das';
 
 export type HeliusCluster = Exclude<Cluster, 'testnet'>;
 
@@ -396,3 +397,6 @@ export type SignedTransactionInput =
 | VersionedTransaction
 | Buffer
 | string;
+
+export type GetAssetRequest = { id: string; options?: { showFungible?: boolean } };
+export type GetAssetResponse = Asset;

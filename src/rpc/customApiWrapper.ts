@@ -2,6 +2,53 @@ import type { RpcApi, RpcPlan } from "@solana/kit";
 import type { SolanaRpcApi } from "@solana/kit";
 import type { HeliusRpcApi } from "./heliusRpcApi";
 import type { Asset } from "../types/das";
+import { GetPriorityFeeEstimateRequest, GetPriorityFeeEstimateResponse } from "../types";
+
+interface MethodConfig<P, R> {
+  params: P;
+  response: R;
+  converter?: (arg: P) => any;
+  arrayWrap?: boolean;
+}
+
+const CUSTOM_METHODS: Record<string, MethodConfig<any, any>> = {
+  getAsset: {
+    params: {} as string | { id: string; options?: { showFungible?: boolean } },
+    response: {} as Asset,
+    arrayWrap: false,
+  },
+  getPriorityFeeEstimate: {
+    params: {} as GetPriorityFeeEstimateRequest,
+    response: {} as GetPriorityFeeEstimateResponse,
+    arrayWrap: true,
+  },
+};
+
+// Factory for creating method handlers
+const createMethodHandler = <P, R>(methodName: string, config: MethodConfig<P, R>) => (rawParams: P) => {
+  let params = rawParams;
+  if (config.converter) params = config.converter(rawParams);
+
+  const request = {
+    methodName,
+    params: config.arrayWrap ? [params] : params,
+  };
+
+  return {
+    execute: async (config) => {
+      const response = await config.transport({
+        payload: {
+          jsonrpc: "2.0",
+          id: "custom-id",
+          method: request.methodName,
+          params: request.params,
+        },
+        signal: config.signal,
+      });
+      return (response as { result: R }).result;
+    },
+  } as RpcPlan<R>;
+};
 
 export const customApiWrapper = (baseApi: RpcApi<SolanaRpcApi>) => {
   return new Proxy(baseApi, {
@@ -13,29 +60,8 @@ export const customApiWrapper = (baseApi: RpcApi<SolanaRpcApi>) => {
     },
     get(target, p) {
       const methodName = p.toString();
-      if (methodName === "getAsset") {
-        return (arg: string | { id: string; options?: { showFungible?: boolean } }) => {
-          const params = typeof arg === "string" ? { id: arg } : arg;
-          const request = {
-            methodName: "getAsset",
-            params,
-          };
-          return {
-            execute: async (config) => {
-              const response = await config.transport({
-                payload: {
-                  jsonrpc: "2.0",
-                  id: "custom-id",
-                  method: request.methodName,
-                  params: request.params,
-                },
-                signal: config.signal,
-              });
-              return (response as { result: Asset }).result;
-            },
-          } as RpcPlan<Asset>;
-        };
-      }
+      const config = CUSTOM_METHODS[methodName];
+      if (config) return createMethodHandler(methodName, config);
 
       // Delegate to base API for standard methods
       return Reflect.get(target, p);

@@ -1,19 +1,18 @@
-import { Helius } from "../../src"; // Replace with 'helius-sdk' in a production setting
+// Replace imports in a production setting
+import { createHelius } from "../../src/rpc";
 
-async function main() {
-  const helius = new Helius('YOUR_API_KEY');
+(async () => {
+  const apiKey = ""; // From Helius dashboard
 
-  const response = await helius.rpc.getPriorityFeeEstimate({
-    accountKeys: ['JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4'],
-    options: {
-      includeAllPriorityFeeLevels: true,
-    },
-  });
-
-  console.log('Priority fee estimate:', response);
-}
-
-main().catch((err) => {
-  console.error('Example failed:', err);
-  process.exit(1);
-});
+  let rpc = createHelius({ apiKey });
+  try {
+    const estimate = await rpc.getPriorityFeeEstimate({
+      accountKeys: ["JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4"],
+      options: { includeAllPriorityFeeLevels: true },
+    });
+    
+    console.log("Priority fee estimate", estimate);
+  } catch (error) {
+    console.error("Error with RPC:", error);
+  }
+})();
