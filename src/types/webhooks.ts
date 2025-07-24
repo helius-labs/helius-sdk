@@ -17,3 +17,5 @@ export interface Webhook {
     webhookType: string;
     authHeader: string;
 };
+
+export type UpdateWebhookRequest = Partial<CreateWebhookRequest>;

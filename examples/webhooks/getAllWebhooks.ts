@@ -2,7 +2,7 @@
 import { createHelius } from "../../src/rpc";
 
 (async () => {
-  const apiKey = "";  // From Helius dashboard
+  const apiKey = ""; // From Helius dashboard
   const helius = createHelius({ apiKey });
 
   try {
