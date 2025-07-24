@@ -5,19 +5,21 @@ import type { ResolvedHeliusRpcApi } from './heliusRpcApi';
 import { createWebhook } from '../webhooks/createWebhook';
 import { CreateWebhookRequest, Webhook } from '../types/webhooks';
 import { getWebhook } from '../webhooks/getWebhook';
+import { getAllWebhooks } from '../webhooks/getAllWebhooks';
 
 interface HeliusRpcOptions {
     apiKey: string;
     network?: "mainnet" | "devnet";
     autoSend?: boolean;
-}
+};
 
 interface HeliusClient extends ResolvedHeliusRpcApi {
     webhooks: {
         create(params: CreateWebhookRequest): Promise<Webhook>;
         get(webhookID: string): Promise<Webhook>;
-    }
-}
+        getAll(): Promise<Webhook[]>;
+    };
+};
 
 export const createHelius = ({ apiKey, network = "mainnet", autoSend = true }: HeliusRpcOptions) => {
     const baseUrl = `https://${network}.helius-rpc.com/`;
@@ -37,6 +39,7 @@ export const createHelius = ({ apiKey, network = "mainnet", autoSend = true }: H
     const webhooks = {
         create: (params: any) => createWebhook(apiKey, params),
         get: (webhookID: string) => getWebhook(apiKey, webhookID),
+        getAll: () => getAllWebhooks(apiKey),
     };
 
     return { ...rpc, webhooks } as unknown as HeliusClient;
