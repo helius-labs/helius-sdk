@@ -1,50 +1,5 @@
-export enum Interface {
-  V1NFT = "V1_NFT",
-  Custom = "Custom",
-  V1PRINT = "V1_PRINT",
-  LegacyNFT = "Legacy_NFT",
-  V2NFT = "V2_NFT",
-  FungibleAsset = "FungibleAsset",
-  Identity = "Identity",
-  Executable = "Executable",
-  ProgrammableNFT = "ProgrammableNFT",
-  FungibleToken = "FungibleToken",
-  MplCoreAsset = "MplCoreAsset",
-}
-
-export enum OwnershipModel {
-  Single = "single",
-  Token = "token",
-}
-
-export enum RoyaltyModel {
-  Creators = "creators",
-  Fanout = "fanout",
-  Single = "single",
-}
-
-export enum Scope {
-  Full = "full",
-  Royalty = "royalty",
-  Metadata = "metadata",
-  Extension = "extension",
-}
-
-export enum UseMethods {
-  Burn = "Burn",
-  Single = "Single",
-  Multiple = "Multiple",
-}
-
-export enum Context {
-  WalletDefault = "wallet-default",
-  WebDesktop = "web-desktop",
-  WebMobile = "web-mobile",
-  AppMobile = "app-mobile",
-  AppDesktop = "app-desktop",
-  App = "app",
-  Vr = "vr",
-}
+import { AssetSortBy, AssetSortDirection, Context, Interface, OwnershipModel, RoyaltyModel, Scope, UseMethods } from "./enums";
+import { GetAssetResponse } from "./types";
 
 export type TokenType =
   | "fungible"
@@ -57,15 +12,15 @@ export type TokenType =
 export interface Asset {
   interface: Interface;
   id: string;
-  content?: Content; 
-  authorities?: Authorities[]; 
-  compression?: Compression; 
-  grouping?: Grouping[]; 
-  royalty?: Royalty; 
-  ownership: Ownership; 
-  creators?: Creators[]; 
-  uses?: Uses; 
-  supply?: Supply; 
+  content?: Content;
+  authorities?: Authorities[];
+  compression?: Compression;
+  grouping?: Grouping[];
+  royalty?: Royalty;
+  ownership: Ownership;
+  creators?: Creators[];
+  uses?: Uses;
+  supply?: Supply;
   mutable: boolean;
   burnt: boolean;
   mint_extensions?: MintExtensions;
@@ -130,16 +85,16 @@ export interface Authorities {
 export interface Content {
   $schema: string;
   json_uri: string;
-  files?: File[]; 
+  files?: File[];
   metadata: Metadata;
   links?: Links;
 }
 
 export type Links = {
-    external_url?: string;
-    image?: string;
-    animation_url?: string;
-  };
+  external_url?: string;
+  image?: string;
+  animation_url?: string;
+};
 
 export interface File {
   uri?: string;
@@ -298,3 +253,48 @@ export interface PriceInfo {
   currency: string;
   total_price?: number;
 }
+
+export type GetAssetsByAuthorityRequest = {
+  authorityAddress: string;
+  page?: number;
+  limit?: number;
+  before?: string;
+  after?: string;
+  options?: DisplayOptions;
+  sortBy?: AssetSortingRequest;
+};
+
+export type DisplayOptions = {
+  showUnverifiedCollections?: boolean;
+  showCollectionMetadata?: boolean;
+  showGrandTotal?: boolean;
+  showRawData?: boolean;
+  showFungible?: boolean;
+  requireFullIndex?: boolean;
+  showSystemMetadata?: boolean;
+  showZeroBalance?: boolean;
+  showClosedAccounts?: boolean;
+  showNativeBalance?: boolean;
+};
+
+// Sorting on request (camelCase)
+export type AssetSortingRequest = {
+  sortBy: AssetSortBy;
+  sortDirection: AssetSortDirection;
+};
+
+export type GetAssetResponseList = {
+  grand_total?: number;
+  total: number;
+  limit: number;
+  page?: number;
+  cursor?: string;
+  items: GetAssetResponse[];
+  nativeBalance?: NativeBalanceInfo;
+};
+
+export type NativeBalanceInfo = {
+  lamports: number;
+  price_per_sol: number;
+  total_price: number;
+};

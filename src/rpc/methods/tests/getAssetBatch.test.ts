@@ -1,5 +1,5 @@
 import type { Asset } from "../../../types/das";
-import { Interface, OwnershipModel } from "../../../types/das";
+import { Interface, OwnershipModel } from "../../../types/enums";
 import { createHelius } from "../..";
 
 const mockRequest = jest.fn();
@@ -36,7 +36,7 @@ describe("getAssetBatch Tests", () => {
   it("Successfully fetches assets by their IDs", async () => {
     const mockAssets: Asset[] = [
       {
-        interface: Interface.ProgrammableNFT,
+        interface: Interface.PROGRAMMABLE_NFT,
         id: "kyber-crystal-1138",
         content: {
           $schema: "jedi-metadata",
@@ -55,14 +55,14 @@ describe("getAssetBatch Tests", () => {
         ownership: {
           frozen: false,
           delegated: false,
-          ownership_model: OwnershipModel.Single,
+          ownership_model: OwnershipModel.SINGLE,
           owner: "lukeskywalker.sol",
         },
         mutable: true,
         burnt: false,
       },
       {
-        interface: Interface.FungibleToken,
+        interface: Interface.FUNGIBLE_TOKEN,
         id: "death-star-plans-66",
         content: {
           $schema: "jedi-metadata",
@@ -81,7 +81,7 @@ describe("getAssetBatch Tests", () => {
         ownership: {
           frozen: false,
           delegated: false,
-          ownership_model: OwnershipModel.Single,
+          ownership_model: OwnershipModel.SINGLE,
           owner: "princessleia.sol",
         },
         mutable: true,
@@ -104,7 +104,7 @@ describe("getAssetBatch Tests", () => {
   it("Successfully fetches assets with options", async () => {
     const mockAssets: Asset[] = [
       {
-        interface: Interface.ProgrammableNFT,
+        interface: Interface.PROGRAMMABLE_NFT,
         id: "kyber-crystal-1138",
         content: {
           $schema: "jedi-metadata",
@@ -123,14 +123,14 @@ describe("getAssetBatch Tests", () => {
         ownership: {
           frozen: false,
           delegated: false,
-          ownership_model: OwnershipModel.Single,
+          ownership_model: OwnershipModel.SINGLE,
           owner: "lukeskywalker.sol",
         },
         mutable: true,
         burnt: false,
       },
       {
-        interface: Interface.FungibleToken,
+        interface: Interface.FUNGIBLE_TOKEN,
         id: "death-star-plans-66",
         content: {
           $schema: "jedi-metadata",
@@ -149,7 +149,7 @@ describe("getAssetBatch Tests", () => {
         ownership: {
           frozen: false,
           delegated: false,
-          ownership_model: OwnershipModel.Single,
+          ownership_model: OwnershipModel.SINGLE,
           owner: "princessleia.sol",
         },
         mutable: true,

@@ -1,5 +1,5 @@
 import type { Asset } from "../../../types/das";
-import { Interface, OwnershipModel } from "../../../types/das";
+import { Interface, OwnershipModel } from "../../../types/enums";
 import { createHelius } from "../..";
 
 const mockRequest = jest.fn();
@@ -38,7 +38,7 @@ describe("getAsset Tests", () => {
 
   it("Successfully fetches an asset by its ID", async () => {
     const mockAsset: Asset = {
-      interface: Interface.ProgrammableNFT,
+      interface: Interface.PROGRAMMABLE_NFT,
       id: "kyber-crystal-1138",
       content: {
         $schema: "jedi-metadata",
@@ -57,7 +57,7 @@ describe("getAsset Tests", () => {
       ownership: {
         frozen: false,
         delegated: false,
-        ownership_model: OwnershipModel.Single,
+        ownership_model: OwnershipModel.SINGLE,
         owner: "lukeskywalker.sol",
       },
       mutable: true,
@@ -75,7 +75,7 @@ describe("getAsset Tests", () => {
 
   it("Successfully fetches an asset with options", async () => {
     const mockAsset: Asset = {
-      interface: Interface.FungibleToken,
+      interface: Interface.FUNGIBLE_TOKEN,
       id: "kyber-crystal-1138",
       content: {
         $schema: "jedi-metadata",
@@ -94,7 +94,7 @@ describe("getAsset Tests", () => {
       ownership: {
         frozen: false,
         delegated: false,
-        ownership_model: OwnershipModel.Single,
+        ownership_model: OwnershipModel.SINGLE,
         owner: "lukeskywalker.sol",
       },
       mutable: true,

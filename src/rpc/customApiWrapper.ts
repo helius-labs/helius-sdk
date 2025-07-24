@@ -1,7 +1,7 @@
 import type { RpcApi, RpcPlan } from "@solana/kit";
 import type { SolanaRpcApi } from "@solana/kit";
 import type { HeliusRpcApi } from "./heliusRpcApi";
-import type { Asset } from "../types/das";
+import type { Asset, GetAssetResponseList, GetAssetsByAuthorityRequest } from "../types/das";
 import { GetAssetBatchRequest, GetAssetBatchResponse, GetAssetProofBatchRequest, GetAssetProofBatchResponse, GetAssetProofRequest, GetAssetProofResponse, GetAssetRequest, GetPriorityFeeEstimateRequest, GetPriorityFeeEstimateResponse } from "../types";
 
 interface MethodConfig<P, R> {
@@ -30,6 +30,11 @@ const CUSTOM_METHODS: Record<string, MethodConfig<any, any>> = {
   getAssetProofBatch: {
     params: {} as GetAssetProofBatchRequest,
     response: {} as GetAssetProofBatchResponse,
+    arrayWrap: false,
+  },
+  getAssetsByAuthority: {
+    params: {} as GetAssetsByAuthorityRequest,
+    response: {} as GetAssetResponseList,
     arrayWrap: false,
   },
   getPriorityFeeEstimate: {

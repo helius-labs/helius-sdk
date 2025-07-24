@@ -4,9 +4,10 @@ import type { GetAssetProofApi } from "./methods/getAssetProof";
 import type { GetAssetApi } from "./methods/getAsset";
 import type { GetPriorityFeeEstimateApi } from "./methods/getPriorityFeeEstimate";
 import type { GetAssetBatchApi } from "./methods/getAssetBatch";
-import { GetAssetProofBatchApi } from "./methods/getAssetProofBatch";
+import type { GetAssetProofBatchApi } from "./methods/getAssetProofBatch";
+import type { GetAssetsByAuthorityApi } from "./methods/getAssetsByAuthority";
 
-export type HeliusCustomApi = GetAssetApi & GetPriorityFeeEstimateApi & GetAssetBatchApi & GetAssetProofApi & GetAssetProofBatchApi;
+export type HeliusCustomApi = GetAssetApi & GetPriorityFeeEstimateApi & GetAssetBatchApi & GetAssetProofApi & GetAssetProofBatchApi & GetAssetsByAuthorityApi;
 
 export type HeliusRpcApi = SolanaRpcApi & HeliusCustomApi;
 
