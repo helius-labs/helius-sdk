@@ -6,9 +6,9 @@ export interface CreateWebhookRequest {
     authHeader?: string;
     encoding?: string;
     txnStatus?: string;
-}
+};
 
-export interface CreateWebhookResponse {
+export interface Webhook {
     webhookID: string;
     wallet: string;
     webhookURL: string;
@@ -16,4 +16,4 @@ export interface CreateWebhookResponse {
     accountAddresses: string[];
     webhookType: string;
     authHeader: string;
-}
+};

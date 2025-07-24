@@ -3,8 +3,8 @@ import { wrapAutoSend } from "./wrapAutoSend";
 import { customApiWrapper } from './customApiWrapper';
 import type { ResolvedHeliusRpcApi } from './heliusRpcApi';
 import { createWebhook } from '../webhooks/createWebhook';
-import { CreateWebhookRequest, CreateWebhookResponse } from '../types/webhooks';
-
+import { CreateWebhookRequest, Webhook } from '../types/webhooks';
+import { getWebhook } from '../webhooks/getWebhook';
 
 interface HeliusRpcOptions {
     apiKey: string;
@@ -14,7 +14,8 @@ interface HeliusRpcOptions {
 
 interface HeliusClient extends ResolvedHeliusRpcApi {
     webhooks: {
-        create(params: CreateWebhookRequest): Promise<CreateWebhookResponse>;
+        create(params: CreateWebhookRequest): Promise<Webhook>;
+        get(webhookID: string): Promise<Webhook>;
     }
 }
 
@@ -35,6 +36,7 @@ export const createHelius = ({ apiKey, network = "mainnet", autoSend = true }: H
 
     const webhooks = {
         create: (params: any) => createWebhook(apiKey, params),
+        get: (webhookID: string) => getWebhook(apiKey, webhookID),
     };
 
     return { ...rpc, webhooks } as unknown as HeliusClient;

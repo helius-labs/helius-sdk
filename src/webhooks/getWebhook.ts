@@ -1,17 +1,16 @@
-import type { CreateWebhookRequest, Webhook } from "../types/webhooks";
+import { Webhook } from "../types/webhooks";
 
-export const createWebhook = async (
+export const getWebhook = async (
   apiKey: string,
-  params: CreateWebhookRequest
+  webhookID: string
 ): Promise<Webhook> => {
-  const url = `https://api.helius.xyz/v0/webhooks?api-key=${apiKey}`;
+  const url = `https://api.helius.xyz/v0/webhooks/${webhookID}?api-key=${apiKey}`;
 
   const response = await fetch(url, {
-    method: "POST",
+    method: "GET",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify(params),
   });
 
   if (!response.ok) {
@@ -20,7 +19,7 @@ export const createWebhook = async (
   }
 
   const data = await response.json();
-  
+
   if (data.error) {
     throw new Error(`Helius error: ${JSON.stringify(data.error)}`);
   }

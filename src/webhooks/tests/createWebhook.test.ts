@@ -1,4 +1,4 @@
-import type { CreateWebhookRequest, CreateWebhookResponse } from "../../types/webhooks";
+import type { CreateWebhookRequest, Webhook } from "../../types/webhooks";
 import { createHelius } from "../../rpc/index";
 
 const mockFetch = jest.fn();
@@ -6,11 +6,11 @@ const mockFetch = jest.fn();
 global.fetch = mockFetch as jest.Mock;
 
 describe("createWebhook Tests", () => {
-  let client: ReturnType<typeof createHelius>;
+  let rpc: ReturnType<typeof createHelius>;
 
   beforeEach(() => {
     jest.clearAllMocks();
-    client = createHelius({ apiKey: "test-key" });
+    rpc = createHelius({ apiKey: "test-key" });
   });
 
   it("Successfully creates a webhook", async () => {
@@ -24,7 +24,7 @@ describe("createWebhook Tests", () => {
       txnStatus: "all",
     };
 
-    const mockResponse: CreateWebhookResponse = {
+    const mockResponse: Webhook = {
       webhookID: "hogwarts-express-1138",
       wallet: "albusdumbledore.sol",
       webhookURL: "https://hogwarts.edu/owlery",
@@ -39,7 +39,7 @@ describe("createWebhook Tests", () => {
       json: async () => mockResponse,
     });
 
-    const result = await client.webhooks.create(mockParams);
+    const result = await rpc.webhooks.create(mockParams);
 
     expect(result).toEqual(mockResponse);
     expect(mockFetch).toHaveBeenCalledWith(
@@ -68,7 +68,7 @@ describe("createWebhook Tests", () => {
       text: async () => "Bad Request",
     });
 
-    await expect(client.webhooks.create(mockParams)).rejects.toThrow("HTTP error! status: 400 - Bad Request");
+    await expect(rpc.webhooks.create(mockParams)).rejects.toThrow("HTTP error! status: 400 - Bad Request");
   });
 
   it("Handles Helius API errors", async () => {
@@ -84,6 +84,6 @@ describe("createWebhook Tests", () => {
       json: async () => ({ error: { code: -32602, message: "Invalid params" } }),
     });
 
-    await expect(client.webhooks.create(mockParams)).rejects.toThrow("Helius error: {\"code\":-32602,\"message\":\"Invalid params\"}");
+    await expect(rpc.webhooks.create(mockParams)).rejects.toThrow("Helius error: {\"code\":-32602,\"message\":\"Invalid params\"}");
   });
 });
