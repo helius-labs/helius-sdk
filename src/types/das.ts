@@ -298,3 +298,14 @@ export type NativeBalanceInfo = {
   price_per_sol: number;
   total_price: number;
 };
+
+export type AssetsByCreatorRequest = {
+  creatorAddress: string;
+    page?: number;
+    onlyVerified?: boolean;
+    limit?: number;
+    before?: string;
+    after?: string;
+    options?: DisplayOptions;
+    sortBy?: AssetSortingRequest;
+}
