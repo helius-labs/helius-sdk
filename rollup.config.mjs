@@ -5,10 +5,10 @@ import commonjs from "@rollup/plugin-commonjs";
 
 export default {
     input: [
-        "src/rpc/index.ts", // Slim factory (core RPC, no helpers)
-        "src/rpc/full.ts", // Full factory (with all helpers)
-        ...globSync("src/rpc/methods/*.ts"), // Individual methods for cherry-picking
-        ...globSync("src/transactions/*.ts"), 
+        "src/rpc/index.ts",
+        ...globSync("src/rpc/methods/*.ts"),
+        ...globSync("src/transactions/*.ts"),
+        ...globSync("src/webhooks/*.ts"),
     ],
     output: {
         dir: "dist",

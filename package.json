@@ -10,6 +10,7 @@
     "./rpc/methods/*": "./dist/rpc/methods/*.js",
     "./transactions/*": "./dist/transactions/*.js",
     "./rpc/wrapAutoSend": "./dist/rpc/wrapAutoSend.js",
+    "./webhooks/*": "./dist/webhooks/*.js",
     "./package.json": "./package.json"
   },
   "sideEffects": false,

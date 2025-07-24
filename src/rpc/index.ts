@@ -1,13 +1,21 @@
 import { createDefaultRpcTransport, createRpc, createSolanaRpcApi, DEFAULT_RPC_CONFIG } from '@solana/kit';
 import { wrapAutoSend } from "./wrapAutoSend";
 import { customApiWrapper } from './customApiWrapper';
-import { ResolvedHeliusRpcApi } from './heliusRpcApi';
+import type { ResolvedHeliusRpcApi } from './heliusRpcApi';
+import { createWebhook } from '../webhooks/createWebhook';
+import { CreateWebhookRequest, CreateWebhookResponse } from '../types/webhooks';
 
 
 interface HeliusRpcOptions {
     apiKey: string;
     network?: "mainnet" | "devnet";
     autoSend?: boolean;
+}
+
+interface HeliusClient extends ResolvedHeliusRpcApi {
+    webhooks: {
+        create(params: CreateWebhookRequest): Promise<CreateWebhookResponse>;
+    }
 }
 
 export const createHelius = ({ apiKey, network = "mainnet", autoSend = true }: HeliusRpcOptions) => {
@@ -25,5 +33,9 @@ export const createHelius = ({ apiKey, network = "mainnet", autoSend = true }: H
         rpc = wrapAutoSend(rpc);
     }
 
-    return rpc as unknown as ResolvedHeliusRpcApi;
+    const webhooks = {
+        create: (params: any) => createWebhook(apiKey, params),
+    };
+
+    return { ...rpc, webhooks } as unknown as HeliusClient;
 };
