@@ -22,6 +22,7 @@ import { makeWebhookClientEager, type WebhookClient } from '../webhooks/client.e
 import { GetAssetsByOwnerFn, makeGetAssetsByOwner } from './methods/getAssetsByOwner';
 import { GetNftEditionsFn, makeGetNftEditions } from './methods/getNftEditions';
 import { GetSignaturesForAssetFn, makeGetSignaturesForAsset } from './methods/getSignaturesForAsset';
+import { GetTokenAccountsFn, makeGetTokenAccounts } from './methods/getTokenAccounts';
 
 export interface HeliusClientEager {
   raw: Rpc<SolanaRpcApi>;
@@ -36,6 +37,7 @@ export interface HeliusClientEager {
   getAssetsByOwner: GetAssetsByOwnerFn;
   getNftEditions: GetNftEditionsFn;
   getSignaturesForAsset: GetSignaturesForAssetFn;
+  getTokenAccounts: GetTokenAccountsFn;
   getPriorityFeeEstimate: GetPriorityFeeEstimateFn;
 
   webhooks: WebhookClient;
@@ -75,11 +77,13 @@ export const createHeliusEager = ({
     getAssetsByGroup: makeGetAssetsByGroup(call),
     getAssetsByOwner: makeGetAssetsByOwner(call),
     getNftEditions: makeGetNftEditions(call),
+    getTokenAccounts: makeGetTokenAccounts(call),
     getSignaturesForAsset: makeGetSignaturesForAsset(call),
 
-    // Other
+    // Priority Fee API
     getPriorityFeeEstimate: makeGetPriorityFeeEstimate(call),
 
+    // Webhooks
     webhooks: makeWebhookClientEager(apiKey),
   };
 };

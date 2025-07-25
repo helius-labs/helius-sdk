@@ -15,7 +15,7 @@ import type {
   Webhook,
 } from "../types/webhooks";
 import { defineLazyMethod, defineLazyNamespace } from "./lazy";
-
+import { makeRpcCaller } from "./caller";
 import type { GetAssetFn } from "./methods/getAsset";
 import type { GetAssetBatchFn } from "./methods/getAssetBatch";
 import type { GetAssetProofFn } from "./methods/getAssetProof";
@@ -25,9 +25,9 @@ import type { GetAssetsByCreatorFn } from "./methods/getAssetsByCreator";
 import type { GetAssetsByGroupFn } from "./methods/getAssetsByGroup";
 import type { GetPriorityFeeEstimateFn } from "./methods/getPriorityFeeEstimate";
 import type { GetAssetsByOwnerFn } from "./methods/getAssetsByOwner";
-import { makeRpcCaller } from "./caller";
-import { GetNftEditionsFn } from "./methods/getNftEditions";
-import { GetSignaturesForAssetFn } from "./methods/getSignaturesForAsset";
+import type { GetNftEditionsFn } from "./methods/getNftEditions";
+import type { GetSignaturesForAssetFn } from "./methods/getSignaturesForAsset";
+import type { GetTokenAccountsFn } from "./methods/getTokenAccounts";
 
 interface HeliusRpcOptions {
   apiKey: string;
@@ -49,6 +49,7 @@ export interface HeliusClient {
   getAssetsByOwner: GetAssetsByOwnerFn;
   getSignaturesForAsset: GetSignaturesForAssetFn;
   getNftEditions: GetNftEditionsFn;
+  getTokenAccounts: GetTokenAccountsFn;
 
   // Priority Fee API
   getPriorityFeeEstimate: GetPriorityFeeEstimateFn;
@@ -180,6 +181,17 @@ export const createHelius = ({
         "./methods/getSignaturesForAsset.js"
       );
       return makeGetSignaturesForAsset(call);
+    }
+  );
+
+  defineLazyMethod<HeliusClient, GetTokenAccountsFn>(
+    client,
+    "getTokenAccounts",
+    async () => {
+      const { makeGetTokenAccounts } = await import(
+        "./methods/getTokenAccounts.js"
+      );
+      return makeGetTokenAccounts(call);
     }
   );
 

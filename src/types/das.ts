@@ -344,13 +344,13 @@ export interface Editions {
   mint?: string;
   edition_address?: string;
   edition?: number;
-};
+}
 
 export interface GetNftEditionsRequest {
   mint?: string;
   page?: number;
   limit?: number;
-};
+}
 
 export interface GetNftEditionsResponse {
   total?: number;
@@ -361,21 +361,53 @@ export interface GetNftEditionsResponse {
   max_supply?: number;
   editions?: Editions[];
   burnt?: any;
-};
+}
 
 export interface GetSignaturesForAssetRequest {
-    id: string;
-    page?: number;
-    limit?: number;
-    before?: string;
-    after?: string;
-  };
+  id: string;
+  page?: number;
+  limit?: number;
+  before?: string;
+  after?: string;
+}
 
-   export interface GetSignaturesForAssetResponse {
-    total: number;
-    limit: number;
-    page?: number;
-    before?: string;
-    after?: string;
-    items: Array<Array<string>>;
-  }
+export interface GetSignaturesForAssetResponse {
+  total: number;
+  limit: number;
+  page?: number;
+  before?: string;
+  after?: string;
+  items: Array<Array<string>>;
+}
+
+export interface TokenAccounts {
+  address?: string;
+  mint?: string;
+  owner?: string;
+  amount?: number;
+  delegated_amount?: number;
+  frozen?: boolean;
+  // TODO: Add proper typing for token extensions instead of using `any`
+  token_extensions: any;
+};
+
+export interface GetTokenAccountsRequest {
+  mint?: string;
+  owner?: string;
+  page?: number;
+  limit?: number;
+  cursor?: string;
+  before?: string;
+  after?: string;
+  options?: {
+    showZeroBalance?: boolean;
+  };
+};
+
+export interface GetTokenAccountsResponse {
+  total?: number;
+  limit?: number;
+  page?: number;
+  cursor?: string;
+  token_accounts?: TokenAccounts[];
+};
