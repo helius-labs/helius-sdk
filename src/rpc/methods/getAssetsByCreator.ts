@@ -1,6 +1,17 @@
-import { PendingRpcRequest } from "@solana/kit";
-import { AssetsByCreatorRequest, GetAssetResponseList } from "../../types/das";
+import type {
+  AssetsByCreatorRequest,
+  GetAssetResponseList,
+} from "../../types/das";
+import type { RpcCaller } from "../caller";
 
-export type GetAssetsByCreatorApi = {
-    getAssetsByCreator(params: AssetsByCreatorRequest): PendingRpcRequest<GetAssetResponseList>;
-};  
+export type GetAssetsByCreatorFn = (
+  p: AssetsByCreatorRequest
+) => Promise<GetAssetResponseList>;
+
+export const makeGetAssetsByCreator =
+  (call: RpcCaller): GetAssetsByCreatorFn =>
+  (params) =>
+    call<AssetsByCreatorRequest, GetAssetResponseList>(
+      "getAssetsByCreator",
+      params
+    );

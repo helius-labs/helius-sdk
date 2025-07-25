@@ -1,30 +1,13 @@
 import type { GetAssetProofResponse } from "../../../types";
-import { createHelius } from "../..";
+import { createHeliusEager as createHelius } from "../../createHelius.eager";
 
-const mockRequest = jest.fn();
+const transportMock = jest.fn();
 
 jest.mock("@solana/kit", () => ({
   createSolanaRpcApi: jest.fn().mockReturnValue({}),
   DEFAULT_RPC_CONFIG: {},
-  createDefaultRpcTransport: jest.fn().mockReturnValue(jest.fn()),
-  createRpc: jest.fn().mockImplementation(() => {
-    const request = mockRequest;
-
-    // Helper that mirrors the real one for getAssetProof
-    const getAssetProof = (idOrParams: any) => {
-      const params =
-        typeof idOrParams === "string" ? { id: idOrParams } : idOrParams;
-      return request("getAssetProof", params).then((resp: any) => {
-        if (resp && resp.error) {
-          // Mimic @solana/kit PendingRpcRequest.send()
-          throw new Error(resp.error.message ?? "RPC error");
-        }
-        return resp.result ?? resp;
-      });
-    };
-
-    return { request, getAssetProof };
-  }),
+  createDefaultRpcTransport: jest.fn(() => transportMock),
+  createRpc: jest.fn().mockReturnValue({}),
 }));
 
 describe("getAssetProof Tests", () => {
@@ -32,10 +15,11 @@ describe("getAssetProof Tests", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    transportMock.mockReset();
     rpc = createHelius({ apiKey: "test-key" });
   });
 
-   it("Successfully fetches an asset proof by its ID", async () => {
+  it("Successfully fetches an asset proof by its ID", async () => {
     const mockProof: GetAssetProofResponse = {
       root: "hogwarts-sorting-hat-root",
       proof: ["proof1", "proof2", "proof3"],
@@ -45,22 +29,35 @@ describe("getAssetProof Tests", () => {
       burnt: false,
     };
 
-    mockRequest.mockResolvedValue({ result: mockProof });
-    const result = await rpc.getAssetProof({ id: "elder-wand-artifact" });
+    transportMock.mockResolvedValue({
+      jsonrpc: "2.0",
+      id: "1",
+      result: mockProof,
+    });
+
+    const params = { id: "elder-wand-artifact" };
+    const result = await rpc.getAssetProof(params);
 
     expect(result).toEqual(mockProof);
-    expect(mockRequest).toHaveBeenCalledWith("getAssetProof", {
-      id: "elder-wand-artifact",
-    });
+    expect(transportMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        payload: expect.objectContaining({
+          method: "getAssetProof",
+          params,
+        }),
+      })
+    );
   });
 
   it("Handles RPC errors", async () => {
-    mockRequest.mockResolvedValue({
+    transportMock.mockResolvedValue({
       jsonrpc: "2.0",
       id: "1",
       error: { code: -32602, message: "Invalid params" },
     });
 
-    await expect(rpc.getAssetProof({ id: "invalid-id" })).rejects.toThrow(/Invalid params/);
+    await expect(rpc.getAssetProof({ id: "invalid-id" })).rejects.toThrow(
+      /Invalid params/
+    );
   });
 });

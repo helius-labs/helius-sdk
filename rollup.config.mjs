@@ -6,6 +6,7 @@ import commonjs from "@rollup/plugin-commonjs";
 export default {
     input: [
         "src/rpc/index.ts",
+        "src/rpc/createHelius.eager.ts",
         ...globSync("src/rpc/methods/*.ts"),
         ...globSync("src/transactions/*.ts"),
         ...globSync("src/webhooks/*.ts"),

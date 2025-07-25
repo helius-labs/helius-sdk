@@ -1,6 +1,17 @@
-import { PendingRpcRequest } from "@solana/kit";
-import { AssetsByGroupRequest, GetAssetResponseList } from "../../types/das";
+import type {
+  AssetsByGroupRequest,
+  GetAssetResponseList,
+} from "../../types/das";
+import type { RpcCaller } from "../caller";
 
-export type GetAssetsByGroupApi = {
-    getAssetsByGroup(params: AssetsByGroupRequest): PendingRpcRequest<GetAssetResponseList>;
-};  
+export type GetAssetsByGroupFn = (
+  p: AssetsByGroupRequest
+) => Promise<GetAssetResponseList>;
+
+export const makeGetAssetsByGroup =
+  (call: RpcCaller): GetAssetsByGroupFn =>
+  (params) =>
+    call<AssetsByGroupRequest, GetAssetResponseList>(
+      "getAssetsByGroup",
+      params
+    );

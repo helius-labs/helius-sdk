@@ -7,6 +7,7 @@
   "types": "./dist/src/index.d.ts",
   "exports": {
     "./rpc": "./dist/rpc/index.js",
+    "./rpc/eager": "./dist/rpc/createHelius.eager.js",
     "./rpc/methods/*": "./dist/rpc/methods/*.js",
     "./transactions/*": "./dist/transactions/*.js",
     "./rpc/wrapAutoSend": "./dist/rpc/wrapAutoSend.js",

@@ -1,6 +1,14 @@
-import { PendingRpcRequest } from "@solana/kit";
-import { GetAssetProofRequest, GetAssetProofResponse } from "../../types";
+import type {
+  GetAssetProofRequest,
+  GetAssetProofResponse,
+} from "../../types";
+import type { RpcCaller } from "../caller";
 
-export type GetAssetProofApi = {
-    getAssetProof(params: GetAssetProofRequest): PendingRpcRequest<GetAssetProofResponse>;
-};  
+export type GetAssetProofFn = (
+  p: GetAssetProofRequest
+) => Promise<GetAssetProofResponse>;
+
+export const makeGetAssetProof =
+  (call: RpcCaller): GetAssetProofFn =>
+  (params) =>
+    call<GetAssetProofRequest, GetAssetProofResponse>("getAssetProof", params);

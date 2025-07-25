@@ -1,28 +1,14 @@
 import type { Asset } from "../../../types/das";
 import { Interface, OwnershipModel } from "../../../types/enums";
-import { createHelius } from "../..";
+import { createHeliusEager as createHelius } from "../../createHelius.eager";
 
-const mockRequest = jest.fn();
+const transportMock = jest.fn();
 
 jest.mock("@solana/kit", () => ({
   createSolanaRpcApi: jest.fn().mockReturnValue({}),
   DEFAULT_RPC_CONFIG: {},
-  createDefaultRpcTransport: jest.fn().mockReturnValue(jest.fn()),
-  createRpc: jest.fn().mockImplementation(() => {
-    const request = mockRequest;
-
-    // Helper that mirrors the real one for getAssetBatch
-    const getAssetBatch = (params: any) => {
-      return request("getAssetBatch", params).then((resp: any) => {
-        if (resp && resp.error) {
-          throw new Error(resp.error.message ?? "RPC error");
-        }
-        return resp.result ?? resp;
-      });
-    };
-
-    return { request, getAssetBatch };
-  }),
+  createDefaultRpcTransport: jest.fn(() => transportMock),
+  createRpc: jest.fn().mockReturnValue({}), // we don't use PendingRpcRequest anymore
 }));
 
 describe("getAssetBatch Tests", () => {
@@ -30,6 +16,7 @@ describe("getAssetBatch Tests", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    transportMock.mockReset();
     rpc = createHelius({ apiKey: "test-key" });
   });
 
@@ -48,9 +35,7 @@ describe("getAssetBatch Tests", () => {
             symbol: "SABER",
             token_standard: "nonFungible",
           },
-          links: {
-            image: "https://starwars.com/lightsaber.png",
-          },
+          links: { image: "https://starwars.com/lightsaber.png" },
         },
         ownership: {
           frozen: false,
@@ -74,9 +59,7 @@ describe("getAssetBatch Tests", () => {
             symbol: "DSP",
             token_standard: "Fungible",
           },
-          links: {
-            image: "https://starwars.com/death-star-plans.png",
-          },
+          links: { image: "https://starwars.com/death-star-plans.png" },
         },
         ownership: {
           frozen: false,
@@ -94,11 +77,24 @@ describe("getAssetBatch Tests", () => {
       },
     ];
 
-    mockRequest.mockResolvedValue({ result: mockAssets });
-    const result = await rpc.getAssetBatch({ ids: ["kyber-crystal-1138", "death-star-plans-66"] });
+    transportMock.mockResolvedValue({
+      jsonrpc: "2.0",
+      id: "1",
+      result: mockAssets,
+    });
+
+    const params = { ids: ["kyber-crystal-1138", "death-star-plans-66"] };
+    const result = await rpc.getAssetBatch(params);
 
     expect(result).toEqual(mockAssets);
-    expect(mockRequest).toHaveBeenCalledWith("getAssetBatch", { ids: ["kyber-crystal-1138", "death-star-plans-66"] });
+    expect(transportMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        payload: expect.objectContaining({
+          method: "getAssetBatch",
+          params,
+        }),
+      })
+    );
   });
 
   it("Successfully fetches assets with options", async () => {
@@ -155,33 +151,51 @@ describe("getAssetBatch Tests", () => {
         mutable: true,
         burnt: false,
         token_info: {
-          supply: 1000000000,
+          supply: 1_000_000_000,
           decimals: 9,
           token_program: "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
         },
       },
     ];
 
-    mockRequest.mockResolvedValue({ result: mockAssets });
-    const result = await rpc.getAssetBatch({
-      ids: ["kyber-crystal-1138", "death-star-plans-66"],
-      options: { showFungible: true, showUnverifiedCollections: true, showCollectionMetadata: true, showInscription: true },
+    transportMock.mockResolvedValue({
+      jsonrpc: "2.0",
+      id: "1",
+      result: mockAssets,
     });
 
-    expect(result).toEqual(mockAssets);
-    expect(mockRequest).toHaveBeenCalledWith("getAssetBatch", {
+    const params = {
       ids: ["kyber-crystal-1138", "death-star-plans-66"],
-      options: { showFungible: true, showUnverifiedCollections: true, showCollectionMetadata: true, showInscription: true },
-    });
+      options: {
+        showFungible: true,
+        showUnverifiedCollections: true,
+        showCollectionMetadata: true,
+        showInscription: true,
+      },
+    };
+
+    const result = await rpc.getAssetBatch(params);
+
+    expect(result).toEqual(mockAssets);
+    expect(transportMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        payload: expect.objectContaining({
+          method: "getAssetBatch",
+          params: params,
+        }),
+      })
+    );
   });
 
   it("Handles RPC errors", async () => {
-    mockRequest.mockResolvedValue({
+    transportMock.mockResolvedValue({
       jsonrpc: "2.0",
       id: "1",
       error: { code: -32602, message: "Invalid params" },
     });
 
-    await expect(rpc.getAssetBatch({ ids: ["invalid-id"] })).rejects.toThrow(/Invalid params/);
+    await expect(rpc.getAssetBatch({ ids: ["invalid-id"] })).rejects.toThrow(
+      /Invalid params/
+    );
   });
 });

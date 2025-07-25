@@ -1,6 +1,9 @@
-import { PendingRpcRequest } from "@solana/kit";
-import { GetAssetRequest, GetAssetResponse } from "../../types";
+import type { GetAssetRequest, GetAssetResponse } from "../../types";
+import type { RpcCaller } from "../caller";
 
-export type GetAssetApi = {
-    getAsset(params: GetAssetRequest): PendingRpcRequest<GetAssetResponse>;
-};  
+export type GetAssetFn = (p: GetAssetRequest) => Promise<GetAssetResponse>;
+
+export const makeGetAsset =
+  (call: RpcCaller): GetAssetFn =>
+  (params) =>
+    call<GetAssetRequest, GetAssetResponse>("getAsset", params);

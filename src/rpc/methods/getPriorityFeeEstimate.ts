@@ -1,6 +1,18 @@
-import { PendingRpcRequest } from "@solana/kit";
-import { GetPriorityFeeEstimateRequest, GetPriorityFeeEstimateResponse } from "../../types";
+import type {
+  GetPriorityFeeEstimateRequest,
+  GetPriorityFeeEstimateResponse,
+} from "../../types";
+import type { RpcCaller } from "../caller";
 
-export type GetPriorityFeeEstimateApi = {
-  getPriorityFeeEstimate(params: GetPriorityFeeEstimateRequest): PendingRpcRequest<GetPriorityFeeEstimateResponse>;
-};
+export type GetPriorityFeeEstimateFn = (
+  p: GetPriorityFeeEstimateRequest
+) => Promise<GetPriorityFeeEstimateResponse>;
+
+export const makeGetPriorityFeeEstimate =
+  (call: RpcCaller): GetPriorityFeeEstimateFn =>
+  (params) =>
+    call<[GetPriorityFeeEstimateRequest], GetPriorityFeeEstimateResponse>(
+      "getPriorityFeeEstimate",
+      // Need to wrap the params in an array
+      [params]
+    );

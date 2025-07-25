@@ -1,6 +1,11 @@
-import { PendingRpcRequest } from "@solana/kit";
-import { GetAssetBatchRequest, GetAssetBatchResponse } from "../../types";
+import type { GetAssetBatchRequest, GetAssetBatchResponse } from "../../types";
+import type { RpcCaller } from "../caller";
 
-export type GetAssetBatchApi = {
-    getAssetBatch(params: GetAssetBatchRequest): PendingRpcRequest<GetAssetBatchResponse>;
-};  
+export type GetAssetBatchFn = (
+  p: GetAssetBatchRequest
+) => Promise<GetAssetBatchResponse>;
+
+export const makeGetAssetBatch =
+  (call: RpcCaller): GetAssetBatchFn =>
+  (params) =>
+    call<GetAssetBatchRequest, GetAssetBatchResponse>("getAssetBatch", params);

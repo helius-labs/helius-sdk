@@ -1,31 +1,14 @@
 import type { Asset } from "../../../types/das";
 import { Interface, OwnershipModel } from "../../../types/enums";
-import { createHelius } from "../..";
+import { createHeliusEager as createHelius } from "../../createHelius.eager";
 
-const mockRequest = jest.fn();
+const transportMock = jest.fn();
 
 jest.mock("@solana/kit", () => ({
   createSolanaRpcApi: jest.fn().mockReturnValue({}),
   DEFAULT_RPC_CONFIG: {},
-  createDefaultRpcTransport: jest.fn().mockReturnValue(jest.fn()),
-  createRpc: jest.fn().mockImplementation(() => {
-    const request = mockRequest;
-
-    // Helper that mirrors the real one
-    const getAsset = (idOrParams: any) => {
-      const params =
-        typeof idOrParams === "string" ? { id: idOrParams } : idOrParams;
-      return request("getAsset", params).then((resp: any) => {
-        if (resp && resp.error) {
-          // Mimic @solana/kit PendingRpcRequest.send()
-          throw new Error(resp.error.message ?? "RPC error");
-        }
-        return resp.result ?? resp;
-      });
-    };
-
-    return { request, getAsset };
-  }),
+  createDefaultRpcTransport: jest.fn(() => transportMock),
+  createRpc: jest.fn().mockReturnValue({}),
 }));
 
 describe("getAsset Tests", () => {
@@ -33,6 +16,7 @@ describe("getAsset Tests", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    transportMock.mockReset();
     rpc = createHelius({ apiKey: "test-key" });
   });
 
@@ -64,13 +48,24 @@ describe("getAsset Tests", () => {
       burnt: false,
     };
 
-    mockRequest.mockResolvedValue({ result: mockAsset });
-    const result = await rpc.getAsset({ id: "kyber-crystal-1138" });
+    transportMock.mockResolvedValue({
+      jsonrpc: "2.0",
+      id: "1",
+      result: mockAsset,
+    });
+
+    const params = { id: "kyber-crystal-1138" };
+    const result = await rpc.getAsset(params);
 
     expect(result).toEqual(mockAsset);
-    expect(mockRequest).toHaveBeenCalledWith("getAsset", {
-      id: "kyber-crystal-1138",
-    });
+    expect(transportMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        payload: expect.objectContaining({
+          method: "getAsset",
+          params,
+        }),
+      })
+    );
   });
 
   it("Successfully fetches an asset with options", async () => {
@@ -82,7 +77,8 @@ describe("getAsset Tests", () => {
         json_uri: "https://starwars.com/kyber.json",
         metadata: {
           name: "Kyber Crystal",
-          description: "Power source for lightsabers, a rare Force-attuned crystal",
+          description:
+            "Power source for lightsabers, a rare Force-attuned crystal",
           attributes: [{ trait_type: "Rarity", value: "Legendary" }],
           symbol: "KYBER",
           token_standard: "Fungible",
@@ -100,29 +96,45 @@ describe("getAsset Tests", () => {
       mutable: true,
       burnt: false,
       token_info: {
-        supply: 1000000000,
+        supply: 1_000_000_000,
         decimals: 9,
         token_program: "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
       },
     };
 
-    mockRequest.mockResolvedValue({ result: mockAsset });
-    const result = await rpc.getAsset({ id: "kyber-crystal-1138", options: { showFungible: true } });
+    transportMock.mockResolvedValue({
+      jsonrpc: "2.0",
+      id: "1",
+      result: mockAsset,
+    });
 
-    expect(result).toEqual(mockAsset);
-    expect(mockRequest).toHaveBeenCalledWith("getAsset", {
+    const params = {
       id: "kyber-crystal-1138",
       options: { showFungible: true },
-    });
+    } as const;
+
+    const result = await rpc.getAsset(params);
+
+    expect(result).toEqual(mockAsset);
+    expect(transportMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        payload: expect.objectContaining({
+          method: "getAsset",
+          params,
+        }),
+      })
+    );
   });
 
   it("Handles RPC errors", async () => {
-    mockRequest.mockResolvedValue({
+    transportMock.mockResolvedValue({
       jsonrpc: "2.0",
       id: "1",
       error: { code: -32602, message: "Invalid params" },
     });
 
-    await expect(rpc.getAsset({ id: "invalid-id" })).rejects.toThrow(/Invalid params/);
+    await expect(rpc.getAsset({ id: "invalid-id" })).rejects.toThrow(
+      /Invalid params/
+    );
   });
 });
