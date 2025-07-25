@@ -6,6 +6,9 @@
   "main": "./dist/src/index.js",
   "types": "./dist/src/index.d.ts",
   "exports": {
+    ".": {
+      "import": "./dist/rpc/index.js"
+    },
     "./rpc": "./dist/rpc/index.js",
     "./rpc/eager": "./dist/rpc/createHelius.eager.js",
     "./rpc/methods/*": "./dist/rpc/methods/*.js",
