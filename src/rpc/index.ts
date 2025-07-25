@@ -2,11 +2,13 @@ import { createDefaultRpcTransport, createRpc, createSolanaRpcApi, DEFAULT_RPC_C
 import { wrapAutoSend } from "./wrapAutoSend";
 import { customApiWrapper } from './customApiWrapper';
 import type { ResolvedHeliusRpcApi } from './heliusRpcApi';
+
 import { createWebhook } from '../webhooks/createWebhook';
 import { CreateWebhookRequest, UpdateWebhookRequest, Webhook } from '../types/webhooks';
 import { getWebhook } from '../webhooks/getWebhook';
 import { getAllWebhooks } from '../webhooks/getAllWebhooks';
 import { updateWebhook } from '../webhooks/updateWebhook';
+import { deleteWebhook } from '../webhooks/deleteWebhook';
 
 interface HeliusRpcOptions {
     apiKey: string;
@@ -20,6 +22,7 @@ interface HeliusClient extends ResolvedHeliusRpcApi {
         get(webhookID: string): Promise<Webhook>;
         getAll(): Promise<Webhook[]>;
         update(webhookID: string, params: UpdateWebhookRequest): Promise<Webhook>;
+        delete(webhookID: string): Promise<boolean>;
     };
 };
 
@@ -43,6 +46,7 @@ export const createHelius = ({ apiKey, network = "mainnet", autoSend = true }: H
         get: (webhookID: string) => getWebhook(apiKey, webhookID),
         getAll: () => getAllWebhooks(apiKey),
         update: (webhookID: string, params: UpdateWebhookRequest) => updateWebhook(apiKey, webhookID, params),
+        delete: (webhookID: string) => deleteWebhook(apiKey, webhookID),
     };
 
     return { ...rpc, webhooks } as unknown as HeliusClient;
