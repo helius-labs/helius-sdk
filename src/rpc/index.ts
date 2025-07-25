@@ -28,6 +28,7 @@ import type { GetAssetsByOwnerFn } from "./methods/getAssetsByOwner";
 import type { GetNftEditionsFn } from "./methods/getNftEditions";
 import type { GetSignaturesForAssetFn } from "./methods/getSignaturesForAsset";
 import type { GetTokenAccountsFn } from "./methods/getTokenAccounts";
+import { SearchAssetsFn } from "./methods/searchAssets";
 
 interface HeliusRpcOptions {
   apiKey: string;
@@ -50,6 +51,7 @@ export interface HeliusClient {
   getSignaturesForAsset: GetSignaturesForAssetFn;
   getNftEditions: GetNftEditionsFn;
   getTokenAccounts: GetTokenAccountsFn;
+  searchAssets: SearchAssetsFn;
 
   // Priority Fee API
   getPriorityFeeEstimate: GetPriorityFeeEstimateFn;
@@ -192,6 +194,15 @@ export const createHelius = ({
         "./methods/getTokenAccounts.js"
       );
       return makeGetTokenAccounts(call);
+    }
+  );
+
+  defineLazyMethod<HeliusClient, SearchAssetsFn>(
+    client,
+    "searchAssets",
+    async () => {
+      const { makeSearchAssets } = await import("./methods/searchAssets.js");
+      return makeSearchAssets(call);
     }
   );
 

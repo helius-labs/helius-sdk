@@ -411,3 +411,29 @@ export interface GetTokenAccountsResponse {
   cursor?: string;
   token_accounts?: TokenAccounts[];
 };
+
+ export interface SearchAssetsRequest {
+    page?: number;
+    limit?: number;
+    cursor?: string;
+    before?: string;
+    after?: string;
+    creatorAddress?: string;
+    ownerAddress?: string;
+    jsonUri?: string;
+    grouping?: string[];
+    burnt?: boolean;
+    sortBy?: AssetSortingRequest;
+    frozen?: boolean;
+    supplyMint?: string;
+    supply?: number;
+    interface?: string;
+    delegate?: string;
+    ownerType?: OwnershipModel;
+    royaltyAmount?: number;
+    royaltyTarget?: string;
+    royaltyTargetType?: RoyaltyModel;
+    compressible?: boolean;
+    compressed?: boolean;
+    tokenType?: TokenType;
+  };
