@@ -31,7 +31,7 @@ export default {
             rootDir: "src",
         })
     ],
-    external: ["@solana/kit"],
+    external: ["@solana/kit", "@solana-program/compute-budget"],
     treeshake: {
         moduleSideEffects: false
     }

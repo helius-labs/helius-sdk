@@ -37,6 +37,7 @@
   "author": "Helius",
   "license": "ISC",
   "dependencies": {
+    "@solana-program/compute-budget": "^0.8.0",
     "@solana/kit": "^2.3.0"
   },
   "devDependencies": {

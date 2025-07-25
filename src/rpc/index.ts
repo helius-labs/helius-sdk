@@ -30,6 +30,8 @@ import type { GetSignaturesForAssetFn } from "./methods/getSignaturesForAsset";
 import type { GetTokenAccountsFn } from "./methods/getTokenAccounts";
 import type { SearchAssetsFn } from "./methods/searchAssets";
 import type { EnhancedTxClientLazy } from "../enhanced";
+import { TxHelpersLazy } from "../transactions";
+import { ResolvedHeliusRpcApi } from "./heliusRpcApi";
 
 interface HeliusRpcOptions {
   apiKey: string;
@@ -68,21 +70,24 @@ export interface HeliusClient {
 
   // Enhanced Transactions
   enhanced: EnhancedTxClientLazy;
+
+  // Transaction Helpers
+  tx: TxHelpersLazy;
 }
 
 export const createHelius = ({
   apiKey,
   network = "mainnet",
   autoSend = true,
-}: HeliusRpcOptions): HeliusClient => {
+}: HeliusRpcOptions): HeliusClient & ResolvedHeliusRpcApi => {
   const baseUrl = `https://${network}.helius-rpc.com/`;
   const url = `${baseUrl}?api-key=${apiKey}`;
 
   const solanaApi = createSolanaRpcApi(DEFAULT_RPC_CONFIG);
   const transport = createDefaultRpcTransport({ url });
 
-  let raw = createRpc({ api: solanaApi, transport }) as Rpc<SolanaRpcApi>;
-  if (autoSend) raw = wrapAutoSend(raw);
+  const baseRpc = createRpc({ api: solanaApi, transport }) as Rpc<SolanaRpcApi>;
+  const raw: Rpc<SolanaRpcApi> = autoSend ? wrapAutoSend(baseRpc) : baseRpc;
 
   // Lightweight, no-PendingRpcRequest caller for custom DAS/webhook methods
   const call = makeRpcCaller(transport);
@@ -241,5 +246,23 @@ export const createHelius = ({
     }
   );
 
-  return client as HeliusClient;
+  defineLazyNamespace<HeliusClient, TxHelpersLazy>(client, "tx", async () => {
+    const { makeTxHelpersLazy } = await import("../transactions");
+    return makeTxHelpersLazy(baseRpc);
+  });
+
+  // So we can send standard RPC calls
+  const merged = new Proxy(client as any, {
+    get(target, prop, receiver) {
+      // Prefer helper / DAS / tx / webhooks / enhanced
+      if (prop in target) return Reflect.get(target, prop, receiver);
+      // Fallback to vanilla Solana RPC (already wrapped by wrapAutoSend)
+      return Reflect.get(raw, prop, receiver);
+    },
+    has(target, prop) {
+      return prop in target || prop in raw;
+    },
+  });
+
+  return merged as HeliusClient & ResolvedHeliusRpcApi;
 };
