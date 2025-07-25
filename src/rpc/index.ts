@@ -27,6 +27,7 @@ import type { GetPriorityFeeEstimateFn } from "./methods/getPriorityFeeEstimate"
 import type { GetAssetsByOwnerFn } from "./methods/getAssetsByOwner";
 import { makeRpcCaller } from "./caller";
 import { GetNftEditionsFn } from "./methods/getNftEditions";
+import { GetSignaturesForAssetFn } from "./methods/getSignaturesForAsset";
 
 interface HeliusRpcOptions {
   apiKey: string;
@@ -37,6 +38,7 @@ interface HeliusRpcOptions {
 export interface HeliusClient {
   raw: Rpc<SolanaRpcApi>;
 
+  // DAS
   getAsset: GetAssetFn;
   getAssetBatch: GetAssetBatchFn;
   getAssetProof: GetAssetProofFn;
@@ -45,9 +47,13 @@ export interface HeliusClient {
   getAssetsByCreator: GetAssetsByCreatorFn;
   getAssetsByGroup: GetAssetsByGroupFn;
   getAssetsByOwner: GetAssetsByOwnerFn;
+  getSignaturesForAsset: GetSignaturesForAssetFn;
   getNftEditions: GetNftEditionsFn;
+
+  // Priority Fee API
   getPriorityFeeEstimate: GetPriorityFeeEstimateFn;
 
+  // Webhooks
   webhooks: {
     create(params: CreateWebhookRequest): Promise<Webhook>;
     get(webhookID: string): Promise<Webhook>;
@@ -163,6 +169,17 @@ export const createHelius = ({
         "./methods/getNftEditions.js"
       );
       return makeGetNftEditions(call);
+    }
+  );
+
+  defineLazyMethod<HeliusClient, GetSignaturesForAssetFn>(
+    client,
+    "getSignaturesForAsset",
+    async () => {
+      const { makeGetSignaturesForAsset } = await import(
+        "./methods/getSignaturesForAsset.js"
+      );
+      return makeGetSignaturesForAsset(call);
     }
   );
 

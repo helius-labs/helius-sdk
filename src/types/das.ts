@@ -362,3 +362,20 @@ export interface GetNftEditionsResponse {
   editions?: Editions[];
   burnt?: any;
 };
+
+export interface GetSignaturesForAssetRequest {
+    id: string;
+    page?: number;
+    limit?: number;
+    before?: string;
+    after?: string;
+  };
+
+   export interface GetSignaturesForAssetResponse {
+    total: number;
+    limit: number;
+    page?: number;
+    before?: string;
+    after?: string;
+    items: Array<Array<string>>;
+  }
