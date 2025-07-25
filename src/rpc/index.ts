@@ -28,7 +28,8 @@ import type { GetAssetsByOwnerFn } from "./methods/getAssetsByOwner";
 import type { GetNftEditionsFn } from "./methods/getNftEditions";
 import type { GetSignaturesForAssetFn } from "./methods/getSignaturesForAsset";
 import type { GetTokenAccountsFn } from "./methods/getTokenAccounts";
-import { SearchAssetsFn } from "./methods/searchAssets";
+import type { SearchAssetsFn } from "./methods/searchAssets";
+import type { EnhancedTxClientLazy } from "../enhanced";
 
 interface HeliusRpcOptions {
   apiKey: string;
@@ -64,6 +65,9 @@ export interface HeliusClient {
     update(webhookID: string, params: UpdateWebhookRequest): Promise<Webhook>;
     delete(webhookID: string): Promise<boolean>;
   } & WebhookClient;
+
+  // Enhanced Transactions
+  enhanced: EnhancedTxClientLazy;
 }
 
 export const createHelius = ({
@@ -225,6 +229,15 @@ export const createHelius = ({
       // are themselves lazily imported inside makeWebhookClient
       const { makeWebhookClient } = await import("../webhooks/client.js");
       return makeWebhookClient(apiKey);
+    }
+  );
+
+  defineLazyNamespace<HeliusClient, EnhancedTxClientLazy>(
+    client,
+    "enhanced",
+    async () => {
+      const { makeEnhancedTxClientLazy } = await import("../enhanced");
+      return makeEnhancedTxClientLazy(apiKey);
     }
   );
 

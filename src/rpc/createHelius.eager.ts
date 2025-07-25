@@ -24,6 +24,7 @@ import { GetNftEditionsFn, makeGetNftEditions } from './methods/getNftEditions';
 import { GetSignaturesForAssetFn, makeGetSignaturesForAsset } from './methods/getSignaturesForAsset';
 import { GetTokenAccountsFn, makeGetTokenAccounts } from './methods/getTokenAccounts';
 import { makeSearchAssets, SearchAssetsFn } from './methods/searchAssets';
+import { EnhancedTxClient, makeEnhancedTxClientEager } from '../enhanced/client.eager';
 
 export interface HeliusClientEager {
   raw: Rpc<SolanaRpcApi>;
@@ -44,6 +45,8 @@ export interface HeliusClientEager {
   getPriorityFeeEstimate: GetPriorityFeeEstimateFn;
 
   webhooks: WebhookClient;
+
+  enhanced: EnhancedTxClient;
 }
 
 export type HeliusRpcOptions = {
@@ -89,5 +92,8 @@ export const createHeliusEager = ({
 
     // Webhooks
     webhooks: makeWebhookClientEager(apiKey),
+
+    // Enhanced Transactions
+    enhanced: makeEnhancedTxClientEager(apiKey),
   };
 };
