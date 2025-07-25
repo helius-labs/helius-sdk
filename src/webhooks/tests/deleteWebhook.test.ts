@@ -1,4 +1,4 @@
-import { createHeliusEager as createHelius } from '../../rpc/createHelius.eager';
+import { createHeliusEager as createHelius } from "../../rpc/createHelius.eager";
 
 const mockFetch = jest.fn();
 
@@ -39,15 +39,21 @@ describe("deleteWebhook Tests", () => {
       text: async () => "Webhook not found",
     });
 
-    await expect(rpc.webhooks.delete("invalid-id")).rejects.toThrow("HTTP error! status: 404 - Webhook not found");
+    await expect(rpc.webhooks.delete("invalid-id")).rejects.toThrow(
+      "HTTP error! status: 404 - Webhook not found"
+    );
   });
 
   it("Handles Helius API errors", async () => {
     mockFetch.mockResolvedValue({
       ok: true,
-      json: async () => ({ error: { code: -32602, message: "Invalid webhook ID" } }),
+      json: async () => ({
+        error: { code: -32602, message: "Invalid webhook ID" },
+      }),
     });
 
-    await expect(rpc.webhooks.delete("invalid-id")).rejects.toThrow("Helius error: {\"code\":-32602,\"message\":\"Invalid webhook ID\"}");
+    await expect(rpc.webhooks.delete("invalid-id")).rejects.toThrow(
+      'Helius error: {"code":-32602,"message":"Invalid webhook ID"}'
+    );
   });
 });

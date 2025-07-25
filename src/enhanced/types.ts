@@ -1,4 +1,4 @@
-export type Commitment = 'finalized' | 'confirmed';
+export type Commitment = "finalized" | "confirmed";
 
 export type TransactionType = string;
 export type TransactionSource = string;

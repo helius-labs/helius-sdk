@@ -1,5 +1,5 @@
 import type { Webhook } from "../../types/webhooks";
-import { createHeliusEager as createHelius } from '../../rpc/createHelius.eager';
+import { createHeliusEager as createHelius } from "../../rpc/createHelius.eager";
 
 const mockFetch = jest.fn();
 
@@ -14,7 +14,7 @@ describe("getAllWebhooks Tests", () => {
   });
 
   it("Successfully fetches all webhooks", async () => {
-     const mockWebhooks: Webhook[] = [
+    const mockWebhooks: Webhook[] = [
       {
         webhookID: "rebel-base-1138",
         wallet: "lukeskywalker.sol",
@@ -71,7 +71,6 @@ describe("getAllWebhooks Tests", () => {
     );
   });
 
-
   it("Handles HTTP errors", async () => {
     mockFetch.mockResolvedValue({
       ok: false,
@@ -79,15 +78,21 @@ describe("getAllWebhooks Tests", () => {
       text: async () => "Not found",
     });
 
-    await expect(rpc.webhooks.getAll()).rejects.toThrow("HTTP error! status: 404 - Not found");
+    await expect(rpc.webhooks.getAll()).rejects.toThrow(
+      "HTTP error! status: 404 - Not found"
+    );
   });
 
   it("Handles Helius API errors", async () => {
     mockFetch.mockResolvedValue({
       ok: true,
-      json: async () => ({ error: { code: -32602, message: "Invalid params" } }),
+      json: async () => ({
+        error: { code: -32602, message: "Invalid params" },
+      }),
     });
 
-    await expect(rpc.webhooks.getAll()).rejects.toThrow("Helius error: {\"code\":-32602,\"message\":\"Invalid params\"}");
+    await expect(rpc.webhooks.getAll()).rejects.toThrow(
+      'Helius error: {"code":-32602,"message":"Invalid params"}'
+    );
   });
 });

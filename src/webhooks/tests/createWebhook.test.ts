@@ -1,5 +1,5 @@
 import type { CreateWebhookRequest, Webhook } from "../../types/webhooks";
-import { createHeliusEager as createHelius } from '../../rpc/createHelius.eager';
+import { createHeliusEager as createHelius } from "../../rpc/createHelius.eager";
 
 const mockFetch = jest.fn();
 
@@ -68,7 +68,9 @@ describe("createWebhook Tests", () => {
       text: async () => "Bad Request",
     });
 
-    await expect(rpc.webhooks.create(mockParams)).rejects.toThrow("HTTP error! status: 400 - Bad Request");
+    await expect(rpc.webhooks.create(mockParams)).rejects.toThrow(
+      "HTTP error! status: 400 - Bad Request"
+    );
   });
 
   it("Handles Helius API errors", async () => {
@@ -81,9 +83,13 @@ describe("createWebhook Tests", () => {
 
     mockFetch.mockResolvedValue({
       ok: true,
-      json: async () => ({ error: { code: -32602, message: "Invalid params" } }),
+      json: async () => ({
+        error: { code: -32602, message: "Invalid params" },
+      }),
     });
 
-    await expect(rpc.webhooks.create(mockParams)).rejects.toThrow("Helius error: {\"code\":-32602,\"message\":\"Invalid params\"}");
+    await expect(rpc.webhooks.create(mockParams)).rejects.toThrow(
+      'Helius error: {"code":-32602,"message":"Invalid params"}'
+    );
   });
 });

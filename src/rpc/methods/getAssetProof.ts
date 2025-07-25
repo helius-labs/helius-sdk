@@ -1,7 +1,4 @@
-import type {
-  GetAssetProofRequest,
-  GetAssetProofResponse,
-} from "../../types";
+import type { GetAssetProofRequest, GetAssetProofResponse } from "../../types";
 import type { RpcCaller } from "../caller";
 
 export type GetAssetProofFn = (

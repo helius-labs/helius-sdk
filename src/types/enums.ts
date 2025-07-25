@@ -106,4 +106,5 @@ export const UiTransactionEncoding = makeEnum({
   JsonParsed: "jsonParsed",
 });
 
-export type UiTransactionEncoding = (typeof UiTransactionEncoding)[keyof typeof UiTransactionEncoding];
+export type UiTransactionEncoding =
+  (typeof UiTransactionEncoding)[keyof typeof UiTransactionEncoding];

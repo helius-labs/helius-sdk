@@ -5,26 +5,56 @@ import {
   DEFAULT_RPC_CONFIG,
   type Rpc,
   type SolanaRpcApi,
-} from '@solana/kit';
-import { wrapAutoSend } from './wrapAutoSend';
-import { makeRpcCaller } from './caller';
+} from "@solana/kit";
+import { wrapAutoSend } from "./wrapAutoSend";
+import { makeRpcCaller } from "./caller";
 
-import { GetAssetFn, makeGetAsset } from './methods/getAsset';
-import { GetAssetBatchFn, makeGetAssetBatch } from './methods/getAssetBatch';
-import { GetAssetProofFn, makeGetAssetProof } from './methods/getAssetProof';
-import { GetAssetProofBatchFn, makeGetAssetProofBatch } from './methods/getAssetProofBatch';
-import { GetAssetsByAuthorityFn, makeGetAssetsByAuthority } from './methods/getAssetsByAuthority';
-import { GetAssetsByCreatorFn, makeGetAssetsByCreator } from './methods/getAssetsByCreator';
-import { GetAssetsByGroupFn, makeGetAssetsByGroup } from './methods/getAssetsByGroup';
-import { GetPriorityFeeEstimateFn, makeGetPriorityFeeEstimate } from './methods/getPriorityFeeEstimate';
+import { GetAssetFn, makeGetAsset } from "./methods/getAsset";
+import { GetAssetBatchFn, makeGetAssetBatch } from "./methods/getAssetBatch";
+import { GetAssetProofFn, makeGetAssetProof } from "./methods/getAssetProof";
+import {
+  GetAssetProofBatchFn,
+  makeGetAssetProofBatch,
+} from "./methods/getAssetProofBatch";
+import {
+  GetAssetsByAuthorityFn,
+  makeGetAssetsByAuthority,
+} from "./methods/getAssetsByAuthority";
+import {
+  GetAssetsByCreatorFn,
+  makeGetAssetsByCreator,
+} from "./methods/getAssetsByCreator";
+import {
+  GetAssetsByGroupFn,
+  makeGetAssetsByGroup,
+} from "./methods/getAssetsByGroup";
+import {
+  GetPriorityFeeEstimateFn,
+  makeGetPriorityFeeEstimate,
+} from "./methods/getPriorityFeeEstimate";
 
-import { makeWebhookClientEager, type WebhookClient } from '../webhooks/client.eager';
-import { GetAssetsByOwnerFn, makeGetAssetsByOwner } from './methods/getAssetsByOwner';
-import { GetNftEditionsFn, makeGetNftEditions } from './methods/getNftEditions';
-import { GetSignaturesForAssetFn, makeGetSignaturesForAsset } from './methods/getSignaturesForAsset';
-import { GetTokenAccountsFn, makeGetTokenAccounts } from './methods/getTokenAccounts';
-import { makeSearchAssets, SearchAssetsFn } from './methods/searchAssets';
-import { EnhancedTxClient, makeEnhancedTxClientEager } from '../enhanced/client.eager';
+import {
+  makeWebhookClientEager,
+  type WebhookClient,
+} from "../webhooks/client.eager";
+import {
+  GetAssetsByOwnerFn,
+  makeGetAssetsByOwner,
+} from "./methods/getAssetsByOwner";
+import { GetNftEditionsFn, makeGetNftEditions } from "./methods/getNftEditions";
+import {
+  GetSignaturesForAssetFn,
+  makeGetSignaturesForAsset,
+} from "./methods/getSignaturesForAsset";
+import {
+  GetTokenAccountsFn,
+  makeGetTokenAccounts,
+} from "./methods/getTokenAccounts";
+import { makeSearchAssets, SearchAssetsFn } from "./methods/searchAssets";
+import {
+  EnhancedTxClient,
+  makeEnhancedTxClientEager,
+} from "../enhanced/client.eager";
 
 export interface HeliusClientEager {
   raw: Rpc<SolanaRpcApi>;
@@ -41,7 +71,7 @@ export interface HeliusClientEager {
   getSignaturesForAsset: GetSignaturesForAssetFn;
   getTokenAccounts: GetTokenAccountsFn;
   searchAssets: SearchAssetsFn;
-  
+
   getPriorityFeeEstimate: GetPriorityFeeEstimateFn;
 
   webhooks: WebhookClient;
@@ -51,13 +81,13 @@ export interface HeliusClientEager {
 
 export type HeliusRpcOptions = {
   apiKey: string;
-  network?: 'mainnet' | 'devnet';
+  network?: "mainnet" | "devnet";
   autoSend?: boolean;
 };
 
 export const createHeliusEager = ({
   apiKey,
-  network = 'mainnet',
+  network = "mainnet",
   autoSend = true,
 }: HeliusRpcOptions): HeliusClientEager => {
   const url = `https://${network}.helius-rpc.com/?api-key=${apiKey}`;

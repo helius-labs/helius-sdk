@@ -1,5 +1,8 @@
-import type { AssetsByOwnerRequest, GetAssetResponseList } from '../../types/das';
-import type { RpcCaller } from '../caller';
+import type {
+  AssetsByOwnerRequest,
+  GetAssetResponseList,
+} from "../../types/das";
+import type { RpcCaller } from "../caller";
 
 export type GetAssetsByOwnerFn = (
   p: AssetsByOwnerRequest
@@ -8,4 +11,7 @@ export type GetAssetsByOwnerFn = (
 export const makeGetAssetsByOwner =
   (call: RpcCaller): GetAssetsByOwnerFn =>
   (params) =>
-    call<AssetsByOwnerRequest, GetAssetResponseList>('getAssetsByOwner', params);
+    call<AssetsByOwnerRequest, GetAssetResponseList>(
+      "getAssetsByOwner",
+      params
+    );

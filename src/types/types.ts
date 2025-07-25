@@ -36,13 +36,13 @@ export interface GetAssetProofResponse {
   burnt?: any;
 }
 
-  export type GetAssetProofBatchRequest = {
-    ids: string[];
-  };
+export type GetAssetProofBatchRequest = {
+  ids: string[];
+};
 
-  export type GetAssetProofBatchResponse = GetAssetProofResponse[];
+export type GetAssetProofBatchResponse = GetAssetProofResponse[];
 
-  export interface GetPriorityFeeEstimateRequest {
+export interface GetPriorityFeeEstimateRequest {
   transaction?: string;
   accountKeys?: string[];
   options?: GetPriorityFeeEstimateOptions;

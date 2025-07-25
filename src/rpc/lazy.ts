@@ -12,8 +12,8 @@ export const defineLazyMethod = <
   loader: () => Promise<F>
 ): void => {
   type R = Awaited<ReturnType<F>>;
-  
-let impl: F | undefined;
+
+  let impl: F | undefined;
   let loading: Promise<F> | undefined;
 
   const install = (fn: F) => {
@@ -36,13 +36,13 @@ let impl: F | undefined;
     get() {
       // The first time someone *reads* the property, we return a callable proxy
       const proxy = (...args: Parameters<F>): Promise<R> => {
-    if (impl) {
-      // Wrap in Promise.resolve to normalize sync/async F
-      return Promise.resolve(impl(...args)) as Promise<R>;
-    }
-    loading ??= loader().then(install);
-    return loading.then(fn => fn(...args)) as Promise<R>;
-  };
+        if (impl) {
+          // Wrap in Promise.resolve to normalize sync/async F
+          return Promise.resolve(impl(...args)) as Promise<R>;
+        }
+        loading ??= loader().then(install);
+        return loading.then((fn) => fn(...args)) as Promise<R>;
+      };
 
       // Replace the getter with the proxy immediately, so future reads don't hit this getter again
       Object.defineProperty(target, key, {
@@ -63,7 +63,7 @@ let impl: F | undefined;
 */
 export const defineLazyNamespace = <
   TTarget extends object,
-  TNamespace extends object
+  TNamespace extends object,
 >(
   target: TTarget,
   key: PropertyKey,
@@ -94,7 +94,7 @@ export const defineLazyNamespace = <
         }
 
         loading ??= loader().then(install);
-        return loading.then(impl => (impl as any)[prop](...args));
+        return loading.then((impl) => (impl as any)[prop](...args));
       };
     },
   });

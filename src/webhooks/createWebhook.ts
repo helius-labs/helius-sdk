@@ -20,7 +20,7 @@ export const createWebhook = async (
   }
 
   const data = await response.json();
-  
+
   if (data.error) {
     throw new Error(`Helius error: ${JSON.stringify(data.error)}`);
   }

@@ -2,12 +2,12 @@ import type {
   CreateWebhookRequest,
   UpdateWebhookRequest,
   Webhook,
-} from '../types/webhooks';
-import { createWebhook } from './createWebhook';
-import { getWebhook } from './getWebhook';
-import { getAllWebhooks } from './getAllWebhooks';
-import { updateWebhook } from './updateWebhook';
-import { deleteWebhook } from './deleteWebhook';
+} from "../types/webhooks";
+import { createWebhook } from "./createWebhook";
+import { getWebhook } from "./getWebhook";
+import { getAllWebhooks } from "./getAllWebhooks";
+import { updateWebhook } from "./updateWebhook";
+import { deleteWebhook } from "./deleteWebhook";
 
 export interface WebhookClient {
   create(params: CreateWebhookRequest): Promise<Webhook>;

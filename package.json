@@ -23,6 +23,7 @@
     "prepare": "pnpm run build",
     "lint": "eslint --ext .ts,.tsx src",
     "format": "prettier --write 'src/**/*.{js,ts,json,md}'",
+    "format:check": "prettier --cache --check 'src/**/*.{js,ts,json,md}'",
     "check-bundle": "agadoo dist && bundlemon"
   },
   "keywords": [
