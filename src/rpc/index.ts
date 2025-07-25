@@ -26,6 +26,7 @@ import type { GetAssetsByGroupFn } from "./methods/getAssetsByGroup";
 import type { GetPriorityFeeEstimateFn } from "./methods/getPriorityFeeEstimate";
 import type { GetAssetsByOwnerFn } from "./methods/getAssetsByOwner";
 import { makeRpcCaller } from "./caller";
+import { GetNftEditionsFn } from "./methods/getNftEditions";
 
 interface HeliusRpcOptions {
   apiKey: string;
@@ -44,6 +45,7 @@ export interface HeliusClient {
   getAssetsByCreator: GetAssetsByCreatorFn;
   getAssetsByGroup: GetAssetsByGroupFn;
   getAssetsByOwner: GetAssetsByOwnerFn;
+  getNftEditions: GetNftEditionsFn;
   getPriorityFeeEstimate: GetPriorityFeeEstimateFn;
 
   webhooks: {
@@ -150,6 +152,17 @@ export const createHelius = ({
         "./methods/getAssetsByOwner.js"
       );
       return makeGetAssetsByOwner(call);
+    }
+  );
+
+  defineLazyMethod<HeliusClient, GetNftEditionsFn>(
+    client,
+    "getNftEditions",
+    async () => {
+      const { makeGetNftEditions } = await import(
+        "./methods/getNftEditions.js"
+      );
+      return makeGetNftEditions(call);
     }
   );
 
