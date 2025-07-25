@@ -24,6 +24,7 @@ import type { GetAssetsByAuthorityFn } from "./methods/getAssetsByAuthority";
 import type { GetAssetsByCreatorFn } from "./methods/getAssetsByCreator";
 import type { GetAssetsByGroupFn } from "./methods/getAssetsByGroup";
 import type { GetPriorityFeeEstimateFn } from "./methods/getPriorityFeeEstimate";
+import type { GetAssetsByOwnerFn } from "./methods/getAssetsByOwner";
 import { makeRpcCaller } from "./caller";
 
 interface HeliusRpcOptions {
@@ -42,6 +43,7 @@ export interface HeliusClient {
   getAssetsByAuthority: GetAssetsByAuthorityFn;
   getAssetsByCreator: GetAssetsByCreatorFn;
   getAssetsByGroup: GetAssetsByGroupFn;
+  getAssetsByOwner: GetAssetsByOwnerFn;
   getPriorityFeeEstimate: GetPriorityFeeEstimateFn;
 
   webhooks: {
@@ -137,6 +139,17 @@ export const createHelius = ({
         "./methods/getAssetsByGroup.js"
       );
       return makeGetAssetsByGroup(call);
+    }
+  );
+
+  defineLazyMethod<HeliusClient, GetAssetsByOwnerFn>(
+    client,
+    "getAssetsByOwner",
+    async () => {
+      const { makeGetAssetsByOwner } = await import(
+        "./methods/getAssetsByOwner.js"
+      );
+      return makeGetAssetsByOwner(call);
     }
   );
 

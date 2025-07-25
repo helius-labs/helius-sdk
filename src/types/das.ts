@@ -1,4 +1,13 @@
-import { AssetSortBy, AssetSortDirection, Context, Interface, OwnershipModel, RoyaltyModel, Scope, UseMethods } from "./enums";
+import {
+  AssetSortBy,
+  AssetSortDirection,
+  Context,
+  Interface,
+  OwnershipModel,
+  RoyaltyModel,
+  Scope,
+  UseMethods,
+} from "./enums";
 import { GetAssetResponse } from "./types";
 
 export type TokenType =
@@ -301,14 +310,14 @@ export type NativeBalanceInfo = {
 
 export type AssetsByCreatorRequest = {
   creatorAddress: string;
-    page?: number;
-    onlyVerified?: boolean;
-    limit?: number;
-    before?: string;
-    after?: string;
-    options?: DisplayOptions;
-    sortBy?: AssetSortingRequest;
-}
+  page?: number;
+  onlyVerified?: boolean;
+  limit?: number;
+  before?: string;
+  after?: string;
+  options?: DisplayOptions;
+  sortBy?: AssetSortingRequest;
+};
 
 export type AssetsByGroupRequest = {
   groupValue: string;
@@ -319,4 +328,14 @@ export type AssetsByGroupRequest = {
   after?: string;
   options?: DisplayOptions;
   sortBy?: AssetSortingRequest;
-}
+};
+
+export type AssetsByOwnerRequest = {
+  ownerAddress: string;
+  page?: number;
+  limit?: number;
+  before?: string;
+  after?: string;
+  displayOptions?: DisplayOptions;
+  sortBy?: AssetSortingRequest;
+};
