@@ -309,3 +309,14 @@ export type AssetsByCreatorRequest = {
     options?: DisplayOptions;
     sortBy?: AssetSortingRequest;
 }
+
+export type AssetsByGroupRequest = {
+  groupValue: string;
+  groupKey: string;
+  page?: number;
+  limit?: number;
+  before?: string;
+  after?: string;
+  options?: DisplayOptions;
+  sortBy?: AssetSortingRequest;
+}
