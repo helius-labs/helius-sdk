@@ -78,7 +78,6 @@ export interface HeliusClient {
 export const createHelius = ({
   apiKey,
   network = "mainnet",
-  autoSend = true,
 }: HeliusRpcOptions): HeliusClient & ResolvedHeliusRpcApi => {
   const baseUrl = `https://${network}.helius-rpc.com/`;
   const url = `${baseUrl}?api-key=${apiKey}`;
@@ -87,7 +86,7 @@ export const createHelius = ({
   const transport = createDefaultRpcTransport({ url });
 
   const baseRpc = createRpc({ api: solanaApi, transport }) as Rpc<SolanaRpcApi>;
-  const raw: Rpc<SolanaRpcApi> = autoSend ? wrapAutoSend(baseRpc) : baseRpc;
+  const raw: Rpc<SolanaRpcApi> = wrapAutoSend(baseRpc);
 
   // Lightweight, no-PendingRpcRequest caller for custom DAS/webhook methods
   const call = makeRpcCaller(transport);
