@@ -3,8 +3,6 @@ import {
   createRpc,
   createSolanaRpcApi,
   DEFAULT_RPC_CONFIG,
-  type Rpc,
-  type SolanaRpcApi,
 } from "@solana/kit";
 
 import { wrapAutoSend } from "./wrapAutoSend";
@@ -36,11 +34,10 @@ import { ResolvedHeliusRpcApi } from "./heliusRpcApi";
 interface HeliusRpcOptions {
   apiKey: string;
   network?: "mainnet" | "devnet";
-  autoSend?: boolean;
 }
 
-export interface HeliusClient {
-  raw: Rpc<SolanaRpcApi>;
+export type HeliusClient = ResolvedHeliusRpcApi & {
+  raw: ResolvedHeliusRpcApi;
 
   // DAS
   getAsset: GetAssetFn;
@@ -78,15 +75,15 @@ export interface HeliusClient {
 export const createHelius = ({
   apiKey,
   network = "mainnet",
-}: HeliusRpcOptions): HeliusClient & ResolvedHeliusRpcApi => {
+}: HeliusRpcOptions): HeliusClient => {
   const baseUrl = `https://${network}.helius-rpc.com/`;
   const url = `${baseUrl}?api-key=${apiKey}`;
 
   const solanaApi = createSolanaRpcApi(DEFAULT_RPC_CONFIG);
   const transport = createDefaultRpcTransport({ url });
 
-  const baseRpc = createRpc({ api: solanaApi, transport }) as Rpc<SolanaRpcApi>;
-  const raw: Rpc<SolanaRpcApi> = wrapAutoSend(baseRpc);
+  const baseRpc = createRpc({ api: solanaApi, transport });
+  const raw = wrapAutoSend(baseRpc) as unknown as ResolvedHeliusRpcApi<typeof solanaApi>;
 
   // Lightweight, no-PendingRpcRequest caller for custom DAS/webhook methods
   const call = makeRpcCaller(transport);
@@ -263,5 +260,5 @@ export const createHelius = ({
     },
   });
 
-  return merged as HeliusClient & ResolvedHeliusRpcApi;
+  return merged as HeliusClient;
 };

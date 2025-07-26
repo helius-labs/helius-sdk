@@ -1,10 +1,18 @@
 import type { PendingRpcRequest, Rpc } from "@solana/kit";
 
+export type AutoSent<T> = {
+  [K in keyof T]: T[K] extends (...args: infer A) => infer R
+    ? R extends { send: (...b: any[]) => infer S }
+      ? (...args: A) => S extends Promise<infer P> ? Promise<P> : Promise<S>
+      : T[K]
+    : T[K];
+};
+
 const isPending = (x: unknown): x is PendingRpcRequest<any> => {
   return !!x && typeof (x as any).send === "function";
 };
 
-export const wrapAutoSend = <T extends Rpc<any>>(raw: T): T => {
+export const wrapAutoSend = <T extends Rpc<any>>(raw: T): AutoSent<T> => {
   const added = new Map<string | symbol, any>();
 
   return new Proxy(raw, {
@@ -28,5 +36,5 @@ export const wrapAutoSend = <T extends Rpc<any>>(raw: T): T => {
     has(target, prop) {
       return added.has(prop) || Reflect.has(target, prop);
     },
-  }) as T;
+  }) as AutoSent<T>;
 };

@@ -3,8 +3,6 @@ import {
   createRpc,
   createSolanaRpcApi,
   DEFAULT_RPC_CONFIG,
-  type Rpc,
-  type SolanaRpcApi,
 } from "@solana/kit";
 import { wrapAutoSend } from "./wrapAutoSend";
 import { makeRpcCaller } from "./caller";
@@ -55,9 +53,10 @@ import {
   EnhancedTxClient,
   makeEnhancedTxClientEager,
 } from "../enhanced/client.eager";
+import { ResolvedHeliusRpcApi } from "./heliusRpcApi";
 
 export interface HeliusClientEager {
-  raw: Rpc<SolanaRpcApi>;
+  raw: ResolvedHeliusRpcApi;
 
   getAsset: GetAssetFn;
   getAssetBatch: GetAssetBatchFn;
@@ -77,26 +76,25 @@ export interface HeliusClientEager {
   webhooks: WebhookClient;
 
   enhanced: EnhancedTxClient;
-}
+};
 
 export type HeliusRpcOptions = {
   apiKey: string;
   network?: "mainnet" | "devnet";
-  autoSend?: boolean;
 };
 
 export const createHeliusEager = ({
   apiKey,
   network = "mainnet",
-  autoSend = true,
 }: HeliusRpcOptions): HeliusClientEager => {
   const url = `https://${network}.helius-rpc.com/?api-key=${apiKey}`;
 
   const solanaApi = createSolanaRpcApi(DEFAULT_RPC_CONFIG);
   const transport = createDefaultRpcTransport({ url });
 
-  let raw = createRpc({ api: solanaApi, transport }) as Rpc<SolanaRpcApi>;
-  if (autoSend) raw = wrapAutoSend(raw);
+  let baseRpc = createRpc({ api: solanaApi, transport });
+  // Cast to any because I cba to go down this type rabbit hole
+  const raw = wrapAutoSend(baseRpc) as any;
 
   const call = makeRpcCaller(transport);
 
