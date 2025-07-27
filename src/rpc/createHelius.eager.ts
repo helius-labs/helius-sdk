@@ -3,6 +3,8 @@ import {
   createRpc,
   createSolanaRpcApi,
   DEFAULT_RPC_CONFIG,
+  Rpc,
+  SolanaRpcApi,
 } from "@solana/kit";
 import { wrapAutoSend } from "./wrapAutoSend";
 import { makeRpcCaller } from "./caller";
@@ -54,6 +56,7 @@ import {
   makeEnhancedTxClientEager,
 } from "../enhanced/client.eager";
 import { ResolvedHeliusRpcApi } from "./heliusRpcApi";
+import { makeTxHelpersEager, TxHelpersEager } from "../transactions/client.eager";
 
 export interface HeliusClientEager {
   raw: ResolvedHeliusRpcApi;
@@ -76,6 +79,8 @@ export interface HeliusClientEager {
   webhooks: WebhookClient;
 
   enhanced: EnhancedTxClient;
+
+  tx: TxHelpersEager;
 };
 
 export type HeliusRpcOptions = {
@@ -123,5 +128,8 @@ export const createHeliusEager = ({
 
     // Enhanced Transactions
     enhanced: makeEnhancedTxClientEager(apiKey),
+
+    // Transaction helpers
+    tx: makeTxHelpersEager(baseRpc as unknown as Rpc<SolanaRpcApi>),
   };
 };
