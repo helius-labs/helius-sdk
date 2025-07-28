@@ -2,7 +2,10 @@ import {
   createDefaultRpcTransport,
   createRpc,
   createSolanaRpcApi,
+  createSolanaRpcSubscriptions,
   DEFAULT_RPC_CONFIG,
+  RpcSubscriptions,
+  SolanaRpcSubscriptionsApi,
 } from "@solana/kit";
 
 import { wrapAutoSend } from "./wrapAutoSend";
@@ -70,6 +73,9 @@ export type HeliusClient = ResolvedHeliusRpcApi & {
 
   // Transaction Helpers
   tx: TxHelpersLazy;
+
+  // WebSocket RPC subscriptions
+  ws: RpcSubscriptions<SolanaRpcSubscriptionsApi>;
 };
 
 export const createHelius = ({
@@ -85,11 +91,24 @@ export const createHelius = ({
   const baseRpc = createRpc({ api: solanaApi, transport });
   const raw = wrapAutoSend(baseRpc) as unknown as ResolvedHeliusRpcApi;
 
+  const wsUrl = new URL(url);
+  wsUrl.protocol = "wss:";
+
   // Lightweight, no-PendingRpcRequest caller for custom DAS/webhook methods
   const call = makeRpcCaller(transport);
 
   // The object we’ll populate lazily
   const client: any = { raw };
+
+  defineLazyNamespace<HeliusClient, RpcSubscriptions<SolanaRpcSubscriptionsApi>>(
+    client,
+    "ws",
+    async () => {
+      // Create the WS subscriptions instance on first use
+      // (Keeps the socket unopened until a ws.* method is actually called)
+      return createSolanaRpcSubscriptions(wsUrl.toString());
+    }
+  );
 
   defineLazyMethod<HeliusClient, GetAssetFn>(client, "getAsset", async () => {
     const { makeGetAsset } = await import("./methods/getAsset.js");
