@@ -2,10 +2,7 @@ import {
   createDefaultRpcTransport,
   createRpc,
   createSolanaRpcApi,
-  createSolanaRpcSubscriptions,
   DEFAULT_RPC_CONFIG,
-  RpcSubscriptions,
-  SolanaRpcSubscriptionsApi,
 } from "@solana/kit";
 
 import { wrapAutoSend } from "./wrapAutoSend";
@@ -33,6 +30,7 @@ import type { SearchAssetsFn } from "./methods/searchAssets";
 import type { EnhancedTxClientLazy } from "../enhanced";
 import { TxHelpersLazy } from "../transactions";
 import { ResolvedHeliusRpcApi } from "./heliusRpcApi";
+import { makeWsAsync, WsAsync } from "../websockets/wsAsync";
 
 interface HeliusRpcOptions {
   apiKey: string;
@@ -75,7 +73,7 @@ export type HeliusClient = ResolvedHeliusRpcApi & {
   tx: TxHelpersLazy;
 
   // WebSocket RPC subscriptions
-  ws: RpcSubscriptions<SolanaRpcSubscriptionsApi>;
+  ws: WsAsync;
 };
 
 export const createHelius = ({
@@ -100,15 +98,11 @@ export const createHelius = ({
   // The object we’ll populate lazily
   const client: any = { raw };
 
-  defineLazyNamespace<HeliusClient, RpcSubscriptions<SolanaRpcSubscriptionsApi>>(
-    client,
-    "ws",
-    async () => {
-      // Create the WS subscriptions instance on first use
-      // (Keeps the socket unopened until a ws.* method is actually called)
-      return createSolanaRpcSubscriptions(wsUrl.toString());
-    }
-  );
+  defineLazyNamespace<HeliusClient, WsAsync>(client, "ws", async () => {
+    // Promisified facade; individual methods return Promise<...>
+    // so: await helius.ws.logsNotifications(...).subscribe(...) and no stupid TypeScript warnings
+    return makeWsAsync(wsUrl.toString());
+  });
 
   defineLazyMethod<HeliusClient, GetAssetFn>(client, "getAsset", async () => {
     const { makeGetAsset } = await import("./methods/getAsset.js");
