@@ -41,7 +41,9 @@
   "license": "ISC",
   "dependencies": {
     "@solana-program/compute-budget": "^0.8.0",
-    "@solana/kit": "^2.3.0"
+    "@solana-program/system": "^0.7.0",
+    "@solana/kit": "^2.3.0",
+    "bs58": "^6.0.0"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^28.0.6",

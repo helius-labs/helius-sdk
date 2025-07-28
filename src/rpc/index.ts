@@ -83,7 +83,7 @@ export const createHelius = ({
   const transport = createDefaultRpcTransport({ url });
 
   const baseRpc = createRpc({ api: solanaApi, transport });
-  const raw = wrapAutoSend(baseRpc) as unknown as ResolvedHeliusRpcApi<typeof solanaApi>;
+  const raw = wrapAutoSend(baseRpc) as unknown as ResolvedHeliusRpcApi;
 
   // Lightweight, no-PendingRpcRequest caller for custom DAS/webhook methods
   const call = makeRpcCaller(transport);
