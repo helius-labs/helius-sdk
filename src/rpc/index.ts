@@ -70,7 +70,7 @@ export type HeliusClient = ResolvedHeliusRpcApi & {
 
   // Transaction Helpers
   tx: TxHelpersLazy;
-}
+};
 
 export const createHelius = ({
   apiKey,
@@ -244,7 +244,12 @@ export const createHelius = ({
 
   defineLazyNamespace<HeliusClient, TxHelpersLazy>(client, "tx", async () => {
     const { makeTxHelpersLazy } = await import("../transactions");
-    return makeTxHelpersLazy(baseRpc);
+    const { makeGetPriorityFeeEstimate } = await import(
+      "./methods/getPriorityFeeEstimate.js"
+    );
+    const getPriorityFeeEstimate = makeGetPriorityFeeEstimate(call);
+
+    return makeTxHelpersLazy(baseRpc, getPriorityFeeEstimate);
   });
 
   // So we can send standard RPC calls
