@@ -1,4 +1,4 @@
-import { TransactionVersion, Address, TransactionSigner, Instruction, Blockhash, Commitment, CompilableTransactionMessage, Rpc, SolanaRpcApi, signTransactionMessageWithSigners } from "@solana/kit";
+import { TransactionVersion, Address, TransactionSigner, Instruction, Blockhash, Commitment, CompilableTransactionMessage, Rpc, SolanaRpcApi, signTransactionMessageWithSigners, RpcSubscriptions, SolanaRpcSubscriptionsApi } from "@solana/kit";
 
 import { GetPriorityFeeEstimateFn } from "../rpc/methods/getPriorityFeeEstimate";
 import { GetComputeUnitsFn } from "./getComputeUnits";
@@ -64,3 +64,25 @@ export type CreateSmartTxDeps = Readonly<{
 }>;
 
 export type CreateSmartTransactionFn = (args: CreateSmartTxInput) => Promise<CreateSmartTxResult>;
+
+export type SendSmartTransactionInput = CreateSmartTxInput & {
+  /** Confirmation commitment for the send+confirm step. Default: "confirmed". */
+  confirmCommitment?: Commitment; // "processed" | "confirmed" | "finalized"
+  /** Forwarded to sendAndConfirm; default 0n. */
+  maxRetries?: bigint;
+  /** Forwarded to sendAndConfirm; default true. */
+  skipPreflight?: boolean;
+};
+
+export type SendSmartTransactionFn = (
+  args: SendSmartTransactionInput
+) => Promise<string>;
+
+export type SendSmartTxDeps = Readonly<{
+  raw: Rpc<SolanaRpcApi>;
+  /** Optional but recommended — enables WS-backed confirmation */
+  rpcSubscriptions?: RpcSubscriptions<SolanaRpcSubscriptionsApi>;
+  /** We compose on top of the creator to reuse your smart build/sign logic */
+  createSmartTransaction: CreateSmartTransactionFn;
+}>;
+

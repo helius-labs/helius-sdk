@@ -2,6 +2,7 @@ import {
   createDefaultRpcTransport,
   createRpc,
   createSolanaRpcApi,
+  createSolanaRpcSubscriptions,
   DEFAULT_RPC_CONFIG,
 } from "@solana/kit";
 
@@ -91,6 +92,9 @@ export const createHelius = ({
 
   const wsUrl = new URL(url);
   wsUrl.protocol = "wss:";
+
+  // We need a concrete WS client immediately available for the transaction client
+  const rpcSubscriptions = createSolanaRpcSubscriptions(wsUrl.toString());
 
   // Lightweight, no-PendingRpcRequest caller for custom DAS/webhook methods
   const call = makeRpcCaller(transport);
@@ -262,7 +266,7 @@ export const createHelius = ({
     );
     const getPriorityFeeEstimate = makeGetPriorityFeeEstimate(call);
 
-    return makeTxHelpersLazy(baseRpc, getPriorityFeeEstimate);
+    return makeTxHelpersLazy(baseRpc, getPriorityFeeEstimate, rpcSubscriptions);
   });
 
   // So we can send standard RPC calls
