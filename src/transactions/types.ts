@@ -11,6 +11,7 @@ import {
   signTransactionMessageWithSigners,
   RpcSubscriptions,
   SolanaRpcSubscriptionsApi,
+  address,
 } from "@solana/kit";
 
 import { GetPriorityFeeEstimateFn } from "../rpc/methods/getPriorityFeeEstimate";
@@ -102,3 +103,24 @@ export type SendSmartTxDeps = Readonly<{
   /** We compose on top of the creator to reuse your smart build/sign logic */
   createSmartTransaction: CreateSmartTransactionFn;
 }>;
+
+// https://jito-foundation.gitbook.io/mev/mev-payment-and-distribution/on-chain-addresses
+export const JITO_TIP_ACCOUNTS: Address[] = [
+  address("96gYZGLnJYVFmbjzopPSU6QiEV5fGqZNyN9nmNhvrZU5"),
+  address("HFqU5x63VTqvQss8hp11i4wVV8bD44PvwucfZ2bU7gRe"),
+  address("Cw8CFyM9FkoMi7K7Crf6HNQqf4uEMzpKw6QNghXLvLkY"),
+  address("ADaUMid9yfUytqMBgopwjb2DTLSokTSzL1zt6iGPaS49"),
+  address("DfXygSm4jCyNCybVYYK6DwvWqjKee8pbDmJGcLWNDXjh"),
+  address("ADuUkR4vqLUMWXxW9gh6D6L8pMSawimctcNZ5pGwDcEt"),
+  address("DttWaMuVvTiduZRnguLF7jNxTgiMBZ1hyAumKUiL2KRL"),
+  address("3AVi9Tg9Uo68tJfuvoKvqKNWKkC5wPdSSdeBnizKZ6jT"),
+] as const;
+
+export interface CreateSmartTxWithTipInput extends CreateSmartTxInput {
+  // Defaults to 1_000
+  tipAmount?: number;
+}
+
+export type CreateSmartTransactionWithTipFn = (
+  args: CreateSmartTxWithTipInput
+) => Promise<CreateSmartTxResult>;
