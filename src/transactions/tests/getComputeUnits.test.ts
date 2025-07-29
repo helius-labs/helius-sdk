@@ -24,7 +24,7 @@ describe("getComputeUnits Tests", () => {
   beforeEach(() => mockEstimate.mockReset());
 
   it("Applies default min (1000) and 10% buffer", async () => {
-    mockEstimate.mockResolvedValueOnce(5000n); 
+    mockEstimate.mockResolvedValueOnce(5000n);
 
     const getComputeUnits = makeGetComputeUnits(dummyRpc);
     const result = await getComputeUnits(dummyMessage);

@@ -24,7 +24,7 @@ export const makeGetComputeUnits = (
   ) => {
     const rawUnits = await estimateFn(message);
     const units = Number(rawUnits);
-    
+
     return Math.max(min, Math.ceil(units * (1 + bufferPct)));
   };
 };

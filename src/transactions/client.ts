@@ -1,4 +1,9 @@
-import type { Rpc, RpcSubscriptions, SolanaRpcApi, SolanaRpcSubscriptionsApi } from "@solana/kit";
+import type {
+  Rpc,
+  RpcSubscriptions,
+  SolanaRpcApi,
+  SolanaRpcSubscriptionsApi,
+} from "@solana/kit";
 import { makeGetComputeUnits, type GetComputeUnitsFn } from "./getComputeUnits";
 import { CreateSmartTransactionFn, SendSmartTransactionFn } from "./types";
 import { makeCreateSmartTransaction } from "./createSmartTransaction";
@@ -14,7 +19,7 @@ export interface TxHelpersLazy {
 export const makeTxHelpersLazy = (
   rpc: Rpc<SolanaRpcApi>,
   getPriorityFeeEstimate: GetPriorityFeeEstimateFn,
-  rpcSubscriptions?: RpcSubscriptions<SolanaRpcSubscriptionsApi>,
+  rpcSubscriptions?: RpcSubscriptions<SolanaRpcSubscriptionsApi>
 ): TxHelpersLazy => {
   const getComputeUnits = makeGetComputeUnits(rpc);
   const { create } = makeCreateSmartTransaction({

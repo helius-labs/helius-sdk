@@ -88,7 +88,7 @@ describe("createTxMessage Tests", () => {
 
     expect((msg as any).instructions?.length).toBe(1);
     expect(getFeePayerAddress(msg)).toBe(feePayer);
-    
+
     const lc = (msg as any).lifetimeConstraint ?? (msg as any).lifetime;
     expect(lc).toBeUndefined();
   });

@@ -56,7 +56,10 @@ import {
   makeEnhancedTxClientEager,
 } from "../enhanced/client.eager";
 import { ResolvedHeliusRpcApi } from "./heliusRpcApi";
-import { makeTxHelpersEager, TxHelpersEager } from "../transactions/client.eager";
+import {
+  makeTxHelpersEager,
+  TxHelpersEager,
+} from "../transactions/client.eager";
 
 export interface HeliusClientEager {
   raw: ResolvedHeliusRpcApi;
@@ -81,7 +84,7 @@ export interface HeliusClientEager {
   enhanced: EnhancedTxClient;
 
   tx: TxHelpersEager;
-};
+}
 
 export type HeliusRpcOptions = {
   apiKey: string;

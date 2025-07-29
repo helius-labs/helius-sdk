@@ -5,10 +5,7 @@ import type {
   CreateSmartTxResult,
   SignedTx,
 } from "./types";
-import type {
-  Instruction,
-  TransactionSigner,
-} from "@solana/kit";
+import type { Instruction, TransactionSigner } from "@solana/kit";
 
 import {
   createTransactionMessage,
@@ -27,19 +24,24 @@ import {
   getSetComputeUnitPriceInstruction,
 } from "@solana-program/compute-budget";
 
-const COMPUTE_BUDGET_PROGRAM_ADDRESS = address("ComputeBudget111111111111111111111111111111");
+const COMPUTE_BUDGET_PROGRAM_ADDRESS = address(
+  "ComputeBudget111111111111111111111111111111"
+);
 
 const isComputeBudgetIx = (ix: Instruction<string, readonly any[]>) =>
   ix.programAddress === COMPUTE_BUDGET_PROGRAM_ADDRESS;
 
-const firstSigner = (signers: readonly TransactionSigner<string>[]): TransactionSigner<string> => {
-  if (!signers.length) throw new Error("createSmartTransaction: expected at least one signer.");
+const firstSigner = (
+  signers: readonly TransactionSigner<string>[]
+): TransactionSigner<string> => {
+  if (!signers.length)
+    throw new Error("createSmartTransaction: expected at least one signer.");
   return signers[0];
-}
+};
 
 const resolveFeePayerSigner = (
   signers: readonly TransactionSigner<string>[],
-  feePayer?: CreateSmartTxInput["feePayer"],
+  feePayer?: CreateSmartTxInput["feePayer"]
 ): TransactionSigner<string> => {
   if (!feePayer) return firstSigner(signers);
 
@@ -49,7 +51,7 @@ const resolveFeePayerSigner = (
   }
 
   // Fee payer is an Address — find matching signer
-  const s = signers.find(s => s.address === feePayer);
+  const s = signers.find((s) => s.address === feePayer);
 
   if (!s) {
     throw new Error(
@@ -58,7 +60,7 @@ const resolveFeePayerSigner = (
   }
 
   return s;
-}
+};
 
 export const makeCreateSmartTransaction = ({
   raw,
@@ -71,21 +73,23 @@ export const makeCreateSmartTransaction = ({
     version = 0,
     priorityFeeCap,
     minUnits = 1_000,
-    bufferPct = 0.10,
+    bufferPct = 0.1,
     commitment = "confirmed",
     feePayer,
   }: CreateSmartTxInput): Promise<CreateSmartTxResult> => {
     const feePayerSigner = resolveFeePayerSigner(signers, feePayer);
-    const userIxs = instructions.filter(ix => !isComputeBudgetIx(ix));
+    const userIxs = instructions.filter((ix) => !isComputeBudgetIx(ix));
 
     // Draft message for CU estimation & fee sampling
-    const { value: initialLifetime } = await raw.getLatestBlockhash({ commitment }).send();
+    const { value: initialLifetime } = await raw
+      .getLatestBlockhash({ commitment })
+      .send();
 
     const draftMsg = pipe(
       createTransactionMessage({ version }),
       (m) => setTransactionMessageFeePayerSigner(feePayerSigner, m),
       (m) => setTransactionMessageLifetimeUsingBlockhash(initialLifetime, m),
-      (m) => appendTransactionMessageInstructions(userIxs, m),
+      (m) => appendTransactionMessageInstructions(userIxs, m)
     );
 
     // Estimate compute units with floor + buffer
@@ -101,13 +105,20 @@ export const makeCreateSmartTransaction = ({
     });
 
     if (priorityFeeEstimate == null) {
-      throw new Error("Priority fee estimate not available. Error creating smart transaction.");
+      throw new Error(
+        "Priority fee estimate not available. Error creating smart transaction."
+      );
     }
 
-    const priorityFee = priorityFeeCap != null ? Math.min(priorityFeeEstimate, priorityFeeCap) : priorityFeeEstimate;
+    const priorityFee =
+      priorityFeeCap != null
+        ? Math.min(priorityFeeEstimate, priorityFeeCap)
+        : priorityFeeEstimate;
 
     // Refresh blockhash to avoid expiry window
-    const { value: finalLifetime } = await raw.getLatestBlockhash({ commitment }).send();
+    const { value: finalLifetime } = await raw
+      .getLatestBlockhash({ commitment })
+      .send();
 
     // Build the final message (fee payer → lifetime → compute budget → user ixs)
     const finalMsg = pipe(
@@ -117,12 +128,14 @@ export const makeCreateSmartTransaction = ({
       (m) =>
         prependTransactionMessageInstructions(
           [
-            getSetComputeUnitPriceInstruction({ microLamports: Number(priorityFee) }),
+            getSetComputeUnitPriceInstruction({
+              microLamports: Number(priorityFee),
+            }),
             getSetComputeUnitLimitInstruction({ units: Number(units) }),
           ] as const,
-          m,
+          m
         ),
-      (m) => appendTransactionMessageInstructions(userIxs, m),
+      (m) => appendTransactionMessageInstructions(userIxs, m)
     );
 
     // Final sign & return
@@ -139,5 +152,5 @@ export const makeCreateSmartTransaction = ({
     };
   };
 
-    return { create };
+  return { create };
 };

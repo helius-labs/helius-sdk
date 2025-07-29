@@ -10,4 +10,6 @@ type UnwrappedRpc<T> = {
     : T[K];
 };
 
-export type ResolvedHeliusRpcApi = UnwrappedRpc<AutoSent<Rpc<ReturnType<typeof createSolanaRpcApi>>>>;
+export type ResolvedHeliusRpcApi = UnwrappedRpc<
+  AutoSent<Rpc<ReturnType<typeof createSolanaRpcApi>>>
+>;

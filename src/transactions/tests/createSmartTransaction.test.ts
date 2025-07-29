@@ -1,4 +1,10 @@
-import { address, type Address, type Instruction, type TransactionSigner, generateKeyPairSigner } from "@solana/kit";
+import {
+  address,
+  type Address,
+  type Instruction,
+  type TransactionSigner,
+  generateKeyPairSigner,
+} from "@solana/kit";
 import {
   getSetComputeUnitLimitInstruction,
   getSetComputeUnitPriceInstruction,
@@ -30,7 +36,8 @@ const makeNoopIx = (program: Address): Instruction<string, readonly any[]> => ({
 });
 
 // Extract program addresses from a compilable message
-const programAddrs = (msg: any): string[] => (msg.instructions ?? []).map((ix: any) => ix.programAddress);
+const programAddrs = (msg: any): string[] =>
+  (msg.instructions ?? []).map((ix: any) => ix.programAddress);
 
 // Dummy signer (no private key needed because we stub signing)
 const feePayerSigner: TransactionSigner<string> = {
@@ -81,7 +88,9 @@ describe("createSmartTransaction Tests", () => {
     });
 
     const userIx = makeNoopIx(address("11111111111111111111111111111111"));
-    const userSuppliedBudgetIx = getSetComputeUnitPriceInstruction({ microLamports: 999 });
+    const userSuppliedBudgetIx = getSetComputeUnitPriceInstruction({
+      microLamports: 999,
+    });
     const instructions = [userIx, userSuppliedBudgetIx];
 
     const result = await create({
@@ -99,7 +108,9 @@ describe("createSmartTransaction Tests", () => {
     // cannot deep-equal the message easily, but we know it was called
 
     expect(mockSign).toHaveBeenCalled(); // Draft sign
-    expect(mockBase64).toHaveBeenCalledWith(expect.objectContaining({ signed: true, msg: expect.anything() }));
+    expect(mockBase64).toHaveBeenCalledWith(
+      expect.objectContaining({ signed: true, msg: expect.anything() })
+    );
     expect(getPriorityFeeEstimate).toHaveBeenCalledWith({
       transaction: "BASE64_DRAFT_TX",
       options: { transactionEncoding: "base64", recommended: true },
@@ -126,7 +137,9 @@ describe("createSmartTransaction Tests", () => {
       getLatestBlockhash: jest.fn().mockReturnValue({ send: sendOnce }),
     };
     const getComputeUnits = jest.fn().mockResolvedValue(1_000);
-    const getPriorityFeeEstimate = jest.fn().mockResolvedValue({ priorityFeeEstimate: 500 });
+    const getPriorityFeeEstimate = jest
+      .fn()
+      .mockResolvedValue({ priorityFeeEstimate: 500 });
 
     const { create } = makeCreateSmartTransaction({
       raw,
@@ -134,7 +147,6 @@ describe("createSmartTransaction Tests", () => {
       getPriorityFeeEstimate,
     });
 
-    
     const altSigner = await generateKeyPairSigner();
 
     const result = await create({
@@ -153,7 +165,9 @@ describe("createSmartTransaction Tests", () => {
       getLatestBlockhash: jest.fn().mockReturnValue({ send: sendOnce }),
     };
     const getComputeUnits = jest.fn().mockResolvedValue(1_000);
-    const getPriorityFeeEstimate = jest.fn().mockResolvedValue({ priorityFeeEstimate: 500 });
+    const getPriorityFeeEstimate = jest
+      .fn()
+      .mockResolvedValue({ priorityFeeEstimate: 500 });
 
     const { create } = makeCreateSmartTransaction({
       raw,
