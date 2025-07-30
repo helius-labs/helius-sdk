@@ -12,6 +12,8 @@ import {
   RpcSubscriptions,
   SolanaRpcSubscriptionsApi,
   address,
+  Signature,
+  Base64EncodedWireTransaction,
 } from "@solana/kit";
 
 import { GetPriorityFeeEstimateFn } from "../rpc/methods/getPriorityFeeEstimate";
@@ -124,3 +126,70 @@ export interface CreateSmartTxWithTipInput extends CreateSmartTxInput {
 export type CreateSmartTransactionWithTipFn = (
   args: CreateSmartTxWithTipInput
 ) => Promise<CreateSmartTxResult>;
+
+export type JitoRegion = "Default" | "NY" | "Amsterdam" | "Frankfurt" | "Tokyo" | "SLC" | "Dallas" | "London" | "Singapore";
+
+// https://jito-labs.gitbook.io/mev/searcher-resources/json-rpc-api-reference/url
+export const JITO_API_URLS: Record<JitoRegion, string> = {
+  Default: "https://mainnet.block-engine.jito.wtf",
+  Dallas: "https://dallas.testnet.block-engine.jito.wtf",
+  NY: "https://ny.mainnet.block-engine.jito.wtf",
+  SLC: "https://slc.mainnet.block-engine.jito.wtf",
+  Singapore: "https://singapore.mainnet.block-engine.jito.wtf",
+  Amsterdam: "https://amsterdam.mainnet.block-engine.jito.wtf",
+  Frankfurt: "https://frankfurt.mainnet.block-engine.jito.wtf",
+  London: "https://london.mainnet.block-engine.jito.wtf",
+  Tokyo: "https://tokyo.mainnet.block-engine.jito.wtf",
+};
+
+export const jitoApiUrl = (region: JitoRegion): string => `${JITO_API_URLS[region]}/api/v1/bundles`;
+
+export interface SendSmartTransactionWithTipInput
+  extends CreateSmartTxWithTipInput {
+  region?: JitoRegion;
+  // Polling cadence (ms). Defaults to 3_000 ms
+  pollIntervalMs?: number;
+  //  Overall timeout (ms). Defaults to 60_000 ms
+  pollTimeoutMs?: number;
+  lastValidBlockHeightOffset?: number;
+}
+
+export type SendSmartTransactionWithTipFn = (
+  args: SendSmartTransactionWithTipInput
+) => Promise<string>;
+
+export interface SendSmartTxWithTipDeps {
+  raw: Rpc<SolanaRpcApi>;
+  createSmartTransactionWithTip: (
+    args: CreateSmartTxWithTipInput
+  ) => Promise<CreateSmartTxResult>;
+}
+
+export interface BroadcastOptions {
+  lastValidBlockHeightOffset?: number;
+  // Overall polling timeout (ms). Defaults to 60_000 ms
+  pollTimeoutMs?: number;
+  // polling cadence (ms). Defaults to 2_000 ms
+  pollIntervalMs?: number;
+  // Defaults to true
+  skipPreflight?: boolean;
+  maxRetries?: bigint;
+  commitment?: "processed" | "confirmed" | "finalized";
+}
+
+export interface PollTxOptions {
+  confirmationStatuses?: ("processed" | "confirmed" | "finalized")[];
+  timeout?: number;
+  interval?: number;
+  lastValidBlockHeight?: bigint | number;
+}
+
+export type PollTransactionConfirmationFn = (
+  signature: Signature,
+  options?: PollTxOptions,
+) => Promise<Signature>;
+
+export type BroadcastTransactionFn = (
+  wireTx64: string | Base64EncodedWireTransaction,
+  options?: BroadcastOptions,
+) => Promise<string>;

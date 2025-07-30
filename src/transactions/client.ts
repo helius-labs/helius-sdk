@@ -5,16 +5,23 @@ import type {
   SolanaRpcSubscriptionsApi,
 } from "@solana/kit";
 import { makeGetComputeUnits, type GetComputeUnitsFn } from "./getComputeUnits";
-import { CreateSmartTransactionFn, CreateSmartTransactionWithTipFn, SendSmartTransactionFn } from "./types";
+import {
+  type BroadcastTransactionFn,
+  type CreateSmartTransactionFn,
+  type PollTransactionConfirmationFn,
+  type SendSmartTransactionFn,
+} from "./types";
 import { makeCreateSmartTransaction } from "./createSmartTransaction";
 import { GetPriorityFeeEstimateFn } from "../rpc/methods/getPriorityFeeEstimate";
 import { makeSendSmartTransaction } from "./sendSmartTransaction";
-import { makeCreateSmartTransactionWithTip } from "./createSmartTransactionWithTip";
+import { makePollTransactionConfirmation } from "./pollTransactionConfirmation";
+import { broadcastTransactionFactory } from "./broadcastTransaction";
 
 export interface TxHelpersLazy {
   getComputeUnits: GetComputeUnitsFn;
+  pollTransactionConfirmation: PollTransactionConfirmationFn;
+  broadcastTransaction: BroadcastTransactionFn;
   createSmartTransaction: CreateSmartTransactionFn;
-  createSmartTransactionWithTip: CreateSmartTransactionWithTipFn;
   sendSmartTransaction: SendSmartTransactionFn;
 }
 
@@ -31,7 +38,9 @@ export const makeTxHelpersLazy = (
     getPriorityFeeEstimate,
   });
 
-  const { create: createWithTip } = makeCreateSmartTransactionWithTip(create);
+  const pollTransactionConfirmation = makePollTransactionConfirmation(rpc);
+
+  const broadcastTransaction = broadcastTransactionFactory(rpc);
 
   const { send } = makeSendSmartTransaction({
     raw: rpc,
@@ -41,8 +50,9 @@ export const makeTxHelpersLazy = (
 
   return {
     getComputeUnits,
+    pollTransactionConfirmation,
+    broadcastTransaction,
     createSmartTransaction: create,
-    createSmartTransactionWithTip: createWithTip,
     sendSmartTransaction: send,
   };
 };
