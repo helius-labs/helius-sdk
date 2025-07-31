@@ -1,7 +1,6 @@
 import { Signature, signature } from "@solana/kit";
 import { SenderRegion, senderFastUrl } from "./types";
 
-
 /**
  * POST a base‑64 transaction to the chosen Sender region.
  * Sender mandates skipPreflight = true and maxRetries = 0
@@ -11,9 +10,9 @@ import { SenderRegion, senderFastUrl } from "./types";
 export const sendViaSender = async (
   tx64: string,
   region: SenderRegion = "Default",
-  swqosOnly: boolean = false,
+  swqosOnly: boolean = false
 ): Promise<Signature> => {
-    const endpoint = swqosOnly
+  const endpoint = swqosOnly
     ? `${senderFastUrl(region)}?swqos_only=true`
     : senderFastUrl(region);
 
@@ -31,7 +30,7 @@ export const sendViaSender = async (
     }),
   });
 
-    /** Handle HTTP‑level failures early */
+  /** Handle HTTP‑level failures early */
   if (!res.ok) {
     const text = await res.text();
     throw new Error(`Sender HTTP ${res.status}: ${text.slice(0, 200)}`);
@@ -50,6 +49,6 @@ export const sendViaSender = async (
   }
 
   throw new Error(
-    `Unexpected Sender response: ${JSON.stringify(body).slice(0, 200)}`,
+    `Unexpected Sender response: ${JSON.stringify(body).slice(0, 200)}`
   );
 };

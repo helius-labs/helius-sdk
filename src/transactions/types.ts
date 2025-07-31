@@ -179,17 +179,19 @@ export interface SendViaSenderOptions {
   pollTimeoutMs?: number;
   pollIntervalMs?: number;
   // Optional explicit lamport tip override (optional)
-  tipAmount?: number; 
+  tipAmount?: number;
 }
 
 export type SendTransactionWithSenderFn = (
-  args: Omit<CreateSmartTxWithTipInput, "tipAmount"> & SendViaSenderOptions,
+  args: Omit<CreateSmartTxWithTipInput, "tipAmount"> & SendViaSenderOptions
 ) => Promise<string>;
 
 export interface SendSmartTxSenderDeps {
   raw: Rpc<SolanaRpcApi>;
-  createSmartTransactionWithTip: (i: CreateSmartTxWithTipInput) => Promise<CreateSmartTxResult>;
-};
+  createSmartTransactionWithTip: (
+    i: CreateSmartTxWithTipInput
+  ) => Promise<CreateSmartTxResult>;
+}
 
 export const SENDER_TIP_ACCOUNTS: Address[] = [
   address("4ACfpUFoaSD9bfPdeu6DBt89gB6ENTeHBXCAi87NhDEE"),
@@ -204,5 +206,5 @@ export const SENDER_TIP_ACCOUNTS: Address[] = [
   address("4TQLFNWK8AovT1gFvda5jfw2oJeRMKEmw7aH6MGBJ3or"),
 ] as const;
 
-export const MIN_TIP_LAMPORTS_DUAL   = 1_000_000n; // 0.001 SOL
-export const MIN_TIP_LAMPORTS_SWQOS  =   500_000n; // 0.0005 SOL
+export const MIN_TIP_LAMPORTS_DUAL = 1_000_000n; // 0.001 SOL
+export const MIN_TIP_LAMPORTS_SWQOS = 500_000n; // 0.0005 SOL

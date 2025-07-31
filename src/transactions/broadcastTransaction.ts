@@ -1,4 +1,8 @@
-import type { Rpc, SolanaRpcApi, Base64EncodedWireTransaction } from "@solana/kit";
+import type {
+  Rpc,
+  SolanaRpcApi,
+  Base64EncodedWireTransaction,
+} from "@solana/kit";
 import { BroadcastOptions } from "./types";
 
 export const broadcastTransactionFactory = (raw: Rpc<SolanaRpcApi>) => {
@@ -11,7 +15,7 @@ export const broadcastTransactionFactory = (raw: Rpc<SolanaRpcApi>) => {
       skipPreflight = true,
       commitment = "confirmed",
       maxRetries = 0n,
-    }: BroadcastOptions = {},
+    }: BroadcastOptions = {}
   ): Promise<string> {
     if (lastValidBlockHeightOffset < 0) {
       throw new Error("lastValidBlockHeightOffset must be a positive number");
@@ -26,13 +30,13 @@ export const broadcastTransactionFactory = (raw: Rpc<SolanaRpcApi>) => {
       })
       .send();
 
-      const bhInfo = await raw.getLatestBlockhash({ commitment }).send();
-      let lastValidBlockHeight = bhInfo.value.lastValidBlockHeight;
+    const bhInfo = await raw.getLatestBlockhash({ commitment }).send();
+    let lastValidBlockHeight = bhInfo.value.lastValidBlockHeight;
 
     const chainHeight = Number(await raw.getBlockHeight().send());
     const expiry = Math.min(
       Number(lastValidBlockHeight),
-      chainHeight + lastValidBlockHeightOffset,
+      chainHeight + lastValidBlockHeightOffset
     );
 
     // Poll signature status
@@ -51,7 +55,7 @@ export const broadcastTransactionFactory = (raw: Rpc<SolanaRpcApi>) => {
       if (status) {
         if (status.err) {
           throw new Error(
-            `Transaction failed on-chain: ${JSON.stringify(status.err)}`,
+            `Transaction failed on-chain: ${JSON.stringify(status.err)}`
           );
         }
         if (
@@ -65,7 +69,7 @@ export const broadcastTransactionFactory = (raw: Rpc<SolanaRpcApi>) => {
       const blockHeight = Number(await raw.getBlockHeight().send());
       if (blockHeight > expiry) {
         throw new Error(
-          "Block height exceeded lastValidBlockHeight, and the transaction failed to land on-chain",
+          "Block height exceeded lastValidBlockHeight, and the transaction failed to land on-chain"
         );
       }
 

@@ -12,4 +12,4 @@ export const determineTipSol = async (swqosOnly: boolean): Promise<bigint> => {
   const chosenSol = Math.max(floorSol ?? minSol, minSol);
 
   return solToLamports(chosenSol);
-}
+};

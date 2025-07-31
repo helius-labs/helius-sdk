@@ -7,8 +7,7 @@ describe("fetchTipFloor75th Tests", () => {
 
   it("Returns the 75-percentile tip when payload is valid", async () => {
     g.fetch = jest.fn().mockResolvedValue({
-      json: () =>
-        Promise.resolve([{ landed_tips_75th_percentile: 0.0013 }]),
+      json: () => Promise.resolve([{ landed_tips_75th_percentile: 0.0013 }]),
     });
 
     expect(await fetchTipFloor75th()).toBe(0.0013);

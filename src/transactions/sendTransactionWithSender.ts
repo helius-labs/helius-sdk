@@ -12,9 +12,7 @@ import { determineTipSol } from "./determineTip";
 const DEFAULT_TIMEOUT_MS = 60_000;
 const DEFAULT_POLL_MS = 2_000;
 
-export const makeSendTransactionWithSender = (
-  deps: SendSmartTxSenderDeps
-) => {
+export const makeSendTransactionWithSender = (deps: SendSmartTxSenderDeps) => {
   const { raw, createSmartTransactionWithTip } = deps;
   const poll = makePollTransactionConfirmation(raw);
 

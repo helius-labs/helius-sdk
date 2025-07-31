@@ -6,7 +6,7 @@ export const fetchTipFloor75th = async (): Promise<number | undefined> => {
   try {
     const res = await fetch(
       "https://bundles.jito.wtf/api/v1/bundles/tip_floor",
-      { cache: "no-store" },
+      { cache: "no-store" }
     );
 
     const json = await res.json();
@@ -16,4 +16,4 @@ export const fetchTipFloor75th = async (): Promise<number | undefined> => {
   } catch {
     return undefined;
   }
-}
+};

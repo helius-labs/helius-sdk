@@ -4,14 +4,15 @@ import type { Signature } from "@solana/kit";
 
 const buildMockRpc = (
   heights: number[],
-  statuses: (null | { confirmationStatus: string; err: any })[],
+  statuses: (null | { confirmationStatus: string; err: any })[]
 ): Rpc<SolanaRpcApi> => {
   let hIdx = 0;
   let sIdx = 0;
 
   return {
     getBlockHeight: jest.fn(() => ({
-      send: () => Promise.resolve(heights[Math.min(hIdx++, heights.length - 1)]),
+      send: () =>
+        Promise.resolve(heights[Math.min(hIdx++, heights.length - 1)]),
     })),
 
     getSignatureStatuses: jest.fn(() => ({
@@ -21,15 +22,16 @@ const buildMockRpc = (
         }),
     })),
   } as unknown as Rpc<SolanaRpcApi>;
-}
+};
 
-const SIG: Signature = "5vRXUwoFtoNHz4kxk6yNpQB8HzMvHqhZkUPrqE9xDdFJ" as Signature;
+const SIG: Signature =
+  "5vRXUwoFtoNHz4kxk6yNpQB8HzMvHqhZkUPrqE9xDdFJ" as Signature;
 
 describe("pollTransactionConfirmation Tests", () => {
   it("Resolves when the signature reaches a confirmed state", async () => {
     const rpc = buildMockRpc(
       [100],
-      [{ confirmationStatus: "confirmed", err: null }],
+      [{ confirmationStatus: "confirmed", err: null }]
     );
 
     const poll = makePollTransactionConfirmation(rpc);
@@ -47,7 +49,7 @@ describe("pollTransactionConfirmation Tests", () => {
           confirmationStatus: "confirmed",
           err: { InstructionError: [0, "Custom"] },
         },
-      ],
+      ]
     );
 
     const poll = makePollTransactionConfirmation(rpc);
@@ -64,7 +66,7 @@ describe("pollTransactionConfirmation Tests", () => {
         interval: 1,
         timeout: 50,
         lastValidBlockHeight: 101,
-      }),
+      })
     ).rejects.toThrow(/exceeded lastValidBlockHeight/i);
   });
 
@@ -76,7 +78,7 @@ describe("pollTransactionConfirmation Tests", () => {
       poll(SIG, {
         interval: 5,
         timeout: 15,
-      }),
+      })
     ).rejects.toThrow(/not confirmed within/i);
   });
 });

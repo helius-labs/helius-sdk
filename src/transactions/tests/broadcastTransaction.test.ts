@@ -14,7 +14,7 @@ const buildMockRpc = (cfg: {
     sendTransaction: jest.fn(() => ({
       send: () =>
         Promise.resolve(
-          "3U9JYc3QkWeSFX36zWYD4bMFheh1J2g1AEB7B1ohRvHC" as Signature,
+          "3U9JYc3QkWeSFX36zWYD4bMFheh1J2g1AEB7B1ohRvHC" as Signature
         ),
     })),
 
@@ -26,7 +26,8 @@ const buildMockRpc = (cfg: {
     })),
 
     getBlockHeight: jest.fn(() => ({
-      send: () => Promise.resolve(cfg.heights[Math.min(h++, cfg.heights.length - 1)]),
+      send: () =>
+        Promise.resolve(cfg.heights[Math.min(h++, cfg.heights.length - 1)]),
     })),
 
     getSignatureStatuses: jest.fn(() => ({
@@ -36,7 +37,7 @@ const buildMockRpc = (cfg: {
         }),
     })),
   } as unknown as Rpc<SolanaRpcApi>;
-}
+};
 
 // Any base64 text is good
 const TX64 = "AAAA";
@@ -78,7 +79,7 @@ describe("broadcastTransaction Tests", () => {
 
     const broadcast = broadcastTransactionFactory(rpc);
     await expect(
-      broadcast(TX64, { pollIntervalMs: 1, pollTimeoutMs: 50 }),
+      broadcast(TX64, { pollIntervalMs: 1, pollTimeoutMs: 50 })
     ).rejects.toThrow(/failed to land on-chain/i);
   });
 
@@ -90,7 +91,7 @@ describe("broadcastTransaction Tests", () => {
 
     const broadcast = broadcastTransactionFactory(rpc);
     await expect(
-      broadcast(TX64, { pollIntervalMs: 5, pollTimeoutMs: 20 }),
+      broadcast(TX64, { pollIntervalMs: 5, pollTimeoutMs: 20 })
     ).rejects.toThrow(/timed-out/i);
   });
 
@@ -102,7 +103,7 @@ describe("broadcastTransaction Tests", () => {
 
     const broadcast = broadcastTransactionFactory(rpc);
     await expect(
-      broadcast(TX64, { lastValidBlockHeightOffset: -1 }),
+      broadcast(TX64, { lastValidBlockHeightOffset: -1 })
     ).rejects.toThrow(/must be a positive number/i);
   });
 });

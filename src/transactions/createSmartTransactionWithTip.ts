@@ -1,6 +1,4 @@
-import {
-  lamports,
-} from "@solana/kit";
+import { lamports } from "@solana/kit";
 import { getTransferSolInstruction } from "@solana-program/system";
 
 import {
@@ -12,7 +10,7 @@ import {
 } from "./types";
 
 export const makeCreateSmartTransactionWithTip = (
-  createSmartTransaction: CreateSmartTransactionFn       
+  createSmartTransaction: CreateSmartTransactionFn
 ): { create: CreateSmartTransactionWithTipFn } => {
   const createWithTip: CreateSmartTransactionWithTipFn = async (
     args: CreateSmartTxWithTipInput
@@ -20,16 +18,19 @@ export const makeCreateSmartTransactionWithTip = (
     const feePayer =
       typeof args.feePayer === "string"
         ? args.signers.find((s) => s.address === args.feePayer)
-        : args.feePayer ?? args.signers[0];
+        : (args.feePayer ?? args.signers[0]);
 
     if (!feePayer) {
       throw new Error(
-        "createSmartTransactionWithTip: could not resolve a fee payer signer",
+        "createSmartTransactionWithTip: could not resolve a fee payer signer"
       );
     }
 
     // Random tip account to avoid CU lockouts
-    const randomTipAccount = SENDER_TIP_ACCOUNTS[Math.floor(Math.random() * SENDER_TIP_ACCOUNTS.length)];
+    const randomTipAccount =
+      SENDER_TIP_ACCOUNTS[
+        Math.floor(Math.random() * SENDER_TIP_ACCOUNTS.length)
+      ];
 
     const tipIx = getTransferSolInstruction({
       source: feePayer,
