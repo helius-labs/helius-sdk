@@ -106,17 +106,56 @@ export type SendSmartTxDeps = Readonly<{
   createSmartTransaction: CreateSmartTransactionFn;
 }>;
 
-// https://jito-foundation.gitbook.io/mev/mev-payment-and-distribution/on-chain-addresses
-export const JITO_TIP_ACCOUNTS: Address[] = [
-  address("96gYZGLnJYVFmbjzopPSU6QiEV5fGqZNyN9nmNhvrZU5"),
-  address("HFqU5x63VTqvQss8hp11i4wVV8bD44PvwucfZ2bU7gRe"),
-  address("Cw8CFyM9FkoMi7K7Crf6HNQqf4uEMzpKw6QNghXLvLkY"),
-  address("ADaUMid9yfUytqMBgopwjb2DTLSokTSzL1zt6iGPaS49"),
-  address("DfXygSm4jCyNCybVYYK6DwvWqjKee8pbDmJGcLWNDXjh"),
-  address("ADuUkR4vqLUMWXxW9gh6D6L8pMSawimctcNZ5pGwDcEt"),
-  address("DttWaMuVvTiduZRnguLF7jNxTgiMBZ1hyAumKUiL2KRL"),
-  address("3AVi9Tg9Uo68tJfuvoKvqKNWKkC5wPdSSdeBnizKZ6jT"),
-] as const;
+export interface BroadcastOptions {
+  lastValidBlockHeightOffset?: number;
+  // Overall polling timeout (ms). Defaults to 60_000 ms
+  pollTimeoutMs?: number;
+  // polling cadence (ms). Defaults to 2_000 ms
+  pollIntervalMs?: number;
+  // Defaults to true
+  skipPreflight?: boolean;
+  maxRetries?: bigint;
+  // pls don't use processed
+  commitment?: "processed" | "confirmed" | "finalized";
+}
+
+export interface PollTxOptions {
+  // pls don't use processed
+  confirmationStatuses?: ("processed" | "confirmed" | "finalized")[];
+  timeout?: number;
+  interval?: number;
+  lastValidBlockHeight?: bigint | number;
+}
+
+export type PollTransactionConfirmationFn = (
+  signature: Signature,
+  options?: PollTxOptions
+) => Promise<Signature>;
+
+export type BroadcastTransactionFn = (
+  wireTx64: string | Base64EncodedWireTransaction,
+  options?: BroadcastOptions
+) => Promise<string>;
+
+export const SENDER_ENDPOINTS = {
+  Default: "http://slc-sender.helius-rpc.com",
+  US_EAST: "http://ewr-sender.helius-rpc.com",
+  EU_WEST: "http://lon-sender.helius-rpc.com",
+  EU_CENTRAL: "http://fra-sender.helius-rpc.com",
+  EU_NORTH: "http://ams-sender.helius-rpc.com",
+  AP_SINGAPORE: "http://sg-sender.helius-rpc.com",
+  AP_TOKYO: "http://tyo-sender.helius-rpc.com",
+} as const;
+
+export type SenderRegion = keyof typeof SENDER_ENDPOINTS;
+
+// `/fast` endpoint used for sending transactions
+export const senderFastUrl = (region: SenderRegion) =>
+  `${SENDER_ENDPOINTS[region]}/fast`;
+
+// `/ping` endpoint used for connection warming
+export const senderPingUrl = (region: SenderRegion) =>
+  `${SENDER_ENDPOINTS[region]}/ping`;
 
 export interface CreateSmartTxWithTipInput extends CreateSmartTxInput {
   // Defaults to 1_000
@@ -127,69 +166,43 @@ export type CreateSmartTransactionWithTipFn = (
   args: CreateSmartTxWithTipInput
 ) => Promise<CreateSmartTxResult>;
 
-export type JitoRegion = "Default" | "NY" | "Amsterdam" | "Frankfurt" | "Tokyo" | "SLC" | "Dallas" | "London" | "Singapore";
+export interface SendViaSenderOptions {
+  region: SenderRegion;
+  pollTimeoutMs?: number;
+  pollIntervalMs?: number;
+}
 
-// https://jito-labs.gitbook.io/mev/searcher-resources/json-rpc-api-reference/url
-export const JITO_API_URLS: Record<JitoRegion, string> = {
-  Default: "https://mainnet.block-engine.jito.wtf",
-  Dallas: "https://dallas.testnet.block-engine.jito.wtf",
-  NY: "https://ny.mainnet.block-engine.jito.wtf",
-  SLC: "https://slc.mainnet.block-engine.jito.wtf",
-  Singapore: "https://singapore.mainnet.block-engine.jito.wtf",
-  Amsterdam: "https://amsterdam.mainnet.block-engine.jito.wtf",
-  Frankfurt: "https://frankfurt.mainnet.block-engine.jito.wtf",
-  London: "https://london.mainnet.block-engine.jito.wtf",
-  Tokyo: "https://tokyo.mainnet.block-engine.jito.wtf",
+export interface SendViaSenderOptions {
+  region: SenderRegion;
+  // Route only through SWQOS infra
+  swqosOnly?: boolean;
+  pollTimeoutMs?: number;
+  pollIntervalMs?: number;
+  // Optional explicit lamport tip override (optional)
+  tipAmount?: number; 
+}
+
+export type SendTransactionWithSenderFn = (
+  args: Omit<CreateSmartTxWithTipInput, "tipAmount"> & SendViaSenderOptions,
+) => Promise<string>;
+
+export interface SendSmartTxSenderDeps {
+  raw: Rpc<SolanaRpcApi>;
+  createSmartTransactionWithTip: (i: CreateSmartTxWithTipInput) => Promise<CreateSmartTxResult>;
 };
 
-export const jitoApiUrl = (region: JitoRegion): string => `${JITO_API_URLS[region]}/api/v1/bundles`;
+export const SENDER_TIP_ACCOUNTS: Address[] = [
+  address("4ACfpUFoaSD9bfPdeu6DBt89gB6ENTeHBXCAi87NhDEE"),
+  address("D2L6yPZ2FmmmTKPgzaMKdhu6EWZcTpLy1Vhx8uvZe7NZ"),
+  address("9bnz4RShgq1hAnLnZbP8kbgBg1kEmcJBYQq3gQbmnSta"),
+  address("5VY91ws6B2hMmBFRsXkoAAdsPHBJwRfBht4DXox3xkwn"),
+  address("2nyhqdwKcJZR2vcqCyrYsaPVdAnFoJjiksCXJ7hfEYgD"),
+  address("2q5pghRs6arqVjRvT5gfgWfWcHWmw1ZuCzphgd5KfWGJ"),
+  address("wyvPkWjVZz1M8fHQnMMCDTQDbkManefNNhweYk5WkcF"),
+  address("3KCKozbAaF75qEU33jtzozcJ29yJuaLJTy2jFdzUY8bT"),
+  address("4vieeGHPYPG2MmyPRcYjdiDmmhN3ww7hsFNap8pVN3Ey"),
+  address("4TQLFNWK8AovT1gFvda5jfw2oJeRMKEmw7aH6MGBJ3or"),
+] as const;
 
-export interface SendSmartTransactionWithTipInput
-  extends CreateSmartTxWithTipInput {
-  region?: JitoRegion;
-  // Polling cadence (ms). Defaults to 3_000 ms
-  pollIntervalMs?: number;
-  //  Overall timeout (ms). Defaults to 60_000 ms
-  pollTimeoutMs?: number;
-  lastValidBlockHeightOffset?: number;
-}
-
-export type SendSmartTransactionWithTipFn = (
-  args: SendSmartTransactionWithTipInput
-) => Promise<string>;
-
-export interface SendSmartTxWithTipDeps {
-  raw: Rpc<SolanaRpcApi>;
-  createSmartTransactionWithTip: (
-    args: CreateSmartTxWithTipInput
-  ) => Promise<CreateSmartTxResult>;
-}
-
-export interface BroadcastOptions {
-  lastValidBlockHeightOffset?: number;
-  // Overall polling timeout (ms). Defaults to 60_000 ms
-  pollTimeoutMs?: number;
-  // polling cadence (ms). Defaults to 2_000 ms
-  pollIntervalMs?: number;
-  // Defaults to true
-  skipPreflight?: boolean;
-  maxRetries?: bigint;
-  commitment?: "processed" | "confirmed" | "finalized";
-}
-
-export interface PollTxOptions {
-  confirmationStatuses?: ("processed" | "confirmed" | "finalized")[];
-  timeout?: number;
-  interval?: number;
-  lastValidBlockHeight?: bigint | number;
-}
-
-export type PollTransactionConfirmationFn = (
-  signature: Signature,
-  options?: PollTxOptions,
-) => Promise<Signature>;
-
-export type BroadcastTransactionFn = (
-  wireTx64: string | Base64EncodedWireTransaction,
-  options?: BroadcastOptions,
-) => Promise<string>;
+export const MIN_TIP_LAMPORTS_DUAL   = 1_000_000n; // 0.001 SOL
+export const MIN_TIP_LAMPORTS_SWQOS  =   500_000n; // 0.0005 SOL
