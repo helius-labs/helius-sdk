@@ -25,14 +25,12 @@ jest.mock("../determineTip", () => ({
 
 describe("makeSendTransactionWithSender Tests", () => {
   const dummyRpc: any = {};
-  const signed = {}; // fake tx object
+  const signed = {};
   const lifetime = { lastValidBlockHeight: 999n } as any;
 
   beforeEach(() => {
     jest.resetAllMocks();
-    (
-      determineTipSol as jest.MockedFunction<typeof determineTipSol>
-    ).mockResolvedValue(1n);
+    (determineTipSol as jest.MockedFunction<typeof determineTipSol>).mockResolvedValue(1n);
     mockCreateSmartTxWithTip.mockResolvedValue({ signed, lifetime });
     mockSendViaSender.mockResolvedValue("sig-123");
   });
