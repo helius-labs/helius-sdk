@@ -25,7 +25,7 @@ export const LAMPORTS_PER_SOL_BIGINT = BigInt(1_000_000_000);
 
 export type CreateStakeTransactionFn = (
   owner: KeyPairSigner<string>,
-  amountSol: number,
+  amountSol: number
 ) => Promise<{
   serializedTx: string;
   stakeAccountPubkey: Address;
@@ -33,5 +33,12 @@ export type CreateStakeTransactionFn = (
 
 export type createUnstakeTransactionFn = (
   ownerSigner: KeyPairSigner<string>,
+  stakeAccount: Address
+) => Promise<{ serializedTx: string }>;
+
+export type CreateWithdrawTransactionFn = (
+  withdrawAuthority: KeyPairSigner<string>,
   stakeAccount: Address,
-) => Promise<{ serializedTx: string }>
+  destination: Address,
+  lamports: number | bigint
+) => Promise<{ serializedTx: string }>;
