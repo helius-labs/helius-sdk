@@ -32,6 +32,7 @@ import type { EnhancedTxClientLazy } from "../enhanced";
 import { TxHelpersLazy } from "../transactions";
 import { ResolvedHeliusRpcApi } from "./heliusRpcApi";
 import { makeWsAsync, WsAsync } from "../websockets/wsAsync";
+import { StakeClientLazy } from "../staking/client";
 
 interface HeliusRpcOptions {
   apiKey: string;
@@ -75,6 +76,9 @@ export type HeliusClient = ResolvedHeliusRpcApi & {
 
   // WebSocket RPC subscriptions
   ws: WsAsync;
+
+  // Staking helpers
+  stake: StakeClientLazy;
 };
 
 export const createHelius = ({
@@ -268,6 +272,15 @@ export const createHelius = ({
 
     return makeTxHelpersLazy(baseRpc, getPriorityFeeEstimate, rpcSubscriptions);
   });
+
+  defineLazyNamespace<HeliusClient, StakeClientLazy>(
+    client,
+    "stake",
+    async () => {
+      const { makeStakeClientLazy } = await import("../staking/client.js");
+      return makeStakeClientLazy(baseRpc);
+    }
+  );
 
   // So we can send standard RPC calls
   const merged = new Proxy(client as any, {
