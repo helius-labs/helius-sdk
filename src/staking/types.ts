@@ -30,3 +30,8 @@ export type CreateStakeTransactionFn = (
   serializedTx: string;
   stakeAccountPubkey: Address;
 }>;
+
+export type createUnstakeTransactionFn = (
+  ownerSigner: KeyPairSigner<string>,
+  stakeAccount: Address,
+) => Promise<{ serializedTx: string }>
