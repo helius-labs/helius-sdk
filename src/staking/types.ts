@@ -18,6 +18,9 @@ export const HELIUS_VALIDATOR_ID: Address = address(
   "he1iusunGwqrNtafDtLdhsUQDFvo13z9sUa36PauBtk"
 );
 
+// Deactivation epoch check (active stake accounts are set to u64's max value)
+export const U64_MAX = BigInt("18446744073709551615");
+
 // The size of a stake account
 export const STAKE_STATE_LEN = 200;
 
@@ -44,5 +47,10 @@ export type CreateWithdrawTransactionFn = (
 ) => Promise<{ serializedTx: string }>;
 
 export type GetHeliusStakeAccountsFn = (
-  wallet: string | Address,
+  wallet: string | Address
 ) => Promise<any[]>;
+
+export type GetWithdrawableAmountFn = (
+  stakeAccount: Address | string,
+  includeRentExempt?: boolean,
+) => Promise<number>;
