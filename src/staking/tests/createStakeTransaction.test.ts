@@ -53,7 +53,7 @@ describe("makeCreateStakeTransaction Tests", () => {
     jest.clearAllMocks();
   });
 
-  it("builds + fully signs a stake‑creation transaction", async () => {
+  it("Builds + fully signs a stake-creation transaction", async () => {
     const { serializedTx, stakeAccountPubkey } =
       await makeCreateStakeTransaction({ rpc: mockRpc })(
         ownerSigner,

@@ -37,7 +37,7 @@ import bs58 from "bs58";
     const v: any = sim.value;
     console.log("Simulation result");
     console.log(
-      "  unitsConsumed:",
+      "unitsConsumed: ",
       v.unitsConsumed?.toString?.() ?? v.unitsConsumed
     );
     console.log("err: ", v.err ?? "none");
