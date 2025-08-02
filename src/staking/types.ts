@@ -42,3 +42,7 @@ export type CreateWithdrawTransactionFn = (
   destination: Address,
   lamports: number | bigint
 ) => Promise<{ serializedTx: string }>;
+
+export type GetHeliusStakeAccountsFn = (
+  wallet: string | Address,
+) => Promise<any[]>;

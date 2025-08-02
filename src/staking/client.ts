@@ -1,18 +1,21 @@
 import type { Rpc, SolanaRpcApi } from "@solana/kit";
 import { makeCreateStakeTransaction } from "./createStakeTransaction";
 import {
+  GetHeliusStakeAccountsFn,
   type CreateStakeTransactionFn,
   type createUnstakeTransactionFn,
   type CreateWithdrawTransactionFn,
 } from "./types";
 import { makeCreateUnstakeTransaction } from "./createUnstakeTransaction";
 import { makeCreateWithdrawTransaction } from "./createWithdrawTransaction";
+import { makeGetHeliusStakeAccounts } from "./getHeliusStakeAccounts";
 
 export interface StakeClientLazy {
   createStakeTransaction: CreateStakeTransactionFn;
   createUnstakeTransaction: createUnstakeTransactionFn;
   createWithdrawTransaction: CreateWithdrawTransactionFn;
-}
+  getHeliusStakeAccounts: GetHeliusStakeAccountsFn;
+};
 
 export const makeStakeClientLazy = (
   rpc: Rpc<SolanaRpcApi>
@@ -20,10 +23,12 @@ export const makeStakeClientLazy = (
   const createStakeTransaction = makeCreateStakeTransaction({ rpc });
   const createUnstakeTransaction = makeCreateUnstakeTransaction({ rpc });
   const createWithdrawTransaction = makeCreateWithdrawTransaction({ rpc });
+  const getHeliusStakeAccounts = makeGetHeliusStakeAccounts({ rpc });
 
   return {
     createStakeTransaction,
     createUnstakeTransaction,
     createWithdrawTransaction,
+    getHeliusStakeAccounts
   };
 };
