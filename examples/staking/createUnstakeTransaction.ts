@@ -7,7 +7,8 @@ import bs58 from "bs58";
   const apiKey = ""; // From Helius dashboard
   const helius = createHelius({ apiKey });
 
-  const STAKE_ACCOUNT = address("FPzfjhDddkde4fAGzm2AWuCE4nWJe6Dw8ZyjUZtsCn89");
+  // Replace with actual address
+  const STAKE_ACCOUNT = address("");
 
   try {
     const ownerSigner = await createKeyPairSignerFromBytes(

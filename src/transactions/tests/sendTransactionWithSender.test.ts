@@ -30,7 +30,9 @@ describe("makeSendTransactionWithSender Tests", () => {
 
   beforeEach(() => {
     jest.resetAllMocks();
-    (determineTipSol as jest.MockedFunction<typeof determineTipSol>).mockResolvedValue(1n);
+    (
+      determineTipSol as jest.MockedFunction<typeof determineTipSol>
+    ).mockResolvedValue(1n);
     mockCreateSmartTxWithTip.mockResolvedValue({ signed, lifetime });
     mockSendViaSender.mockResolvedValue("sig-123");
   });
