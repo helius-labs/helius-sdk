@@ -208,3 +208,25 @@ export const SENDER_TIP_ACCOUNTS: Address[] = [
 
 export const MIN_TIP_LAMPORTS_DUAL = 1_000_000n; // 0.001 SOL
 export const MIN_TIP_LAMPORTS_SWQOS = 500_000n; // 0.0005 SOL
+
+export interface HeliusSendOptions {
+  skipPreflight?: boolean;
+  maxRetries?: number;
+  minContextSlot?: number;
+  preflightCommitment?: string;
+  validatorAcls?: string[];
+}
+
+export type SendableTransaction =
+  | Base64EncodedWireTransaction
+  | { serialize(): Uint8Array }
+  | { base64: string }
+  | { signed: unknown };
+
+export type SendTransactionFn = (
+  tx: SendableTransaction,
+  opts?: HeliusSendOptions
+) => Promise<Signature>;
+
+export const SFDP_REJECTS_URL =
+  "https://helius-docs.s3.us-east-2.amazonaws.com/sfdp_rejects.json";

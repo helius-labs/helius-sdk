@@ -6,6 +6,7 @@ import type {
 } from "@solana/kit";
 import { makeGetComputeUnits, type GetComputeUnitsFn } from "./getComputeUnits";
 import {
+  SendTransactionFn,
   SendTransactionWithSenderFn,
   type BroadcastTransactionFn,
   type CreateSmartTransactionFn,
@@ -19,6 +20,7 @@ import { makePollTransactionConfirmation } from "./pollTransactionConfirmation";
 import { broadcastTransactionFactory } from "./broadcastTransaction";
 import { makeCreateSmartTransactionWithTip } from "./createSmartTransactionWithTip";
 import { makeSendTransactionWithSender } from "./sendTransactionWithSender";
+import { makeSendTransaction } from "./sendTransaction";
 
 export interface TxHelpersLazy {
   getComputeUnits: GetComputeUnitsFn;
@@ -27,6 +29,7 @@ export interface TxHelpersLazy {
   createSmartTransaction: CreateSmartTransactionFn;
   sendSmartTransaction: SendSmartTransactionFn;
   sendTransactionWithSender: SendTransactionWithSenderFn;
+  sendTransaction: SendTransactionFn;
 }
 
 export const makeTxHelpersLazy = (
@@ -60,6 +63,8 @@ export const makeTxHelpersLazy = (
     createSmartTransactionWithTip,
   });
 
+  const  { send: sendTransaction } = makeSendTransaction(rpc);
+
   return {
     getComputeUnits,
     pollTransactionConfirmation,
@@ -67,5 +72,6 @@ export const makeTxHelpersLazy = (
     createSmartTransaction: create,
     sendSmartTransaction: send,
     sendTransactionWithSender: sendWithSender,
+    sendTransaction,
   };
 };
