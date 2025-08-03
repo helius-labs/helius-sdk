@@ -1,4 +1,6 @@
-import { address, Address, KeyPairSigner } from "@solana/kit";
+import { getInitializeInstruction, getDelegateStakeInstruction } from "@solana-program/stake";
+import { getCreateAccountInstruction } from "@solana-program/system";
+import { address, Address, KeyPairSigner, TransactionSigner } from "@solana/kit";
 
 export const STAKE_PROGRAM_ID: Address = address(
   "Stake11111111111111111111111111111111111111"
@@ -54,3 +56,31 @@ export type GetWithdrawableAmountFn = (
   stakeAccount: Address | string,
   includeRentExempt?: boolean,
 ) => Promise<number>;
+
+export interface StakeInstructionsResult {
+  instructions: ReadonlyArray<
+    ReturnType<
+      | typeof getCreateAccountInstruction
+      | typeof getInitializeInstruction
+      | typeof getDelegateStakeInstruction
+    >
+  >;
+  stakeAccount: TransactionSigner<string>;
+}
+
+export type GetStakeInstructionsFn = (
+  owner: TransactionSigner<string>,
+  amountSol: number,
+) => Promise<StakeInstructionsResult>;
+
+export type GetUnstakeInstructionFn = (
+  owner: Address,
+  stakeAccount: Address,
+) => any;                         
+
+export type GetWithdrawIxFn = (
+  owner: Address,
+  stakeAccount: Address,
+  destination: Address,
+  lamports: number | bigint,
+) => any;
