@@ -4,9 +4,11 @@ import type { RpcCaller } from "../rpc/caller";
 import type {
   GetCompressedAccountFn,
 } from "./methods/getCompressedAccount";
+import { GetCompressedAccountProofFn } from "./methods/getCompressedAccountProof";
 
 export interface ZkClientLazy {
   getCompressedAccount: GetCompressedAccountFn;
+  getCompressedAccountProof: GetCompressedAccountProofFn;
 }
 
 export const makeZkClientLazy = (call: RpcCaller): ZkClientLazy => {
@@ -20,6 +22,17 @@ export const makeZkClientLazy = (call: RpcCaller): ZkClientLazy => {
         "./methods/getCompressedAccount"
       );
       return makeGetCompressedAccount(call);
+    },
+  );
+
+  defineLazyMethod<ZkClientLazy, GetCompressedAccountProofFn>(
+    obj,
+    "getCompressedAccountProof",
+    async () => {
+      const { makeGetCompressedAccountProof } = await import(
+        "./methods/getCompressedAccountProof"
+      );
+      return makeGetCompressedAccountProof(call);
     },
   );
 

@@ -23,3 +23,21 @@ export interface GetCompressedAccountResponse {
   value: GetCompressedAccountValue;
   context: { slot: number };
 }
+
+export type GetCompressedAccountProofRequest = Readonly<{
+  hash: string;
+}>;
+
+export type MerkleProofWithContext = Readonly<{
+  hash: string;
+  leafIndex: number;
+  merkleTree: string;
+  proof: string[];
+  root: string;
+  rootSeq: bigint | number;
+}>;
+
+export type GetCompressedAccountProofResponse = Readonly<{
+  context: { slot: number };
+  value: MerkleProofWithContext;
+}>;
