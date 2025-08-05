@@ -1,7 +1,7 @@
 export interface GetCompressedAccountRequest {
   address: string | null;
   hash?: string;
-}
+};
 
 export interface GetCompressedAccountValue {
   address: string;
@@ -17,12 +17,12 @@ export interface GetCompressedAccountValue {
   seq: number;
   slotCreated: number;
   tree: string;
-}
+};
 
 export interface GetCompressedAccountResponse {
   value: GetCompressedAccountValue;
   context: { slot: number };
-}
+};
 
 export type GetCompressedAccountProofRequest = Readonly<{
   hash: string;
@@ -48,13 +48,13 @@ export interface GetCompressedAccountsByOwnerRequest {
   limit?: number | null;
   dataSlice?: { offset: number; length: number } | null;
   filters?: ReadonlyArray<{ memcmp: { offset: number; bytes: string } }>;
-}
+};
 
 export interface AccountData {
   discriminator: number;
   data: string; // Base64
   dataHash: string;
-}
+};
 
 export interface CompressedAccount {
   address?: string;
@@ -66,26 +66,38 @@ export interface CompressedAccount {
   seq: number;
   slotCreated: number;
   tree: string;
-}
+};
 
 export interface PaginatedAccountList {
   cursor?: string;
   items: CompressedAccount[];
-}
+};
 
 export interface GetCompressedAccountsByOwnerResponse {
   context: { slot: number };
   value: PaginatedAccountList;
-}
+};
 
 export interface GetCompressedBalanceRequest {
   address?: string | null;
   hash?: string | null;
-}
+};
 
 export interface GetCompressedBalanceResponse {
   context: { slot: number };
   value: number;
-}
+};
 
 export type GetCompressedBalanceFn = (p: GetCompressedBalanceRequest) => Promise<GetCompressedBalanceResponse>;
+
+export interface GetCompressedBalanceByOwnerRequest {
+  owner: string;
+};
+
+export interface GetCompressedBalanceByOwnerResponse {
+  context: { slot: number };
+  value: number;
+};
+
+export type GetCompressedBalanceByOwnerFn = (p: GetCompressedBalanceByOwnerRequest) => Promise<GetCompressedBalanceByOwnerResponse>;
+

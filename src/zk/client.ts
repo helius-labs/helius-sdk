@@ -1,17 +1,16 @@
 import { defineLazyMethod } from "../rpc/lazy";
 import type { RpcCaller } from "../rpc/caller";
-import type {
-  GetCompressedAccountFn,
-} from "./methods/getCompressedAccount";
+import type { GetCompressedAccountFn } from "./methods/getCompressedAccount";
 import { GetCompressedAccountProofFn } from "./methods/getCompressedAccountProof";
 import { GetCompressedAccountsByOwnerFn } from "./methods/getCompressedAccountsByOwner";
-import { GetCompressedBalanceFn } from "./types";
+import { GetCompressedBalanceByOwnerFn, GetCompressedBalanceFn } from "./types";
 
 export interface ZkClientLazy {
   getCompressedAccount: GetCompressedAccountFn;
   getCompressedAccountProof: GetCompressedAccountProofFn;
   getCompressedAccountsByOwner: GetCompressedAccountsByOwnerFn;
-  getCompressedBalance: GetCompressedBalanceFn; 
+  getCompressedBalance: GetCompressedBalanceFn;
+  getCompressedBalanceByOwner: GetCompressedBalanceByOwnerFn;
 }
 
 export const makeZkClientLazy = (call: RpcCaller): ZkClientLazy => {
@@ -25,7 +24,7 @@ export const makeZkClientLazy = (call: RpcCaller): ZkClientLazy => {
         "./methods/getCompressedAccount"
       );
       return makeGetCompressedAccount(call);
-    },
+    }
   );
 
   defineLazyMethod<ZkClientLazy, GetCompressedAccountProofFn>(
@@ -36,7 +35,7 @@ export const makeZkClientLazy = (call: RpcCaller): ZkClientLazy => {
         "./methods/getCompressedAccountProof"
       );
       return makeGetCompressedAccountProof(call);
-    },
+    }
   );
 
   defineLazyMethod(obj, "getCompressedAccountsByOwner", async () => {
@@ -47,11 +46,22 @@ export const makeZkClientLazy = (call: RpcCaller): ZkClientLazy => {
   });
 
   defineLazyMethod(obj, "getCompressedBalance", async () => {
-  const { makeGetCompressedBalance } = await import(
-    "./methods/getCompressedBalance"
+    const { makeGetCompressedBalance } = await import(
+      "./methods/getCompressedBalance"
+    );
+    return makeGetCompressedBalance(call);
+  });
+
+  defineLazyMethod<ZkClientLazy, GetCompressedBalanceByOwnerFn>(
+    obj,
+    "getCompressedBalanceByOwner",
+    async () => {
+      const { makeGetCompressedBalanceByOwner } = await import(
+        "./methods/getCompressedBalanceByOwner"
+      );
+      return makeGetCompressedBalanceByOwner(call);
+    }
   );
-  return makeGetCompressedBalance(call);
-});
 
   return obj as ZkClientLazy;
 };
