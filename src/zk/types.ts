@@ -48,13 +48,13 @@ export interface GetCompressedAccountsByOwnerRequest {
   limit?: number | null;
   dataSlice?: { offset: number; length: number } | null;
   filters?: ReadonlyArray<{ memcmp: { offset: number; bytes: string } }>;
-};
+}
 
 export interface AccountData {
   discriminator: number;
   data: string; // Base64
   dataHash: string;
-};
+}
 
 export interface CompressedAccount {
   address?: string;
@@ -66,14 +66,26 @@ export interface CompressedAccount {
   seq: number;
   slotCreated: number;
   tree: string;
-};
+}
 
 export interface PaginatedAccountList {
   cursor?: string;
   items: CompressedAccount[];
-};
+}
 
 export interface GetCompressedAccountsByOwnerResponse {
   context: { slot: number };
   value: PaginatedAccountList;
-};
+}
+
+export interface GetCompressedBalanceRequest {
+  address?: string | null;
+  hash?: string | null;
+}
+
+export interface GetCompressedBalanceResponse {
+  context: { slot: number };
+  value: number;
+}
+
+export type GetCompressedBalanceFn = (p: GetCompressedBalanceRequest) => Promise<GetCompressedBalanceResponse>;
