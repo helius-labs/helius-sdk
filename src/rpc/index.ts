@@ -33,6 +33,7 @@ import { TxHelpersLazy } from "../transactions";
 import { ResolvedHeliusRpcApi } from "./heliusRpcApi";
 import { makeWsAsync, WsAsync } from "../websockets/wsAsync";
 import { StakeClientLazy } from "../staking/client";
+import { ZkClientLazy } from "../zk/client";
 
 interface HeliusRpcOptions {
   apiKey: string;
@@ -79,6 +80,9 @@ export type HeliusClient = ResolvedHeliusRpcApi & {
 
   // Staking helpers
   stake: StakeClientLazy;
+
+  // ZK Compression
+  zk: ZkClientLazy;
 };
 
 export const createHelius = ({
@@ -279,6 +283,15 @@ export const createHelius = ({
     async () => {
       const { makeStakeClientLazy } = await import("../staking/client.js");
       return makeStakeClientLazy(baseRpc);
+    }
+  );
+
+  defineLazyNamespace<HeliusClient, ZkClientLazy>(
+    client,
+    "zk",
+    async () => {
+      const { makeZkClientLazy } = await import("../zk/client");
+      return makeZkClientLazy(call);
     }
   );
 
