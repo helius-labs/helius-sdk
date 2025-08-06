@@ -1,7 +1,7 @@
 export interface GetCompressedAccountRequest {
   address: string | null;
   hash?: string;
-};
+}
 
 export interface GetCompressedAccountValue {
   address: string;
@@ -17,12 +17,12 @@ export interface GetCompressedAccountValue {
   seq: number;
   slotCreated: number;
   tree: string;
-};
+}
 
 export interface GetCompressedAccountResponse {
   value: GetCompressedAccountValue;
   context: { slot: number };
-};
+}
 
 export type GetCompressedAccountProofRequest = Readonly<{
   hash: string;
@@ -48,13 +48,13 @@ export interface GetCompressedAccountsByOwnerRequest {
   limit?: number | null;
   dataSlice?: { offset: number; length: number } | null;
   filters?: ReadonlyArray<{ memcmp: { offset: number; bytes: string } }>;
-};
+}
 
 export interface AccountData {
   discriminator: number;
   data: string; // Base64
   dataHash: string;
-};
+}
 
 export interface CompressedAccount {
   address?: string;
@@ -66,7 +66,7 @@ export interface CompressedAccount {
   seq: number;
   slotCreated: number;
   tree: string;
-};
+}
 
 export interface PaginatedAccountList {
   cursor?: string;
@@ -88,7 +88,9 @@ export interface GetCompressedBalanceResponse {
   value: number;
 };
 
-export type GetCompressedBalanceFn = (p: GetCompressedBalanceRequest) => Promise<GetCompressedBalanceResponse>;
+export type GetCompressedBalanceFn = (
+  p: GetCompressedBalanceRequest
+) => Promise<GetCompressedBalanceResponse>;
 
 export interface GetCompressedBalanceByOwnerRequest {
   owner: string;
@@ -99,5 +101,27 @@ export interface GetCompressedBalanceByOwnerResponse {
   value: number;
 };
 
-export type GetCompressedBalanceByOwnerFn = (p: GetCompressedBalanceByOwnerRequest) => Promise<GetCompressedBalanceByOwnerResponse>;
+export type GetCompressedBalanceByOwnerFn = (
+  p: GetCompressedBalanceByOwnerRequest
+) => Promise<GetCompressedBalanceByOwnerResponse>;
 
+export interface GetCompressedMintTokenHoldersRequest {
+  mint: string; // Base58
+  cursor?: string | null; // Base58
+  limit?: number | null;
+};
+
+export interface OwnerBalance {
+  owner: string;
+  balance: number;
+}
+
+export interface GetCompressedMintTokenHoldersResponse {
+  context: { slot: number };
+  value: {
+    cursor?: string;
+    items: OwnerBalance[];
+  };
+};
+
+export type GetCompressedMintTokenHoldersFn = (p: GetCompressedMintTokenHoldersRequest) => Promise<GetCompressedMintTokenHoldersResponse>;
