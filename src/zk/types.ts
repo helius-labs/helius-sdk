@@ -171,3 +171,32 @@ export interface GetCompressedTokenAccountsByDelegateResponse {
 }
 
 export type GetCompressedTokenAccountsByDelegateFn = (p: GetCompressedTokenAccountsByDelegateRequest) => Promise<GetCompressedTokenAccountsByDelegateResponse>;
+
+export interface GetCompressedTokenAccountsByOwnerRequest {
+  owner: string;
+  mint?: string | null;
+  cursor?: string | null;
+  limit?: number | null;
+}
+
+export interface GetCompressedTokenAccountsByOwnerResponse {
+  context: { slot: number };
+  value: {
+    cursor?: string;
+    items: Array<{
+      account: CompressedAccount;        
+      tokenData: {
+        amount: number;
+        delegate?: string;
+        mint: string;
+        owner: string;
+        state: "initialized" | "frozen";
+        tlv?: string;
+      };
+    }>;
+  };
+}
+
+export type GetCompressedTokenAccountsByOwnerFn = (
+  p: GetCompressedTokenAccountsByOwnerRequest,
+) => Promise<GetCompressedTokenAccountsByOwnerResponse>;
