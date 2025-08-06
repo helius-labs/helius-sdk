@@ -82,15 +82,15 @@ export const makeZkClientLazy = (call: RpcCaller): ZkClientLazy => {
   );
 
   defineLazyMethod<ZkClientLazy, GetCompressedTokenAccountBalanceFn>(
-  obj,
-  "getCompressedTokenAccountBalance",
-  async () => {
-    const { makeGetCompressedTokenAccountBalance } = await import(
-      "./methods/getCompressedTokenAccountBalance"
-    );
-    return makeGetCompressedTokenAccountBalance(call);
-  },
-);
+    obj,
+    "getCompressedTokenAccountBalance",
+    async () => {
+      const { makeGetCompressedTokenAccountBalance } = await import(
+        "./methods/getCompressedTokenAccountBalance"
+      );
+      return makeGetCompressedTokenAccountBalance(call);
+    }
+  );
 
   return obj as ZkClientLazy;
 };

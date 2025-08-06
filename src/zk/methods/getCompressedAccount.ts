@@ -5,7 +5,7 @@ import type {
 } from "../types";
 
 export type GetCompressedAccountFn = (
-  p: GetCompressedAccountRequest,
+  p: GetCompressedAccountRequest
 ) => Promise<GetCompressedAccountResponse>;
 
 export const makeGetCompressedAccount =
@@ -13,5 +13,5 @@ export const makeGetCompressedAccount =
   (params) =>
     call<GetCompressedAccountRequest, GetCompressedAccountResponse>(
       "getCompressedAccount",
-      params,
+      params
     );

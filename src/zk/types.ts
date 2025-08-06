@@ -140,4 +140,6 @@ export interface GetCompressedTokenAccountBalanceResponse {
   };
 }
 
-export type GetCompressedTokenAccountBalanceFn = (p: GetCompressedTokenAccountBalanceRequest) => Promise<GetCompressedTokenAccountBalanceResponse>;
+export type GetCompressedTokenAccountBalanceFn = (
+  p: GetCompressedTokenAccountBalanceRequest
+) => Promise<GetCompressedTokenAccountBalanceResponse>;

@@ -63,7 +63,7 @@ export const makeTxHelpersLazy = (
     createSmartTransactionWithTip,
   });
 
-  const  { send: sendTransaction } = makeSendTransaction(rpc);
+  const { send: sendTransaction } = makeSendTransaction(rpc);
 
   return {
     getComputeUnits,

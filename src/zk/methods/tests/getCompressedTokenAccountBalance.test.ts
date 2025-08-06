@@ -1,7 +1,5 @@
 import { createHelius } from "../../../rpc";
-import type {
-  GetCompressedTokenAccountBalanceResponse,
-} from "../../types";
+import type { GetCompressedTokenAccountBalanceResponse } from "../../types";
 
 const transportMock = jest.fn();
 jest.mock("@solana/kit", () => ({

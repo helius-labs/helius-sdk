@@ -29,7 +29,6 @@ const smartLike = {
   base64: BASE64_TX,
 };
 
-
 describe("sendTransaction Tests", () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -39,7 +38,7 @@ describe("sendTransaction Tests", () => {
     await sendTx(BASE64_TX);
     expect(mockRpc.sendTransaction).toHaveBeenCalledWith(
       BASE64_TX,
-      expect.objectContaining({ encoding: "base64" }),
+      expect.objectContaining({ encoding: "base64" })
     );
   });
 
@@ -47,7 +46,7 @@ describe("sendTransaction Tests", () => {
     await sendTx({ base64: BASE64_TX } as any);
     expect(mockRpc.sendTransaction).toHaveBeenCalledWith(
       BASE64_TX,
-      expect.any(Object),
+      expect.any(Object)
     );
   });
 
@@ -56,7 +55,7 @@ describe("sendTransaction Tests", () => {
     expect(getBase64EncodedWireTransaction).not.toHaveBeenCalled();
     expect(mockRpc.sendTransaction).toHaveBeenCalledWith(
       BASE64_TX,
-      expect.any(Object),
+      expect.any(Object)
     );
   });
 
@@ -65,7 +64,7 @@ describe("sendTransaction Tests", () => {
     expect(getBase64EncodedWireTransaction).toHaveBeenCalledWith(serialisable);
     expect(mockRpc.sendTransaction).toHaveBeenCalledWith(
       BASE64_TX,
-      expect.any(Object),
+      expect.any(Object)
     );
   });
 

@@ -1,6 +1,6 @@
 import { RpcCaller } from "../../rpc/caller";
 import {
-    GetCompressedMintTokenHoldersFn,
+  GetCompressedMintTokenHoldersFn,
   GetCompressedMintTokenHoldersRequest as Req,
   GetCompressedMintTokenHoldersResponse as Res,
 } from "../types";

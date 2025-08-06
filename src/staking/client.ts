@@ -37,9 +37,9 @@ export const makeStakeClientLazy = (
   const createWithdrawTransaction = makeCreateWithdrawTransaction({ rpc });
   const getHeliusStakeAccounts = makeGetHeliusStakeAccounts({ rpc });
   const getWithdrawableAmount = makeGetWithdrawableAmount({ rpc });
-  const getStakeInstructions =     makeGetStakeInstructions({ rpc });
-  const getUnstakeInstruction =    makeGetUnstakeInstruction();
-  const getWithdrawInstruction =   makeGetWithdrawInstruction();
+  const getStakeInstructions = makeGetStakeInstructions({ rpc });
+  const getUnstakeInstruction = makeGetUnstakeInstruction();
+  const getWithdrawInstruction = makeGetWithdrawInstruction();
 
   return {
     createStakeTransaction,

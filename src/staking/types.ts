@@ -1,6 +1,14 @@
-import { getInitializeInstruction, getDelegateStakeInstruction } from "@solana-program/stake";
+import {
+  getInitializeInstruction,
+  getDelegateStakeInstruction,
+} from "@solana-program/stake";
 import { getCreateAccountInstruction } from "@solana-program/system";
-import { address, Address, KeyPairSigner, TransactionSigner } from "@solana/kit";
+import {
+  address,
+  Address,
+  KeyPairSigner,
+  TransactionSigner,
+} from "@solana/kit";
 
 export const STAKE_PROGRAM_ID: Address = address(
   "Stake11111111111111111111111111111111111111"
@@ -54,7 +62,7 @@ export type GetHeliusStakeAccountsFn = (
 
 export type GetWithdrawableAmountFn = (
   stakeAccount: Address | string,
-  includeRentExempt?: boolean,
+  includeRentExempt?: boolean
 ) => Promise<number>;
 
 export interface StakeInstructionsResult {
@@ -70,17 +78,17 @@ export interface StakeInstructionsResult {
 
 export type GetStakeInstructionsFn = (
   owner: TransactionSigner<string>,
-  amountSol: number,
+  amountSol: number
 ) => Promise<StakeInstructionsResult>;
 
 export type GetUnstakeInstructionFn = (
   owner: Address,
-  stakeAccount: Address,
-) => any;                         
+  stakeAccount: Address
+) => any;
 
 export type GetWithdrawIxFn = (
   owner: Address,
   stakeAccount: Address,
   destination: Address,
-  lamports: number | bigint,
+  lamports: number | bigint
 ) => any;

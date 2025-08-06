@@ -1,6 +1,6 @@
 import { RpcCaller } from "../../rpc/caller";
 import {
-    GetCompressedTokenAccountBalanceFn,
+  GetCompressedTokenAccountBalanceFn,
   GetCompressedTokenAccountBalanceRequest as Req,
   GetCompressedTokenAccountBalanceResponse as Res,
 } from "../types";

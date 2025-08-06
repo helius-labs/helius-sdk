@@ -286,14 +286,10 @@ export const createHelius = ({
     }
   );
 
-  defineLazyNamespace<HeliusClient, ZkClientLazy>(
-    client,
-    "zk",
-    async () => {
-      const { makeZkClientLazy } = await import("../zk/client");
-      return makeZkClientLazy(call);
-    }
-  );
+  defineLazyNamespace<HeliusClient, ZkClientLazy>(client, "zk", async () => {
+    const { makeZkClientLazy } = await import("../zk/client");
+    return makeZkClientLazy(call);
+  });
 
   // So we can send standard RPC calls
   const merged = new Proxy(client as any, {
