@@ -372,3 +372,20 @@ export interface GetMultipleCompressedAccountProofsResponse {
 export type GetMultipleCompressedAccountProofsFn = (
   hashes: GetMultipleCompressedAccountProofsRequest,
 ) => Promise<GetMultipleCompressedAccountProofsResponse>;
+
+
+export interface GetMultipleCompressedAccountsRequest {
+  addresses?: string[] | null;
+  hashes?: string[] | null;
+}
+
+export interface GetMultipleCompressedAccountsResponse {
+  context: { slot: number };
+  value: {
+    items: (CompressedAccount | null)[];
+  };
+}
+
+export type GetMultipleCompressedAccountsFn = (
+  p: GetMultipleCompressedAccountsRequest,
+) => Promise<GetMultipleCompressedAccountsResponse>;
