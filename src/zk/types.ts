@@ -303,11 +303,11 @@ export interface GetCompressionSignaturesForTokenOwnerRequest {
 
 export interface GetCompressionSignaturesForTokenOwnerResponse {
   context: { slot: number };
-  value: PaginatedSignatureInfoList;      
+  value: PaginatedSignatureInfoList;
 }
 
 export type GetCompressionSignaturesForTokenOwnerFn = (
-  p: GetCompressionSignaturesForTokenOwnerRequest,
+  p: GetCompressionSignaturesForTokenOwnerRequest
 ) => Promise<GetCompressionSignaturesForTokenOwnerResponse>;
 
 export type GetIndexerHealthRequest = Record<string, never>;
@@ -321,3 +321,17 @@ export type GetIndexerSlotRequest = Record<string, never>;
 export type GetIndexerSlotResponse = number;
 
 export type GetIndexerSlotFn = () => Promise<GetIndexerSlotResponse>;
+
+export interface GetLatestCompressionSignaturesRequest {
+  cursor?: string | null;
+  limit?: number | null;
+}
+
+export interface GetLatestCompressionSignaturesResponse {
+  context: { slot: number };
+  value: PaginatedSignatureInfoList;
+}
+
+export type GetLatestCompressionSignaturesFn = (
+  p?: GetLatestCompressionSignaturesRequest
+) => Promise<GetLatestCompressionSignaturesResponse>;
