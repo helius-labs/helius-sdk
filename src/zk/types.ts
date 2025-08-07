@@ -315,3 +315,9 @@ export type GetIndexerHealthRequest = Record<string, never>;
 export type GetIndexerHealthResponse = "ok";
 
 export type GetIndexerHealthFn = () => Promise<GetIndexerHealthResponse>;
+
+export type GetIndexerSlotRequest = Record<string, never>;
+
+export type GetIndexerSlotResponse = number;
+
+export type GetIndexerSlotFn = () => Promise<GetIndexerSlotResponse>;
