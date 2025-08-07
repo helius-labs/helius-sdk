@@ -16,6 +16,7 @@ import {
   GetCompressionSignaturesForAddressFn,
   GetCompressionSignaturesForOwnerFn,
   GetCompressionSignaturesForTokenOwnerFn,
+  GetIndexerHealthFn,
 } from "./types";
 
 export interface ZkClientLazy {
@@ -34,6 +35,7 @@ export interface ZkClientLazy {
   getCompressionSignaturesForAddress: GetCompressionSignaturesForAddressFn;
   getCompressionSignaturesForOwner: GetCompressionSignaturesForOwnerFn;
   getCompressionSignaturesForTokenOwner: GetCompressionSignaturesForTokenOwnerFn;
+  getIndexerHealth: GetIndexerHealthFn;
 }
 
 export const makeZkClientLazy = (call: RpcCaller): ZkClientLazy => {
@@ -193,6 +195,17 @@ export const makeZkClientLazy = (call: RpcCaller): ZkClientLazy => {
         "./methods/getCompressionSignaturesForTokenOwner"
       );
       return makeGetCompressionSignaturesForTokenOwner(call);
+    }
+  );
+
+  defineLazyMethod<ZkClientLazy, GetIndexerHealthFn>(
+    obj,
+    "getIndexerHealth",
+    async () => {
+      const { makeGetIndexerHealth } = await import(
+        "./methods/getIndexerHealth"
+      );
+      return makeGetIndexerHealth(call);
     }
   );
 

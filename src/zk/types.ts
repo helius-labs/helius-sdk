@@ -294,3 +294,24 @@ export interface GetCompressionSignaturesForOwnerResponse {
 export type GetCompressionSignaturesForOwnerFn = (
   p: GetCompressionSignaturesForOwnerRequest
 ) => Promise<GetCompressionSignaturesForOwnerResponse>;
+
+export interface GetCompressionSignaturesForTokenOwnerRequest {
+  owner: string;
+  cursor?: string | null;
+  limit?: number | null;
+}
+
+export interface GetCompressionSignaturesForTokenOwnerResponse {
+  context: { slot: number };
+  value: PaginatedSignatureInfoList;      
+}
+
+export type GetCompressionSignaturesForTokenOwnerFn = (
+  p: GetCompressionSignaturesForTokenOwnerRequest,
+) => Promise<GetCompressionSignaturesForTokenOwnerResponse>;
+
+export type GetIndexerHealthRequest = Record<string, never>;
+
+export type GetIndexerHealthResponse = "ok";
+
+export type GetIndexerHealthFn = () => Promise<GetIndexerHealthResponse>;
