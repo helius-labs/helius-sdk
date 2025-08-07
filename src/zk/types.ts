@@ -361,18 +361,16 @@ export type GetLatestNonVotingSignaturesFn = (
   p?: GetLatestNonVotingSignaturesRequest
 ) => Promise<GetLatestNonVotingSignaturesResponse>;
 
-
 export type GetMultipleCompressedAccountProofsRequest = string[];
 
 export interface GetMultipleCompressedAccountProofsResponse {
   context: { slot: number };
-  value: MerkleProofWithContext[]; 
+  value: MerkleProofWithContext[];
 }
 
 export type GetMultipleCompressedAccountProofsFn = (
-  hashes: GetMultipleCompressedAccountProofsRequest,
+  hashes: GetMultipleCompressedAccountProofsRequest
 ) => Promise<GetMultipleCompressedAccountProofsResponse>;
-
 
 export interface GetMultipleCompressedAccountsRequest {
   addresses?: string[] | null;
@@ -387,7 +385,7 @@ export interface GetMultipleCompressedAccountsResponse {
 }
 
 export type GetMultipleCompressedAccountsFn = (
-  p: GetMultipleCompressedAccountsRequest,
+  p: GetMultipleCompressedAccountsRequest
 ) => Promise<GetMultipleCompressedAccountsResponse>;
 
 export type GetMultipleNewAddressProofsRequest = readonly string[];
@@ -410,8 +408,8 @@ export interface GetMultipleNewAddressProofsResponse {
 }
 
 export interface AddressWithTree {
-  address: string; 
-  tree: string;   
+  address: string;
+  tree: string;
 }
 
 export type GetMultipleNewAddressProofsV2Request = readonly AddressWithTree[];
@@ -419,4 +417,30 @@ export type GetMultipleNewAddressProofsV2Request = readonly AddressWithTree[];
 export interface GetMultipleNewAddressProofsV2Response {
   context: { slot: number };
   value: MerkleContextWithNewAddressProof[];
+}
+
+export interface AccountWithOptionalTokenData {
+  account: CompressedAccount;
+  optionalTokenData?: {
+    amount: number;
+    delegate?: string;
+    mint: string;
+    owner: string;
+    state: "initialized" | "frozen";
+    tlv?: string;
+  };
+}
+
+export interface CompressionInfo {
+  closedAccounts: AccountWithOptionalTokenData[];
+  openedAccounts: AccountWithOptionalTokenData[];
+}
+
+export interface GetTransactionWithCompressionInfoRequest {
+  signature: string;
+}
+
+export interface GetTransactionWithCompressionInfoResponse {
+  compression_info: CompressionInfo;
+  transaction: unknown;
 }
