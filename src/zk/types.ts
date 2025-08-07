@@ -200,3 +200,27 @@ export interface GetCompressedTokenAccountsByOwnerResponse {
 export type GetCompressedTokenAccountsByOwnerFn = (
   p: GetCompressedTokenAccountsByOwnerRequest,
 ) => Promise<GetCompressedTokenAccountsByOwnerResponse>;
+
+export interface GetCompressedTokenBalancesByOwnerRequest {
+  owner: string;
+  mint?: string | null;
+  cursor?: string | null;
+  limit?: number | null;
+}
+
+export interface TokenBalance {
+  mint: string;
+  balance: number;
+}
+
+export interface GetCompressedTokenBalancesByOwnerResponse {
+  context: { slot: number };
+  value: {
+    cursor?: string;
+    token_balances: TokenBalance[];
+  };
+}
+
+export type GetCompressedTokenBalancesByOwnerFn = (
+  p: GetCompressedTokenBalancesByOwnerRequest,
+) => Promise<GetCompressedTokenBalancesByOwnerResponse>;
