@@ -389,3 +389,22 @@ export interface GetMultipleCompressedAccountsResponse {
 export type GetMultipleCompressedAccountsFn = (
   p: GetMultipleCompressedAccountsRequest,
 ) => Promise<GetMultipleCompressedAccountsResponse>;
+
+export type GetMultipleNewAddressProofsRequest = readonly string[];
+
+export interface MerkleContextWithNewAddressProof {
+  address: string;
+  lowerRangeAddress: string;
+  higherRangeAddress: string;
+  nextIndex: number;
+  lowElementLeafIndex: number;
+  merkleTree: string;
+  root: string;
+  rootSeq: bigint | number;
+  proof: string[];
+}
+
+export interface GetMultipleNewAddressProofsResponse {
+  context: { slot: number };
+  value: MerkleContextWithNewAddressProof[];
+}
