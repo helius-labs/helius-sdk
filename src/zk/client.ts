@@ -12,6 +12,7 @@ import {
   GetCompressedTokenAccountsByOwnerFn,
   GetCompressedTokenBalancesByOwnerFn,
   GetCompressedTokenBalancesByOwnerV2Fn,
+  GetCompressionSignaturesForAccountFn,
 } from "./types";
 
 export interface ZkClientLazy {
@@ -26,6 +27,7 @@ export interface ZkClientLazy {
   getCompressedTokenAccountsByOwner: GetCompressedTokenAccountsByOwnerFn;
   getCompressedTokenBalancesByOwner: GetCompressedTokenBalancesByOwnerFn;
   getCompressedTokenBalancesByOwnerV2: GetCompressedTokenBalancesByOwnerV2Fn;
+  getCompressionSignaturesForAccount: GetCompressionSignaturesForAccountFn;
 }
 
 export const makeZkClientLazy = (call: RpcCaller): ZkClientLazy => {
@@ -141,6 +143,17 @@ export const makeZkClientLazy = (call: RpcCaller): ZkClientLazy => {
         "./methods/getCompressedTokenBalancesByOwnerV2"
       );
       return makeGetCompressedTokenBalancesByOwnerV2(call);
+    }
+  );
+
+  defineLazyMethod<ZkClientLazy, GetCompressionSignaturesForAccountFn>(
+    obj,
+    "getCompressionSignaturesForAccount",
+    async () => {
+      const { makeGetCompressionSignaturesForAccount } = await import(
+        "./methods/getCompressionSignaturesForAccount"
+      );
+      return makeGetCompressionSignaturesForAccount(call);
     }
   );
 

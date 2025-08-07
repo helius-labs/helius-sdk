@@ -237,3 +237,24 @@ export interface GetCompressedTokenBalancesByOwnerV2Response {
 export type GetCompressedTokenBalancesByOwnerV2Fn = (
   p: GetCompressedTokenBalancesByOwnerRequest,
 ) => Promise<GetCompressedTokenBalancesByOwnerV2Response>;
+
+
+export interface GetCompressionSignaturesForAccountRequest {
+  // Merkle-tree hash of the compressed account
+  hash: string;
+}
+
+export interface SignatureInfo {
+  signature: string; // Base58 
+  slot: number;
+  blockTime: number; // Unix
+}
+
+export interface GetCompressionSignaturesForAccountResponse {
+  context: { slot: number };
+  value: { items: SignatureInfo[] };
+}
+
+export type GetCompressionSignaturesForAccountFn = (
+  p: GetCompressionSignaturesForAccountRequest,
+) => Promise<GetCompressionSignaturesForAccountResponse>;
