@@ -59,7 +59,8 @@ export const makeWsAsync = (wsUrl: string): WsAsync => {
     logsNotifications: (filter, config) =>
       raw().then((r) => r.logsNotifications(filter as any, config)),
 
-    slotNotifications: (config) => raw().then((r) => (r.slotNotifications as any)(config)),
+    slotNotifications: (config) =>
+      raw().then((r) => (r.slotNotifications as any)(config)),
 
     signatureNotifications: (sig, config) =>
       raw().then((r) => r.signatureNotifications(sig as Signature, config)),

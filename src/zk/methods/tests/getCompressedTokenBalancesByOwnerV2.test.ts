@@ -1,7 +1,5 @@
 import { createHelius } from "../../../rpc";
-import {
-  GetCompressedTokenBalancesByOwnerV2Response,
-} from "../../types";
+import { GetCompressedTokenBalancesByOwnerV2Response } from "../../types";
 
 const transportMock = jest.fn();
 
@@ -52,7 +50,7 @@ describe("getCompressedTokenBalancesByOwnerV2 Tests", () => {
           method: "getCompressedTokenBalancesByOwnerV2",
           params,
         }),
-      }),
+      })
     );
   });
 
@@ -66,7 +64,7 @@ describe("getCompressedTokenBalancesByOwnerV2 Tests", () => {
     await expect(
       helius.zk.getCompressedTokenBalancesByOwnerV2({
         owner: "AlderaanRubble00000000000000000000",
-      }),
+      })
     ).rejects.toThrow(/Planet destroyed/i);
   });
 });

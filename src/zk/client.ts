@@ -334,7 +334,7 @@ export const makeZkClientLazy = (call: RpcCaller): ZkClientLazy => {
         "./methods/getSignaturesForAsset"
       );
       return makeGetSignaturesForAsset(call);
-    },
+    }
   );
 
   return obj as ZkClientLazy;

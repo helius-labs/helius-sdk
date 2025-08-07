@@ -476,7 +476,7 @@ export interface GetValidityProofResponse {
 }
 
 export type GetValidityProofFn = (
-  p: GetValidityProofRequest,
+  p: GetValidityProofRequest
 ) => Promise<GetValidityProofResponse>;
 
 export type AssetOp =
@@ -504,5 +504,5 @@ export interface GetSignaturesForAssetResponse {
 }
 
 export type GetSignaturesForAssetFn = (
-  p: GetSignaturesForAssetRequest,
+  p: GetSignaturesForAssetRequest
 ) => Promise<GetSignaturesForAssetResponse>;

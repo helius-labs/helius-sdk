@@ -97,7 +97,7 @@ describe("getTransactionWithCompressionInfo Tests", () => {
           method: "getTransactionWithCompressionInfo",
           params,
         }),
-      }),
+      })
     );
   });
 
@@ -128,11 +128,14 @@ describe("getTransactionWithCompressionInfo Tests", () => {
     transportMock.mockResolvedValue({
       jsonrpc: "2.0",
       id: "1",
-      error: { code: -32000, message: "These are not the blocks you're looking for" },
+      error: {
+        code: -32000,
+        message: "These are not the blocks you're looking for",
+      },
     });
 
     await expect(
-      helius.zk.getTransactionWithCompressionInfo({ signature: "BadSig" }),
+      helius.zk.getTransactionWithCompressionInfo({ signature: "BadSig" })
     ).rejects.toThrow(/not the blocks/i);
   });
 });

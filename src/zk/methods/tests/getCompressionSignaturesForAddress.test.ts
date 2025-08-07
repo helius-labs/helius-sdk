@@ -1,7 +1,5 @@
 import { createHelius } from "../../../rpc";
-import {
-  GetCompressionSignaturesForAddressResponse,
-} from "../../types";
+import { GetCompressionSignaturesForAddressResponse } from "../../types";
 
 const transportMock = jest.fn();
 
@@ -56,7 +54,7 @@ describe("getCompressionSignaturesForAddress Tests", () => {
           method: "getCompressionSignaturesForAddress",
           params,
         }),
-      }),
+      })
     );
   });
 
@@ -70,7 +68,7 @@ describe("getCompressionSignaturesForAddress Tests", () => {
     await expect(
       helius.zk.getCompressionSignaturesForAddress({
         address: "BadAddress",
-      }),
+      })
     ).rejects.toThrow(/Outer Rim/i);
   });
 });
