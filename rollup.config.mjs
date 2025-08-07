@@ -3,14 +3,13 @@ import typescript from "@rollup/plugin-typescript";
 import resolve from "@rollup/plugin-node-resolve";
 import commonjs from "@rollup/plugin-commonjs";
 
+// Every TS file under src/ will be included, with tests excluded
+const inputs = globSync('src/**/*.ts', {
+  ignore: ['**/*.test.ts', '**/*.spec.ts'],
+});
+
 export default {
-    input: [
-        "src/rpc/index.ts",
-        "src/rpc/createHelius.eager.ts",
-        ...globSync("src/rpc/methods/*.ts"),
-        ...globSync("src/transactions/*.ts"),
-        ...globSync("src/webhooks/*.ts"),
-    ],
+    input: inputs,
     output: {
         dir: "dist",
         format: "esm",
@@ -31,8 +30,8 @@ export default {
             rootDir: "src",
         })
     ],
-    external: ["@solana/kit", "@solana-program/compute-budget"],
     treeshake: {
         moduleSideEffects: false
-    }
+    },
+    external: ["@solana/kit", "@solana-program/compute-budget", "@solana-program/stake", "@solana-program/system", "bs58"],
 };
