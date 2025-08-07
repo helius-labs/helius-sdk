@@ -224,3 +224,16 @@ export interface GetCompressedTokenBalancesByOwnerResponse {
 export type GetCompressedTokenBalancesByOwnerFn = (
   p: GetCompressedTokenBalancesByOwnerRequest,
 ) => Promise<GetCompressedTokenBalancesByOwnerResponse>;
+
+export interface GetCompressedTokenBalancesByOwnerV2Response {
+  context: { slot: number };
+  value: {
+    cursor?: string;
+    // In V2 the array is called `items` instead of `token_balances`
+    items: TokenBalance[];
+  };
+}
+
+export type GetCompressedTokenBalancesByOwnerV2Fn = (
+  p: GetCompressedTokenBalancesByOwnerRequest,
+) => Promise<GetCompressedTokenBalancesByOwnerV2Response>;

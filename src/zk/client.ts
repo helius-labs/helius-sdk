@@ -11,6 +11,7 @@ import {
   GetCompressedTokenAccountsByDelegateFn,
   GetCompressedTokenAccountsByOwnerFn,
   GetCompressedTokenBalancesByOwnerFn,
+  GetCompressedTokenBalancesByOwnerV2Fn,
 } from "./types";
 
 export interface ZkClientLazy {
@@ -24,6 +25,7 @@ export interface ZkClientLazy {
   getCompressedTokenAccountsByDelegate: GetCompressedTokenAccountsByDelegateFn;
   getCompressedTokenAccountsByOwner: GetCompressedTokenAccountsByOwnerFn;
   getCompressedTokenBalancesByOwner: GetCompressedTokenBalancesByOwnerFn;
+  getCompressedTokenBalancesByOwnerV2: GetCompressedTokenBalancesByOwnerV2Fn;
 }
 
 export const makeZkClientLazy = (call: RpcCaller): ZkClientLazy => {
@@ -128,6 +130,17 @@ export const makeZkClientLazy = (call: RpcCaller): ZkClientLazy => {
         "./methods/getCompressedTokenBalancesByOwner"
       );
       return makeGetCompressedTokenBalancesByOwner(call);
+    }
+  );
+
+  defineLazyMethod<ZkClientLazy, GetCompressedTokenBalancesByOwnerV2Fn>(
+    obj,
+    "getCompressedTokenBalancesByOwnerV2",
+    async () => {
+      const { makeGetCompressedTokenBalancesByOwnerV2 } = await import(
+        "./methods/getCompressedTokenBalancesByOwnerV2"
+      );
+      return makeGetCompressedTokenBalancesByOwnerV2(call);
     }
   );
 
