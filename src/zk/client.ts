@@ -19,6 +19,7 @@ import {
   GetIndexerHealthFn,
   GetIndexerSlotFn,
   GetLatestCompressionSignaturesFn,
+  GetLatestNonVotingSignaturesFn,
 } from "./types";
 
 export interface ZkClientLazy {
@@ -40,6 +41,7 @@ export interface ZkClientLazy {
   getIndexerHealth: GetIndexerHealthFn;
   getIndexerSlot: GetIndexerSlotFn;
   getLatestCompressionSignatures: GetLatestCompressionSignaturesFn;
+  getLatestNonVotingSignatures: GetLatestNonVotingSignaturesFn;
 }
 
 export const makeZkClientLazy = (call: RpcCaller): ZkClientLazy => {
@@ -230,6 +232,17 @@ export const makeZkClientLazy = (call: RpcCaller): ZkClientLazy => {
         "./methods/getLatestCompressionSignatures"
       );
       return makeGetLatestCompressionSignatures(call);
+    }
+  );
+
+  defineLazyMethod<ZkClientLazy, GetLatestNonVotingSignaturesFn>(
+    obj,
+    "getLatestNonVotingSignatures",
+    async () => {
+      const { makeGetLatestNonVotingSignatures } = await import(
+        "./methods/getLatestNonVotingSignatures"
+      );
+      return makeGetLatestNonVotingSignatures(call);
     }
   );
 

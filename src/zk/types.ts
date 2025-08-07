@@ -335,3 +335,28 @@ export interface GetLatestCompressionSignaturesResponse {
 export type GetLatestCompressionSignaturesFn = (
   p?: GetLatestCompressionSignaturesRequest
 ) => Promise<GetLatestCompressionSignaturesResponse>;
+
+export interface GetLatestNonVotingSignaturesRequest {
+  cursor?: string | null;
+  limit?: number | null;
+}
+
+export interface SignatureInfoWithError {
+  signature: string;
+  slot: number;
+  blockTime: number;
+  error?: string | null;
+}
+
+export interface SignatureInfoListWithError {
+  items: SignatureInfoWithError[];
+}
+
+export interface GetLatestNonVotingSignaturesResponse {
+  context: { slot: number };
+  value: SignatureInfoListWithError;
+}
+
+export type GetLatestNonVotingSignaturesFn = (
+  p?: GetLatestNonVotingSignaturesRequest
+) => Promise<GetLatestNonVotingSignaturesResponse>;
