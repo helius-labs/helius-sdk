@@ -408,3 +408,15 @@ export interface GetMultipleNewAddressProofsResponse {
   context: { slot: number };
   value: MerkleContextWithNewAddressProof[];
 }
+
+export interface AddressWithTree {
+  address: string; 
+  tree: string;   
+}
+
+export type GetMultipleNewAddressProofsV2Request = readonly AddressWithTree[];
+
+export interface GetMultipleNewAddressProofsV2Response {
+  context: { slot: number };
+  value: MerkleContextWithNewAddressProof[];
+}
