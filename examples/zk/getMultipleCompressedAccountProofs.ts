@@ -12,6 +12,7 @@ import { createHelius } from "../../src/rpc";
       "KexN4KsPq3uCtXngBDBn3SFCcFNXwb79DuzkmUs4efi",
     ];
 
+    // Pass in as an array, not an object
     const { value } =
       await helius.zk.getMultipleCompressedAccountProofs(hashes);
     console.log(`Proofs received: ${JSON.stringify(value, null, 2)}`);
