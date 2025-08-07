@@ -279,3 +279,18 @@ export interface GetCompressionSignaturesForAddressResponse {
 export type GetCompressionSignaturesForAddressFn = (
   p: GetCompressionSignaturesForAddressRequest
 ) => Promise<GetCompressionSignaturesForAddressResponse>;
+
+export interface GetCompressionSignaturesForOwnerRequest {
+  owner: string;
+  cursor?: string | null;
+  limit?: number | null;
+}
+
+export interface GetCompressionSignaturesForOwnerResponse {
+  context: { slot: number };
+  value: PaginatedSignatureInfoList;
+}
+
+export type GetCompressionSignaturesForOwnerFn = (
+  p: GetCompressionSignaturesForOwnerRequest
+) => Promise<GetCompressionSignaturesForOwnerResponse>;
