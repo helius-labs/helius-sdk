@@ -15,13 +15,13 @@ const config: Config = {
     collectCoverageFrom: ["src/**/*.ts"],
     coverageDirectory: "coverage",
     coverageReporters: ["text", "lcov"],
-    // At least 40% test coverage across all metrics
+    // At least 65% test coverage across all metrics
     coverageThreshold: {
         global: {
-            branches: 40,
-            functions: 40,
-            lines: 40,
-            statements: 40
+            branches: 65,
+            functions: 65,
+            lines: 65,
+            statements: 65
         }
     }
 };
