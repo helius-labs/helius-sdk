@@ -444,3 +444,37 @@ export interface GetTransactionWithCompressionInfoResponse {
   compression_info: CompressionInfo;
   transaction: unknown;
 }
+
+export interface AddressWithTree {
+  address: string;
+  tree: string;
+}
+
+export interface CompressedProof {
+  a: string;
+  b: string;
+  c: string;
+}
+
+export interface CompressedProofWithContext {
+  compressedProof: CompressedProof;
+  leafIndices: number[];
+  leaves: string[];
+  merkleTrees: string[];
+  rootIndices: bigint[] | number[];
+  roots: string[];
+}
+
+export interface GetValidityProofRequest {
+  hashes?: readonly string[] | null;
+  newAddressesWithTrees?: readonly AddressWithTree[] | null;
+}
+
+export interface GetValidityProofResponse {
+  context: { slot: number };
+  value: CompressedProofWithContext;
+}
+
+export type GetValidityProofFn = (
+  p: GetValidityProofRequest,
+) => Promise<GetValidityProofResponse>;

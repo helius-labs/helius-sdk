@@ -22,6 +22,7 @@ import {
   GetLatestNonVotingSignaturesFn,
   GetMultipleCompressedAccountProofsFn,
   GetMultipleCompressedAccountsFn,
+  GetValidityProofFn,
 } from "./types";
 import { GetMultipleNewAddressProofsFn } from "./methods/getMultipleNewAddressProofs";
 import { GetMultipleNewAddressProofsV2Fn } from "./methods/getMultipleNewAddressProofsV2";
@@ -52,6 +53,7 @@ export interface ZkClientLazy {
   getMultipleNewAddressProofs: GetMultipleNewAddressProofsFn;
   getMultipleNewAddressProofsV2: GetMultipleNewAddressProofsV2Fn;
   getTransactionWithCompressionInfo: GetTransactionWithCompressionInfoFn;
+  getValidityProof: GetValidityProofFn;
 }
 
 export const makeZkClientLazy = (call: RpcCaller): ZkClientLazy => {
@@ -308,6 +310,17 @@ export const makeZkClientLazy = (call: RpcCaller): ZkClientLazy => {
         "./methods/getTransactionWithCompressionInfo"
       );
       return makeGetTransactionWithCompressionInfo(call);
+    }
+  );
+
+  defineLazyMethod<ZkClientLazy, GetValidityProofFn>(
+    obj,
+    "getValidityProof",
+    async () => {
+      const { makeGetValidityProof } = await import(
+        "./methods/getValidityProof"
+      );
+      return makeGetValidityProof(call);
     }
   );
 
