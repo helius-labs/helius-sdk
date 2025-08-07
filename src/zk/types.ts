@@ -157,7 +157,7 @@ export interface GetCompressedTokenAccountsByDelegateResponse {
   value: {
     cursor?: string;
     items: Array<{
-      account: CompressedAccount;       
+      account: CompressedAccount;
       tokenData: {
         amount: number;
         delegate?: string;
@@ -170,7 +170,9 @@ export interface GetCompressedTokenAccountsByDelegateResponse {
   };
 }
 
-export type GetCompressedTokenAccountsByDelegateFn = (p: GetCompressedTokenAccountsByDelegateRequest) => Promise<GetCompressedTokenAccountsByDelegateResponse>;
+export type GetCompressedTokenAccountsByDelegateFn = (
+  p: GetCompressedTokenAccountsByDelegateRequest
+) => Promise<GetCompressedTokenAccountsByDelegateResponse>;
 
 export interface GetCompressedTokenAccountsByOwnerRequest {
   owner: string;
@@ -184,7 +186,7 @@ export interface GetCompressedTokenAccountsByOwnerResponse {
   value: {
     cursor?: string;
     items: Array<{
-      account: CompressedAccount;        
+      account: CompressedAccount;
       tokenData: {
         amount: number;
         delegate?: string;
@@ -198,7 +200,7 @@ export interface GetCompressedTokenAccountsByOwnerResponse {
 }
 
 export type GetCompressedTokenAccountsByOwnerFn = (
-  p: GetCompressedTokenAccountsByOwnerRequest,
+  p: GetCompressedTokenAccountsByOwnerRequest
 ) => Promise<GetCompressedTokenAccountsByOwnerResponse>;
 
 export interface GetCompressedTokenBalancesByOwnerRequest {
@@ -222,7 +224,7 @@ export interface GetCompressedTokenBalancesByOwnerResponse {
 }
 
 export type GetCompressedTokenBalancesByOwnerFn = (
-  p: GetCompressedTokenBalancesByOwnerRequest,
+  p: GetCompressedTokenBalancesByOwnerRequest
 ) => Promise<GetCompressedTokenBalancesByOwnerResponse>;
 
 export interface GetCompressedTokenBalancesByOwnerV2Response {
@@ -235,9 +237,8 @@ export interface GetCompressedTokenBalancesByOwnerV2Response {
 }
 
 export type GetCompressedTokenBalancesByOwnerV2Fn = (
-  p: GetCompressedTokenBalancesByOwnerRequest,
+  p: GetCompressedTokenBalancesByOwnerRequest
 ) => Promise<GetCompressedTokenBalancesByOwnerV2Response>;
-
 
 export interface GetCompressionSignaturesForAccountRequest {
   // Merkle-tree hash of the compressed account
@@ -245,7 +246,7 @@ export interface GetCompressionSignaturesForAccountRequest {
 }
 
 export interface SignatureInfo {
-  signature: string; // Base58 
+  signature: string; // Base58
   slot: number;
   blockTime: number; // Unix
 }
@@ -256,5 +257,25 @@ export interface GetCompressionSignaturesForAccountResponse {
 }
 
 export type GetCompressionSignaturesForAccountFn = (
-  p: GetCompressionSignaturesForAccountRequest,
+  p: GetCompressionSignaturesForAccountRequest
 ) => Promise<GetCompressionSignaturesForAccountResponse>;
+
+export interface GetCompressionSignaturesForAddressRequest {
+  address: string;
+  cursor?: string | null;
+  limit?: number | null;
+}
+
+export interface PaginatedSignatureInfoList {
+  cursor?: string | null;
+  items: SignatureInfo[];
+}
+
+export interface GetCompressionSignaturesForAddressResponse {
+  context: { slot: number };
+  value: PaginatedSignatureInfoList;
+}
+
+export type GetCompressionSignaturesForAddressFn = (
+  p: GetCompressionSignaturesForAddressRequest
+) => Promise<GetCompressionSignaturesForAddressResponse>;
