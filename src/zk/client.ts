@@ -20,6 +20,7 @@ import {
   GetIndexerSlotFn,
   GetLatestCompressionSignaturesFn,
   GetLatestNonVotingSignaturesFn,
+  GetMultipleCompressedAccountProofsFn,
 } from "./types";
 
 export interface ZkClientLazy {
@@ -42,6 +43,7 @@ export interface ZkClientLazy {
   getIndexerSlot: GetIndexerSlotFn;
   getLatestCompressionSignatures: GetLatestCompressionSignaturesFn;
   getLatestNonVotingSignatures: GetLatestNonVotingSignaturesFn;
+  getMultipleCompressedAccountProofs: GetMultipleCompressedAccountProofsFn;
 }
 
 export const makeZkClientLazy = (call: RpcCaller): ZkClientLazy => {
@@ -243,6 +245,17 @@ export const makeZkClientLazy = (call: RpcCaller): ZkClientLazy => {
         "./methods/getLatestNonVotingSignatures"
       );
       return makeGetLatestNonVotingSignatures(call);
+    }
+  );
+
+  defineLazyMethod<ZkClientLazy, GetMultipleCompressedAccountProofsFn>(
+    obj,
+    "getMultipleCompressedAccountProofs",
+    async () => {
+      const { makeGetMultipleCompressedAccountProofs } = await import(
+        "./methods/getMultipleCompressedAccountProofs"
+      );
+      return makeGetMultipleCompressedAccountProofs(call);
     }
   );
 

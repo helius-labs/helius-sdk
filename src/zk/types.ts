@@ -360,3 +360,15 @@ export interface GetLatestNonVotingSignaturesResponse {
 export type GetLatestNonVotingSignaturesFn = (
   p?: GetLatestNonVotingSignaturesRequest
 ) => Promise<GetLatestNonVotingSignaturesResponse>;
+
+
+export type GetMultipleCompressedAccountProofsRequest = string[];
+
+export interface GetMultipleCompressedAccountProofsResponse {
+  context: { slot: number };
+  value: MerkleProofWithContext[]; 
+}
+
+export type GetMultipleCompressedAccountProofsFn = (
+  hashes: GetMultipleCompressedAccountProofsRequest,
+) => Promise<GetMultipleCompressedAccountProofsResponse>;
