@@ -478,3 +478,31 @@ export interface GetValidityProofResponse {
 export type GetValidityProofFn = (
   p: GetValidityProofRequest,
 ) => Promise<GetValidityProofResponse>;
+
+export type AssetOp =
+  | "MintToCollectionV1"
+  | "MintV1"
+  | "Burn"
+  | "Transfer"
+  | "Sale"
+  | string; // Fallback for future ops
+
+export type SignatureOpPair = [signature: string, op: AssetOp];
+
+export interface GetSignaturesForAssetRequest {
+  id: string;
+  page: number;
+  limit?: number | null;
+  before?: string | null;
+  after?: string | null;
+}
+
+export interface GetSignaturesForAssetResponse {
+  total: number;
+  limit: number;
+  items: SignatureOpPair[];
+}
+
+export type GetSignaturesForAssetFn = (
+  p: GetSignaturesForAssetRequest,
+) => Promise<GetSignaturesForAssetResponse>;
