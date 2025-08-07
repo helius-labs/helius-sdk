@@ -2,7 +2,6 @@ import {
   createDefaultRpcTransport,
   createRpc,
   createSolanaRpcApi,
-  createSolanaRpcSubscriptions,
   DEFAULT_RPC_CONFIG,
 } from "@solana/kit";
 
@@ -101,8 +100,17 @@ export const createHelius = ({
   const wsUrl = new URL(url);
   wsUrl.protocol = "wss:";
 
-  // We need a concrete WS client immediately available for the transaction client
-  const rpcSubscriptions = createSolanaRpcSubscriptions(wsUrl.toString());
+  // Lazily create when/if transaction helpers need it
+  let rpcSubscriptionsPromise:
+    | ReturnType<typeof import("@solana/kit").createSolanaRpcSubscriptions>
+    | undefined;
+
+  const getRpcSubscriptions = async () => {
+    if (rpcSubscriptionsPromise) return rpcSubscriptionsPromise;
+    const { createSolanaRpcSubscriptions } = await import("@solana/kit");
+    rpcSubscriptionsPromise = createSolanaRpcSubscriptions(wsUrl.toString());
+    return rpcSubscriptionsPromise;
+  };
 
   // Lightweight, no-PendingRpcRequest caller for custom DAS/webhook methods
   const call = makeRpcCaller(transport);
@@ -113,7 +121,9 @@ export const createHelius = ({
   defineLazyNamespace<HeliusClient, WsAsync>(client, "ws", async () => {
     // Promisified facade; individual methods return Promise<...>
     // so: await helius.ws.logsNotifications(...).subscribe(...) and no stupid TypeScript warnings
-    return makeWsAsync(wsUrl.toString());
+    const ws = makeWsAsync(wsUrl.toString());
+    client.close = () => ws.close();
+    return ws;
   });
 
   defineLazyMethod<HeliusClient, GetAssetFn>(client, "getAsset", async () => {
@@ -274,7 +284,11 @@ export const createHelius = ({
     );
     const getPriorityFeeEstimate = makeGetPriorityFeeEstimate(call);
 
-    return makeTxHelpersLazy(baseRpc, getPriorityFeeEstimate, rpcSubscriptions);
+    return makeTxHelpersLazy(
+      baseRpc,
+      getPriorityFeeEstimate,
+      await getRpcSubscriptions()
+    );
   });
 
   defineLazyNamespace<HeliusClient, StakeClientLazy>(
