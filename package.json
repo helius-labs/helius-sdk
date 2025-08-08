@@ -29,8 +29,7 @@
     "format:check": "prettier --cache --check 'src/**/*.{js,ts,json,md}'",
     "bundle:size": "bundlemon",
     "check-all-tree": "node check-all-tree-shake.js",
-    "check-bundle": "pnpm run build && pnpm check-all-tree && bundlemon",
-    "check-bundle:ci": "pnpm run build && agadoo dist/rpc/index.js && agadoo dist/rpc/createHelius.eager.js && bundlemon --report-output github"
+    "check-bundle": "pnpm run build && pnpm check-all-tree && bundlemon"
   },
   "keywords": [
     "helius",
