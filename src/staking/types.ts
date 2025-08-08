@@ -4,37 +4,28 @@ import {
 } from "@solana-program/stake";
 import { getCreateAccountInstruction } from "@solana-program/system";
 import {
-  address,
-  Address,
+  type Address,
   KeyPairSigner,
   TransactionSigner,
 } from "@solana/kit";
 
-export const STAKE_PROGRAM_ID: Address = address(
-  "Stake11111111111111111111111111111111111111"
-);
+export const STAKE_PROGRAM_ID: Address = "Stake11111111111111111111111111111111111111" as Address;
 
-export const SYSVAR_CLOCK = address(
-  "SysvarC1ock11111111111111111111111111111111"
-);
-export const SYSVAR_STAKE_HISTORY = address(
-  "SysvarStakeHistory1111111111111111111111111"
-);
-export const UNUSED_STAKE_CONFIG_ACC = address(
-  "StakeConfig11111111111111111111111111111111"
-);
+export const SYSVAR_CLOCK = "SysvarC1ock11111111111111111111111111111111" as Address;
 
-export const HELIUS_VALIDATOR_ID: Address = address(
-  "he1iusunGwqrNtafDtLdhsUQDFvo13z9sUa36PauBtk"
-);
+export const SYSVAR_STAKE_HISTORY = "SysvarStakeHistory1111111111111111111111111" as Address;
+
+export const UNUSED_STAKE_CONFIG_ACC = "StakeConfig11111111111111111111111111111111" as Address;
+
+export const HELIUS_VALIDATOR_ID: Address = "he1iusunGwqrNtafDtLdhsUQDFvo13z9sUa36PauBtk" as Address;
 
 // Deactivation epoch check (active stake accounts are set to u64's max value)
-export const U64_MAX = BigInt("18446744073709551615");
+export const U64_MAX = "18446744073709551615" as unknown as BigInt;
 
 // The size of a stake account
 export const STAKE_STATE_LEN = 200;
 
-export const LAMPORTS_PER_SOL_BIGINT = BigInt(1_000_000_000);
+export const LAMPORTS_PER_SOL_BIGINT = "1_000_000_000" as unknown as BigInt;
 
 export type CreateStakeTransactionFn = (
   owner: KeyPairSigner<string>,

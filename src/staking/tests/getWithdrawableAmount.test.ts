@@ -41,7 +41,7 @@ describe("getWithdrawableAmount Tests", () => {
   it("Returns 0 when stake is still active", async () => {
     const rpc = mockRpcBase();
     rpc.getAccountInfo.mockReturnValue({
-      send: () => ({ value: makeAccInfo(5_000_000n, U64_MAX) }),
+      send: () => ({ value: makeAccInfo(5_000_000n, U64_MAX as bigint) }),
     });
 
     const fn = makeGetWithdrawableAmount({ rpc });

@@ -5,7 +5,7 @@ import type {
   CreateSmartTxResult,
   SignedTx,
 } from "./types";
-import type { Instruction, TransactionSigner } from "@solana/kit";
+import type { Address, Instruction, TransactionSigner } from "@solana/kit";
 
 import {
   createTransactionMessage,
@@ -16,7 +16,6 @@ import {
   setTransactionMessageFeePayerSigner,
   setTransactionMessageLifetimeUsingBlockhash,
   signTransactionMessageWithSigners,
-  address,
 } from "@solana/kit";
 
 import {
@@ -24,9 +23,7 @@ import {
   getSetComputeUnitPriceInstruction,
 } from "@solana-program/compute-budget";
 
-const COMPUTE_BUDGET_PROGRAM_ADDRESS = address(
-  "ComputeBudget111111111111111111111111111111"
-);
+const COMPUTE_BUDGET_PROGRAM_ADDRESS = "ComputeBudget111111111111111111111111111111" as Address;
 
 const isComputeBudgetIx = (ix: Instruction<string, readonly any[]>) =>
   ix.programAddress === COMPUTE_BUDGET_PROGRAM_ADDRESS;
