@@ -5,7 +5,7 @@ import commonjs from "@rollup/plugin-commonjs";
 
 // Every TS file under src/ will be included, with tests excluded
 const inputs = globSync('src/**/*.ts', {
-  ignore: ['**/*.test.ts', '**/*.spec.ts'],
+  ignore: ['**/*.test.ts', '**/*.spec.ts', 'src/main.ts'],
 });
 
 export default {
