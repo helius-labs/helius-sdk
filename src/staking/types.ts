@@ -3,21 +3,22 @@ import {
   getDelegateStakeInstruction,
 } from "@solana-program/stake";
 import { getCreateAccountInstruction } from "@solana-program/system";
-import {
-  type Address,
-  KeyPairSigner,
-  TransactionSigner,
-} from "@solana/kit";
+import { type Address, KeyPairSigner, TransactionSigner } from "@solana/kit";
 
-export const STAKE_PROGRAM_ID: Address = "Stake11111111111111111111111111111111111111" as Address;
+export const STAKE_PROGRAM_ID: Address =
+  "Stake11111111111111111111111111111111111111" as Address;
 
-export const SYSVAR_CLOCK = "SysvarC1ock11111111111111111111111111111111" as Address;
+export const SYSVAR_CLOCK =
+  "SysvarC1ock11111111111111111111111111111111" as Address;
 
-export const SYSVAR_STAKE_HISTORY = "SysvarStakeHistory1111111111111111111111111" as Address;
+export const SYSVAR_STAKE_HISTORY =
+  "SysvarStakeHistory1111111111111111111111111" as Address;
 
-export const UNUSED_STAKE_CONFIG_ACC = "StakeConfig11111111111111111111111111111111" as Address;
+export const UNUSED_STAKE_CONFIG_ACC =
+  "StakeConfig11111111111111111111111111111111" as Address;
 
-export const HELIUS_VALIDATOR_ID: Address = "he1iusunGwqrNtafDtLdhsUQDFvo13z9sUa36PauBtk" as Address;
+export const HELIUS_VALIDATOR_ID: Address =
+  "he1iusunGwqrNtafDtLdhsUQDFvo13z9sUa36PauBtk" as Address;
 
 // Deactivation epoch check (active stake accounts are set to u64's max value)
 export const U64_MAX = "18446744073709551615" as unknown as BigInt;
