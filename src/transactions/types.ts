@@ -137,7 +137,8 @@ export type BroadcastTransactionFn = (
 ) => Promise<string>;
 
 export const SENDER_ENDPOINTS = {
-  Default: "http://slc-sender.helius-rpc.com",
+  Default: "http://sender.helius-rpc.com",
+  US_SLC: "http://slc-sender.helius-rpc.com",
   US_EAST: "http://ewr-sender.helius-rpc.com",
   EU_WEST: "http://lon-sender.helius-rpc.com",
   EU_CENTRAL: "http://fra-sender.helius-rpc.com",
