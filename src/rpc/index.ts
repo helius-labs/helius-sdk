@@ -29,7 +29,7 @@ import type { GetTokenAccountsFn } from "./methods/getTokenAccounts";
 import type { SearchAssetsFn } from "./methods/searchAssets";
 import type { EnhancedTxClientLazy } from "../enhanced";
 import { TxHelpersLazy } from "../transactions";
-import { ResolvedHeliusRpcApi } from "./heliusRpcApi";
+import type { ResolvedHeliusRpcApi } from "./heliusRpcApi";
 import { makeWsAsync, WsAsync } from "../websockets/wsAsync";
 import { StakeClientLazy } from "../staking/client";
 import { ZkClientLazy } from "../zk/client";
