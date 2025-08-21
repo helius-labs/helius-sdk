@@ -1,12 +1,9 @@
 import { RpcCaller } from "../../rpc/caller";
 import {
+  GetCompressedAccountProofFn,
   GetCompressedAccountProofRequest,
   GetCompressedAccountProofResponse,
 } from "../types";
-
-export type GetCompressedAccountProofFn = (
-  p: GetCompressedAccountProofRequest
-) => Promise<GetCompressedAccountProofResponse>;
 
 export const makeGetCompressedAccountProof =
   (call: RpcCaller): GetCompressedAccountProofFn =>

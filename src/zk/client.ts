@@ -1,9 +1,6 @@
 import { defineLazyMethod } from "../rpc/lazy";
 import type { RpcCaller } from "../rpc/caller";
-import type { GetCompressedAccountFn } from "./methods/getCompressedAccount";
-import { GetCompressedAccountProofFn } from "./methods/getCompressedAccountProof";
-import { GetCompressedAccountsByOwnerFn } from "./methods/getCompressedAccountsByOwner";
-import {
+import type {
   GetCompressedBalanceByOwnerFn,
   GetCompressedBalanceFn,
   GetCompressedMintTokenHoldersFn,
@@ -24,10 +21,13 @@ import {
   GetMultipleCompressedAccountsFn,
   GetSignaturesForAssetFn,
   GetValidityProofFn,
+  GetTransactionWithCompressionInfoFn,
+  GetMultipleNewAddressProofsFn,
+  GetMultipleNewAddressProofsV2Fn,
+  GetCompressedAccountsByOwnerFn,
+  GetCompressedAccountProofFn,
+  GetCompressedAccountFn,
 } from "./types";
-import { GetMultipleNewAddressProofsFn } from "./methods/getMultipleNewAddressProofs";
-import { GetMultipleNewAddressProofsV2Fn } from "./methods/getMultipleNewAddressProofsV2";
-import { GetTransactionWithCompressionInfoFn } from "./methods/getTransactionWithCompressionInfo";
 
 export interface ZkClientLazy {
   getCompressedAccount: GetCompressedAccountFn;

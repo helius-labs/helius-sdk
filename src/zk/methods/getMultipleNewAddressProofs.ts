@@ -1,12 +1,9 @@
 import type { RpcCaller } from "../../rpc/caller";
 import type {
+  GetMultipleNewAddressProofsFn,
   GetMultipleNewAddressProofsRequest,
   GetMultipleNewAddressProofsResponse,
 } from "../types";
-
-export type GetMultipleNewAddressProofsFn = (
-  p: GetMultipleNewAddressProofsRequest
-) => Promise<GetMultipleNewAddressProofsResponse>;
 
 export const makeGetMultipleNewAddressProofs =
   (call: RpcCaller): GetMultipleNewAddressProofsFn =>

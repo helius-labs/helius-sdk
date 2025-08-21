@@ -501,3 +501,25 @@ export interface GetSignaturesForAssetResponse {
 export type GetSignaturesForAssetFn = (
   p: GetSignaturesForAssetRequest
 ) => Promise<GetSignaturesForAssetResponse>;
+
+export type GetTransactionWithCompressionInfoFn = (
+  p: GetTransactionWithCompressionInfoRequest
+) => Promise<GetTransactionWithCompressionInfoResponse>;
+
+export type GetMultipleNewAddressProofsFn = (
+  p: GetMultipleNewAddressProofsRequest
+) => Promise<GetMultipleNewAddressProofsResponse>;
+
+export type GetMultipleNewAddressProofsV2Fn = (
+  p: GetMultipleNewAddressProofsV2Request
+) => Promise<GetMultipleNewAddressProofsV2Response>;
+
+export type GetCompressedAccountsByOwnerFn = (p: GetCompressedAccountsByOwnerRequest) => Promise<GetCompressedAccountsByOwnerResponse>;
+
+export type GetCompressedAccountProofFn = (
+  p: GetCompressedAccountProofRequest
+) => Promise<GetCompressedAccountProofResponse>;
+
+export type GetCompressedAccountFn = (
+  p: GetCompressedAccountRequest
+) => Promise<GetCompressedAccountResponse>;
