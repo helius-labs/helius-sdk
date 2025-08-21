@@ -514,7 +514,9 @@ export type GetMultipleNewAddressProofsV2Fn = (
   p: GetMultipleNewAddressProofsV2Request
 ) => Promise<GetMultipleNewAddressProofsV2Response>;
 
-export type GetCompressedAccountsByOwnerFn = (p: GetCompressedAccountsByOwnerRequest) => Promise<GetCompressedAccountsByOwnerResponse>;
+export type GetCompressedAccountsByOwnerFn = (
+  p: GetCompressedAccountsByOwnerRequest
+) => Promise<GetCompressedAccountsByOwnerResponse>;
 
 export type GetCompressedAccountProofFn = (
   p: GetCompressedAccountProofRequest
