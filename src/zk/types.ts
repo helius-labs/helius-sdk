@@ -445,11 +445,6 @@ export interface GetTransactionWithCompressionInfoResponse {
   transaction: unknown;
 }
 
-export interface AddressWithTree {
-  address: string;
-  tree: string;
-}
-
 export interface CompressedProof {
   a: string;
   b: string;
