@@ -1,0 +1,16 @@
+# No blank issues; users must pick a template
+blank_issues_enabled: false
+
+contact_links:
+  - name: General Support
+    url: https://discord.com/invite/6GXdee3gBj
+    about: Ask questions or get help in our Discord
+  - name: Documentation
+    url: https://www.helius.dev/docs
+    about: Check out our docs for common questions and detailed guides
+  - name: Security vulnerability disclosure
+    url: mailto:support@helius.xyz
+    about: Please email us privately to report security issues
+  - name: Status Page
+    url: https://helius.statuspage.io/
+    about: Real-time information about service availability and performance
