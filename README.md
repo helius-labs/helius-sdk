@@ -150,6 +150,15 @@ Provides methods for setting up, editing, and managing webhooks, crucial for lis
 - [`sendJitoBundle()`](https://github.com/helius-labs/helius-sdk/blob/main/examples/EXAMPLES_OVERVIEW.md#sendjitobundle): Sends a bundle of transactions to the Jito Block Engine
 - [`sendSmartTransactionWithTip()`](https://github.com/helius-labs/helius-sdk/blob/main/examples/EXAMPLES_OVERVIEW.md#sendsmarttransactionwithtip): Sends a smart transaction as a Jito bundle with a tip
 
+[**Enhanced RPC Methods (V2)**](https://github.com/helius-labs/helius-sdk/blob/main/examples/EXAMPLES_OVERVIEW.md#enhanced-rpc-methods-v2)
+
+New paginated RPC methods with cursor-based pagination for efficient data retrieval.
+
+- [`getProgramAccountsV2()`](https://github.com/helius-labs/helius-sdk/blob/main/examples/rpc/getProgramAccountsV2.ts): Get program accounts with pagination support and changedSinceSlot for incremental updates.
+- [`getAllProgramAccounts()`](https://github.com/helius-labs/helius-sdk/blob/main/examples/rpc/getProgramAccountsV2.ts): Auto-paginate through all program accounts (use with caution for large programs).
+- [`getTokenAccountsByOwnerV2()`](https://github.com/helius-labs/helius-sdk/blob/main/examples/rpc/getTokenAccountsByOwnerV2.ts): Get token accounts by owner with pagination and filters.
+- [`getAllTokenAccountsByOwner()`](https://github.com/helius-labs/helius-sdk/blob/main/examples/rpc/getTokenAccountsByOwnerV2.ts): Auto-paginate through all token accounts for an owner.
+
 [**Helper Methods**](https://github.com/helius-labs/helius-sdk/blob/main/examples/EXAMPLES_OVERVIEW.md#helper-methods)
 
 Offers additional tools for various Solana-related tasks like analyzing blockchain throughput and tracking stake accounts and SPL token holders.

@@ -404,3 +404,76 @@ export type SignedTransactionInput =
   | VersionedTransaction
   | Buffer
   | string;
+
+// V2 RPC Methods Types
+
+export type GetProgramAccountsV2Filter = {
+  dataSize?: number;
+  memcmp?: {
+    offset: number;
+    bytes: string;
+  };
+};
+
+export type GetProgramAccountsV2Options = {
+  encoding?: 'base58' | 'base64' | 'base64+zstd' | 'jsonParsed';
+  commitment?: 'processed' | 'confirmed' | 'finalized';
+  minContextSlot?: number;
+  withContext?: boolean;
+  limit?: number; // 1-10000
+  paginationKey?: string;
+  changedSinceSlot?: number;
+  filters?: GetProgramAccountsV2Filter[];
+};
+
+export type GetProgramAccountsV2Response<T = any> = {
+  accounts: Array<{
+    pubkey: string;
+    account: {
+      lamports: number;
+      owner: string;
+      data: T;
+      executable: boolean;
+      rentEpoch: number;
+      space?: number;
+    };
+  }>;
+  paginationKey?: string;
+  count: number;
+};
+
+export type GetTokenAccountsByOwnerV2Filter = {
+  mint?: string;
+  programId?: string;
+};
+
+export type GetTokenAccountsByOwnerV2Options = {
+  encoding?: 'base58' | 'base64' | 'base64+zstd' | 'jsonParsed';
+  commitment?: 'processed' | 'confirmed' | 'finalized';
+  minContextSlot?: number;
+  limit?: number; // 1-10000
+  paginationKey?: string;
+  changedSinceSlot?: number;
+};
+
+export type GetTokenAccountsByOwnerV2Response<T = any> = {
+  context: {
+    slot: number;
+    apiVersion: string;
+  };
+  value: {
+    accounts: Array<{
+      pubkey: string;
+      account: {
+        lamports: number;
+        owner: string;
+        data: T;
+        executable: boolean;
+        rentEpoch: number;
+        space?: number;
+      };
+    }>;
+    paginationKey?: string;
+    count: number;
+  };
+};
