@@ -1352,7 +1352,7 @@ export class RpcClient {
    * Use with caution for programs with many accounts.
    * 
    * @param {string} programId - The program ID to query
-   * @param {Omit<GetProgramAccountsV2Options, 'paginationKey'>} options - Options excluding paginationKey
+   * @param {Omit<GetProgramAccountsV2Options, 'paginationKey' | 'limit'>} options - Options excluding paginationKey and limit
    * @returns {Promise<Array>} - All program accounts
    * 
    * @example
@@ -1361,7 +1361,6 @@ export class RpcClient {
    *   'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA',
    *   { 
    *     encoding: 'jsonParsed',
-   *     limit: 5000,
    *     filters: [{ dataSize: 165 }]
    *   }
    * );
@@ -1369,14 +1368,18 @@ export class RpcClient {
    */
   async getAllProgramAccounts<T = any>(
     programId: string,
-    options: Omit<GetProgramAccountsV2Options, 'paginationKey'> = {}
+    options: Omit<GetProgramAccountsV2Options, 'paginationKey' | 'limit'> = {}
   ): Promise<Array<{ pubkey: string; account: any }>> {
     const allAccounts: Array<{ pubkey: string; account: any }> = [];
     let paginationKey: string | undefined = undefined;
     
+    // Always use maximum limit for auto-pagination to minimize API calls
+    const limit = 10000;
+    
     do {
       const response: GetProgramAccountsV2Response<T> = await this.getProgramAccountsV2<T>(programId, {
         ...options,
+        limit,
         paginationKey,
       });
       
@@ -1468,7 +1471,7 @@ export class RpcClient {
    * 
    * @param {string} ownerAddress - The owner's wallet address
    * @param {GetTokenAccountsByOwnerV2Filter} filter - Filter by mint or programId
-   * @param {Omit<GetTokenAccountsByOwnerV2Options, 'paginationKey'>} options - Options excluding paginationKey
+   * @param {Omit<GetTokenAccountsByOwnerV2Options, 'paginationKey' | 'limit'>} options - Options excluding paginationKey and limit
    * @returns {Promise<Array>} - All token accounts
    * 
    * @example
@@ -1476,21 +1479,25 @@ export class RpcClient {
    * const allTokenAccounts = await helius.rpc.getAllTokenAccountsByOwner(
    *   '86xCnPeV69n6t3DnyGvkKobf9FdN2H9oiVDdaMpo2MMY',
    *   { programId: 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA' },
-   *   { encoding: 'jsonParsed', limit: 1000 }
+   *   { encoding: 'jsonParsed' }
    * );
    * ```
    */
   async getAllTokenAccountsByOwner<T = any>(
     ownerAddress: string,
     filter: GetTokenAccountsByOwnerV2Filter,
-    options: Omit<GetTokenAccountsByOwnerV2Options, 'paginationKey'> = {}
+    options: Omit<GetTokenAccountsByOwnerV2Options, 'paginationKey' | 'limit'> = {}
   ): Promise<Array<{ pubkey: string; account: any }>> {
     const allAccounts: Array<{ pubkey: string; account: any }> = [];
     let paginationKey: string | undefined = undefined;
     
+    // Always use maximum limit for auto-pagination to minimize API calls
+    const limit = 10000;
+    
     do {
       const response: GetTokenAccountsByOwnerV2Response<T> = await this.getTokenAccountsByOwnerV2<T>(ownerAddress, filter, {
         ...options,
+        limit,
         paginationKey,
       });
       
