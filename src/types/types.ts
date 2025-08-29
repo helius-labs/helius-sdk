@@ -67,8 +67,6 @@ export type CreateWebhookRequest = Omit<
   'webhookID' | 'wallet' | 'project'
 >;
 
-
-
 export type EditWebhookRequest = Partial<
   Omit<Webhook, 'webhookID' | 'wallet' | 'project'>
 >;
@@ -373,15 +371,34 @@ export interface JupiterSwapParams {
   restrictIntermediateTokens?: boolean;
   wrapUnwrapSOL?: boolean;
   /** Priority level for transaction fees:
+   * - 'low': 10th percentile (cheapest, slowest)
    * - 'medium': 25th percentile
    * - 'high': 50th percentile  
    * - 'veryHigh': 75th percentile
+   * - 'unsafeMax': 95th percentile (highest priority, use with caution)
    */
-  priorityLevel?: 'medium' | 'high' | 'veryHigh';
+  priorityLevel?: 'low' | 'medium' | 'high' | 'veryHigh' | 'unsafeMax';
   maxPriorityFeeLamports?: number;
   skipPreflight?: boolean;
   maxRetries?: number;
   confirmationCommitment?: 'processed' | 'confirmed' | 'finalized';
+  useSmartTransaction?: boolean;
+}
+
+export interface JupiterPriorityFeeLamports {
+  priorityLevelWithMaxLamports: {
+    maxLamports: number;
+    priorityLevel: 'low' | 'medium' | 'high' | 'veryHigh' | 'unsafeMax';
+  };
+}
+
+export interface JupiterSwapRequestBody {
+  quoteResponse: any;
+  userPublicKey: string;
+  wrapAndUnwrapSol: boolean;
+  dynamicComputeUnitLimit?: boolean;
+  dynamicSlippage?: boolean;
+  prioritizationFeeLamports?: JupiterPriorityFeeLamports;
 }
 
 export interface JupiterSwapResult {
