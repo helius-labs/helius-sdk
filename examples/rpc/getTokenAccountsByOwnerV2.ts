@@ -101,8 +101,8 @@ async function main() {
     ownerAddress,
     { programId: 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA' },
     {
-      encoding: 'jsonParsed',
-      limit: 100 // Fetch 100 at a time
+      encoding: 'jsonParsed'
+      // Note: limit is not configurable for getAllTokenAccountsByOwner - it always uses 10000 internally
     }
   );
   
