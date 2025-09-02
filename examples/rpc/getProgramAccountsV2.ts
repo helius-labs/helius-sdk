@@ -74,7 +74,7 @@ async function main() {
     'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA',
     {
       encoding: 'jsonParsed',
-      limit: 100, // Fetch 100 at a time
+      // Note: limit is not configurable for getAllProgramAccounts - it always uses 10000 internally
       filters: [
         { dataSize: 82 }, // Filter for mint accounts (82 bytes) to reduce results
       ]
