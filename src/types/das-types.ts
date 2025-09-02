@@ -338,7 +338,8 @@ export namespace DAS {
     amount?: number;
     delegated_amount?: number;
     frozen?: boolean;
-    token_extensions: TokenAccountExtensions;
+    burnt?: any; // From Helius docs
+    token_extensions?: TokenAccountExtensions; // Optional - may not always be present
   }
 
   export interface TokenAccountExtensions {

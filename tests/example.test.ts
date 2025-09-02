@@ -91,11 +91,11 @@ describe("Helius SDK Tests", () => {
 
     // Verify the type works
     expect(mockTokenAccount.token_extensions).toBeDefined();
-    expect(mockTokenAccount.token_extensions.immutable_owner).toBe(true);
-    expect(mockTokenAccount.token_extensions.required_memo_on_transfer?.enabled).toBe(true);
-    expect(mockTokenAccount.token_extensions.cpi_guard?.enabled).toBe(true);
-    expect(mockTokenAccount.token_extensions.confidential_transfer_account).toBeDefined();
-    expect(mockTokenAccount.token_extensions.transfer_fee_account).toBeDefined();
-    expect(mockTokenAccount.token_extensions.unknown_extension).toBe("some value");
+    expect(mockTokenAccount.token_extensions!.immutable_owner).toBe(true);
+    expect(mockTokenAccount.token_extensions!.required_memo_on_transfer?.enabled).toBe(true);
+    expect(mockTokenAccount.token_extensions!.cpi_guard?.enabled).toBe(true);
+    expect(mockTokenAccount.token_extensions!.confidential_transfer_account).toBeDefined();
+    expect(mockTokenAccount.token_extensions!.transfer_fee_account).toBeDefined();
+    expect(mockTokenAccount.token_extensions!.unknown_extension).toBe("some value");
   });
 });
