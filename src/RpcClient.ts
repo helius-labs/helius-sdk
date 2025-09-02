@@ -41,6 +41,7 @@ import {
   JITO_TIP_ACCOUNTS,
   JitoRegion,
   JupiterSwapParams,
+  JupiterSwapRequestBody,
   JupiterSwapResult,
   PollTransactionOptions,
   SendSmartTransactionOptions,
@@ -1586,13 +1587,16 @@ export class RpcClient {
    *   - `restrictIntermediateTokens` - Whether to restrict intermediate tokens (default: true)
    *   - `wrapUnwrapSOL` - Whether to auto-wrap/unwrap SOL (default: true)
    *   - `priorityLevel` - Priority level for transaction fees:
+   *     - 'low': 10th percentile (cheapest, slowest)
    *     - 'medium': 25th percentile (cheaper, slower)
    *     - 'high': 50th percentile (balanced, default)
    *     - 'veryHigh': 75th percentile (more expensive, faster)
+   *     - 'unsafeMax': 95th percentile (highest priority, use with caution)
    *   - `maxPriorityFeeLamports` - Maximum priority fee in lamports (default: 1000000)
    *   - `skipPreflight` - Whether to skip preflight transaction checks (default: true)
    *   - `maxRetries` - Maximum number of retries when sending transaction (default: 0)
    *   - `confirmationCommitment` - Commitment level for confirming transaction ('processed', 'confirmed', 'finalized', default: 'confirmed')
+   *   - `useSmartTransaction` - Whether to use Helius Smart Transactions for improved reliability (default: false)
    *
    * @param signer - The wallet that will execute and pay for the swap
    *
@@ -1626,6 +1630,7 @@ export class RpcClient {
       const skipPreflight = params.skipPreflight ?? true;
       const confirmationCommitment =
         params.confirmationCommitment ?? 'confirmed';
+      const useSmartTransaction = params.useSmartTransaction ?? false;
 
       // Get Jupiter quote using fetch API with updated parameters
       const quoteUrl = new URL('https://lite-api.jup.ag/swap/v1/quote');
@@ -1654,26 +1659,31 @@ export class RpcClient {
       }
 
       // Get swap transaction with optimizations for transaction landing
+      const swapRequestBody: JupiterSwapRequestBody = {
+        quoteResponse,
+        userPublicKey: signer.publicKey.toString(),
+        wrapAndUnwrapSol: wrapUnwrapSOL,
+      };
+
+      // Only add Jupiter's transaction optimizations if not using Smart Transactions
+      // Smart Transactions will handle priority fees and compute units automatically
+      if (!useSmartTransaction) {
+        swapRequestBody.dynamicComputeUnitLimit = true;
+        swapRequestBody.dynamicSlippage = true;
+        swapRequestBody.prioritizationFeeLamports = {
+          priorityLevelWithMaxLamports: {
+            maxLamports: maxPriorityFeeLamports,
+            priorityLevel: priorityLevel,
+          },
+        };
+      }
+
       const swapResponseRaw = await fetch('https://lite-api.jup.ag/swap/v1/swap', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          quoteResponse,
-          userPublicKey: signer.publicKey.toString(),
-          wrapAndUnwrapSol: wrapUnwrapSOL,
-
-          // Transaction landing optimizations
-          dynamicComputeUnitLimit: true,
-          dynamicSlippage: true,
-          prioritizationFeeLamports: {
-            priorityLevelWithMaxLamports: {
-              maxLamports: maxPriorityFeeLamports,
-              priorityLevel: priorityLevel,
-            },
-          },
-        }),
+        body: JSON.stringify(swapRequestBody),
       });
 
       if (!swapResponseRaw.ok) {
@@ -1700,20 +1710,50 @@ export class RpcClient {
       );
       const transaction = VersionedTransaction.deserialize(swapTransactionBuf);
 
-      // Sign the transaction
-      transaction.sign([signer]);
+      let signature: string;
+      let confirmation: any;
 
-      // Use Helius's optimized broadcastTransaction for better reliability
-      const signature = await this.broadcastTransaction(transaction, {
-        skipPreflight,
-        maxRetries,
-        preflightCommitment: confirmationCommitment,
-        pollTimeoutMs: 30000, // 30 second timeout for swaps
-        pollIntervalMs: 1000,  // Check every 1 second
-      });
+      if (useSmartTransaction) {
+        // Use Smart Transactions for improved reliability
+        const message = TransactionMessage.decompile(transaction.message);
+        const instructions = message.instructions;
 
-      // Transaction is already confirmed by broadcastTransaction  
-      const confirmation = { value: { err: null }, context: { slot: 0 } };
+        // Use Smart Transactions with the extracted instructions
+        // Note: We pass empty lookup tables since the instructions are already decompiled
+        signature = await this.sendSmartTransaction(
+          instructions,
+          [signer],
+          [], // Empty lookup tables since instructions are already resolved
+          {
+            skipPreflight,
+            maxRetries,
+            priorityFeeCap: maxPriorityFeeLamports,
+            pollTimeoutMs: 60000,
+            pollIntervalMs: 2000,
+          }
+        );
+
+        // For Smart Transactions, we need to get confirmation status
+        confirmation = await this.connection.confirmTransaction(
+          signature,
+          confirmationCommitment
+        );
+      } else {
+        // Sign the transaction before broadcasting
+        transaction.sign([signer]);
+
+        // Use Helius's optimized broadcastTransaction for better reliability
+        signature = await this.broadcastTransaction(transaction, {
+          skipPreflight,
+          maxRetries,
+          preflightCommitment: confirmationCommitment,
+          pollTimeoutMs: 30000, // 30 second timeout for swaps
+          pollIntervalMs: 1000,  // Check every 1 second
+        });
+
+        // Transaction is already confirmed by broadcastTransaction  
+        confirmation = { value: { err: null }, context: { slot: 0 } };
+      }
 
       // Return detailed result with confirmation status
       return {
