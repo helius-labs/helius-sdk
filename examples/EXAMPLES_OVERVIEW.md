@@ -1,4 +1,5 @@
 # Examples Overview
+
 ## DAS API (Digital Asset Standard)
 
 Read more about the DAS API from our docs, [here](https://docs.helius.dev/solana-compression/digital-asset-standard-das-api).
@@ -184,21 +185,27 @@ console.log(response);
 ## Staking
 
 The easiest way to manage your stake with Helius. These methods allow you to:
+
 - Generate transactions users can sign and send themselves
 - Manage staking UX flows directly on your dApp or backend
 - Target the number one validator on Solana for commission-free staking
 
 ### createStakeTransaction
+
 Create and delegate a new stake account (unsigned transaction).
+
 ```ts
-const { serializedTx, stakeAccountPubkey } = await helius.rpc.createStakeTransaction(
-  ownerPubkey,
-  1.5 // Amount in SOL (excluding rent exemption)
-);
+const { serializedTx, stakeAccountPubkey } =
+  await helius.rpc.createStakeTransaction(
+    ownerPubkey,
+    1.5 // Amount in SOL (excluding rent exemption)
+  );
 ```
 
 ### createUnstakeTransaction
+
 Deactivate a stake account (unsigned transaction).
+
 ```ts
 const serializedTx = await helius.rpc.createUnstakeTransaction(
   ownerPubkey,
@@ -207,7 +214,9 @@ const serializedTx = await helius.rpc.createUnstakeTransaction(
 ```
 
 ### createWithdrawTransaction
+
 Withdraw from a stake account after cooldown (unsigned transaction).
+
 ```ts
 const serializedTx = await helius.rpc.createWithdrawTransaction(
   ownerPubkey,
@@ -218,7 +227,9 @@ const serializedTx = await helius.rpc.createWithdrawTransaction(
 ```
 
 ### getStakeInstructions
+
 Return only the instructions for creating and delegating a stake account.
+
 ```ts
 const { instructions, stakeAccount } = await helius.rpc.getStakeInstructions(
   ownerPubkey,
@@ -227,19 +238,28 @@ const { instructions, stakeAccount } = await helius.rpc.getStakeInstructions(
 ```
 
 ### getUnstakeInstruction
+
 Return a single instruction to deactivate a stake account.
+
 ```ts
 const ix = helius.rpc.getUnstakeInstruction(ownerPubkey, stakeAccountPubkey);
 ```
 
 ### getWithdrawableAmount
+
 Returns how many lamports are withdrawable (optional rent-exempt inclusion).
+
 ```ts
-const withdrawable = await helius.rpc.getWithdrawableAmount(stakeAccountPubkey, true);
+const withdrawable = await helius.rpc.getWithdrawableAmount(
+  stakeAccountPubkey,
+  true
+);
 ```
 
 ### getWithdrawInstruction
+
 Return a single instruction to withdraw from a stake account.
+
 ```ts
 const ix = helius.rpc.getWithdrawInstruction(
   ownerPubkey,
@@ -250,9 +270,12 @@ const ix = helius.rpc.getWithdrawInstruction(
 ```
 
 ### getHeliusStakeAccounts
+
 Fetch all stake accounts delegated to the Helius validator for a given wallet.
+
 ```ts
-const heliusStakeAccounts = await helius.rpc.getHeliusStakeAccounts(walletAddress);
+const heliusStakeAccounts =
+  await helius.rpc.getHeliusStakeAccounts(walletAddress);
 ```
 
 ## Mint
@@ -501,8 +524,6 @@ const helius = new Helius('YOUR_API_KEY');
 
 helius.getAllWebhooks();
 ```
-
-
 
 ## Smart Transactions
 
@@ -765,28 +786,29 @@ try {
 ```
 
 ### broadcastTransaction()
+
 This method broadcasts a fully signed transaction and polls for its confirmation, regardless of whether it's an object or serialized. If
 a `Transaction` is passed in then we automatically extract the `recentBlockhash`. In the example below, we build a versioned transaction,
 serialize it to a buffer, and then broadcast the transaction.
 
 ```typescript
 async function main() {
-    // Build a versioned transaction
-    const { blockhash } = await helius.connection.getLatestBlockhash();
-  
-    const messageV0 = new TransactionMessage({
-      payerKey: payer.publicKey,
-      recentBlockhash: blockhash,
-      instructions: [
-        SystemProgram.transfer({
-          fromPubkey: payer.publicKey,
-          toPubkey: recipient,
-          lamports: 1000,
-        }),
-      ],
-    }).compileToV0Message();
-  
-    const vtx = new VersionedTransaction(messageV0);
+  // Build a versioned transaction
+  const { blockhash } = await helius.connection.getLatestBlockhash();
+
+  const messageV0 = new TransactionMessage({
+    payerKey: payer.publicKey,
+    recentBlockhash: blockhash,
+    instructions: [
+      SystemProgram.transfer({
+        fromPubkey: payer.publicKey,
+        toPubkey: recipient,
+        lamports: 1000,
+      }),
+    ],
+  }).compileToV0Message();
+
+  const vtx = new VersionedTransaction(messageV0);
   vtx.sign([payer]);
 
   // Serialize to Buffer
@@ -795,7 +817,7 @@ async function main() {
   // Broadcast
   const signature = await helius.rpc.broadcastTransaction(serializedBuffer);
   console.log('Broadcast serialized (Buffer) signature:', signature);
-  }
+}
 ```
 
 ### executeJupiterSwap()
@@ -809,17 +831,20 @@ import { Keypair } from '@solana/web3.js';
 const helius = new Helius('YOUR_API_KEY');
 
 // Swap SOL to USDC with transaction landing optimizations
-const result = await helius.rpc.executeJupiterSwap({
-  inputMint: 'So11111111111111111111111111111111111111112', // SOL
-  outputMint: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v', // USDC
-  amount: 10000000, // 0.01 SOL (SOL has 9 decimals)
-  slippageBps: 50, // 0.5% slippage tolerance
-  restrictIntermediateTokens: true, // Improves pricing
-  priorityLevel: 'high', // Options: 'medium' (25th percentile), 'high' (50th percentile), 'veryHigh' (75th percentile)
-  maxPriorityFeeLamports: 1000000, // Caps priority fee at 0.001 SOL
-  skipPreflight: true, // Skip preflight checks
-  confirmationCommitment: 'confirmed' // Wait for confirmation
-}, wallet);
+const result = await helius.rpc.executeJupiterSwap(
+  {
+    inputMint: 'So11111111111111111111111111111111111111112', // SOL
+    outputMint: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v', // USDC
+    amount: 10000000, // 0.01 SOL (SOL has 9 decimals)
+    slippageBps: 50, // 0.5% slippage tolerance
+    restrictIntermediateTokens: true, // Improves pricing
+    priorityLevel: 'high', // Options: 'medium' (25th percentile), 'high' (50th percentile), 'veryHigh' (75th percentile)
+    maxPriorityFeeLamports: 1000000, // Caps priority fee at 0.001 SOL
+    skipPreflight: true, // Skip preflight checks
+    confirmationCommitment: 'confirmed', // Wait for confirmation
+  },
+  wallet
+);
 
 if (result.success && result.confirmed) {
   console.log(`Received ${result.outputAmount} USDC, tx: ${result.signature}`);
@@ -827,6 +852,7 @@ if (result.success && result.confirmed) {
 ```
 
 Key features:
+
 - Automatic compute unit and priority fee calculation
 - Transaction retry logic during network congestion
 - Slippage tolerance and route optimization

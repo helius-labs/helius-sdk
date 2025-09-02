@@ -12,6 +12,8 @@ import type {
   VersionedTransaction,
 } from '@solana/web3.js';
 
+import type { AxiosError } from 'axios';
+
 import type {
   AccountWebhookEncoding,
   PriorityLevel,
@@ -66,8 +68,6 @@ export type CreateWebhookRequest = Omit<
   Webhook,
   'webhookID' | 'wallet' | 'project'
 >;
-
-
 
 export type EditWebhookRequest = Partial<
   Omit<Webhook, 'webhookID' | 'wallet' | 'project'>
@@ -374,7 +374,7 @@ export interface JupiterSwapParams {
   wrapUnwrapSOL?: boolean;
   /** Priority level for transaction fees:
    * - 'medium': 25th percentile
-   * - 'high': 50th percentile  
+   * - 'high': 50th percentile
    * - 'veryHigh': 75th percentile
    */
   priorityLevel?: 'medium' | 'high' | 'veryHigh';
@@ -477,3 +477,9 @@ export type GetTokenAccountsByOwnerV2Response<T = any> = {
     count: number;
   };
 };
+
+export interface PriceInfo {
+  price_per_token: number;
+  currency: string;
+  total_price?: number;
+}

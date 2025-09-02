@@ -1265,30 +1265,30 @@ export class RpcClient {
 
   /**
    * Get program accounts with pagination support (V2)
-   * 
+   *
    * Enhanced version with cursor-based pagination and changedSinceSlot support
    * for efficiently querying large sets of accounts
-   * 
+   *
    * @param {string} programId - The program ID to query
    * @param {GetProgramAccountsV2Options} options - Options for the query including pagination
    * @returns {Promise<GetProgramAccountsV2Response>} - Paginated program accounts
    * @throws {Error}
-   * 
+   *
    * @example
    * ```typescript
    * // Basic query with pagination
    * const result = await helius.rpc.getProgramAccountsV2(
    *   'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA',
-   *   { 
+   *   {
    *     encoding: 'jsonParsed',
-   *     limit: 1000 
+   *     limit: 1000
    *   }
    * );
-   * 
+   *
    * // Continue pagination
    * const nextPage = await helius.rpc.getProgramAccountsV2(
    *   'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA',
-   *   { 
+   *   {
    *     encoding: 'jsonParsed',
    *     limit: 1000,
    *     paginationKey: result.paginationKey
@@ -1302,26 +1302,30 @@ export class RpcClient {
   ): Promise<GetProgramAccountsV2Response<T>> {
     try {
       const url = `${this.connection.rpcEndpoint}`;
-      
+
       // Build params array
-      const params: any[] = [programId];
-      
+      const params: [string, GetProgramAccountsV2Options?] = [programId];
+
       // Add options if provided
       if (Object.keys(options).length > 0) {
-        const configOptions: any = {};
-        
+        const configOptions: GetProgramAccountsV2Options = {};
+
         if (options.encoding) configOptions.encoding = options.encoding;
         if (options.commitment) configOptions.commitment = options.commitment;
-        if (options.minContextSlot !== undefined) configOptions.minContextSlot = options.minContextSlot;
-        if (options.withContext !== undefined) configOptions.withContext = options.withContext;
+        if (options.minContextSlot !== undefined)
+          configOptions.minContextSlot = options.minContextSlot;
+        if (options.withContext !== undefined)
+          configOptions.withContext = options.withContext;
         if (options.limit !== undefined) configOptions.limit = options.limit;
-        if (options.paginationKey) configOptions.paginationKey = options.paginationKey;
-        if (options.changedSinceSlot !== undefined) configOptions.changedSinceSlot = options.changedSinceSlot;
+        if (options.paginationKey)
+          configOptions.paginationKey = options.paginationKey;
+        if (options.changedSinceSlot !== undefined)
+          configOptions.changedSinceSlot = options.changedSinceSlot;
         if (options.filters) configOptions.filters = options.filters;
-        
+
         params.push(configOptions);
       }
-      
+
       const response = await axios.post(
         url,
         {
@@ -1347,19 +1351,19 @@ export class RpcClient {
 
   /**
    * Get all program accounts by auto-paginating through results
-   * 
+   *
    * Automatically handles pagination to fetch all accounts.
    * Use with caution for programs with many accounts.
-   * 
+   *
    * @param {string} programId - The program ID to query
    * @param {Omit<GetProgramAccountsV2Options, 'paginationKey' | 'limit'>} options - Options excluding paginationKey and limit
    * @returns {Promise<Array>} - All program accounts
-   * 
+   *
    * @example
    * ```typescript
    * const allAccounts = await helius.rpc.getAllProgramAccounts(
    *   'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA',
-   *   { 
+   *   {
    *     encoding: 'jsonParsed',
    *     filters: [{ dataSize: 165 }]
    *   }
@@ -1369,38 +1373,47 @@ export class RpcClient {
   async getAllProgramAccounts<T = any>(
     programId: string,
     options: Omit<GetProgramAccountsV2Options, 'paginationKey' | 'limit'> = {}
-  ): Promise<Array<{ pubkey: string; account: any }>> {
-    const allAccounts: Array<{ pubkey: string; account: any }> = [];
+  ): Promise<
+    Array<{
+      pubkey: string;
+      account: GetProgramAccountsV2Response<T>['accounts'][0]['account'];
+    }>
+  > {
+    const allAccounts: Array<{
+      pubkey: string;
+      account: GetProgramAccountsV2Response<T>['accounts'][0]['account'];
+    }> = [];
     let paginationKey: string | undefined = undefined;
-    
+
     // Always use maximum limit for auto-pagination to minimize API calls
     const limit = 10000;
-    
+
     do {
-      const response: GetProgramAccountsV2Response<T> = await this.getProgramAccountsV2<T>(programId, {
-        ...options,
-        limit,
-        paginationKey,
-      });
-      
+      const response: GetProgramAccountsV2Response<T> =
+        await this.getProgramAccountsV2<T>(programId, {
+          ...options,
+          limit,
+          paginationKey,
+        });
+
       allAccounts.push(...response.accounts);
       paginationKey = response.paginationKey;
     } while (paginationKey);
-    
+
     return allAccounts;
   }
 
   /**
    * Get token accounts by owner with pagination support (V2)
-   * 
+   *
    * Enhanced version with cursor-based pagination and changedSinceSlot support
-   * 
+   *
    * @param {string} ownerAddress - The owner's wallet address
    * @param {GetTokenAccountsByOwnerV2Filter} filter - Filter by mint or programId
    * @param {GetTokenAccountsByOwnerV2Options} options - Options including pagination
    * @returns {Promise<GetTokenAccountsByOwnerV2Response>} - Paginated token accounts
    * @throws {Error}
-   * 
+   *
    * @example
    * ```typescript
    * // Get all SPL token accounts for a wallet
@@ -1409,7 +1422,7 @@ export class RpcClient {
    *   { programId: 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA' },
    *   { encoding: 'jsonParsed', limit: 100 }
    * );
-   * 
+   *
    * // Get accounts for a specific mint
    * const usdcAccounts = await helius.rpc.getTokenAccountsByOwnerV2(
    *   '86xCnPeV69n6t3DnyGvkKobf9FdN2H9oiVDdaMpo2MMY',
@@ -1425,24 +1438,31 @@ export class RpcClient {
   ): Promise<GetTokenAccountsByOwnerV2Response<T>> {
     try {
       const url = `${this.connection.rpcEndpoint}`;
-      
+
       // Build params array
-      const params: any[] = [ownerAddress, filter];
-      
+      const params: [
+        string,
+        GetTokenAccountsByOwnerV2Filter,
+        GetTokenAccountsByOwnerV2Options?,
+      ] = [ownerAddress, filter];
+
       // Add options if provided
       if (Object.keys(options).length > 0) {
-        const configOptions: any = {};
-        
+        const configOptions: GetTokenAccountsByOwnerV2Options = {};
+
         if (options.encoding) configOptions.encoding = options.encoding;
         if (options.commitment) configOptions.commitment = options.commitment;
-        if (options.minContextSlot !== undefined) configOptions.minContextSlot = options.minContextSlot;
+        if (options.minContextSlot !== undefined)
+          configOptions.minContextSlot = options.minContextSlot;
         if (options.limit !== undefined) configOptions.limit = options.limit;
-        if (options.paginationKey) configOptions.paginationKey = options.paginationKey;
-        if (options.changedSinceSlot !== undefined) configOptions.changedSinceSlot = options.changedSinceSlot;
-        
+        if (options.paginationKey)
+          configOptions.paginationKey = options.paginationKey;
+        if (options.changedSinceSlot !== undefined)
+          configOptions.changedSinceSlot = options.changedSinceSlot;
+
         params.push(configOptions);
       }
-      
+
       const response = await axios.post(
         url,
         {
@@ -1468,12 +1488,12 @@ export class RpcClient {
 
   /**
    * Get all token accounts by owner by auto-paginating through results
-   * 
+   *
    * @param {string} ownerAddress - The owner's wallet address
    * @param {GetTokenAccountsByOwnerV2Filter} filter - Filter by mint or programId
    * @param {Omit<GetTokenAccountsByOwnerV2Options, 'paginationKey' | 'limit'>} options - Options excluding paginationKey and limit
    * @returns {Promise<Array>} - All token accounts
-   * 
+   *
    * @example
    * ```typescript
    * const allTokenAccounts = await helius.rpc.getAllTokenAccountsByOwner(
@@ -1486,25 +1506,37 @@ export class RpcClient {
   async getAllTokenAccountsByOwner<T = any>(
     ownerAddress: string,
     filter: GetTokenAccountsByOwnerV2Filter,
-    options: Omit<GetTokenAccountsByOwnerV2Options, 'paginationKey' | 'limit'> = {}
-  ): Promise<Array<{ pubkey: string; account: any }>> {
-    const allAccounts: Array<{ pubkey: string; account: any }> = [];
+    options: Omit<
+      GetTokenAccountsByOwnerV2Options,
+      'paginationKey' | 'limit'
+    > = {}
+  ): Promise<
+    Array<{
+      pubkey: string;
+      account: GetTokenAccountsByOwnerV2Response<T>['value']['accounts'][0]['account'];
+    }>
+  > {
+    const allAccounts: Array<{
+      pubkey: string;
+      account: GetTokenAccountsByOwnerV2Response<T>['value']['accounts'][0]['account'];
+    }> = [];
     let paginationKey: string | undefined = undefined;
-    
+
     // Always use maximum limit for auto-pagination to minimize API calls
     const limit = 10000;
-    
+
     do {
-      const response: GetTokenAccountsByOwnerV2Response<T> = await this.getTokenAccountsByOwnerV2<T>(ownerAddress, filter, {
-        ...options,
-        limit,
-        paginationKey,
-      });
-      
+      const response: GetTokenAccountsByOwnerV2Response<T> =
+        await this.getTokenAccountsByOwnerV2<T>(ownerAddress, filter, {
+          ...options,
+          limit,
+          paginationKey,
+        });
+
       allAccounts.push(...response.value.accounts);
       paginationKey = response.value.paginationKey;
     } while (paginationKey);
-    
+
     return allAccounts;
   }
 
@@ -1564,18 +1596,18 @@ export class RpcClient {
    *   amount: 10000000,  // 0.01 SOL
    * }, wallet);
    *
-    * // Advanced swap with custom settings for better transaction landing
- * const advancedResult = await helius.rpc.executeJupiterSwap({
- *   inputMint: 'So11111111111111111111111111111111111111112',
- *   outputMint: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',
- *   amount: 10000000,
- *   slippageBps: 50,                       // 0.5% slippage
- *   priorityLevel: 'veryHigh',             // 75th percentile - faster but more expensive
- *   maxPriorityFeeLamports: 2000000,       // Max 0.002 SOL for priority fee
- *   skipPreflight: true,                   // Skip preflight checks
- *   maxRetries: 3,                         // Retry sending 3 times if needed
- *   confirmationCommitment: 'finalized',   // Wait for finalization
- * }, wallet);
+   * // Advanced swap with custom settings for better transaction landing
+   * const advancedResult = await helius.rpc.executeJupiterSwap({
+   *   inputMint: 'So11111111111111111111111111111111111111112',
+   *   outputMint: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',
+   *   amount: 10000000,
+   *   slippageBps: 50,                       // 0.5% slippage
+   *   priorityLevel: 'veryHigh',             // 75th percentile - faster but more expensive
+   *   maxPriorityFeeLamports: 2000000,       // Max 0.002 SOL for priority fee
+   *   skipPreflight: true,                   // Skip preflight checks
+   *   maxRetries: 3,                         // Retry sending 3 times if needed
+   *   confirmationCommitment: 'finalized',   // Wait for finalization
+   * }, wallet);
    * ```
    *
    * @param params - Swap parameters object with the following properties:
@@ -1640,7 +1672,9 @@ export class RpcClient {
 
       const quoteResponseRaw = await fetch(quoteUrl.toString());
       if (!quoteResponseRaw.ok) {
-        throw new Error(`Jupiter quote API error: ${quoteResponseRaw.status} ${quoteResponseRaw.statusText}`);
+        throw new Error(
+          `Jupiter quote API error: ${quoteResponseRaw.status} ${quoteResponseRaw.statusText}`
+        );
       }
       const quoteResponse = await quoteResponseRaw.json();
 
@@ -1654,31 +1688,36 @@ export class RpcClient {
       }
 
       // Get swap transaction with optimizations for transaction landing
-      const swapResponseRaw = await fetch('https://lite-api.jup.ag/swap/v1/swap', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          quoteResponse,
-          userPublicKey: signer.publicKey.toString(),
-          wrapAndUnwrapSol: wrapUnwrapSOL,
-
-          // Transaction landing optimizations
-          dynamicComputeUnitLimit: true,
-          dynamicSlippage: true,
-          prioritizationFeeLamports: {
-            priorityLevelWithMaxLamports: {
-              maxLamports: maxPriorityFeeLamports,
-              priorityLevel: priorityLevel,
-            },
+      const swapResponseRaw = await fetch(
+        'https://lite-api.jup.ag/swap/v1/swap',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
           },
-        }),
-      });
+          body: JSON.stringify({
+            quoteResponse,
+            userPublicKey: signer.publicKey.toString(),
+            wrapAndUnwrapSol: wrapUnwrapSOL,
+
+            // Transaction landing optimizations
+            dynamicComputeUnitLimit: true,
+            dynamicSlippage: true,
+            prioritizationFeeLamports: {
+              priorityLevelWithMaxLamports: {
+                maxLamports: maxPriorityFeeLamports,
+                priorityLevel: priorityLevel,
+              },
+            },
+          }),
+        }
+      );
 
       if (!swapResponseRaw.ok) {
         const errorText = await swapResponseRaw.text();
-        throw new Error(`Jupiter swap API error: ${swapResponseRaw.status} ${swapResponseRaw.statusText} - ${errorText}`);
+        throw new Error(
+          `Jupiter swap API error: ${swapResponseRaw.status} ${swapResponseRaw.statusText} - ${errorText}`
+        );
       }
 
       const swapResponse = await swapResponseRaw.json();
@@ -1690,7 +1729,9 @@ export class RpcClient {
 
       if (!swapResponse?.swapTransaction) {
         console.error('Swap response:', JSON.stringify(swapResponse, null, 2));
-        throw new Error('Failed to get swap transaction - response missing swapTransaction field');
+        throw new Error(
+          'Failed to get swap transaction - response missing swapTransaction field'
+        );
       }
 
       // Deserialize transaction from base64 format
@@ -1709,10 +1750,10 @@ export class RpcClient {
         maxRetries,
         preflightCommitment: confirmationCommitment,
         pollTimeoutMs: 30000, // 30 second timeout for swaps
-        pollIntervalMs: 1000,  // Check every 1 second
+        pollIntervalMs: 1000, // Check every 1 second
       });
 
-      // Transaction is already confirmed by broadcastTransaction  
+      // Transaction is already confirmed by broadcastTransaction
       const confirmation = { value: { err: null }, context: { slot: 0 } };
 
       // Return detailed result with confirmation status

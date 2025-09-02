@@ -11,7 +11,7 @@ async function main() {
   });
 
   const collectionNames = response.grouping?.map(
-    (g: any) => g.collection_metadata?.name
+    (g) => g.collection_metadata?.name
   );
 
   console.log(collectionNames);

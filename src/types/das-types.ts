@@ -338,8 +338,56 @@ export namespace DAS {
     amount?: number;
     delegated_amount?: number;
     frozen?: boolean;
-    // TODO: Add proper typing for token extensions instead of using `any`
-    token_extensions: any;
+    token_extensions: TokenAccountExtensions;
+  }
+
+  export interface TokenAccountExtensions {
+    immutable_owner?: boolean;
+    required_memo_on_transfer?: RequiredMemoOnTransfer;
+    cpi_guard?: CpiGuard;
+    default_account_state?: DefaultAccountState;
+    confidential_transfer_account?: ConfidentialTransferAccount;
+    transfer_fee_account?: TransferFeeAccount;
+    interest_bearing_account?: InterestBearingAccount;
+    transfer_hook_account?: TransferHookAccount;
+    metadata_account?: TokenAccountMetadata;
+    [key: string]: unknown;
+  }
+
+  export interface RequiredMemoOnTransfer {
+    enabled: boolean;
+    memo_program_id?: string;
+  }
+
+  export interface CpiGuard {
+    enabled: boolean;
+    allowed_programs: string[];
+  }
+
+  export interface TransferFeeAccount {
+    transfer_fee_config_authority: string;
+    withdraw_withheld_authority: string;
+    withheld_amount: number;
+    older_transfer_fee: OlderTransferFee;
+    newer_transfer_fee: NewTransferFee;
+  }
+
+  export interface InterestBearingAccount {
+    rate: number;
+    last_update_timestamp: number;
+    pre_update_average_rate: number;
+  }
+
+  export interface TransferHookAccount {
+    program_id: string;
+    authority: string;
+  }
+
+  export interface TokenAccountMetadata {
+    name: string;
+    symbol: string;
+    uri: string;
+    additional_metadata: AdditionalMetadata[];
   }
 
   export interface GetTokenAccountsRequest {
@@ -371,6 +419,25 @@ export namespace DAS {
     | 'all'
     | (string & {});
 
+  export interface TokenInfo {
+    symbol?: string;
+    balance?: number;
+    supply?: number;
+    decimals?: number;
+    token_program?: string;
+    associated_token_address?: string;
+    price_info?: PriceInfo;
+    mint_authority?: string;
+    freeze_authority?: string;
+  }
+
+  export interface PriceInfo {
+    price_per_token: number;
+    currency: string;
+    total_price?: number;
+  }
+
+  // Mint-level extensions (these are different from account-level extensions)
   export interface MintExtensions {
     confidential_transfer_mint?: ConfidentialTransferMint;
     confidential_transfer_fee_config?: ConfidentialTransferFeeConfig;
@@ -473,24 +540,6 @@ export namespace DAS {
   export interface AdditionalMetadata {
     key: string;
     value: string;
-  }
-
-  export interface TokenInfo {
-    symbol?: string;
-    balance?: number;
-    supply?: number;
-    decimals?: number;
-    token_program?: string;
-    associated_token_address?: string;
-    price_info?: PriceInfo;
-    mint_authority?: string;
-    freeze_authority?: string;
-  }
-
-  export interface PriceInfo {
-    price_per_token: number;
-    currency: string;
-    total_price?: number;
   }
   // End of DAS
 }

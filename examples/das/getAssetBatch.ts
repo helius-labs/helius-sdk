@@ -5,12 +5,12 @@ async function main() {
 
   const ids = [
     'F9Lw3ki3hJ7PF9HQXsBzoY8GyE6sPoEZZdXJBsTTD2rk',
-    'F9Lw3ki3hJ7PF9HQXsBzoY8GyE6sPoEZZdXJBsTTD2rk',
+    'F9Lw3hJ7PF9HQXsBzoY8GyE6sPoEZZdXJBsTTD2rk',
   ];
 
   const response = await helius.rpc.getAssetBatch({ ids });
 
-  const assetIds = response.map((x: any) => x.id);
+  const assetIds = response.map((x) => x.id);
   console.log(assetIds);
 }
 
