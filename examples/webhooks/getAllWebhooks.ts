@@ -1,14 +1,13 @@
-import { Helius } from "../../src"; // Replace with 'helius-sdk' in a production setting
+import { createHelius } from "helius-sdk";
 
-async function main() {
-  const helius = new Helius('YOUR_API_KEY');
+(async () => {
+  const apiKey = ""; // From Helius dashboard
+  const helius = createHelius({ apiKey });
 
-  const webhooks = await helius.getAllWebhooks();
-
-  console.log('Registered webhooks:', webhooks);
-}
-
-main().catch((err) => {
-  console.error('Example failed:', err);
-  process.exit(1);
-});
+  try {
+    const webhook = await helius.webhooks.getAll();
+    console.log("Fetched webhook:", webhook);
+  } catch (error) {
+    console.error("Error:", error);
+  }
+})();

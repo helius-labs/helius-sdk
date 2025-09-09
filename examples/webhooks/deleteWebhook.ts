@@ -1,20 +1,13 @@
-import { Helius } from "../../src"; // Replace with 'helius-sdk' in a production setting
+import { createHelius } from "helius-sdk";
 
-async function main() {
-  const helius = new Helius('YOUR_API_KEY');
+(async () => {
+  const apiKey = ""; // From Helius dashboard
+  const helius = createHelius({ apiKey });
 
-  const webhookId = '<webhook-id-here>';
-
-  const success = await helius.deleteWebhook(webhookId);
-
-  if (success) {
-    console.log(`Webhook ${webhookId} deleted successfully.`);
-  } else {
-    console.log(`Failed to delete webhook ${webhookId}.`);
+  try {
+    await helius.webhooks.delete("your_webhook_ID_goes_here");
+    console.log("Webhook deleted successfully");
+  } catch (error) {
+    console.error("Error:", error);
   }
-}
-
-main().catch((err) => {
-  console.error('Example failed:', err);
-  process.exit(1);
-});
+})();

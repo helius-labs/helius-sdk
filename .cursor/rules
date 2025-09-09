@@ -1,31 +1,45 @@
 ## Project Context
 
-The Helius SDK is a Node.js library that provides seamless access to various Helius APIs for interacting with the Solana. The codebase is written in TypeScript, leverages @solana/web3.js for blockchain operations, Jest for testing, and uses pnpm for dependency management. It is designed to offer robust, modular, and high-performance tooling for developers building on Solana.
+The Helius SDK is a Node.js library that provides seamless access to various Helius APIs for interacting with Solana. The codebase is written in TypeScript, leverages @solana/kit for blockchain operations, Jest for testing, and uses pnpm for dependency management. It is designed to offer robust, modular, and high-performance tooling for developers building on Solana, with a focus on tree-shakability and minimal bundle sizes.
 
 ## Coding Guidelines
 
-- **Node.js & Architecture:**  
+- **Node.js & Architecture:**
   - Follow best practices for Node.js development and maintain a modular code structure.
-  - Organize functionality into clear segments (e.g., DAS API, Mint API, Webhooks, Smart Transactions, and Helper Methods).
+  - Organize functionality into clear segments (e.g., DAS, Webhooks, Staking, Transactions, WebSockets, Enhanced Transactions, and ZK Compression).
+  - Ensure files do not have any side-effects: The SDK is designed with tree-shakability in mind; ensure no top-level side effects are introduced during development (e.g., no runtime function calls in constants; use type assertsions. We can do `"ComputeBudget111111111111111111111111111111" as Address` instead of using Kit's `address()`).
 
-- **TypeScript & Code Quality:**  
+- **TypeScript & Code Quality:**
   - Enforce strict TypeScript typing with well-defined interfaces.
   - Always use descriptive, full names for variables and functions (avoid abbreviations).
   - Prefer arrow functions over traditional function declarations.
   - Use `const` by default; use `let` only when reassignment is necessary.
   - Use async/await for all asynchronous operations and wrap them in try/catch blocks.
   - Assume that thrown objects are instances of `Error`—do not throw non-Error objects.
+  - Use double quotes (" ") for all string literals; single quotes (' ') should be avoided except in JSON strings or when escaping.
 
-- **Documentation & Comments:**  
+- **Documentation & Comments:**
   - Include clear JSDoc comments for public methods and modules.
-  - Maintain inline examples and usage notes for more complex interactions.
+  - Maintain inline examples and usage notes for more complex interactions, especially those involving @solana/kit.
 
-- **Blockchain & API Integration:**  
-  - Use @solana/web3.js for all interactions with Solana.
+- **Blockchain & API Integration:**
+  - Use @solana/kit for all interactions with Solana.
   - Integrate with the Helius API correctly, ensuring proper authentication and robust error handling.
   - Use asynchronous patterns consistently and handle network or blockchain errors comprehensively.
 
-- **Project Tools & Conventions:**  
+- **Bundle Optimization & Build:**
+  - Use Rollup for building with preserveModules enabled to support tree-shaking.
+  - Run `pnpm check-bundle` locally to verify tree-shakability (agadoo) and sizes (Bundlemon).
+  - Keep individual modules small (<2.5kb) and entry points lean (e.g., dist/rpc/index.js <2kb).
+  - Externalize dependencies like @solana/kit in Rollup config.
+
+- **Project Tools & Conventions:**
   - Manage dependencies with pnpm and adhere to the versions specified in package.json.
   - Ensure code is modular, testable, and maintainable.
-  - Write unit and integration tests using Jest for critical components to guarantee reliable performance.
+  - Write unit and integration tests using Jest for critical components to guarantee reliable performance. Aim for 65%+ test coverage.
+  - Use Prettier for formatting; run `pnpm format:check` before commits.
+
+## Versioning & Contributions
+- Follow SemVer for releases; bump major for breaking changes (e.g., API signatures), minor for features, patch for fixes.
+- All PRs must pass CI checks (format, bundle size, tests) and include relevant tests/docs updates.
+- Read [our contributions guide](https://github.com/helius-labs/helius-sdk/blob/main/CONTRIBUTING.md) for more info.

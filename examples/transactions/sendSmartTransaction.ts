@@ -1,0 +1,40 @@
+import { createHelius } from "helius-sdk";
+import { address, createKeyPairSignerFromBytes, lamports } from "@solana/kit";
+import { getTransferSolInstruction } from "@solana-program/system";
+import bs58 from "bs58";
+
+(async () => {
+  const apiKey = ""; // From Helius dashboard
+  const helius = createHelius({ apiKey });
+
+  try {
+    const feePayerSigner = await createKeyPairSignerFromBytes(
+      bs58.decode(process.env.FEEPAYER_SECRET ?? "")
+    );
+
+    const toPubkey = address("your_to_address");
+
+    const transferIx = getTransferSolInstruction({
+      amount: lamports(1_000_000n), // 0.001 SOL
+      destination: toPubkey,
+      source: feePayerSigner,
+    });
+
+    const sig = await helius.tx.sendSmartTransaction({
+      signers: [feePayerSigner], // First signer becomes default fee‑payer
+      instructions: [transferIx], // No ComputeBudget ixs – SDK prepends them
+      version: 0,
+      commitment: "confirmed",
+      minUnits: 1_000,
+      bufferPct: 0.1, // 10 % head‑room on CU estimate
+      priorityFeeCap: 80_000,
+    });
+
+    console.log("Confirmed signature:", sig);
+    console.log(
+      `Explorer link: https://orb.helius.dev/tx/${sig}?cluster=mainnet`
+    );
+  } catch (error) {
+    console.error("Error:", error);
+  }
+})();

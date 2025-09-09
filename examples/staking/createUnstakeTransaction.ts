@@ -1,21 +1,47 @@
-import { Helius } from "../../src"; // Replace with 'helius-sdk' in a production setting
-import { PublicKey } from "@solana/web3.js";
+import { createHelius } from "helius-sdk";
+import { address, createKeyPairSignerFromBytes } from "@solana/kit";
+import bs58 from "bs58";
 
-async function main() {
-  const helius = new Helius('YOUR_API_KEY');
+(async () => {
+  const apiKey = ""; // From Helius dashboard
+  const helius = createHelius({ apiKey });
 
-  const ownerPubkey = new PublicKey('YourWalletPublicKeyHere');
-  const stakeAccountPubkey = new PublicKey('YourStakeAccountPubkeyHere');
+  // Replace with actual address
+  const STAKE_ACCOUNT = address("");
 
-  const serializedTx = await helius.rpc.createUnstakeTransaction(
-    ownerPubkey,
-    stakeAccountPubkey
-  );
+  try {
+    const ownerSigner = await createKeyPairSignerFromBytes(
+      bs58.decode(process.env.FEEPAYER_SECRET ?? "")
+    );
 
-  console.log('Serialized Unstake Transaction:', serializedTx);
-}
+    const { serializedTx } = await helius.stake.createUnstakeTransaction(
+      ownerSigner,
+      STAKE_ACCOUNT
+    );
 
-main().catch((err) => {
-  console.error('Example failed:', err);
-  process.exit(1);
-});
+    console.log("\n— Unstake TX built —");
+    console.log("Base64 length:", serializedTx.length);
+
+    console.log("\nSimulating…");
+    const sim = await helius.simulateTransaction(serializedTx, {
+      encoding: "base64",
+      commitment: "confirmed",
+      replaceRecentBlockhash: false,
+      innerInstructions: true,
+    });
+
+    const v: any = sim.value;
+    console.log("Simulation result");
+    console.log(
+      "unitsConsumed: ",
+      v.unitsConsumed?.toString?.() ?? v.unitsConsumed
+    );
+    console.log("err: ", v.err ?? "none");
+
+    if (Array.isArray(v.logs)) {
+      console.log("log tail: ", v.logs.slice(-5));
+    }
+  } catch (error) {
+    console.error("Error:", error);
+  }
+})();

@@ -1,21 +1,50 @@
-import { Helius } from "../../src"; // Replace with 'helius-sdk' in a production setting
-import { PublicKey } from "@solana/web3.js";
+import { createHelius } from "helius-sdk";
+import { createKeyPairSignerFromBytes } from "@solana/kit";
+import bs58 from "bs58";
 
-async function main() {
-  const helius = new Helius('YOUR_API_KEY');
+(async () => {
+  const apiKey = ""; // From Helius dashboard
+  const helius = createHelius({ apiKey });
 
-  const ownerPubkey = new PublicKey('YourWalletPublicKeyHere'); // Replace with your actual pubkey
+  const STAKE_SOL = 0.001;
 
-  const { serializedTx, stakeAccountPubkey } = await helius.rpc.createStakeTransaction(
-    ownerPubkey,
-    1.5 // Amount in SOL (excluding rent exemption)
-  );
+  try {
+    const ownerSigner = await createKeyPairSignerFromBytes(
+      bs58.decode(process.env.FEEPAYER_SECRET ?? "")
+    );
 
-  console.log('Stake Account:', stakeAccountPubkey.toBase58());
-  console.log('Serialized Transaction:', serializedTx);
-}
+    const stakeTxDraft = await helius.stake.createStakeTransaction(
+      ownerSigner,
+      STAKE_SOL
+    );
 
-main().catch((err) => {
-  console.error('Example failed:', err);
-  process.exit(1);
-});
+    console.log("\n— Stake TX draft —");
+    console.log(
+      "Stake account pubkey :",
+      stakeTxDraft.stakeAccountPubkey.toString()
+    );
+    console.log("Base64 length:", stakeTxDraft.serializedTx.length);
+
+    console.log("\nSimulating…");
+    const sim = await helius.simulateTransaction(stakeTxDraft.serializedTx, {
+      encoding: "base64",
+      commitment: "confirmed",
+      replaceRecentBlockhash: false,
+      innerInstructions: true,
+    });
+
+    const v: any = sim.value;
+    console.log("Simulation result");
+    console.log(
+      "unitsConsumed: ",
+      v.unitsConsumed?.toString?.() ?? v.unitsConsumed
+    );
+    console.log("err: ", v.err ?? "none");
+
+    if (Array.isArray(v.logs)) {
+      console.log("log tail: ", v.logs.slice(-5));
+    }
+  } catch (error) {
+    console.error("Error:", error);
+  }
+})();

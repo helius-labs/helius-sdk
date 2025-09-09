@@ -1,27 +1,18 @@
-/*
-    Note: You can use enum WebhookType to specify between raw, discord, or enhanced webhooks! The default type is "enhanced". 
-*/
+import { createHelius } from "helius-sdk";
 
-import {
-    Address,
-    TransactionType,
-    Helius,
-  } from "../../src"; // Replace with 'helius-sdk' in a production setting
-  
-  async function main() {
-    const helius = new Helius('YOUR_API_KEY');
-  
-    const response = await helius.createWebhook({
-      accountAddresses: [Address.MAGIC_EDEN_V2],
-      transactionTypes: [TransactionType.NFT_LISTING],
-      webhookURL: 'https://my-webhook-handler.com/handle',
+(async () => {
+  const apiKey = ""; // From Helius dashboard
+  const helius = createHelius({ apiKey });
+
+  try {
+    const webhook = await helius.webhooks.create({
+      webhookURL: "https://your-server.com/webhook",
+      transactionTypes: ["TRANSFER"],
+      accountAddresses: ["your-account"],
+      webhookType: "enhanced",
     });
-  
-    console.log('Webhook created:', response);
+    console.log("Created webhook:", webhook);
+  } catch (error) {
+    console.error("Error:", error);
   }
-  
-  main().catch((err) => {
-    console.error('Example failed:', err);
-    process.exit(1);
-  });
-  
+})();

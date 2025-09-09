@@ -1,288 +1,53 @@
-import type {
-  BlockhashWithExpiryBlockHeight,
-  Cluster,
-  Keypair,
-  SendOptions,
-  SerializeConfig,
-  Signer,
-  SendOptions as SolanaWebJsSendOptions,
-  Transaction,
-  TransactionConfirmationStatus,
-  TransactionError,
-  VersionedTransaction,
-} from '@solana/web3.js';
+import type { Commitment, RpcResponse } from "@solana/kit";
 
-import type {
-  AccountWebhookEncoding,
-  PriorityLevel,
-  ProgramName,
-  Source,
-  TokenStandard,
-  TransactionContext,
-  TransactionType,
-  TxnStatus,
-  UiTransactionEncoding,
-  WebhookType,
-} from './enums';
+import { Asset } from "./das";
+import { PriorityLevel, UiTransactionEncoding } from "./enums";
 
-export type HeliusCluster = Exclude<Cluster, 'testnet'>;
-
-export type SmartTransactionContext = {
-  transaction: Transaction | VersionedTransaction;
-  blockhash: BlockhashWithExpiryBlockHeight;
-  minContextSlot: number;
-};
-
-export interface HeliusEndpoints {
-  api: string;
-  rpc: string;
-}
-
-export type HeliusOptions = {
-  limit?: number;
-  paginationToken?: string;
-};
-
-export interface Webhook {
-  webhookID: string;
-  wallet: string;
-  project: string;
-  webhookURL: string;
-  transactionTypes: TransactionType[];
-  accountAddresses: string[];
-  accountAddressOwners?: string[];
-  webhookType?: WebhookType;
-  authHeader?: string;
-  txnStatus?: TxnStatus;
-  encoding?: AccountWebhookEncoding;
-}
-
-export type CollectionIdentifier = {
-  firstVerifiedCreators?: string[];
-  verifiedCollectionAddresses?: string[];
-};
-
-export type CreateWebhookRequest = Omit<
-  Webhook,
-  'webhookID' | 'wallet' | 'project'
->;
-
-
-
-export type EditWebhookRequest = Partial<
-  Omit<Webhook, 'webhookID' | 'wallet' | 'project'>
->;
-
-export interface RawTokenAmount {
-  tokenAmount: string;
-  decimals: number;
-}
-
-export interface TokenBalanceChange {
-  userAccount: string;
-  tokenAccount: string;
-  rawTokenAmount: RawTokenAmount;
-  mint: string;
-}
-
-export interface AccountData {
-  account: string;
-  nativeBalanceChange: number;
-  tokenBalanceChanges: TokenBalanceChange[] | null;
-}
-
-export interface TokenTransfer {
-  fromUserAccount: string | null;
-  toUserAccount: string | null;
-  fromTokenAccount: string | null;
-  toTokenAccount: string | null;
-  tokenAmount: number;
-  decimals: number;
-  tokenStandard: TokenStandard;
-  mint: string;
-}
-
-export interface NativeBalanceChange {
-  account: string;
-  amount: number;
-}
-
-export interface NativeTransfer {
-  fromUserAccount: string | null;
-  toUserAccount: string | null;
-  amount: number;
-}
-
-export type Instruction = {
-  accounts: string[];
-  data: string;
-  programId: string;
-  innerInstructions: InnerInstruction[];
-};
-
-export type InnerInstruction = {
-  accounts: string[];
-  data: string;
-  programId: string;
-};
-
-export interface ProgramInfo {
-  source: Source;
-  account: string;
-  programName: ProgramName;
-  instructionName: string;
-}
-
-export interface TokenSwap {
-  nativeInput: NativeTransfer | null;
-  nativeOutput: NativeTransfer | null;
-  tokenInputs: TokenTransfer[];
-  tokenOutputs: TokenTransfer[];
-  tokenFees: TokenTransfer[];
-  nativeFees: NativeTransfer[];
-  programInfo: ProgramInfo;
-}
-
-export interface SwapEvent {
-  nativeInput: NativeBalanceChange;
-  nativeOutput: NativeBalanceChange;
-  tokenInputs: TokenBalanceChange[];
-  tokenOutputs: TokenBalanceChange[];
-  tokenFees: TokenBalanceChange[];
-  nativeFees: NativeBalanceChange[];
-  innerSwaps: TokenSwap[];
-}
-
-export interface CompressedNftCreator {
-  address: string;
-  share: number;
-  verified: boolean;
-}
-
-export interface CompressedNftMetadata {
-  collection: {
-    key: string;
-    verified: boolean;
-  };
-  creators: CompressedNftCreator[];
-  isMutable: boolean;
-  name: string;
-  primarySaleHappened: boolean;
-  sellerFeeBasisPoints: number;
-  symbol: string;
-  tokenProgramVersion: string;
-  tokenStandard: TokenStandard;
-  uri: string;
-}
-
-export interface CompressedNftEvent {
-  type: TransactionType;
-  treeId: string;
-  leafIndex: number | null;
-  seq: number | null;
-  assetId: string | null;
-  instructionIndex: number | null;
-  innerInstructionIndex: number | null;
-  newLeafOwner: string | null;
-  oldLeafOwner: string | null;
-  newLeafDelegate: string | null;
-  oldLeafDelegate: string | null;
-  treeDelegate: string | null;
-  metadata: CompressedNftMetadata | null;
-}
-
-export interface Token {
-  mint: string;
-  tokenStandard: TokenStandard;
-}
-
-export interface NFTEvent {
-  seller: string;
-  buyer: string;
-  timestamp: number;
-  amount: number;
-  fee: number;
-  signature: string;
-  source: Source;
-  type: TransactionType;
-  saleType?: TransactionContext;
-  nfts: Token[];
-}
-
-export interface TransactionEvent {
-  nft: NFTEvent | null;
-  swap: SwapEvent | null;
-  compressed: CompressedNftEvent[] | null;
-}
-
-export interface EnrichedTransaction {
-  description: string;
-  type: TransactionType;
-  source: Source;
-  fee: number;
-  feePayer: string;
-  signature: string;
-  slot: number;
-  timestamp: number;
-  nativeTransfers: NativeTransfer[] | null;
-  tokenTransfers: TokenTransfer[] | null;
-  accountData: AccountData[];
-  transactionError: TransactionError | null;
-  instructions: Instruction[];
-  events: TransactionEvent;
-}
-
-export interface MintApiRequest {
-  name: string;
-  symbol: string;
-  description?: string;
-  owner: string;
-  delegate?: string;
-  collection?: string;
-  creators?: {
-    address: string;
-    share: number;
-  }[];
-  uri?: string;
-  sellerFeeBasisPoints?: number;
-  imageUrl?: string;
-  externalUrl?: string;
-  attributes?: {
-    trait_type: string;
-    value: string;
-  }[];
-  /**
-   * @deprecated Use imageUrl instead. This field is no longer used.
-   */
-  imagePath?: string;
-  /**
-   * @deprecated Remove walletPrivateKey; image uploads are no longer supported.
-   */
-  walletPrivateKey?: string;
-}
-
-export interface MintApiResponse {
-  jsonrpc: string;
+export type GetAssetRequest = {
   id: string;
-  result: {
-    signature: string;
-    minted: boolean;
-    assetId: string;
+  options?: {
+    showFungible?: boolean;
+    showUnverifiedCollections?: boolean;
+    showCollectionMetadata?: boolean;
+    showInscription?: boolean;
   };
+};
+export type GetAssetResponse = Asset;
+
+export type GetAssetBatchRequest = {
+  ids: string[];
+  options?: {
+    showFungible?: boolean;
+    showUnverifiedCollections?: boolean;
+    showCollectionMetadata?: boolean;
+    showInscription?: boolean;
+  };
+};
+export type GetAssetBatchResponse = Asset[];
+
+export type GetAssetProofRequest = {
+  id: string;
+};
+
+export interface GetAssetProofResponse {
+  root: string;
+  proof: Array<string>;
+  node_index: number;
+  leaf: string;
+  tree_id: string;
+  burnt?: any;
 }
 
-export interface DelegateCollectionAuthorityRequest {
-  collectionMint: string;
-  newCollectionAuthority?: string;
-  updateAuthorityKeypair: Keypair;
-  payerKeypair?: Keypair;
-}
+export type GetAssetProofBatchRequest = {
+  ids: string[];
+};
 
-export interface RevokeCollectionAuthorityRequest {
-  collectionMint: string;
-  delegatedCollectionAuthority?: string;
-  revokeAuthorityKeypair: Keypair;
-  payerKeypair?: Keypair;
+export type GetAssetProofBatchResponse = GetAssetProofResponse[];
+
+export interface GetPriorityFeeEstimateRequest {
+  transaction?: string;
+  accountKeys?: string[];
+  options?: GetPriorityFeeEstimateOptions;
 }
 
 export interface GetPriorityFeeEstimateOptions {
@@ -291,12 +56,6 @@ export interface GetPriorityFeeEstimateOptions {
   transactionEncoding?: UiTransactionEncoding;
   lookbackSlots?: number;
   recommended?: boolean;
-}
-
-export interface GetPriorityFeeEstimateRequest {
-  transaction?: string;
-  accountKeys?: string[];
-  options?: GetPriorityFeeEstimateOptions;
 }
 
 export interface MicroLamportPriorityFeeLevels {
@@ -313,167 +72,91 @@ export interface GetPriorityFeeEstimateResponse {
   priorityFeeLevels?: MicroLamportPriorityFeeLevels;
 }
 
-export type JitoRegion = 'Default' | 'NY' | 'Amsterdam' | 'Frankfurt' | 'Tokyo';
+export type Encoding = "jsonParsed" | "base58" | "base64" | "base64+zstd";
 
-export type PollTransactionOptions = {
-  confirmationStatuses?: TransactionConfirmationStatus[];
-  // In milliseconds
-  timeout?: number;
-  // In milliseconds
-  interval?: number;
-  lastValidBlockHeight?: number;
-};
-
-/**
- * Options for sending transactions with Helius
- */
-export interface CreateSmartTransactionOptions {
-  /** Optional separate fee payer. If not provided, the first signer will be used */
-  feePayer?: Signer;
-  /** Maximum priority fee (in microlamports) to pay for the transaction */
-  priorityFeeCap?: number;
-  /** Options for serializing legacy transactions:
-   * - requireAllSignatures: Requires all signatures to be present (default: true)
-   * - verifySignatures: Verifies provided signatures (default: true)
-   */
-  serializeOptions?: SerializeConfig;
-}
-
-/**
- * Options for sending transactions with Helius
- */
-export interface SendSmartTransactionOptions
-  extends CreateSmartTransactionOptions,
-    SendOptions {
-  /** Number of blocks after the current block height that the transaction remains valid */
-  lastValidBlockHeightOffset?: number;
-  /** Maximum time in milliseconds to wait for transaction confirmation */
-  pollTimeoutMs?: number;
-  /** Time in milliseconds to wait between confirmation status checks */
-  pollIntervalMs?: number;
-  /** Time in milliseconds for each polling attempt before retrying transaction */
-  pollChunkMs?: number;
-}
-
-export interface HeliusSendOptions extends SolanaWebJsSendOptions {
-  validatorAcls?: string[];
-}
-
-export interface ParseTransactionsRequest {
-  transactions: string[];
-}
-
-export type ParseTransactionsResponse = EnrichedTransaction[];
-
-export interface JupiterSwapParams {
-  inputMint: string;
-  outputMint: string;
-  amount: number;
-  slippageBps?: number;
-  restrictIntermediateTokens?: boolean;
-  wrapUnwrapSOL?: boolean;
-  /** Priority level for transaction fees:
-   * - 'medium': 25th percentile
-   * - 'high': 50th percentile  
-   * - 'veryHigh': 75th percentile
-   */
-  priorityLevel?: 'medium' | 'high' | 'veryHigh';
-  maxPriorityFeeLamports?: number;
-  skipPreflight?: boolean;
-  maxRetries?: number;
-  confirmationCommitment?: 'processed' | 'confirmed' | 'finalized';
-}
-
-export interface JupiterSwapResult {
-  signature: string;
-  success: boolean;
-  error?: string;
-  inputAmount?: number;
-  outputAmount?: number;
-  minimumOutputAmount?: number;
-  lastValidBlockHeight?: number;
-  prioritizationFeeLamports?: number;
-  computeUnitLimit?: number;
-  confirmed?: boolean;
-  confirmationStatus?: string;
-  explorerUrl?: string;
-}
-
-export type SignedTransactionInput =
-  | Transaction
-  | VersionedTransaction
-  | Buffer
-  | string;
-
-// V2 RPC Methods Types
-
-export type GetProgramAccountsV2Filter = {
-  dataSize?: number;
-  memcmp?: {
-    offset: number;
-    bytes: string;
-  };
-};
-
-export type GetProgramAccountsV2Options = {
-  encoding?: 'base58' | 'base64' | 'base64+zstd' | 'jsonParsed';
-  commitment?: 'processed' | 'confirmed' | 'finalized';
+export type GetProgramAccountsV2Config = {
+  commitment?: Commitment;
   minContextSlot?: number;
   withContext?: boolean;
-  limit?: number; // 1-10000
-  paginationKey?: string;
+  encoding?: Encoding;
+  dataSlice?: { length: number; offset: number };
+  limit?: number; // Up to 10_000
+  paginationKey?: string | null; // b58 cursor; null when done
   changedSinceSlot?: number;
-  filters?: GetProgramAccountsV2Filter[];
+  filters?: ReadonlyArray<
+    { dataSize: number } | { memcmp: { offset: number; bytes: string } }
+  >;
 };
 
-export type GetProgramAccountsV2Response<T = any> = {
-  accounts: Array<{
-    pubkey: string;
-    account: {
-      lamports: number;
-      owner: string;
-      data: T;
-      executable: boolean;
-      rentEpoch: number;
-      space?: number;
-    };
-  }>;
-  paginationKey?: string;
-  count: number;
+export type GetProgramAccountsV2Request = [string, GetProgramAccountsV2Config?];
+
+export type GpaV2AccountInfo = {
+  lamports: number;
+  owner: string;
+  data: any;
+  executable: boolean;
+  rentEpoch: number;
+  space?: number;
 };
+
+export type GpaV2Account = {
+  pubkey: string;
+  account: GpaV2AccountInfo;
+};
+
+export type GetProgramAccountsV2Result = {
+  accounts: ReadonlyArray<GpaV2Account>;
+  paginationKey: string | null;
+  totalResults?: number | null;
+};
+
+export type GetProgramAccountsV2Response =
+  | GetProgramAccountsV2Result
+  | RpcResponse<GetProgramAccountsV2Result>;
+
+export type GtaV2DataSlice = { length: number; offset: number };
 
 export type GetTokenAccountsByOwnerV2Filter = {
   mint?: string;
   programId?: string;
 };
 
-export type GetTokenAccountsByOwnerV2Options = {
-  encoding?: 'base58' | 'base64' | 'base64+zstd' | 'jsonParsed';
-  commitment?: 'processed' | 'confirmed' | 'finalized';
+export type GetTokenAccountsByOwnerV2Config = {
+  commitment?: Commitment;
   minContextSlot?: number;
-  limit?: number; // 1-10000
-  paginationKey?: string;
+  dataSlice?: GtaV2DataSlice;
+  encoding?: Encoding;
+  limit?: number; // Up to 10_000
+  paginationKey?: string | null; // b58 cursor; null when done
   changedSinceSlot?: number;
 };
 
-export type GetTokenAccountsByOwnerV2Response<T = any> = {
-  context: {
-    slot: number;
-    apiVersion: string;
-  };
-  value: {
-    accounts: Array<{
-      pubkey: string;
-      account: {
-        lamports: number;
-        owner: string;
-        data: T;
-        executable: boolean;
-        rentEpoch: number;
-        space?: number;
-      };
-    }>;
-    paginationKey?: string;
-    count: number;
-  };
+export type GetTokenAccountsByOwnerV2Request = [
+  string,
+  GetTokenAccountsByOwnerV2Filter?,
+  GetTokenAccountsByOwnerV2Config?,
+];
+
+export type GtaV2AccountInfo = {
+  lamports: number;
+  owner: string;
+  data: any;
+  executable: boolean;
+  rentEpoch: number;
+  space?: number;
 };
+
+export type GtaV2Account = {
+  pubkey: string;
+  account: GtaV2AccountInfo;
+};
+
+export type GetTokenAccountsByOwnerV2Result = {
+  accounts: ReadonlyArray<GtaV2Account>;
+  paginationKey: string | null;
+  totalResults?: number | null;
+};
+
+export type GetTokenAccountsByOwnerV2Response =
+  | GetTokenAccountsByOwnerV2Result
+  | RpcResponse<GetTokenAccountsByOwnerV2Result>;
