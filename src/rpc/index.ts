@@ -29,6 +29,8 @@ import type { GetTokenAccountsFn } from "./methods/getTokenAccounts";
 import type { SearchAssetsFn } from "./methods/searchAssets";
 import type { GetProgramAccountsV2Fn } from "./methods/getProgramAccountsV2";
 import type { GetAllProgramAccountsFn } from "./methods/getAllProgramAccounts";
+import type { GetTokenAccountsByOwnerV2Fn } from "./methods/getTokenAccountsByOwnerV2";
+import type { GetAllTokenAccountsByOwnerFn } from "./methods/getAllTokenAccountsByOwner.js";
 import type { EnhancedTxClientLazy } from "../enhanced";
 import { TxHelpersLazy } from "../transactions";
 import type { ResolvedHeliusRpcApi } from "./heliusRpcApi";
@@ -64,6 +66,8 @@ export type HeliusClient = ResolvedHeliusRpcApi & {
   // V2 RPC methods
   getProgramAccountsV2: GetProgramAccountsV2Fn;
   getAllProgramAccounts: GetAllProgramAccountsFn;
+  getTokenAccountsByOwnerV2: GetTokenAccountsByOwnerV2Fn;
+  getAllTokenAccountsByOwner: GetAllTokenAccountsByOwnerFn;
 
   // Webhooks
   webhooks: {
@@ -282,6 +286,28 @@ export const createHelius = ({
         "./methods/getAllProgramAccounts.js"
       );
       return makeGetAllProgramAccounts(call);
+    }
+  );
+
+  defineLazyMethod<HeliusClient, GetTokenAccountsByOwnerV2Fn>(
+    client,
+    "getTokenAccountsByOwnerV2",
+    async () => {
+      const { makeGetTokenAccountsByOwnerV2 } = await import(
+        "./methods/getTokenAccountsByOwnerV2.js"
+      );
+      return makeGetTokenAccountsByOwnerV2(call);
+    }
+  );
+
+  defineLazyMethod<HeliusClient, GetAllTokenAccountsByOwnerFn>(
+    client,
+    "getAllTokenAccountsByOwner",
+    async () => {
+      const { makeGetAllTokenAccountsByOwner } = await import(
+        "./methods/getAllTokenAccountsByOwner.js"
+      );
+      return makeGetAllTokenAccountsByOwner(call);
     }
   );
 

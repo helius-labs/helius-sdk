@@ -62,6 +62,8 @@ import {
 } from "../transactions/client.eager";
 import { GetProgramAccountsV2Fn, makeGetProgramAccountsV2 } from "./methods/getProgramAccountsV2";
 import { GetAllProgramAccountsFn, makeGetAllProgramAccounts } from "./methods/getAllProgramAccounts";
+import { GetTokenAccountsByOwnerV2Fn, makeGetTokenAccountsByOwnerV2 } from "./methods/getTokenAccountsByOwnerV2";
+import { GetAllTokenAccountsByOwnerFn, makeGetAllTokenAccountsByOwner } from "./methods/getAllTokenAccountsByOwner";
 
 export interface HeliusClientEager {
   raw: ResolvedHeliusRpcApi;
@@ -83,6 +85,8 @@ export interface HeliusClientEager {
 
   getProgramAccountsV2: GetProgramAccountsV2Fn;
   getAllProgramAccounts: GetAllProgramAccountsFn;
+  getTokenAccountsByOwnerV2: GetTokenAccountsByOwnerV2Fn;
+  getAllTokenAccountsByOwner: GetAllTokenAccountsByOwnerFn;
 
   webhooks: WebhookClient;
 
@@ -134,6 +138,8 @@ export const createHeliusEager = ({
     // V2 methods
     getProgramAccountsV2: makeGetProgramAccountsV2(call),
     getAllProgramAccounts: makeGetAllProgramAccounts(call),
+    getTokenAccountsByOwnerV2: makeGetTokenAccountsByOwnerV2(call),
+    getAllTokenAccountsByOwner: makeGetAllTokenAccountsByOwner(call),
 
     // Webhooks
     webhooks: makeWebhookClientEager(apiKey),

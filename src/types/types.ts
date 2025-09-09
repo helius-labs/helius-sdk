@@ -72,14 +72,16 @@ export interface GetPriorityFeeEstimateResponse {
   priorityFeeLevels?: MicroLamportPriorityFeeLevels;
 }
 
+export type Encoding = "jsonParsed" | "base58" | "base64" | "base64+zstd";
+
 export type GetProgramAccountsV2Config = {
   commitment?: Commitment;
   minContextSlot?: number;
   withContext?: boolean;
-  encoding?: "jsonParsed" | "base58" | "base64" | "base64+zstd";
+  encoding?: Encoding;
   dataSlice?: { length: number; offset: number };
   limit?: number; // Up to 10_000
-  paginationKey?: string | null; // b58 cursor
+  paginationKey?: string | null; // b58 cursor; null when done
   changedSinceSlot?: number;
   filters?: ReadonlyArray<
     | { dataSize: number }
@@ -115,4 +117,50 @@ export type GetProgramAccountsV2Result = {
 export type GetProgramAccountsV2Response =
   | GetProgramAccountsV2Result
   | RpcResponse<GetProgramAccountsV2Result>;
-  
+
+export type GtaV2DataSlice = { length: number; offset: number };
+
+export type GetTokenAccountsByOwnerV2Filter = {
+  mint?: string;
+  programId?: string;
+};
+
+export type GetTokenAccountsByOwnerV2Config = {
+  commitment?: Commitment;
+  minContextSlot?: number;
+  dataSlice?: GtaV2DataSlice;
+  encoding?: Encoding;
+  limit?: number; // Up to 10_000
+  paginationKey?: string | null; // b58 cursor; null when done
+  changedSinceSlot?: number;
+};
+
+export type GetTokenAccountsByOwnerV2Request = [
+  string,
+  GetTokenAccountsByOwnerV2Filter?,
+  GetTokenAccountsByOwnerV2Config?
+];
+
+export type GtaV2AccountInfo = {
+  lamports: number;
+  owner: string;
+  data: any;
+  executable: boolean;
+  rentEpoch: number;
+  space?: number;
+};
+
+export type GtaV2Account = {
+  pubkey: string;
+  account: GtaV2AccountInfo;
+};
+
+export type GetTokenAccountsByOwnerV2Result = {
+  accounts: ReadonlyArray<GtaV2Account>;
+  paginationKey: string | null;
+  totalResults?: number | null;
+};
+
+export type GetTokenAccountsByOwnerV2Response =
+  | GetTokenAccountsByOwnerV2Result
+  | RpcResponse<GetTokenAccountsByOwnerV2Result>;

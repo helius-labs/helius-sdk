@@ -17,5 +17,4 @@ import { createHelius } from "helius-sdk";
   } catch (error) {
     console.error("Error with RPC:", error);
   }
-
 })();
