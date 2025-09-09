@@ -1,0 +1,4 @@
+title: Helius SDK
+theme: jekyll-theme-primer
+plugins:
+  - jekyll-redirect-from

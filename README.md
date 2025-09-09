@@ -39,7 +39,7 @@ The package needs to be configured with your account's API key, which is availab
 
 ```ts
 // Replace imports in a production setting
-import { createHelius } from "../../src/rpc/index";
+import { createHelius } from "helius-sdk";
 
 (async () => {
   const apiKey = ""; // From Helius dashboard
@@ -60,7 +60,7 @@ import { createHelius } from "../../src/rpc/index";
 })();
 ```
 
-### Migrating to helius-sdk 2.0.0
+### Migrating to `helius-sdk` 2.0.0
 The Helius Node.js SDK has been rewritten from the ground up in version 2.0.0 to use [`@solana/kit` (i.e., Kit)](https://www.npmjs.com/package/@solana/kit) under the hood, replacing the dependency on `@solana/web3.js` versions higher than 1.73.2.
 
 We've gone to great lengths to ensure that the developer experience remains largely the same, with minimal impact on existing code. The API methods and namespaces are designed to be intuitive and an improvement on previous versions, so migrating to the latest version is relatively straightforward. There are a plethora of examples found in the `examples` directory, organized by namespace, to aid in this migration.
