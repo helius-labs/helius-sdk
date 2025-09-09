@@ -168,17 +168,11 @@ export type CreateSmartTransactionWithTipFn = (
 
 export interface SendViaSenderOptions {
   region: SenderRegion;
-  pollTimeoutMs?: number;
-  pollIntervalMs?: number;
-}
-
-export interface SendViaSenderOptions {
-  region: SenderRegion;
   // Route only through SWQOS infra
   swqosOnly?: boolean;
   pollTimeoutMs?: number;
   pollIntervalMs?: number;
-  // Optional explicit lamport tip override (optional)
+  // Explicit lamport tip override
   tipAmount?: number;
 }
 
