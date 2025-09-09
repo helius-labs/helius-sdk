@@ -61,6 +61,7 @@ import {
   TxHelpersEager,
 } from "../transactions/client.eager";
 import { GetProgramAccountsV2Fn, makeGetProgramAccountsV2 } from "./methods/getProgramAccountsV2";
+import { GetAllProgramAccountsFn, makeGetAllProgramAccounts } from "./methods/getAllProgramAccounts";
 
 export interface HeliusClientEager {
   raw: ResolvedHeliusRpcApi;
@@ -81,6 +82,7 @@ export interface HeliusClientEager {
   getPriorityFeeEstimate: GetPriorityFeeEstimateFn;
 
   getProgramAccountsV2: GetProgramAccountsV2Fn;
+  getAllProgramAccounts: GetAllProgramAccountsFn;
 
   webhooks: WebhookClient;
 
@@ -131,6 +133,7 @@ export const createHeliusEager = ({
 
     // V2 methods
     getProgramAccountsV2: makeGetProgramAccountsV2(call),
+    getAllProgramAccounts: makeGetAllProgramAccounts(call),
 
     // Webhooks
     webhooks: makeWebhookClientEager(apiKey),

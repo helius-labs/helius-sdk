@@ -122,7 +122,8 @@ Comprehensive and performant API for tokens, NFTs, and compressed NFTs on Solana
 
 Enhanced RPC methods, available only with Helius.
 
-- [`getProgramAccountsV2`](https://www.helius.dev/docs/api-reference/rpc/http/getprogramaccountsv2): Enhanced version of `getProgramAccounts` with cursor-based pagination and `changedSinceSlot` support for efficiently querying large sets of accounts.
+- [`getProgramAccountsV2()`](https://www.helius.dev/docs/api-reference/rpc/http/getprogramaccountsv2): Enhanced version of `getProgramAccounts` with cursor-based pagination and `changedSinceSlot` support for efficiently querying large sets of accounts.
+- `getAllProgramAccounts()`: Auto-paginates through all program accounts. Use with caution on larger programs.
 
 [**Staking**](https://www.helius.dev/docs/staking/how-to-stake-with-helius-programmatically)
 

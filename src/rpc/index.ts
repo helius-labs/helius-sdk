@@ -27,13 +27,14 @@ import type { GetNftEditionsFn } from "./methods/getNftEditions";
 import type { GetSignaturesForAssetFn } from "./methods/getSignaturesForAsset";
 import type { GetTokenAccountsFn } from "./methods/getTokenAccounts";
 import type { SearchAssetsFn } from "./methods/searchAssets";
+import type { GetProgramAccountsV2Fn } from "./methods/getProgramAccountsV2";
+import type { GetAllProgramAccountsFn } from "./methods/getAllProgramAccounts";
 import type { EnhancedTxClientLazy } from "../enhanced";
 import { TxHelpersLazy } from "../transactions";
 import type { ResolvedHeliusRpcApi } from "./heliusRpcApi";
 import { makeWsAsync, WsAsync } from "../websockets/wsAsync";
 import { StakeClientLazy } from "../staking/client";
 import { ZkClientLazy } from "../zk/client";
-import { GetProgramAccountsV2Fn } from "./methods/getProgramAccountsV2";
 
 interface HeliusRpcOptions {
   apiKey: string;
@@ -62,6 +63,7 @@ export type HeliusClient = ResolvedHeliusRpcApi & {
 
   // V2 RPC methods
   getProgramAccountsV2: GetProgramAccountsV2Fn;
+  getAllProgramAccounts: GetAllProgramAccountsFn;
 
   // Webhooks
   webhooks: {
@@ -269,6 +271,17 @@ export const createHelius = ({
         "./methods/getProgramAccountsV2.js"
       );
       return makeGetProgramAccountsV2(call);
+    }
+  );
+
+  defineLazyMethod<HeliusClient, GetAllProgramAccountsFn>(
+    client,
+    "getAllProgramAccounts",
+    async () => {
+      const { makeGetAllProgramAccounts } = await import(
+        "./methods/getAllProgramAccounts.js"
+      );
+      return makeGetAllProgramAccounts(call);
     }
   );
 
