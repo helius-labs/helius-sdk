@@ -33,6 +33,7 @@ import type { ResolvedHeliusRpcApi } from "./heliusRpcApi";
 import { makeWsAsync, WsAsync } from "../websockets/wsAsync";
 import { StakeClientLazy } from "../staking/client";
 import { ZkClientLazy } from "../zk/client";
+import { GetProgramAccountsV2Fn } from "./methods/getProgramAccountsV2";
 
 interface HeliusRpcOptions {
   apiKey: string;
@@ -58,6 +59,9 @@ export type HeliusClient = ResolvedHeliusRpcApi & {
 
   // Priority Fee API
   getPriorityFeeEstimate: GetPriorityFeeEstimateFn;
+
+  // V2 RPC methods
+  getProgramAccountsV2: GetProgramAccountsV2Fn;
 
   // Webhooks
   webhooks: {
@@ -254,6 +258,17 @@ export const createHelius = ({
         "./methods/getPriorityFeeEstimate.js"
       );
       return makeGetPriorityFeeEstimate(call);
+    }
+  );
+
+  defineLazyMethod<HeliusClient, GetProgramAccountsV2Fn>(
+    client,
+    "getProgramAccountsV2",
+    async () => {
+      const { makeGetProgramAccountsV2 } = await import(
+        "./methods/getProgramAccountsV2.js"
+      );
+      return makeGetProgramAccountsV2(call);
     }
   );
 

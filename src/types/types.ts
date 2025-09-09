@@ -1,3 +1,5 @@
+import type { Commitment, RpcResponse } from "@solana/kit";
+
 import { Asset } from "./das";
 import { PriorityLevel, UiTransactionEncoding } from "./enums";
 
@@ -69,3 +71,48 @@ export interface GetPriorityFeeEstimateResponse {
   priorityFeeEstimate?: number;
   priorityFeeLevels?: MicroLamportPriorityFeeLevels;
 }
+
+export type GetProgramAccountsV2Config = {
+  commitment?: Commitment;
+  minContextSlot?: number;
+  withContext?: boolean;
+  encoding?: "jsonParsed" | "base58" | "base64" | "base64+zstd";
+  dataSlice?: { length: number; offset: number };
+  limit?: number; // Up to 10_000
+  paginationKey?: string | null; // b58 cursor
+  changedSinceSlot?: number;
+  filters?: ReadonlyArray<
+    | { dataSize: number }
+    | { memcmp: { offset: number; bytes: string } }
+  >;
+};
+
+export type GetProgramAccountsV2Request = [
+  string,
+  GetProgramAccountsV2Config?
+];
+
+export type GpaV2AccountInfo = {
+  lamports: number;
+  owner: string;
+  data: any;    
+  executable: boolean;
+  rentEpoch: number;
+  space?: number;
+};
+
+export type GpaV2Account = {
+  pubkey: string;
+  account: GpaV2AccountInfo;
+};
+
+export type GetProgramAccountsV2Result = {
+  accounts: ReadonlyArray<GpaV2Account>;
+  paginationKey: string | null;
+  totalResults?: number | null;
+};
+
+export type GetProgramAccountsV2Response =
+  | GetProgramAccountsV2Result
+  | RpcResponse<GetProgramAccountsV2Result>;
+  
