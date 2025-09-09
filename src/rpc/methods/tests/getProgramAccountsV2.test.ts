@@ -1,4 +1,7 @@
-import { GetProgramAccountsV2Request, GetProgramAccountsV2Result } from "../../../types";
+import {
+  GetProgramAccountsV2Request,
+  GetProgramAccountsV2Result,
+} from "../../../types";
 import { createHeliusEager as createHelius } from "../../createHelius.eager";
 
 const transportMock = jest.fn();
@@ -81,14 +84,46 @@ describe("getProgramAccountsV2 Tests", () => {
 
   it("Fetches the next page using the paginationKey", async () => {
     const firstPage: GetProgramAccountsV2Result = {
-      accounts: [{ pubkey: "First", account: { lamports: 1, owner: programId, data: ["", "base64"], executable: false, rentEpoch: 0, space: 165 } }],
+      accounts: [
+        {
+          pubkey: "First",
+          account: {
+            lamports: 1,
+            owner: programId,
+            data: ["", "base64"],
+            executable: false,
+            rentEpoch: 0,
+            space: 165,
+          },
+        },
+      ],
       paginationKey: "cursor-1",
       totalResults: 3,
     };
     const secondPage: GetProgramAccountsV2Result = {
       accounts: [
-        { pubkey: "Second", account: { lamports: 2, owner: programId, data: ["", "base64"], executable: false, rentEpoch: 0, space: 165 } },
-        { pubkey: "Third", account: { lamports: 3, owner: programId, data: ["", "base64"], executable: false, rentEpoch: 0, space: 165 } },
+        {
+          pubkey: "Second",
+          account: {
+            lamports: 2,
+            owner: programId,
+            data: ["", "base64"],
+            executable: false,
+            rentEpoch: 0,
+            space: 165,
+          },
+        },
+        {
+          pubkey: "Third",
+          account: {
+            lamports: 3,
+            owner: programId,
+            data: ["", "base64"],
+            executable: false,
+            rentEpoch: 0,
+            space: 165,
+          },
+        },
       ],
       paginationKey: null,
       totalResults: 3,

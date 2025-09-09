@@ -16,9 +16,9 @@ describe("wrapAutoSend", () => {
       getAsync: jest.fn().mockImplementation(async (x: number) => x * 2),
 
       // Returns a pending object that must be auto-sent
-      getPending: jest.fn().mockImplementation((msg: string) =>
-        makePending(`SENT:${msg}`)
-      ),
+      getPending: jest
+        .fn()
+        .mockImplementation((msg: string) => makePending(`SENT:${msg}`)),
 
       // For argument-forwarding checks
       echo: jest.fn().mockImplementation((...args: any[]) => args),
@@ -55,7 +55,8 @@ describe("wrapAutoSend", () => {
 
     // Ensure original method was invoked and .send() was called once
     expect(raw.getPending).toHaveBeenCalledWith("hello");
-    const pendingObj = (raw.getPending.mock.results[0].value as FakePending<string>);
+    const pendingObj = raw.getPending.mock.results[0]
+      .value as FakePending<string>;
     expect(pendingObj.send).toHaveBeenCalledTimes(1);
   });
 

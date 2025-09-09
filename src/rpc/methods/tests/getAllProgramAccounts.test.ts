@@ -238,7 +238,11 @@ describe("getAllProgramAccounts (auto-pagination) Tests", () => {
       },
     };
 
-    transportMock.mockResolvedValueOnce({ jsonrpc: "2.0", id: "1", result: p1 });
+    transportMock.mockResolvedValueOnce({
+      jsonrpc: "2.0",
+      id: "1",
+      result: p1,
+    });
 
     const all = await rpc.getAllProgramAccounts(programId, {
       withContext: true,

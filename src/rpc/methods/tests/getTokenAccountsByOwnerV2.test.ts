@@ -1,5 +1,7 @@
-
-import { GetTokenAccountsByOwnerV2Request, GetTokenAccountsByOwnerV2Result } from "../../../types";
+import {
+  GetTokenAccountsByOwnerV2Request,
+  GetTokenAccountsByOwnerV2Result,
+} from "../../../types";
 import { createHeliusEager as createHelius } from "../../createHelius.eager";
 
 const transportMock = jest.fn();
@@ -87,14 +89,46 @@ describe("getTokenAccountsByOwnerV2 Tests", () => {
 
   it("Continues pagination using the paginationKey", async () => {
     const page1: GetTokenAccountsByOwnerV2Result = {
-      accounts: [{ pubkey: "First", account: { lamports: 1, owner: TOKEN_V1, data: { parsed: { info: {} } }, executable: false, rentEpoch: 0, space: 165 } }],
+      accounts: [
+        {
+          pubkey: "First",
+          account: {
+            lamports: 1,
+            owner: TOKEN_V1,
+            data: { parsed: { info: {} } },
+            executable: false,
+            rentEpoch: 0,
+            space: 165,
+          },
+        },
+      ],
       paginationKey: "next-1",
       totalResults: 3,
     };
     const page2: GetTokenAccountsByOwnerV2Result = {
       accounts: [
-        { pubkey: "Second", account: { lamports: 2, owner: TOKEN_V1, data: { parsed: { info: {} } }, executable: false, rentEpoch: 0, space: 165 } },
-        { pubkey: "Third", account: { lamports: 3, owner: TOKEN_V1, data: { parsed: { info: {} } }, executable: false, rentEpoch: 0, space: 165 } },
+        {
+          pubkey: "Second",
+          account: {
+            lamports: 2,
+            owner: TOKEN_V1,
+            data: { parsed: { info: {} } },
+            executable: false,
+            rentEpoch: 0,
+            space: 165,
+          },
+        },
+        {
+          pubkey: "Third",
+          account: {
+            lamports: 3,
+            owner: TOKEN_V1,
+            data: { parsed: { info: {} } },
+            executable: false,
+            rentEpoch: 0,
+            space: 165,
+          },
+        },
       ],
       paginationKey: null,
       totalResults: 3,
@@ -121,7 +155,11 @@ describe("getTokenAccountsByOwnerV2 Tests", () => {
     const res2 = await rpc.getTokenAccountsByOwnerV2([
       owner,
       { programId: TOKEN_V1 },
-      { encoding: "jsonParsed", limit: 1000, paginationKey: res1.paginationKey! },
+      {
+        encoding: "jsonParsed",
+        limit: 1000,
+        paginationKey: res1.paginationKey!,
+      },
     ]);
     expect(res2).toEqual(page2);
 
@@ -150,7 +188,13 @@ describe("getTokenAccountsByOwnerV2 Tests", () => {
             owner: TOKEN_V1,
             data: {
               program: "spl-token",
-              parsed: { info: { mint: usdcMint, owner, tokenAmount: { uiAmountString: "1.23" } } },
+              parsed: {
+                info: {
+                  mint: usdcMint,
+                  owner,
+                  tokenAmount: { uiAmountString: "1.23" },
+                },
+              },
             },
             executable: false,
             rentEpoch: 0,

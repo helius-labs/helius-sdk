@@ -1,4 +1,3 @@
-
 import { GetTokenAccountsByOwnerV2Result } from "../../../types";
 import { createHeliusEager as createHelius } from "../../createHelius.eager";
 
@@ -95,7 +94,7 @@ describe("getAllTokenAccountsByOwner (auto-pagination) Tests", () => {
       options
     );
 
-    expect(all.map((a: { pubkey: any; }) => a.pubkey)).toEqual(["A", "B", "C"]);
+    expect(all.map((a: { pubkey: any }) => a.pubkey)).toEqual(["A", "B", "C"]);
 
     // First call payload
     const firstPayload = transportMock.mock.calls[0][0].payload;
@@ -175,7 +174,7 @@ describe("getAllTokenAccountsByOwner (auto-pagination) Tests", () => {
       { encoding: "jsonParsed" }
     );
 
-    expect(all.map((a: { pubkey: any; }) => a.pubkey)).toEqual(["W1", "W2"]);
+    expect(all.map((a: { pubkey: any }) => a.pubkey)).toEqual(["W1", "W2"]);
     expect(transportMock).toHaveBeenCalledTimes(2);
   });
 
@@ -189,7 +188,10 @@ describe("getAllTokenAccountsByOwner (auto-pagination) Tests", () => {
           account: {
             lamports: 0,
             owner: TOKEN_V1,
-            data: { program: "spl-token", parsed: { info: { mint: usdcMint } } },
+            data: {
+              program: "spl-token",
+              parsed: { info: { mint: usdcMint } },
+            },
             executable: false,
             rentEpoch: 0,
             space: 165,
@@ -212,7 +214,7 @@ describe("getAllTokenAccountsByOwner (auto-pagination) Tests", () => {
       { encoding: "jsonParsed" }
     );
 
-    expect(all.map((a: { pubkey: any; }) => a.pubkey)).toEqual(["USDCacc1"]);
+    expect(all.map((a: { pubkey: any }) => a.pubkey)).toEqual(["USDCacc1"]);
 
     const payload = transportMock.mock.calls[0][0].payload;
     expect(payload.method).toBe("getTokenAccountsByOwnerV2");
@@ -254,7 +256,7 @@ describe("getAllTokenAccountsByOwner (auto-pagination) Tests", () => {
       { encoding: "base64" }
     );
 
-    expect(all.map((a: { pubkey: any; }) => a.pubkey)).toEqual(["Base64Acc"]);
+    expect(all.map((a: { pubkey: any }) => a.pubkey)).toEqual(["Base64Acc"]);
     expect(Array.isArray(all[0].account.data)).toBe(true);
 
     const payload = transportMock.mock.calls[0][0].payload;
@@ -293,14 +295,22 @@ describe("getAllTokenAccountsByOwner (auto-pagination) Tests", () => {
       });
 
     await expect(
-      rpc.getAllTokenAccountsByOwner(owner, { programId: TOKEN_V1 }, { encoding: "jsonParsed" })
+      rpc.getAllTokenAccountsByOwner(
+        owner,
+        { programId: TOKEN_V1 },
+        { encoding: "jsonParsed" }
+      )
     ).rejects.toThrow(/Internal error/);
 
     const secondPayload = transportMock.mock.calls[1][0].payload;
     expect(secondPayload.params).toEqual([
       owner,
       { programId: TOKEN_V1 },
-      expect.objectContaining({ encoding: "jsonParsed", limit: 10_000, paginationKey: "will-error" }),
+      expect.objectContaining({
+        encoding: "jsonParsed",
+        limit: 10_000,
+        paginationKey: "will-error",
+      }),
     ]);
   });
 });
