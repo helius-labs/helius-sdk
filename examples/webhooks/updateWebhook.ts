@@ -1,5 +1,4 @@
-// Replace imports in a production setting
-import { createHelius } from "../../src/rpc";
+import { createHelius } from "helius-sdk";
 
 (async () => {
   const apiKey = ""; // From Helius dashboard

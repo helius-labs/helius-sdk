@@ -1,10 +1,9 @@
-// Replace imports in a production setting
-import { createHelius } from "../../src/rpc";
+import { createHelius } from "helius-sdk";
 
 (async () => {
   const apiKey = ""; // From Helius dashboard
-
-  let helius = createHelius({ apiKey });
+  const helius = createHelius({ apiKey });
+  
   try {
     const proof = await helius.zk.getCompressedAccountProof({
       hash: "CkcqmptQFTXMMZaKib6GwMNFffCEdbBDfyNttr33scA",

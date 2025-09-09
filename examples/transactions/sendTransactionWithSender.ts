@@ -1,5 +1,4 @@
-// Replace imports in a production setting
-import { createHelius } from "../../src/rpc/index";
+import { createHelius } from "helius-sdk";
 import { address, createKeyPairSignerFromBytes, lamports } from "@solana/kit";
 import { getTransferSolInstruction } from "@solana-program/system";
 import bs58 from "bs58";
@@ -28,7 +27,7 @@ import bs58 from "bs58";
       commitment: "confirmed",
       minUnits: 1_000,
       bufferPct: 0.1,
-      // priorityFeeCap: 80_000,         // optional lamports/CU ceiling
+      // priorityFeeCap: 80_000,         // Optional lamports/CU ceiling
 
       // Sender-specific options
       region: "US_EAST",

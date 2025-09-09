@@ -1,10 +1,9 @@
-// Replace imports in a production setting
-import { createHelius } from "../../src/rpc";
+import { createHelius } from "helius-sdk";
 
 (async () => {
   const apiKey = ""; // From Helius dashboard
+  const helius = createHelius({ apiKey });
 
-  let helius = createHelius({ apiKey });
   try {
     await helius.zk.getIndexerHealth();
     console.log("Compression indexer is in perfect sync");

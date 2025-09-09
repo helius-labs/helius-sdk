@@ -1,9 +1,9 @@
-// Replace imports in a production setting
-import { createHelius } from "../../src/rpc/index";
+import { createHelius } from "helius-sdk";
+import { SFDP_REJECTS_URL } from "helius-sdk/transactions/types";
+
 import { address, createKeyPairSignerFromBytes, lamports } from "@solana/kit";
 import { getTransferSolInstruction } from "@solana-program/system";
 import bs58 from "bs58";
-import { SFDP_REJECTS_URL } from "../../src/transactions/types";
 
 (async () => {
   const apiKey = ""; // From Helius dashboard

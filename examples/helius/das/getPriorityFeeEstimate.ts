@@ -5,12 +5,12 @@ import { createHelius } from "helius-sdk";
   const helius = createHelius({ apiKey });
 
   try {
-    const history = await helius.zk.getSignaturesForAsset({
-      id: "FNt6A9Mfnqbwc1tY7uwAguKQ1JcpBrxmhczDgbdJy5AC",
-      page: 1,
+    const estimate = await helius.getPriorityFeeEstimate({
+      accountKeys: ["JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4"],
+      options: { includeAllPriorityFeeLevels: true },
     });
-
-    console.log(history.items);
+    
+    console.log("Priority fee estimate: ", estimate);
   } catch (error) {
     console.error("Error with RPC: ", error);
   }

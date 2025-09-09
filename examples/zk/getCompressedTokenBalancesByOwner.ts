@@ -1,10 +1,9 @@
-// Replace imports in a production setting
-import { createHelius } from "../../src/rpc";
+import { createHelius } from "helius-sdk";
 
 (async () => {
   const apiKey = ""; // From Helius dashboard
+  const helius = createHelius({ apiKey });
 
-  let helius = createHelius({ apiKey });
   try {
     const balances = await helius.zk.getCompressedTokenBalancesByOwner({
       owner: "11111115q4EpJaTXAZWpCg3J2zppWGSZ46KXozzo9",

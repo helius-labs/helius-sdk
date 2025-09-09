@@ -1,5 +1,4 @@
-// Replace imports in a production setting
-import { createHelius } from "../../src/rpc/index";
+import { createHelius } from "helius-sdk";
 
 (async () => {
   const apiKey = ""; // From Helius dashboard
@@ -7,8 +6,8 @@ import { createHelius } from "../../src/rpc/index";
 
   try {
     const assets = await helius.getAssetsByGroup({ groupKey: "collection", groupValue: "J1S9H3QjnRtBbbuD4HjPV6RpRhwuk4zKbxsnCHuTgh9w" });
-    console.log("Fetched assets:", assets);
+    console.log("Fetched assets: ", assets);
   } catch (error) {
-    console.error("Error:", error);
+    console.error("Error: ", error);
   }
 })();

@@ -1,5 +1,4 @@
-// Replace imports in a production setting
-import { createHelius } from "../../src/rpc/index";
+import { createHelius } from "helius-sdk";
 import { address, createKeyPairSignerFromBytes, lamports } from "@solana/kit";
 import { getTransferSolInstruction } from "@solana-program/system";
 import bs58 from "bs58";
