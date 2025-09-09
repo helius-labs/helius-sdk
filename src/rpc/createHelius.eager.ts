@@ -60,10 +60,22 @@ import {
   makeTxHelpersEager,
   TxHelpersEager,
 } from "../transactions/client.eager";
-import { GetProgramAccountsV2Fn, makeGetProgramAccountsV2 } from "./methods/getProgramAccountsV2";
-import { GetAllProgramAccountsFn, makeGetAllProgramAccounts } from "./methods/getAllProgramAccounts";
-import { GetTokenAccountsByOwnerV2Fn, makeGetTokenAccountsByOwnerV2 } from "./methods/getTokenAccountsByOwnerV2";
-import { GetAllTokenAccountsByOwnerFn, makeGetAllTokenAccountsByOwner } from "./methods/getAllTokenAccountsByOwner";
+import {
+  GetProgramAccountsV2Fn,
+  makeGetProgramAccountsV2,
+} from "./methods/getProgramAccountsV2";
+import {
+  GetAllProgramAccountsFn,
+  makeGetAllProgramAccounts,
+} from "./methods/getAllProgramAccounts";
+import {
+  GetTokenAccountsByOwnerV2Fn,
+  makeGetTokenAccountsByOwnerV2,
+} from "./methods/getTokenAccountsByOwnerV2";
+import {
+  GetAllTokenAccountsByOwnerFn,
+  makeGetAllTokenAccountsByOwner,
+} from "./methods/getAllTokenAccountsByOwner";
 
 export interface HeliusClientEager {
   raw: ResolvedHeliusRpcApi;

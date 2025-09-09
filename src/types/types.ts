@@ -84,20 +84,16 @@ export type GetProgramAccountsV2Config = {
   paginationKey?: string | null; // b58 cursor; null when done
   changedSinceSlot?: number;
   filters?: ReadonlyArray<
-    | { dataSize: number }
-    | { memcmp: { offset: number; bytes: string } }
+    { dataSize: number } | { memcmp: { offset: number; bytes: string } }
   >;
 };
 
-export type GetProgramAccountsV2Request = [
-  string,
-  GetProgramAccountsV2Config?
-];
+export type GetProgramAccountsV2Request = [string, GetProgramAccountsV2Config?];
 
 export type GpaV2AccountInfo = {
   lamports: number;
   owner: string;
-  data: any;    
+  data: any;
   executable: boolean;
   rentEpoch: number;
   space?: number;
@@ -138,7 +134,7 @@ export type GetTokenAccountsByOwnerV2Config = {
 export type GetTokenAccountsByOwnerV2Request = [
   string,
   GetTokenAccountsByOwnerV2Filter?,
-  GetTokenAccountsByOwnerV2Config?
+  GetTokenAccountsByOwnerV2Config?,
 ];
 
 export type GtaV2AccountInfo = {

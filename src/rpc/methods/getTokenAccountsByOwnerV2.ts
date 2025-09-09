@@ -11,7 +11,7 @@ export type GetTokenAccountsByOwnerV2Fn = (
 export const makeGetTokenAccountsByOwnerV2 =
   (call: RpcCaller): GetTokenAccountsByOwnerV2Fn =>
   (params) =>
-    call<
-      GetTokenAccountsByOwnerV2Request,
-      GetTokenAccountsByOwnerV2Response
-    >("getTokenAccountsByOwnerV2", params);
+    call<GetTokenAccountsByOwnerV2Request, GetTokenAccountsByOwnerV2Response>(
+      "getTokenAccountsByOwnerV2",
+      params
+    );
