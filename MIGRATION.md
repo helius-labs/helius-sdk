@@ -1,6 +1,6 @@
 # Migrating to `helius-sdk` 2.0.0
 
-The Helius Node.js SDK has been rewritten on top of [`@solana/kit`](https://github.com/anza-xyz/kit), replacing the dependency on `@solana/web3.js` (> 1.73.2). The goal: keep DevEx familiar while improving ergonomics, performance, and type safety while supporting the latest Solana developments.  
+The Helius Node.js SDK has been rewritten on top of [`@solana/kit`](https://github.com/anza-xyz/kit), replacing the dependency on `@solana/web3.js` (>1.73.2). The goal: keep DevEx familiar while improving ergonomics, performance, and type safety while supporting the latest Solana developments.  
 
 The TLDR is most method names are unchanged. What has changed is their namespace and the exact types, reflecting the latest types via Kit.
 
@@ -107,7 +107,7 @@ See the [`examples` directory](https://github.com/helius-labs/helius-sdk/tree/ma
 - WebSockets (listening to accounts for specific updates)
 
 ## 9) Support
-Docs: https://www.helius.dev/docs
-Discord: https://discord.com/invite/6GXdee3gBj
-Chat support: https://dashboard.helius.dev/support
-Email support: support@helius.xyz
+- Docs: https://www.helius.dev/docs
+- Discord: https://discord.com/invite/6GXdee3gBj
+- Chat support: https://dashboard.helius.dev/support
+- Email support: support@helius.xyz
