@@ -36,7 +36,7 @@ const assets = await helius.getAssetsByOwner({ ownerAddress: address("...") });
 ```
 
 ## 3) Import Paths and Tree-shaking
-This package is ESM-frist (i.e., `"type": "module"`). Use `import`, not `require`.
+This package is ESM-first (i.e., `"type": "module"`). Use `import`, not `require`.
 
 The root is the `src` dir, with the main functionality deriving from the `createHelius` function. There are also subpaths for more granular tree-shaking:
 - RPC methods: `import "helius-sdk/rpc/methods/<>`
@@ -81,7 +81,7 @@ Note, the SDK is designed such that these granular imports are not 100% necessar
 - Staking (`helius.stake.`): `createStakeTransaction`, `createUnstakeTransaction`, `createWithdrawTransaction`, `getHeliusStakeAccounts`, `getStakeInstruction`, `getUnstakeInstruction`, `getWithdrawInstruction`, `getWithdrawableAmount`
 - Transactions (`helius.tx.`): `broadcastTransaction`, `getComputeUnits`, `pollTransactionConfirmation`, `createSmartTransaction`, `sendSmartTransaction`, `sendTransactionWithSender`, `sendTransaction`
 - Webhooks (`helius.webhooks.`): `create`, `get`, `getAll`, `update`, `delete`
-- WebSockets (`helius.ws.`): `logNotifications`, `slotNotifications`, `signatureNotifications`, `programNotifications`, `accountNotifications`, `close`
+- WebSockets (`helius.ws.`): `logsNotifications`, `slotNotifications`, `signatureNotifications`, `programNotifications`, `accountNotifications`, `close`
 - ZK Compression (`helius.zk.`): `getCompressedAccount`, `getCompressedAccountProof`, `getCompressedAccountsByOwner`, `getCompressedBalance`, `getCompressedBalanceByOwner`, `getCompressedMintTokenHolders`, `getCompressedTokenAccountBalance`, `getCompressedTokenAccountsByDelegate`, `getCompressedTokenAccountsByOwner`, `getCompressedTokenBalancesByOwner`, `getCompressedTokenBalancesByOwnerV2`, `getCompressionSignaturesForAccount`, `getCompressionSignaturesForAddress`, `getCompressionSignaturesForOwner`, `getCompressionSignaturesForTokenOwner`, `getIndexerHealth`, `getIndexerSlot`, `getLatestCompressionSignatures`, `getLatestNonVotingSignatures`, `getMultipleCompressedAccountProofs`, `getMultipleCompressedAccounts`, `getMultipleNewAddressProofs`, `getMultipleNewAddressProofsV2`, `getTransactionWithCompressionInfo`, `getValidityProof`, `getSignaturesForAsset`
 
 ## 7) FAQ
