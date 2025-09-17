@@ -3,23 +3,55 @@
   "version": "2.0.0",
   "description": "A Helius Node.js SDK for building the future of Solana",
   "type": "module",
-  "main": "./dist/src/index.js",
-  "types": "./dist/src/index.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/rpc/index.js"
+      "types": "./dist/src/rpc/index.d.ts",
+      "import": "./dist/src/rpc/index.js"
     },
-    "./rpc": "./dist/rpc/index.js",
-    "./rpc/eager": "./dist/rpc/createHelius.eager.js",
-    "./rpc/methods/*": "./dist/rpc/methods/*.js",
-    "./transactions/*": "./dist/transactions/*.js",
-    "./rpc/wrapAutoSend": "./dist/rpc/wrapAutoSend.js",
-    "./webhooks/*": "./dist/webhooks/*.js",
-    "./enhanced/*": "./dist/enhanced/*.js",
-    "./staking/*": "./dist/staking/*.js",
-    "./websockets/*": "./dist/websockets/*.js",
-    "./zk/*": "./dist/zk/*.js",
-    "./types/*": "./dist/types/*.js",
+    "./rpc": {
+      "types": "./dist/src/rpc/index.d.ts",
+      "import": "./dist/src/rpc/index.js"
+    },
+    "./rpc/eager": {
+      "types": "./dist/src/rpc/createHelius.eager.d.ts",
+      "import": "./dist/src/rpc/createHelius.eager.js"
+    },
+    "./rpc/methods/*": {
+      "types": "./dist/src/rpc/methods/*.d.ts",
+      "import": "./dist/src/rpc/methods/*.js"
+    },
+    "./transactions/*": {
+      "types": "./dist/src/transactions/*.d.ts",
+      "import": "./dist/src/transactions/*.js"
+    },
+    "./rpc/wrapAutoSend": {
+      "types": "./dist/src/rpc/wrapAutoSend.d.ts",
+      "import": "./dist/src/rpc/wrapAutoSend.js"
+    },
+    "./webhooks/*": {
+      "types": "./dist/src/webhooks/*.d.ts",
+      "import": "./dist/src/webhooks/*.js"
+    },
+    "./enhanced/*": {
+      "types": "./dist/src/enhanced/*.d.ts",
+      "import": "./dist/src/enhanced/*.js"
+    },
+    "./staking/*": {
+      "types": "./dist/src/staking/*.d.ts",
+      "import": "./dist/src/staking/*.js"
+    },
+    "./websockets/*": {
+      "types": "./dist/src/websockets/*.d.ts",
+      "import": "./dist/src/websockets/*.js"
+    },
+    "./zk/*": {
+      "types": "./dist/src/zk/*.d.ts",
+      "import": "./dist/src/zk/*.js"
+    },
+    "./types/*": {
+      "types": "./dist/src/types/*.d.ts",
+      "import": "./dist/src/types/*.js"
+    },
     "./package.json": "./package.json"
   },
   "sideEffects": false,
@@ -27,7 +59,7 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
-    "build": "rollup -c",
+    "build": "rimraf dist && rollup -c",
     "prepare": "pnpm run build",
     "lint": "eslint --ext .ts,.tsx src",
     "format": "prettier --write 'src/**/*.{js,ts,json,md}'",
@@ -71,6 +103,7 @@
     "glob": "^11.0.3",
     "jest": "^30.0.4",
     "prettier": "^3.6.2",
+    "rimraf": "^6.0.1",
     "rollup": "^4.44.2",
     "ts-jest": "^29.4.0",
     "ts-node": "^10.9.2",
