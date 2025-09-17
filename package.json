@@ -1,56 +1,56 @@
 {
   "name": "helius-sdk",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "A Helius Node.js SDK for building the future of Solana",
   "type": "module",
   "exports": {
     ".": {
-      "types": "./dist/src/rpc/index.d.ts",
-      "import": "./dist/src/rpc/index.js"
+      "types": "./dist/rpc/index.d.ts",
+      "import": "./dist/rpc/index.js"
     },
     "./rpc": {
-      "types": "./dist/src/rpc/index.d.ts",
-      "import": "./dist/src/rpc/index.js"
+      "types": "./dist/rpc/index.d.ts",
+      "import": "./dist/rpc/index.js"
     },
     "./rpc/eager": {
-      "types": "./dist/src/rpc/createHelius.eager.d.ts",
-      "import": "./dist/src/rpc/createHelius.eager.js"
+      "types": "./dist/rpc/createHelius.eager.d.ts",
+      "import": "./dist/rpc/createHelius.eager.js"
     },
     "./rpc/methods/*": {
-      "types": "./dist/src/rpc/methods/*.d.ts",
-      "import": "./dist/src/rpc/methods/*.js"
+      "types": "./dist/rpc/methods/*.d.ts",
+      "import": "./dist/rpc/methods/*.js"
     },
     "./transactions/*": {
-      "types": "./dist/src/transactions/*.d.ts",
-      "import": "./dist/src/transactions/*.js"
+      "types": "./dist/transactions/*.d.ts",
+      "import": "./dist/transactions/*.js"
     },
     "./rpc/wrapAutoSend": {
-      "types": "./dist/src/rpc/wrapAutoSend.d.ts",
-      "import": "./dist/src/rpc/wrapAutoSend.js"
+      "types": "./dist/rpc/wrapAutoSend.d.ts",
+      "import": "./dist/rpc/wrapAutoSend.js"
     },
     "./webhooks/*": {
-      "types": "./dist/src/webhooks/*.d.ts",
-      "import": "./dist/src/webhooks/*.js"
+      "types": "./dist/webhooks/*.d.ts",
+      "import": "./dist/webhooks/*.js"
     },
     "./enhanced/*": {
-      "types": "./dist/src/enhanced/*.d.ts",
-      "import": "./dist/src/enhanced/*.js"
+      "types": "./dist/enhanced/*.d.ts",
+      "import": "./dist/enhanced/*.js"
     },
     "./staking/*": {
-      "types": "./dist/src/staking/*.d.ts",
-      "import": "./dist/src/staking/*.js"
+      "types": "./dist/staking/*.d.ts",
+      "import": "./dist/staking/*.js"
     },
     "./websockets/*": {
-      "types": "./dist/src/websockets/*.d.ts",
-      "import": "./dist/src/websockets/*.js"
+      "types": "./dist/websockets/*.d.ts",
+      "import": "./dist/websockets/*.js"
     },
     "./zk/*": {
-      "types": "./dist/src/zk/*.d.ts",
-      "import": "./dist/src/zk/*.js"
+      "types": "./dist/zk/*.d.ts",
+      "import": "./dist/zk/*.js"
     },
     "./types/*": {
-      "types": "./dist/src/types/*.d.ts",
-      "import": "./dist/src/types/*.js"
+      "types": "./dist/types/*.d.ts",
+      "import": "./dist/types/*.js"
     },
     "./package.json": "./package.json"
   },
