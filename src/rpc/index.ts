@@ -105,7 +105,7 @@ export const createHelius = ({
   const transport = createDefaultRpcTransport({ url });
 
   const baseRpc = createRpc({ api: solanaApi, transport });
-  const raw = wrapAutoSend(baseRpc) as unknown as ResolvedHeliusRpcApi;
+  const raw: ResolvedHeliusRpcApi = wrapAutoSend(baseRpc);
 
   const wsUrl = new URL(url);
   wsUrl.protocol = "wss:";
