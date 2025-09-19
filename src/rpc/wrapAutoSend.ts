@@ -22,10 +22,14 @@ export const wrapAutoSend = <T extends Rpc<any>>(raw: T): AutoSent<T> => {
       const value = Reflect.get(target, prop, receiver);
       if (typeof value !== "function") return value;
 
-      return (...args: unknown[]) => {
-        const result = (value as (...args: unknown[]) => unknown)(...args);
+      const typedProp = prop as keyof T;
+
+      const wrapper = function (this:any, ...args: any[]) {
+        const result = value.apply(this, args);
         return isPending(result) ? result.send() : result;
       };
+
+      return wrapper as AutoSent<T>[typeof typedProp];
     },
 
     set(_target, prop, value) {
