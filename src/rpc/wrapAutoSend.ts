@@ -24,7 +24,7 @@ export const wrapAutoSend = <T extends Rpc<any>>(raw: T): AutoSent<T> => {
 
       const typedProp = prop as keyof T;
 
-      const wrapper = function (this:any, ...args: any[]) {
+      const wrapper = function (this: any, ...args: any[]) {
         const result = value.apply(this, args);
         return isPending(result) ? result.send() : result;
       };
