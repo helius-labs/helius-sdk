@@ -103,8 +103,23 @@ export const createHelius = ({
 
   const solanaApi = createSolanaRpcApi(DEFAULT_RPC_CONFIG);
   const transport = createDefaultRpcTransport({ url });
+  const customTransport = async <TResponse>(
+    request: Parameters<typeof transport>[0]
+  ): Promise<TResponse> => {
+    const payload = {
+      ...(request.payload as Record<string, unknown>),
+      id: "helius-sdk",
+    };
 
-  const baseRpc = createRpc({ api: solanaApi, transport });
+    const modifiedRequest = {
+      ...request,
+      payload,
+    };
+
+    return transport(modifiedRequest) as Promise<TResponse>;
+  };
+
+  const baseRpc = createRpc({ api: solanaApi, transport: customTransport });
   const raw: ResolvedHeliusRpcApi = wrapAutoSend(baseRpc);
 
   const wsUrl = new URL(url);
