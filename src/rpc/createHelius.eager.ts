@@ -110,13 +110,16 @@ export interface HeliusClientEager {
 export type HeliusRpcOptions = {
   apiKey: string;
   network?: "mainnet" | "devnet";
+  rebateAddress?: string;
 };
 
 export const createHeliusEager = ({
   apiKey,
   network = "mainnet",
+  rebateAddress,
 }: HeliusRpcOptions): HeliusClientEager => {
-  const url = `https://${network}.helius-rpc.com/?api-key=${apiKey}`;
+  const rebateParam = rebateAddress ? `&rebate-address=${rebateAddress}` : "";
+  const url = `https://${network}.helius-rpc.com/?api-key=${apiKey}${rebateParam}`;
 
   const solanaApi = createSolanaRpcApi(DEFAULT_RPC_CONFIG);
   const transport = createDefaultRpcTransport({ url });
