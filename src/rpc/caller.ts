@@ -8,7 +8,7 @@ export const makeRpcCaller =
     const res = (await transport({
       payload: {
         jsonrpc: "2.0",
-        id: "helius-custom",
+        id: "helius-sdk",
         method,
         params,
       },
