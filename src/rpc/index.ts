@@ -342,7 +342,7 @@ export const createHelius = ({
     "enhanced",
     async () => {
       const { makeEnhancedTxClientLazy } = await import("../enhanced");
-      return makeEnhancedTxClientLazy(apiKey);
+      return makeEnhancedTxClientLazy(apiKey, network);
     }
   );
 

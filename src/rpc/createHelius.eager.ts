@@ -157,7 +157,7 @@ export const createHeliusEager = ({
     webhooks: makeWebhookClientEager(apiKey),
 
     // Enhanced Transactions
-    enhanced: makeEnhancedTxClientEager(apiKey),
+    enhanced: makeEnhancedTxClientEager(apiKey, network),
 
     // Transaction helpers
     tx: makeTxHelpersEager(baseRpc as unknown as Rpc<SolanaRpcApi>),

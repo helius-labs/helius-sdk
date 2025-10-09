@@ -42,8 +42,14 @@ const handle = async <T>(res: Response): Promise<T> => {
   return json as T;
 };
 
-export const makeEnhancedTxClientEager = (apiKey: string): EnhancedTxClient => {
-  const base = "https://api.helius.xyz/v0";
+export const makeEnhancedTxClientEager = (
+  apiKey: string,
+  network: "mainnet" | "devnet" = "mainnet"
+): EnhancedTxClient => {
+  const base =
+    network === "devnet"
+      ? "https://api-devnet.helius.xyz/v0"
+      : "https://api.helius.xyz/v0";
 
   const getTransactions: EnhancedTxClient["getTransactions"] = async ({
     transactions,
