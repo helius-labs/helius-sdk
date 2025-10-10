@@ -30,4 +30,5 @@ Thumbs.db
 
 # Misc
 *.bak
+.claude
 src/main.ts
