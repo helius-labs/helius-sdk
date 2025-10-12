@@ -110,13 +110,16 @@ export interface HeliusClientEager {
 export type HeliusRpcOptions = {
   apiKey: string;
   network?: "mainnet" | "devnet";
+  rebateAddress?: string;
 };
 
 export const createHeliusEager = ({
   apiKey,
   network = "mainnet",
+  rebateAddress,
 }: HeliusRpcOptions): HeliusClientEager => {
-  const url = `https://${network}.helius-rpc.com/?api-key=${apiKey}`;
+  const rebateParam = rebateAddress ? `&rebate-address=${rebateAddress}` : "";
+  const url = `https://${network}.helius-rpc.com/?api-key=${apiKey}${rebateParam}`;
 
   const solanaApi = createSolanaRpcApi(DEFAULT_RPC_CONFIG);
   const transport = createDefaultRpcTransport({ url });
@@ -157,7 +160,7 @@ export const createHeliusEager = ({
     webhooks: makeWebhookClientEager(apiKey),
 
     // Enhanced Transactions
-    enhanced: makeEnhancedTxClientEager(apiKey),
+    enhanced: makeEnhancedTxClientEager(apiKey, network),
 
     // Transaction helpers
     tx: makeTxHelpersEager(baseRpc as unknown as Rpc<SolanaRpcApi>),

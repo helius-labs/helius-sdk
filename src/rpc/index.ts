@@ -41,6 +41,7 @@ import { ZkClientLazy } from "../zk/client";
 interface HeliusRpcOptions {
   apiKey: string;
   network?: "mainnet" | "devnet";
+  rebateAddress?: string;
 }
 
 export type HeliusClient = ResolvedHeliusRpcApi & {
@@ -97,9 +98,11 @@ export type HeliusClient = ResolvedHeliusRpcApi & {
 export const createHelius = ({
   apiKey,
   network = "mainnet",
+  rebateAddress,
 }: HeliusRpcOptions): HeliusClient => {
   const baseUrl = `https://${network}.helius-rpc.com/`;
-  const url = `${baseUrl}?api-key=${apiKey}`;
+  const rebateParam = rebateAddress ? `&rebate-address=${rebateAddress}` : "";
+  const url = `${baseUrl}?api-key=${apiKey}${rebateParam}`;
 
   const solanaApi = createSolanaRpcApi(DEFAULT_RPC_CONFIG);
   const transport = createDefaultRpcTransport({ url });
@@ -342,7 +345,7 @@ export const createHelius = ({
     "enhanced",
     async () => {
       const { makeEnhancedTxClientLazy } = await import("../enhanced");
-      return makeEnhancedTxClientLazy(apiKey);
+      return makeEnhancedTxClientLazy(apiKey, network);
     }
   );
 
