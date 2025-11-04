@@ -58,6 +58,30 @@ import { createHelius } from "helius-sdk";
   }
 })();
 ```
+---
+
+### 🐍 Python Example — Fetching Recent Transactions
+
+Helius APIs can also be used from Python for automation and data engineering tasks.  
+The following example demonstrates how to fetch recent transactions for a wallet using the Helius RPC.
+
+```python
+import requests
+
+API_KEY = "YOUR_HELIUS_API_KEY"
+WALLET_ADDRESS = "EnterWalletAddressHere"
+
+url = f"https://mainnet.helius-rpc.com/?api-key={API_KEY}"
+payload = {
+    "jsonrpc": "2.0",
+    "id": "helius-python-demo",
+    "method": "getSignaturesForAddress",
+    "params": [WALLET_ADDRESS, {"limit": 5}],
+}
+
+response = requests.post(url, json=payload)
+print(response.json())
+
 
 ### Migrating to `helius-sdk` 2.0.0
 The Helius Node.js SDK has been rewritten from the ground up in version 2.0.0 to use [`@solana/kit` (i.e., Kit)](https://www.npmjs.com/package/@solana/kit) under the hood, replacing the dependency on `@solana/web3.js` versions higher than 1.73.2.
