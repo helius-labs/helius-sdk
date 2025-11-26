@@ -5,7 +5,8 @@ import {
   Instruction,
   Blockhash,
   Commitment,
-  CompilableTransactionMessage,
+  BaseTransactionMessage,
+  TransactionMessageWithFeePayer,
   Rpc,
   SolanaRpcApi,
   signTransactionMessageWithSigners,
@@ -71,7 +72,7 @@ export type CreateSmartTxResult = Readonly<{
   /** Final blockhash + lastValidBlockHeight used for the message. */
   lifetime: BlockhashLifetime;
   /** Final message (after compute‑budget ixs are prepended). */
-  message: CompilableTransactionMessage;
+  message: BaseTransactionMessage & TransactionMessageWithFeePayer;
 }>;
 
 export type CreateSmartTxDeps = Readonly<{
