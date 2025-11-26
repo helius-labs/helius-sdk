@@ -1,13 +1,14 @@
 import {
-  type CompilableTransactionMessage,
+  type BaseTransactionMessage,
   type Rpc,
   type SolanaRpcApi,
+  type TransactionMessageWithFeePayer,
 } from "@solana/kit";
 import { estimateComputeUnitLimitFactory } from "@solana-program/compute-budget";
 import { GetComputeUnitsOpts } from "./types";
 
 export type GetComputeUnitsFn = (
-  message: CompilableTransactionMessage,
+  message: BaseTransactionMessage & TransactionMessageWithFeePayer,
   opts?: GetComputeUnitsOpts
 ) => Promise<number>;
 

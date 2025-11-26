@@ -1,5 +1,8 @@
 import { makeGetComputeUnits } from "../getComputeUnits";
-import type { CompilableTransactionMessage } from "@solana/kit";
+import type {
+  BaseTransactionMessage,
+  TransactionMessageWithFeePayer,
+} from "@solana/kit";
 
 /**
  * We sub out @solana-program/compute-budget so that:
@@ -11,11 +14,11 @@ jest.mock("@solana-program/compute-budget", () => ({
   estimateComputeUnitLimitFactory: () => mockEstimate,
 }));
 
-// A dummy “rpc” that satisfies the type but is never called because of the sub
+// A dummy "rpc" that satisfies the type but is never called because of the sub
 const dummyRpc: any = {};
 
 // A minimal, compilable tx‑message object (i.e., instructions + version)
-const dummyMessage: CompilableTransactionMessage = {
+const dummyMessage: BaseTransactionMessage & TransactionMessageWithFeePayer = {
   instructions: [],
   version: 0,
 } as any;
