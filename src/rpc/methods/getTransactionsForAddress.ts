@@ -19,7 +19,8 @@ export type GetTransactionsForAddressFn = {
   ): Promise<GetTransactionsForAddressResultSignatures>;
 };
 
-export const makeGetTransactionsForAddress =
-  (call: RpcCaller): GetTransactionsForAddressFn =>
+export const makeGetTransactionsForAddress = (
+  call: RpcCaller
+): GetTransactionsForAddressFn =>
   ((params: [string, any?]) =>
     call("getTransactionsForAddress", params)) as GetTransactionsForAddressFn;

@@ -24,7 +24,8 @@ describe("getTransactionsForAddress Tests", () => {
     const mockResponse: GetTransactionsForAddressResultSignatures = {
       data: [
         {
-          signature: "5wHu1qwD7q2oogLJXZiNvf4JLpQw2gZSQWNYQEaFz8VjP1WtZkPvWZ1BZGZzJT2p",
+          signature:
+            "5wHu1qwD7q2oogLJXZiNvf4JLpQw2gZSQWNYQEaFz8VjP1WtZkPvWZ1BZGZzJT2p",
           slot: 123456789,
           err: null,
           memo: null,
@@ -32,7 +33,8 @@ describe("getTransactionsForAddress Tests", () => {
           confirmationStatus: "finalized",
         },
         {
-          signature: "3xKu2rwE8r3ppgMKYZqNwg5KMrRx3hZTRWNZRFbGy9WkQ2XuAkQvXA2CZHZaKU3q",
+          signature:
+            "3xKu2rwE8r3ppgMKYZqNwg5KMrRx3hZTRWNZRFbGy9WkQ2XuAkQvXA2CZHZaKU3q",
           slot: 123456780,
           err: null,
           memo: "test memo",

@@ -242,4 +242,3 @@ export type GetTransactionsForAddressResultFull = {
   data: ReadonlyArray<TransactionForAddressFull>;
   paginationToken: string | null;
 };
-
