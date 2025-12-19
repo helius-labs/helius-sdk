@@ -201,7 +201,8 @@ export type GetTransactionsForAddressRequest = [
   GetTransactionsForAddressConfig?,
 ];
 
-export type TransactionForAddress = {
+// Response when transactionDetails: "signatures"
+export type TransactionForAddressSignature = {
   signature: string;
   slot: number;
   err: null | object;
@@ -209,6 +210,18 @@ export type TransactionForAddress = {
   blockTime: number;
   confirmationStatus: "finalized" | "confirmed" | "processed";
 };
+
+// Response when transactionDetails: "full"
+export type TransactionForAddressFull = {
+  slot: number;
+  transaction: object;
+  meta: object | null;
+  blockTime: number | null;
+};
+
+export type TransactionForAddress =
+  | TransactionForAddressSignature
+  | TransactionForAddressFull;
 
 export type GetTransactionsForAddressResult = {
   data: ReadonlyArray<TransactionForAddress>;
