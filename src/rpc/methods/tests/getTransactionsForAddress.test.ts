@@ -1,7 +1,4 @@
-import {
-  GetTransactionsForAddressRequest,
-  GetTransactionsForAddressResult,
-} from "../../../types";
+import { GetTransactionsForAddressResultSignatures } from "../../../types";
 import { createHeliusEager as createHelius } from "../../createHelius.eager";
 
 const transportMock = jest.fn();
@@ -24,7 +21,7 @@ describe("getTransactionsForAddress Tests", () => {
   });
 
   it("Fetches transactions with config (limit/sortOrder/filters)", async () => {
-    const mockResponse: GetTransactionsForAddressResult = {
+    const mockResponse: GetTransactionsForAddressResultSignatures = {
       data: [
         {
           signature: "5wHu1qwD7q2oogLJXZiNvf4JLpQw2gZSQWNYQEaFz8VjP1WtZkPvWZ1BZGZzJT2p",
@@ -52,7 +49,7 @@ describe("getTransactionsForAddress Tests", () => {
       result: mockResponse,
     });
 
-    const params: GetTransactionsForAddressRequest = [
+    const result = await rpc.getTransactionsForAddress([
       address,
       {
         limit: 10,
@@ -62,23 +59,20 @@ describe("getTransactionsForAddress Tests", () => {
           slot: { gte: 100000000 },
         },
       },
-    ];
-
-    const result = await rpc.getTransactionsForAddress(params);
+    ]);
 
     expect(result).toEqual(mockResponse);
     expect(transportMock).toHaveBeenCalledWith(
       expect.objectContaining({
         payload: expect.objectContaining({
           method: "getTransactionsForAddress",
-          params,
         }),
       })
     );
   });
 
   it("Fetches the next page using the paginationToken", async () => {
-    const firstPage: GetTransactionsForAddressResult = {
+    const firstPage: GetTransactionsForAddressResultSignatures = {
       data: [
         {
           signature: "first-sig",
@@ -91,7 +85,7 @@ describe("getTransactionsForAddress Tests", () => {
       ],
       paginationToken: "token-1",
     };
-    const secondPage: GetTransactionsForAddressResult = {
+    const secondPage: GetTransactionsForAddressResultSignatures = {
       data: [
         {
           signature: "second-sig",

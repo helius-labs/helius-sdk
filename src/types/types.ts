@@ -162,11 +162,12 @@ export type GetTokenAccountsByOwnerV2Response =
   | RpcResponse<GetTokenAccountsByOwnerV2Result>;
 
 // getTransactionsForAddress types
-export type GetTransactionsForAddressConfig = {
+
+// Base config without transactionDetails
+export type GetTransactionsForAddressBaseConfig = {
   commitment?: Commitment;
   minContextSlot?: number;
   encoding?: "json" | "jsonParsed" | "base64" | "base58";
-  transactionDetails?: "full" | "signatures";
   maxSupportedTransactionVersion?: number;
   limit?: number;
   paginationToken?: string | null;
@@ -196,12 +197,24 @@ export type GetTransactionsForAddressConfig = {
   };
 };
 
-export type GetTransactionsForAddressRequest = [
-  string,
-  GetTransactionsForAddressConfig?,
-];
+// Config for transactionDetails: "signatures" (default)
+export type GetTransactionsForAddressConfigSignatures =
+  GetTransactionsForAddressBaseConfig & {
+    transactionDetails?: "signatures";
+  };
 
-// Response when transactionDetails: "signatures"
+// Config for transactionDetails: "full"
+export type GetTransactionsForAddressConfigFull =
+  GetTransactionsForAddressBaseConfig & {
+    transactionDetails: "full";
+  };
+
+// Union config type
+export type GetTransactionsForAddressConfig =
+  | GetTransactionsForAddressConfigSignatures
+  | GetTransactionsForAddressConfigFull;
+
+// Response when transactionDetails: "signatures" (default)
 export type TransactionForAddressSignature = {
   signature: string;
   slot: number;
@@ -219,15 +232,14 @@ export type TransactionForAddressFull = {
   blockTime: number | null;
 };
 
-export type TransactionForAddress =
-  | TransactionForAddressSignature
-  | TransactionForAddressFull;
-
-export type GetTransactionsForAddressResult = {
-  data: ReadonlyArray<TransactionForAddress>;
+// Result types for each variant
+export type GetTransactionsForAddressResultSignatures = {
+  data: ReadonlyArray<TransactionForAddressSignature>;
   paginationToken: string | null;
 };
 
-export type GetTransactionsForAddressResponse =
-  | GetTransactionsForAddressResult
-  | RpcResponse<GetTransactionsForAddressResult>;
+export type GetTransactionsForAddressResultFull = {
+  data: ReadonlyArray<TransactionForAddressFull>;
+  paginationToken: string | null;
+};
+

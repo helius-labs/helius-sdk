@@ -1,17 +1,25 @@
 import type {
-  GetTransactionsForAddressRequest,
-  GetTransactionsForAddressResponse,
+  GetTransactionsForAddressConfigFull,
+  GetTransactionsForAddressConfigSignatures,
+  GetTransactionsForAddressResultFull,
+  GetTransactionsForAddressResultSignatures,
 } from "../../types";
 import type { RpcCaller } from "../caller";
 
-export type GetTransactionsForAddressFn = (
-  p: GetTransactionsForAddressRequest
-) => Promise<GetTransactionsForAddressResponse>;
+// Function overloads: return type based on transactionDetails config
+export type GetTransactionsForAddressFn = {
+  // transactionDetails: "full" => returns full transaction data
+  (
+    params: [string, GetTransactionsForAddressConfigFull]
+  ): Promise<GetTransactionsForAddressResultFull>;
+
+  // transactionDetails: "signatures" or omitted => returns signature data (default)
+  (
+    params: [string, GetTransactionsForAddressConfigSignatures?]
+  ): Promise<GetTransactionsForAddressResultSignatures>;
+};
 
 export const makeGetTransactionsForAddress =
   (call: RpcCaller): GetTransactionsForAddressFn =>
-  (params) =>
-    call<GetTransactionsForAddressRequest, GetTransactionsForAddressResponse>(
-      "getTransactionsForAddress",
-      params
-    );
+  ((params: [string, any?]) =>
+    call("getTransactionsForAddress", params)) as GetTransactionsForAddressFn;
