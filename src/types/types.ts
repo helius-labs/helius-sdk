@@ -160,3 +160,85 @@ export type GetTokenAccountsByOwnerV2Result = {
 export type GetTokenAccountsByOwnerV2Response =
   | GetTokenAccountsByOwnerV2Result
   | RpcResponse<GetTokenAccountsByOwnerV2Result>;
+
+// getTransactionsForAddress types
+
+// Base config without transactionDetails
+export type GetTransactionsForAddressBaseConfig = {
+  commitment?: Commitment;
+  minContextSlot?: number;
+  encoding?: "json" | "jsonParsed" | "base64" | "base58";
+  maxSupportedTransactionVersion?: number;
+  limit?: number;
+  paginationToken?: string | null;
+  sortOrder?: "asc" | "desc";
+  filters?: {
+    status?: "succeeded" | "failed" | "any";
+    slot?: {
+      eq?: number;
+      gte?: number;
+      gt?: number;
+      lte?: number;
+      lt?: number;
+    };
+    blockTime?: {
+      eq?: number;
+      gte?: number;
+      gt?: number;
+      lte?: number;
+      lt?: number;
+    };
+    signature?: {
+      gte?: string;
+      gt?: string;
+      lte?: string;
+      lt?: string;
+    };
+  };
+};
+
+// Config for transactionDetails: "signatures" (default)
+export type GetTransactionsForAddressConfigSignatures =
+  GetTransactionsForAddressBaseConfig & {
+    transactionDetails?: "signatures";
+  };
+
+// Config for transactionDetails: "full"
+export type GetTransactionsForAddressConfigFull =
+  GetTransactionsForAddressBaseConfig & {
+    transactionDetails: "full";
+  };
+
+// Union config type
+export type GetTransactionsForAddressConfig =
+  | GetTransactionsForAddressConfigSignatures
+  | GetTransactionsForAddressConfigFull;
+
+// Response when transactionDetails: "signatures" (default)
+export type TransactionForAddressSignature = {
+  signature: string;
+  slot: number;
+  err: null | object;
+  memo: null | string;
+  blockTime: number;
+  confirmationStatus: "finalized" | "confirmed" | "processed";
+};
+
+// Response when transactionDetails: "full"
+export type TransactionForAddressFull = {
+  slot: number;
+  transaction: object;
+  meta: object | null;
+  blockTime: number | null;
+};
+
+// Result types for each variant
+export type GetTransactionsForAddressResultSignatures = {
+  data: ReadonlyArray<TransactionForAddressSignature>;
+  paginationToken: string | null;
+};
+
+export type GetTransactionsForAddressResultFull = {
+  data: ReadonlyArray<TransactionForAddressFull>;
+  paginationToken: string | null;
+};
