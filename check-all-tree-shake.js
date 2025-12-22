@@ -2,7 +2,8 @@ import { globSync } from 'glob';
 import { execSync } from 'child_process';
 import { relative } from 'path';
 
-const files = globSync('dist/**/*.js', { absolute: true });
+// Only check ESM build for tree-shakability (CJS doesn't need tree-shaking checks)
+const files = globSync('dist/esm/**/*.js', { absolute: true });
 
 files.forEach(file => {
   const relativePath = relative(process.cwd(), file);  // For nicer logging
