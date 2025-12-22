@@ -2,6 +2,7 @@ export type Commitment = "finalized" | "confirmed";
 
 export type TransactionType = string;
 export type TransactionSource = string;
+export type SortOrder = "asc" | "desc";
 
 export interface EnhancedNativeTransfer {
   fromUserAccount: string;
@@ -57,11 +58,20 @@ export type GetEnhancedTransactionsResponse = EnhancedTransaction[];
 /** GET /v0/addresses/:address/transactions */
 export interface GetEnhancedTransactionsByAddressRequest {
   address: string;
-  before?: string;
-  until?: string;
+  beforeSignature?: string;
+  afterSignature?: string;
   commitment?: Commitment;
   source?: TransactionSource;
   type?: TransactionType;
   limit?: number;
+  gtSlot?: number;
+  gteSlot?: number;
+  ltSlot?: number;
+  lteSlot?: number;
+  gtTime?: number;
+  gteTime?: number;
+  ltTime?: number;
+  lteTime?: number;
+  sortOrder?: SortOrder;
 }
 export type GetEnhancedTransactionsByAddressResponse = EnhancedTransaction[];

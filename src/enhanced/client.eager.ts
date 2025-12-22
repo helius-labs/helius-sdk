@@ -67,17 +67,43 @@ export const makeEnhancedTxClientEager = (
   };
 
   const getTransactionsByAddress: EnhancedTxClient["getTransactionsByAddress"] =
-    async ({ address, before, until, commitment, source, type, limit }) => {
+    async ({
+      address,
+      beforeSignature,
+      afterSignature,
+      commitment,
+      source,
+      type,
+      limit,
+      gtSlot,
+      gteSlot,
+      ltSlot,
+      lteSlot,
+      gtTime,
+      gteTime,
+      ltTime,
+      lteTime,
+      sortOrder,
+    }) => {
       const url =
         `${base}/addresses/${address}/transactions` +
         qs({
           "api-key": apiKey,
-          before,
-          until,
+          "before-signature": beforeSignature,
+          "after-signature": afterSignature,
           commitment,
           source,
           type,
           limit,
+          "gt-slot": gtSlot,
+          "gte-slot": gteSlot,
+          "lt-slot": ltSlot,
+          "lte-slot": lteSlot,
+          "gt-time": gtTime,
+          "gte-time": gteTime,
+          "lt-time": ltTime,
+          "lte-time": lteTime,
+          "sort-order": sortOrder,
         });
 
       const res = await fetch(url, { method: "GET" });

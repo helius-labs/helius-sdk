@@ -39,8 +39,8 @@ describe("Enhanced getTransactionsByAddress Tests", () => {
       commitment: "finalized",
       type: "NFT_SALE",
       source: "MAGIC_EDEN",
-      before: "someSigBefore",
-      until: "someSigUntil",
+      beforeSignature: "someSigBefore",
+      afterSignature: "someSigAfter",
     };
 
     const result = await client.getTransactionsByAddress(params);
@@ -59,8 +59,8 @@ describe("Enhanced getTransactionsByAddress Tests", () => {
     expect(url).toMatch(/type=NFT_SALE/);
     expect(url).toMatch(/source=MAGIC_EDEN/);
     expect(url).toMatch(/commitment=finalized/);
-    expect(url).toMatch(/before=someSigBefore/);
-    expect(url).toMatch(/until=someSigUntil/);
+    expect(url).toMatch(/before-signature=someSigBefore/);
+    expect(url).toMatch(/after-signature=someSigAfter/);
 
     expect(init).toMatchObject({ method: "GET" });
   });
