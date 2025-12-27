@@ -161,9 +161,6 @@ export type GetTokenAccountsByOwnerV2Response =
   | GetTokenAccountsByOwnerV2Result
   | RpcResponse<GetTokenAccountsByOwnerV2Result>;
 
-// getTransactionsForAddress types
-
-// Base config without transactionDetails
 export type GetTransactionsForAddressBaseConfig = {
   commitment?: Commitment;
   minContextSlot?: number;
@@ -174,24 +171,43 @@ export type GetTransactionsForAddressBaseConfig = {
   sortOrder?: "asc" | "desc";
   filters?: {
     status?: "succeeded" | "failed" | "any";
+    /** Filter by slot number */
     slot?: {
+      /** Equal to */
       eq?: number;
+      /** Greater than or equal to */
       gte?: number;
+      /** Greater than */
       gt?: number;
+      /** Less than or equal to */
       lte?: number;
+      /** Less than */
       lt?: number;
     };
+
+    /** Filter by block time (Unix timestamp) */
     blockTime?: {
+      /** Equal to */
       eq?: number;
+      /** Greater than or equal to */
       gte?: number;
+      /** Greater than */
       gt?: number;
+      /** Less than or equal to */
       lte?: number;
+      /** Less than */
       lt?: number;
     };
+
+    /** Filter by signature (lexicographic comparison) */
     signature?: {
+      /** Greater than or equal to */
       gte?: string;
+      /** Greater than */
       gt?: string;
+      /** Less than or equal to */
       lte?: string;
+      /** Less than */
       lt?: string;
     };
   };
@@ -218,6 +234,7 @@ export type GetTransactionsForAddressConfig =
 export type TransactionForAddressSignature = {
   signature: string;
   slot: number;
+  transactionIndex: number;
   err: null | object;
   memo: null | string;
   blockTime: number;
@@ -227,6 +244,7 @@ export type TransactionForAddressSignature = {
 // Response when transactionDetails: "full"
 export type TransactionForAddressFull = {
   slot: number;
+  transactionIndex: number;
   transaction: object;
   meta: object | null;
   blockTime: number | null;
