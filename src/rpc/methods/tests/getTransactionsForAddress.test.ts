@@ -27,6 +27,7 @@ describe("getTransactionsForAddress Tests", () => {
           signature:
             "5wHu1qwD7q2oogLJXZiNvf4JLpQw2gZSQWNYQEaFz8VjP1WtZkPvWZ1BZGZzJT2p",
           slot: 123456789,
+          transactionIndex: 0,
           err: null,
           memo: null,
           blockTime: 1700000000,
@@ -36,6 +37,7 @@ describe("getTransactionsForAddress Tests", () => {
           signature:
             "3xKu2rwE8r3ppgMKYZqNwg5KMrRx3hZTRWNZRFbGy9WkQ2XuAkQvXA2CZHZaKU3q",
           slot: 123456780,
+          transactionIndex: 1,
           err: null,
           memo: "test memo",
           blockTime: 1699999990,
