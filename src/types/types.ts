@@ -169,6 +169,8 @@ export type GetTransactionsForAddressBaseConfig = {
   limit?: number;
   paginationToken?: string | null;
   sortOrder?: "asc" | "desc";
+  // Include transactions from associated token accounts
+  includeTokenAccounts?: boolean;
   filters?: {
     status?: "succeeded" | "failed" | "any";
     // Filter by slot number
@@ -210,9 +212,6 @@ export type GetTransactionsForAddressBaseConfig = {
       // Less than
       lt?: string;
     };
-
-    // Include transactions from associated token accounts
-    includeTokenAccounts?: boolean;
   };
 };
 
