@@ -173,25 +173,25 @@ export type GetTransactionsForAddressBaseConfig = {
     status?: "succeeded" | "failed" | "any";
     // Filter by slot number
     slot?: {
-      // Equal to 
+      // Equal to
       eq?: number;
-      // Greater than or equal to 
+      // Greater than or equal to
       gte?: number;
-      // Greater than 
+      // Greater than
       gt?: number;
-      // Less than or equal to 
+      // Less than or equal to
       lte?: number;
-      // Less than 
+      // Less than
       lt?: number;
     };
 
     // Filter by block time (Unix timestamp)
     blockTime?: {
-      // Equal to 
+      // Equal to
       eq?: number;
-      // Greater than or equal to 
+      // Greater than or equal to
       gte?: number;
-      // Greater than 
+      // Greater than
       gt?: number;
       // Less than or equal to
       lte?: number;
@@ -201,7 +201,7 @@ export type GetTransactionsForAddressBaseConfig = {
 
     // Filter by signature (lexicographic comparison)
     signature?: {
-      // Greater than or equal to 
+      // Greater than or equal to
       gte?: string;
       // Greater than
       gt?: string;
