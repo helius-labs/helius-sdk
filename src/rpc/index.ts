@@ -40,9 +40,10 @@ import { StakeClientLazy } from "../staking/client";
 import { ZkClientLazy } from "../zk/client";
 
 interface HeliusRpcOptions {
-  apiKey: string;
+  apiKey?: string;
   network?: "mainnet" | "devnet";
   rebateAddress?: string;
+  baseUrl?: string;
 }
 
 export type HeliusClient = ResolvedHeliusRpcApi & {
@@ -101,10 +102,22 @@ export const createHelius = ({
   apiKey,
   network = "mainnet",
   rebateAddress,
+  baseUrl,
 }: HeliusRpcOptions): HeliusClient => {
-  const baseUrl = `https://${network}.helius-rpc.com/`;
-  const rebateParam = rebateAddress ? `&rebate-address=${rebateAddress}` : "";
-  const url = `${baseUrl}?api-key=${apiKey}${rebateParam}`;
+  // Use custom baseUrl if provided, otherwise construct from network
+  const resolvedBaseUrl = baseUrl ?? `https://${network}.helius-rpc.com/`;
+
+  // Build query parameters
+  const queryParams: string[] = [];
+  if (apiKey) {
+    queryParams.push(`api-key=${apiKey}`);
+  }
+  if (rebateAddress) {
+    queryParams.push(`rebate-address=${rebateAddress}`);
+  }
+
+  const queryString = queryParams.length > 0 ? `?${queryParams.join("&")}` : "";
+  const url = `${resolvedBaseUrl}${queryString}`;
 
   const solanaApi = createSolanaRpcApi(DEFAULT_RPC_CONFIG);
   const transport = createDefaultRpcTransport({ url });
@@ -349,7 +362,7 @@ export const createHelius = ({
       // This one import is enough since the sub-methods in the webhook client
       // are themselves lazily imported inside makeWebhookClient
       const { makeWebhookClient } = await import("../webhooks/client.js");
-      return makeWebhookClient(apiKey);
+      return makeWebhookClient(apiKey ?? "");
     }
   );
 
@@ -358,7 +371,7 @@ export const createHelius = ({
     "enhanced",
     async () => {
       const { makeEnhancedTxClientLazy } = await import("../enhanced");
-      return makeEnhancedTxClientLazy(apiKey, network);
+      return makeEnhancedTxClientLazy(apiKey ?? "", network);
     }
   );
 
