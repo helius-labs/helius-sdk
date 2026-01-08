@@ -118,8 +118,28 @@ import { createHelius } from "helius-sdk";
       console.log(`${i + 1}. Slot: ${tx.slot}, Signature: ${tx.signature.slice(0, 20)}...`);
     });
 
+    // Include token account transactions
+    console.log("\nExample 6: Include Token Account Transactions");
+    const withTokenAccounts = await helius.getTransactionsForAddress([
+      address,
+      {
+        limit: 10,
+        filters: {
+          includeTokenAccounts: true, // Include transactions from associated token accounts
+          blockTime: {
+            gte: Math.floor(Date.now() / 1000) - (7 * 24 * 60 * 60), // Last 7 days
+          },
+        },
+      },
+    ]);
+
+    console.log(`Found ${withTokenAccounts.data.length} transactions (including token accounts)`);
+    withTokenAccounts.data.forEach((tx, i) => {
+      console.log(`${i + 1}. Slot: ${tx.slot}, Signature: ${tx.signature.slice(0, 20)}...`);
+    });
+
     // Pagination with paginationToken
-    console.log("\nExample 6: Pagination");
+    console.log("\nExample 7: Pagination");
     // First page
     const page1 = await helius.getTransactionsForAddress([
       address,
