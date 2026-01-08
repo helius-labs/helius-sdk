@@ -124,8 +124,8 @@ import { createHelius } from "helius-sdk";
       address,
       {
         limit: 10,
+        includeTokenAccounts: true, // Include transactions from associated token accounts
         filters: {
-          includeTokenAccounts: true, // Include transactions from associated token accounts
           blockTime: {
             gte: Math.floor(Date.now() / 1000) - (7 * 24 * 60 * 60), // Last 7 days
           },
