@@ -5,6 +5,8 @@ import {
   DEFAULT_RPC_CONFIG,
 } from "@solana/kit";
 
+import { SDK_USER_AGENT } from "../http";
+
 import { wrapAutoSend } from "./wrapAutoSend";
 import type { WebhookClient } from "../webhooks/client";
 import type {
@@ -107,9 +109,12 @@ export const createHelius = ({
   const url = `${baseUrl}?api-key=${apiKey}${rebateParam}`;
 
   const solanaApi = createSolanaRpcApi(DEFAULT_RPC_CONFIG);
-  const transport = createDefaultRpcTransport({ url });
-  const customTransport = async <TResponse>(
-    request: Parameters<typeof transport>[0]
+  const baseTransport = createDefaultRpcTransport({
+    url,
+    headers: { "User-Agent": SDK_USER_AGENT },
+  });
+  const transport = async <TResponse>(
+    request: Parameters<typeof baseTransport>[0]
   ): Promise<TResponse> => {
     const payload = {
       ...(request.payload as Record<string, unknown>),
@@ -121,10 +126,10 @@ export const createHelius = ({
       payload,
     };
 
-    return transport(modifiedRequest) as Promise<TResponse>;
+    return baseTransport(modifiedRequest) as Promise<TResponse>;
   };
 
-  const baseRpc = createRpc({ api: solanaApi, transport: customTransport });
+  const baseRpc = createRpc({ api: solanaApi, transport });
   const raw: ResolvedHeliusRpcApi = wrapAutoSend(baseRpc);
 
   const wsUrl = new URL(url);

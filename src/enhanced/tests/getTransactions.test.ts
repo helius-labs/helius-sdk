@@ -59,9 +59,9 @@ describe("Enhanced getTransactions Tests", () => {
 
     expect(init).toMatchObject({
       method: "POST",
-      headers: { "content-type": "application/json" },
       body: JSON.stringify({ transactions: params.transactions }),
     });
+    expect(init.headers).toMatchObject({ "Content-Type": "application/json" });
   });
 
   it("Throws on non-2xx response", async () => {

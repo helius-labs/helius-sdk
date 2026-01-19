@@ -1,3 +1,5 @@
+import { SDK_USER_AGENT } from "../http";
+
 export const deleteWebhook = async (
   apiKey: string,
   webhookID: string
@@ -8,6 +10,7 @@ export const deleteWebhook = async (
     method: "DELETE",
     headers: {
       "Content-Type": "application/json",
+      "User-Agent": SDK_USER_AGENT,
     },
   });
 

@@ -4,6 +4,7 @@ import {
   type GetEnhancedTransactionsByAddressRequest,
   type GetEnhancedTransactionsByAddressResponse,
 } from "./types";
+import { SDK_USER_AGENT } from "../http";
 
 export interface EnhancedTxClient {
   getTransactions: (
@@ -59,7 +60,10 @@ export const makeEnhancedTxClientEager = (
 
     const res = await fetch(url, {
       method: "POST",
-      headers: { "content-type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "User-Agent": SDK_USER_AGENT,
+      },
       body: JSON.stringify({ transactions }),
     });
 
@@ -106,7 +110,10 @@ export const makeEnhancedTxClientEager = (
           "sort-order": sortOrder,
         });
 
-      const res = await fetch(url, { method: "GET" });
+      const res = await fetch(url, {
+        method: "GET",
+        headers: { "User-Agent": SDK_USER_AGENT },
+      });
       return handle<GetEnhancedTransactionsByAddressResponse>(res);
     };
 

@@ -1,4 +1,5 @@
 import type { Webhook } from "../types/webhooks";
+import { SDK_USER_AGENT } from "../http";
 
 export const getAllWebhooks = async (apiKey: string): Promise<Webhook[]> => {
   const url = `https://api.helius.xyz/v0/webhooks?api-key=${apiKey}`;
@@ -7,6 +8,7 @@ export const getAllWebhooks = async (apiKey: string): Promise<Webhook[]> => {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
+      "User-Agent": SDK_USER_AGENT,
     },
   });
 

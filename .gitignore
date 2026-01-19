@@ -4,6 +4,7 @@
 # Build/Output
 /dist
 /coverage
+src/version.ts
 
 # Logs
 *.log
