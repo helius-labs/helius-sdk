@@ -169,47 +169,51 @@ export type GetTransactionsForAddressBaseConfig = {
   limit?: number;
   paginationToken?: string | null;
   sortOrder?: "asc" | "desc";
-  // Include transactions from associated token accounts
-  includeTokenAccounts?: boolean;
   filters?: {
+    /** Filter by transaction status */
     status?: "succeeded" | "failed" | "any";
-    // Filter by slot number
+    /**
+     * Filter transactions for related token accounts:
+     * - `none`: Only return transactions that reference the provided address (default)
+     * - `balanceChanged`: Include transactions that modify token account balances owned by the address (recommended)
+     * - `all`: Include all transactions involving any token account owned by the address
+     */
+    tokenAccounts?: "none" | "balanceChanged" | "all";
+    /** Filter by slot number */
     slot?: {
-      // Equal to
+      /** Equal to */
       eq?: number;
-      // Greater than or equal to
+      /** Greater than or equal to */
       gte?: number;
-      // Greater than
+      /** Greater than */
       gt?: number;
-      // Less than or equal to
+      /** Less than or equal to */
       lte?: number;
-      // Less than
+      /** Less than */
       lt?: number;
     };
-
-    // Filter by block time (Unix timestamp)
+    /** Filter by block time (Unix timestamp) */
     blockTime?: {
-      // Equal to
+      /** Equal to */
       eq?: number;
-      // Greater than or equal to
+      /** Greater than or equal to */
       gte?: number;
-      // Greater than
+      /** Greater than */
       gt?: number;
-      // Less than or equal to
+      /** Less than or equal to */
       lte?: number;
-      // Less than
+      /** Less than */
       lt?: number;
     };
-
-    // Filter by signature (lexicographic comparison)
+    /** Filter by signature (lexicographic comparison) */
     signature?: {
-      // Greater than or equal to
+      /** Greater than or equal to */
       gte?: string;
-      // Greater than
+      /** Greater than */
       gt?: string;
-      // Less than or equal to
+      /** Less than or equal to */
       lte?: string;
-      // Less than
+      /** Less than */
       lt?: string;
     };
   };
