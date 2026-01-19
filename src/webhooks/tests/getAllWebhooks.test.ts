@@ -47,9 +47,9 @@ describe("getAllWebhooks Tests", () => {
       `https://api.helius.xyz/v0/webhooks?api-key=test-key`,
       expect.objectContaining({
         method: "GET",
-        headers: {
+        headers: expect.objectContaining({
           "Content-Type": "application/json",
-        },
+        }),
       })
     );
   });

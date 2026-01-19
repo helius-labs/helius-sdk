@@ -1,4 +1,5 @@
 import type { UpdateWebhookRequest, Webhook } from "../types/webhooks";
+import { SDK_USER_AGENT } from "../http";
 
 export const updateWebhook = async (
   apiKey: string,
@@ -11,6 +12,7 @@ export const updateWebhook = async (
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
+      "User-Agent": SDK_USER_AGENT,
     },
     body: JSON.stringify(params),
   });

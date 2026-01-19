@@ -46,9 +46,9 @@ describe("createWebhook Tests", () => {
       `https://api.helius.xyz/v0/webhooks?api-key=test-key`,
       expect.objectContaining({
         method: "POST",
-        headers: {
+        headers: expect.objectContaining({
           "Content-Type": "application/json",
-        },
+        }),
         body: JSON.stringify(mockParams),
       })
     );

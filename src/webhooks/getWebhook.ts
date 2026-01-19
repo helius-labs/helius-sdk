@@ -1,4 +1,5 @@
 import { Webhook } from "../types/webhooks";
+import { SDK_USER_AGENT } from "../http";
 
 export const getWebhook = async (
   apiKey: string,
@@ -10,6 +11,7 @@ export const getWebhook = async (
     method: "GET",
     headers: {
       "Content-Type": "application/json",
+      "User-Agent": SDK_USER_AGENT,
     },
   });
 
