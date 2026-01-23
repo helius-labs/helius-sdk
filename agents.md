@@ -24,14 +24,16 @@ pnpm check-bundle              # Verify tree-shakability and bundle sizes
 
 ## Structure
 
-**Core:**
+### Core
+
 - `src/rpc/index.ts` - Main Helius client with lazy-loaded methods
 - `src/rpc/methods/` - DAS API & RPC V2 methods (getAsset, getProgramAccountsV2, etc.)
 - `src/rpc/wrapAutoSend.ts` - Auto-send transaction wrapper
 - `src/rpc/caller.ts` - Lightweight RPC caller for custom methods
 - `src/http.ts` - HTTP client with SDK User-Agent
 
-**Feature Modules:**
+### Feature Modules
+
 - `src/transactions/` - Smart transactions & Helius Sender
 - `src/webhooks/` - Webhook management (create, update, delete)
 - `src/enhanced/` - Enhanced transaction parsing
@@ -39,43 +41,50 @@ pnpm check-bundle              # Verify tree-shakability and bundle sizes
 - `src/websockets/` - WebSocket subscriptions (logs, slots, accounts, etc.)
 - `src/zk/` - ZK Compression methods
 
-**Types:**
+### Types
+
 - `src/types/das.ts` - DAS API types (Asset, GetAssetRequest, etc.)
 - `src/types/enums.ts` - Network, TransactionDetails, TokenAccountsFilter
 - `src/types/webhooks.ts` - Webhook types
 
-**Other:**
+### Other
+
 - `examples/` - Usage examples organized by namespace
 - `src/*/tests/` - Jest tests colocated with source files
 - `dist/` - Generated ESM & CJS output
 
 ## Architecture & Design Decisions
 
-**Lazy Loading:**
+### Lazy Loading
+
 - Reduces initial bundle size by 70%+ (only load methods you use)
 - Critical for frontend applications where bundle size impacts load time
 - Enables tree-shaking for optimal production builds
 - Implementation: `defineLazyMethod` and `defineLazyNamespace` in `src/rpc/lazy.ts`
 
-**@solana/kit over @solana/web3.js:**
+### @solana/kit over @solana/web3.js
+
 - Modern, tree-shakeable architecture (web3.js 1.x is ~2MB, Kit is modular)
 - Better TypeScript support with strict types
 - Improved performance and smaller bundle sizes
 - Future-proof: Solana Foundation's recommended SDK going forward
 - See [MIGRATION.md](MIGRATION.md) for migration details
 
-**Dual ESM/CJS Exports:**
+### Dual ESM/CJS Exports
+
 - ESM: Modern bundlers (Vite, Webpack 5, Rollup) for optimal tree-shaking
 - CJS: Compatibility with legacy Node.js tools and Jest
 - Rollup configuration generates both formats from single source
 
-**Colocated Tests:**
+### Colocated Tests
+
 - Easier to find and maintain tests alongside source code
 - Clear import paths (e.g., `import { makeGetAsset } from "../getAsset"`)
 - Encourages comprehensive test coverage
 - Tests mirror the `src/` directory structure in `src/*/tests/`
 
-**SDK User-Agent Tracking:**
+### SDK User-Agent Tracking
+
 - All requests include `User-Agent: helius-node-sdk/<version> (node|browser|deno)`
 - Helps Helius optimize infrastructure and identify SDK-specific issues
 - Located in [src/http.ts](src/http.ts) as `SDK_USER_AGENT` constant
@@ -83,7 +92,8 @@ pnpm check-bundle              # Verify tree-shakability and bundle sizes
 
 ## Code Style
 
-**Client Usage:**
+### Client Usage
+
 ```typescript
 import { createHelius } from "helius-sdk";
 
@@ -119,14 +129,16 @@ const account = await helius.zk.getCompressedAccount({ hash: "accountHash" });
 const balance = await helius.getBalance("address");
 ```
 
-**TypeScript Conventions:**
+### TypeScript Conventions
+
 - **Naming:** camelCase (functions/variables), PascalCase (types/interfaces), SCREAMING_SNAKE_CASE (constants)
 - **Strict Types:** Enable all strict TypeScript options (noImplicitAny, noUnusedLocals, noUnusedParameters)
 - **Async:** Use async/await with try/catch for error handling
 - **Exports:** Named exports preferred over default exports
 - **File Naming:** camelCase or kebab-case, consistent with surrounding files
 
-**Lazy Loading:**
+### Lazy Loading Pattern
+
 ```typescript
 // Methods are lazily imported to reduce bundle size
 defineLazyMethod<HeliusClient, GetAssetFn>(client, "getAsset", async () => {
@@ -135,7 +147,8 @@ defineLazyMethod<HeliusClient, GetAssetFn>(client, "getAsset", async () => {
 });
 ```
 
-**Type Overloads (getTransactionsForAddress):**
+### Type Overloads (getTransactionsForAddress)
+
 ```typescript
 // Return type depends on transactionDetails config
 export type GetTransactionsForAddressFn = {
@@ -147,7 +160,8 @@ export type GetTransactionsForAddressFn = {
 };
 ```
 
-**TokenAccountsFilter (getTransactionsForAddress):**
+### TokenAccountsFilter (getTransactionsForAddress)
+
 ```typescript
 // Options: "all" (include all token account txs), "balanceChanged" (only txs that changed balance), or omit
 const result = await helius.getTransactionsForAddress([
@@ -178,7 +192,8 @@ describe("getAsset", () => {
 });
 ```
 
-**Testing Priorities:**
+### Testing Priorities
+
 - RPC methods and type correctness
 - Error handling and edge cases
 - Lazy loading behavior
@@ -186,13 +201,18 @@ describe("getAsset", () => {
 - Webhook CRUD operations
 - WebSocket subscriptions
 
-**Coverage:** Aim for 65%+ test coverage (run `pnpm test:coverage`)
+### Coverage
 
-**CI:** GitHub Actions runs format checks on all PRs to main/dev
+Aim for 65%+ test coverage (run `pnpm test:coverage`)
+
+### CI
+
+GitHub Actions runs format checks on all PRs to main/dev
 
 ## Common Patterns
 
-**Adding a New RPC Method:**
+### Adding a New RPC Method
+
 1. Create method file in `src/rpc/methods/yourMethod.ts`
 2. Export a factory function: `export const makeYourMethod = (call: RpcCaller) => ...`
 3. Define function type with proper overloads if needed
@@ -207,7 +227,8 @@ describe("getAsset", () => {
 6. Create test file in `src/rpc/methods/tests/yourMethod.test.ts`
 7. Add usage example in `examples/helius/yourMethod.ts`
 
-**Adding a New Namespace:**
+### Adding a New Namespace
+
 1. Create namespace directory: `src/yourNamespace/`
 2. Create client file: `src/yourNamespace/client.ts`
 3. Export factory function: `export const makeYourNamespaceClient = (params) => { ... }`
@@ -222,13 +243,15 @@ describe("getAsset", () => {
 6. Create tests in `src/yourNamespace/tests/`
 7. Add examples in `examples/yourNamespace/`
 
-**Adding New Types:**
+### Adding New Types
+
 - DAS API types: Add to `src/types/das.ts`
 - Enums: Add to `src/types/enums.ts`
 - Namespace-specific types: Create `src/yourNamespace/types.ts` or add to existing namespace files
 - Always export types for external use
 
-**Working with @solana/kit:**
+### Working with @solana/kit
+
 ```typescript
 // Import Kit types and functions
 import { address, lamports, type Address } from "@solana/kit";
@@ -243,9 +266,12 @@ const balance = await baseRpc.getBalance(addr).send();
 
 ## Git Workflow
 
-**Branches:** `main` (stable, target for PRs)
+### Branches
 
-**PR Process:**
+`main` (stable, target for PRs)
+
+### PR Process
+
 1. Fork and branch from `main`
 2. Run `pnpm format && pnpm lint && pnpm test && pnpm check-bundle`
 3. Open PR to `main`
@@ -254,7 +280,8 @@ const balance = await baseRpc.getBalance(addr).send();
 5. Include Co-Authored-By for AI: `Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>`
 6. Reference related issues (e.g., `Closes #123`)
 
-**Releases:**
+### Releases
+
 ```bash
 # Update version in package.json
 git tag -a v2.1.0 -m "Release v2.1.0"
@@ -264,9 +291,12 @@ pnpm publish
 
 ## Boundaries
 
-**Never commit:** API keys, secrets, .env files, private keys, wallet seed phrases
+### Never Commit
 
-**SDK Version Tracking:**
+API keys, secrets, .env files, private keys, wallet seed phrases
+
+### SDK Version Tracking
+
 - All HTTP requests include SDK version in User-Agent header
 - Format: `helius-node-sdk/<version> (node|browser|deno)`
 - Automatically set via `SDK_USER_AGENT` constant in [src/http.ts](src/http.ts)
@@ -274,23 +304,27 @@ pnpm publish
 - Never manually modify the User-Agent header in SDK code
 - Critical for debugging, support, and infrastructure optimization
 
-**Compatibility:**
+### Compatibility
+
 - Match Helius API specs exactly (see [docs.helius.dev](https://docs.helius.dev))
 - Support both ESM and CJS via dual exports
 - Maintain tree-shakability (avoid top-level side effects)
 - Follow @solana/kit patterns for RPC methods
 - Minimum Node.js version: 20+ (requires native fetch support)
 
-**Migration from 1.x to 2.x:**
+### Migration from 1.x to 2.x
+
 - SDK now uses `@solana/kit` instead of `@solana/web3.js` 1.x
 - See [MIGRATION.md](MIGRATION.md) for detailed migration guide
 - Kit docs: [solanakit.com](https://www.solanakit.com/)
 
-**Breaking Changes:**
+### Breaking Changes
+
 - Bump version (major for breaking, minor for features, patch for fixes)
 - Provide migration guide in PR description
 
-**Performance:**
+### Performance
+
 - All methods are lazy-loaded to minimize bundle size
 - Use tree-shaking-friendly exports
 - Run `pnpm check-bundle` to verify bundle size impact
