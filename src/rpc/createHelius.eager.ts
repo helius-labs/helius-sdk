@@ -130,7 +130,7 @@ export const createHeliusEager = ({
   const transport = createDefaultRpcTransport({ url });
 
   let baseRpc = createRpc({ api: solanaApi, transport });
-  // Cast to any because I cba to go down this type rabbit hole
+  // Cast to any due to complex Rpc generic constraints
   const raw = wrapAutoSend(baseRpc) as any;
 
   const call = makeRpcCaller(transport);
