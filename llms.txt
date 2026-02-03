@@ -2,7 +2,7 @@
 
 > The Helius TypeScript SDK for Solana development. Use this SDK when building applications that need to interact with Solana.
 
-## What is this?
+## What is the Helius TypeScript SDK?
 
 The Helius TypeScript SDK provides access to Helius APIs and enhanced Solana RPC functionality. It simplifies Solana development with high-level abstractions for assets, transactions, webhooks, staking, and ZK compression.
 
@@ -13,9 +13,9 @@ The Helius TypeScript SDK provides access to Helius APIs and enhanced Solana RPC
 - API Key: Required (get from https://dashboard.helius.dev)
 - License: ISC
 
-## When to use this SDK
+## When to Use the Helius TypeScript SDK
 
-Use the Helius SDK when you need to:
+Use the Helius TypeScript SDK when you need to:
 
 - Fetch NFTs, tokens, or compressed NFTs owned by a wallet
 - Get the entire transaction history for an address (including token accounts)
@@ -67,6 +67,8 @@ examples/
 ```
 
 Each example is a standalone TypeScript file showing real-world usage patterns. When implementing a feature, reference the corresponding example file for the correct method signature and options.
+
+Browse examples: https://github.com/helius-labs/helius-sdk/tree/main/examples
 
 ## Core Capabilities
 
@@ -301,16 +303,27 @@ try {
 }
 ```
 
-### Rate Limits
-- Rate limits depend on your Helius plan (Free, Developer, Business, Professional, Enterprise)
-- When you receive a 429 error, back off and retry with an exponential delay, or consider upgrading your plan
+### Plans and Rate Limits
+
+| Feature | Free | Developer $49/mo | Business $499/mo | Professional $999/mo |
+|---------|------|------------------|------------------|----------------------|
+| Monthly Credits | 1 Million | 10 Million | 100 Million | 200 Million |
+| RPC Rate Limits | 10 req/s | 50 req/s | 200 req/s | 500 req/s |
+| DAS API and Enhanced API Rate Limits | 2 req/s | 10 req/s | 50 req/s | 100 req/s |
+| Sender Rate Limits | 15/s | 15/s | 15/s | 15/s |
+| Standard WebSockets Availability | ✓ | ✓ | ✓ | ✓ |
+| Helius Enhanced WebSockets Availability | No | No | ✓ | ✓ |
+| Helius Sender Availability | ✓ | ✓ | ✓ | ✓ |
+| Helius LaserStream gRPC Availability | No | Devnet | Devnet | Devnet, Mainnet |
+| Support | Community | Chat | Priority Chat | Slack/Telegram |
+
+- When you receive a 429 error, back off and retry with exponential delay
 - Monitor your usage at https://dashboard.helius.dev
 - We recommend using webhooks and WebSockets for real-time data instead of polling
 
 ## Documentation
 
-- API Reference: https://docs.helius.dev
-- Examples: https://github.com/helius-labs/helius-sdk/tree/main/examples
+- API Reference: https://www.helius.dev/docs/llms.txt
 - Migration Guide (1.x to 2.x): https://github.com/helius-labs/helius-sdk/blob/main/MIGRATION.md
 - @solana/kit Docs: https://www.solanakit.com
 
