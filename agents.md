@@ -1,4 +1,4 @@
-# Helius Node.js SDK - Agent Guide
+# Helius TypeScript SDK - Agent Guide
 
 ## Overview
 
