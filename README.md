@@ -1,9 +1,9 @@
-# Helius Node.js SDK
+# Helius TypeScript SDK
 
 [![Version](https://img.shields.io/npm/v/helius-sdk)](https://www.npmjs.org/package/helius-sdk)
 ![Downloads](https://img.shields.io/npm/dm/helius-sdk)
 
-The Helius Node.js SDK provides access to Helius-related methods and APIs using TypeScript, making building on Solana as easy as possible.
+The Helius TypeScript SDK provides access to Helius APIs and enhanced Solana RPC functionality, making building on Solana as easy as possible.
 
 ## Documentation
 
