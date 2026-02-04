@@ -193,7 +193,9 @@ describe("createHeliusEager", () => {
 
   describe("webhooks without apiKey", () => {
     it("throws error when accessing webhooks methods without apiKey", () => {
-      const rpc = createHeliusEager({ baseUrl: "https://custom-rpc.example.com/" });
+      const rpc = createHeliusEager({
+        baseUrl: "https://custom-rpc.example.com/",
+      });
 
       expect(() => rpc.webhooks.getAll()).toThrow(
         "An API key is required to use webhooks/enhanced transactions. Provide apiKey in createHelius() options."
@@ -201,7 +203,9 @@ describe("createHeliusEager", () => {
     });
 
     it("throws error when accessing webhooks.create without apiKey", () => {
-      const rpc = createHeliusEager({ baseUrl: "https://custom-rpc.example.com/" });
+      const rpc = createHeliusEager({
+        baseUrl: "https://custom-rpc.example.com/",
+      });
 
       expect(() =>
         rpc.webhooks.create({
@@ -218,7 +222,9 @@ describe("createHeliusEager", () => {
 
   describe("enhanced without apiKey", () => {
     it("throws error when accessing enhanced methods without apiKey", () => {
-      const rpc = createHeliusEager({ baseUrl: "https://custom-rpc.example.com/" });
+      const rpc = createHeliusEager({
+        baseUrl: "https://custom-rpc.example.com/",
+      });
 
       expect(() => rpc.enhanced.getTransactions({ transactions: [] })).toThrow(
         "An API key is required to use webhooks/enhanced transactions. Provide apiKey in createHelius() options."
@@ -226,7 +232,9 @@ describe("createHeliusEager", () => {
     });
 
     it("throws error when accessing enhanced.getTransactionsByAddress without apiKey", () => {
-      const rpc = createHeliusEager({ baseUrl: "https://custom-rpc.example.com/" });
+      const rpc = createHeliusEager({
+        baseUrl: "https://custom-rpc.example.com/",
+      });
 
       expect(() =>
         rpc.enhanced.getTransactionsByAddress({
