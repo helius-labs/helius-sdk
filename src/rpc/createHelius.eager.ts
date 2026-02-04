@@ -80,6 +80,7 @@ import {
   GetTransactionsForAddressFn,
   makeGetTransactionsForAddress,
 } from "./methods/getTransactionsForAddress";
+import type { HeliusRpcOptions } from "./types";
 
 export interface HeliusClientEager {
   raw: ResolvedHeliusRpcApi;
@@ -112,19 +113,26 @@ export interface HeliusClientEager {
   tx: TxHelpersEager;
 }
 
-export type HeliusRpcOptions = {
-  apiKey: string;
-  network?: "mainnet" | "devnet";
-  rebateAddress?: string;
-};
-
 export const createHeliusEager = ({
   apiKey,
   network = "mainnet",
   rebateAddress,
+  baseUrl,
 }: HeliusRpcOptions): HeliusClientEager => {
-  const rebateParam = rebateAddress ? `&rebate-address=${rebateAddress}` : "";
-  const url = `https://${network}.helius-rpc.com/?api-key=${apiKey}${rebateParam}`;
+  // Use custom baseUrl if provided, otherwise construct from network
+  const resolvedBaseUrl = baseUrl ?? `https://${network}.helius-rpc.com/`;
+
+  // Build query parameters
+  const queryParams: string[] = [];
+  if (apiKey) {
+    queryParams.push(`api-key=${apiKey}`);
+  }
+  if (rebateAddress) {
+    queryParams.push(`rebate-address=${rebateAddress}`);
+  }
+
+  const queryString = queryParams.length > 0 ? `?${queryParams.join("&")}` : "";
+  const url = `${resolvedBaseUrl}${queryString}`;
 
   const solanaApi = createSolanaRpcApi(DEFAULT_RPC_CONFIG);
   const transport = createDefaultRpcTransport({ url });
@@ -163,10 +171,24 @@ export const createHeliusEager = ({
     getTransactionsForAddress: makeGetTransactionsForAddress(call),
 
     // Webhooks
-    webhooks: makeWebhookClientEager(apiKey),
+    get webhooks() {
+      if (!apiKey) {
+        throw new Error(
+          "An API key is required to use webhooks/enhanced transactions. Provide apiKey in createHelius() options."
+        );
+      }
+      return makeWebhookClientEager(apiKey);
+    },
 
     // Enhanced Transactions
-    enhanced: makeEnhancedTxClientEager(apiKey, network),
+    get enhanced() {
+      if (!apiKey) {
+        throw new Error(
+          "An API key is required to use webhooks/enhanced transactions. Provide apiKey in createHelius() options."
+        );
+      }
+      return makeEnhancedTxClientEager(apiKey, network);
+    },
 
     // Transaction helpers
     tx: makeTxHelpersEager(baseRpc as unknown as Rpc<SolanaRpcApi>),

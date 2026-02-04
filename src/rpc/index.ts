@@ -40,12 +40,9 @@ import type { ResolvedHeliusRpcApi } from "./heliusRpcApi";
 import { makeWsAsync, WsAsync } from "../websockets/wsAsync";
 import { StakeClientLazy } from "../staking/client";
 import { ZkClientLazy } from "../zk/client";
+import type { HeliusRpcOptions } from "./types";
 
-interface HeliusRpcOptions {
-  apiKey: string;
-  network?: "mainnet" | "devnet";
-  rebateAddress?: string;
-}
+export type { HeliusRpcOptions };
 
 export type HeliusClient = ResolvedHeliusRpcApi & {
   raw: ResolvedHeliusRpcApi;
@@ -103,10 +100,22 @@ export const createHelius = ({
   apiKey,
   network = "mainnet",
   rebateAddress,
+  baseUrl,
 }: HeliusRpcOptions): HeliusClient => {
-  const baseUrl = `https://${network}.helius-rpc.com/`;
-  const rebateParam = rebateAddress ? `&rebate-address=${rebateAddress}` : "";
-  const url = `${baseUrl}?api-key=${apiKey}${rebateParam}`;
+  // Use custom baseUrl if provided, otherwise construct from network
+  const resolvedBaseUrl = baseUrl ?? `https://${network}.helius-rpc.com/`;
+
+  // Build query parameters
+  const queryParams: string[] = [];
+  if (apiKey) {
+    queryParams.push(`api-key=${apiKey}`);
+  }
+  if (rebateAddress) {
+    queryParams.push(`rebate-address=${rebateAddress}`);
+  }
+
+  const queryString = queryParams.length > 0 ? `?${queryParams.join("&")}` : "";
+  const url = `${resolvedBaseUrl}${queryString}`;
 
   const solanaApi = createSolanaRpcApi(DEFAULT_RPC_CONFIG);
   const baseTransport = createDefaultRpcTransport({
@@ -351,6 +360,11 @@ export const createHelius = ({
     client,
     "webhooks",
     async () => {
+      if (!apiKey) {
+        throw new Error(
+          "An API key is required to use webhooks/enhanced transactions. Provide apiKey in createHelius() options."
+        );
+      }
       // This one import is enough since the sub-methods in the webhook client
       // are themselves lazily imported inside makeWebhookClient
       const { makeWebhookClient } = await import("../webhooks/client.js");
@@ -362,6 +376,11 @@ export const createHelius = ({
     client,
     "enhanced",
     async () => {
+      if (!apiKey) {
+        throw new Error(
+          "An API key is required to use webhooks/enhanced transactions. Provide apiKey in createHelius() options."
+        );
+      }
       const { makeEnhancedTxClientLazy } = await import("../enhanced");
       return makeEnhancedTxClientLazy(apiKey, network);
     }
