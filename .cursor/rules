@@ -1,11 +1,11 @@
 ## Project Context
 
-The Helius SDK is a Node.js library that provides seamless access to various Helius APIs for interacting with Solana. The codebase is written in TypeScript, leverages @solana/kit for blockchain operations, Jest for testing, and uses pnpm for dependency management. It is designed to offer robust, modular, and high-performance tooling for developers building on Solana, with a focus on tree-shakability and minimal bundle sizes.
+The Helius TypeScript SDK provides seamless access to various Helius APIs for interacting with Solana. The SDK is written in TypeScript, leverages @solana/kit for blockchain operations, Jest for testing, and uses pnpm for dependency management. It is designed to offer robust, modular, and high-performance tooling for developers building on Solana, with a focus on tree-shakability and minimal bundle sizes. The SDK is runtime-agnostic and works in Node.js, browsers, Deno, Bun, and edge runtimes (Cloudflare Workers, Vercel Edge, etc.).
 
 ## Coding Guidelines
 
-- **Node.js & Architecture:**
-  - Follow best practices for Node.js development and maintain a modular code structure.
+- **TypeScript & Architecture:**
+  - Follow TypeScript best practices and maintain a modular code structure.
   - Organize functionality into clear segments (e.g., DAS, Webhooks, Staking, Transactions, WebSockets, Enhanced Transactions, and ZK Compression).
   - Ensure files do not have any side-effects: The SDK is designed with tree-shakability in mind; ensure no top-level side effects are introduced during development (e.g., no runtime function calls in constants; use type assertsions. We can do `"ComputeBudget111111111111111111111111111111" as Address` instead of using Kit's `address()`).
 
