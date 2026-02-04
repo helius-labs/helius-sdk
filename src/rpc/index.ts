@@ -38,13 +38,9 @@ import type { ResolvedHeliusRpcApi } from "./heliusRpcApi";
 import { makeWsAsync, WsAsync } from "../websockets/wsAsync";
 import { StakeClientLazy } from "../staking/client";
 import { ZkClientLazy } from "../zk/client";
+import type { HeliusRpcOptions } from "./types";
 
-interface HeliusRpcOptions {
-  apiKey?: string;
-  network?: "mainnet" | "devnet";
-  rebateAddress?: string;
-  baseUrl?: string;
-}
+export type { HeliusRpcOptions };
 
 export type HeliusClient = ResolvedHeliusRpcApi & {
   raw: ResolvedHeliusRpcApi;
@@ -359,10 +355,15 @@ export const createHelius = ({
     client,
     "webhooks",
     async () => {
+      if (!apiKey) {
+        throw new Error(
+          "An API key is required to use webhooks/enhanced transactions. Provide apiKey in createHelius() options."
+        );
+      }
       // This one import is enough since the sub-methods in the webhook client
       // are themselves lazily imported inside makeWebhookClient
       const { makeWebhookClient } = await import("../webhooks/client.js");
-      return makeWebhookClient(apiKey ?? "");
+      return makeWebhookClient(apiKey);
     }
   );
 
@@ -370,8 +371,13 @@ export const createHelius = ({
     client,
     "enhanced",
     async () => {
+      if (!apiKey) {
+        throw new Error(
+          "An API key is required to use webhooks/enhanced transactions. Provide apiKey in createHelius() options."
+        );
+      }
       const { makeEnhancedTxClientLazy } = await import("../enhanced");
-      return makeEnhancedTxClientLazy(apiKey ?? "", network);
+      return makeEnhancedTxClientLazy(apiKey, network);
     }
   );
 

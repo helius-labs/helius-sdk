@@ -80,6 +80,7 @@ import {
   GetTransactionsForAddressFn,
   makeGetTransactionsForAddress,
 } from "./methods/getTransactionsForAddress";
+import type { HeliusRpcOptions } from "./types";
 
 export interface HeliusClientEager {
   raw: ResolvedHeliusRpcApi;
@@ -111,13 +112,6 @@ export interface HeliusClientEager {
 
   tx: TxHelpersEager;
 }
-
-export type HeliusRpcOptions = {
-  apiKey?: string;
-  network?: "mainnet" | "devnet";
-  rebateAddress?: string;
-  baseUrl?: string;
-};
 
 export const createHeliusEager = ({
   apiKey,
@@ -177,10 +171,24 @@ export const createHeliusEager = ({
     getTransactionsForAddress: makeGetTransactionsForAddress(call),
 
     // Webhooks
-    webhooks: makeWebhookClientEager(apiKey ?? ""),
+    get webhooks() {
+      if (!apiKey) {
+        throw new Error(
+          "An API key is required to use webhooks/enhanced transactions. Provide apiKey in createHelius() options."
+        );
+      }
+      return makeWebhookClientEager(apiKey);
+    },
 
     // Enhanced Transactions
-    enhanced: makeEnhancedTxClientEager(apiKey ?? "", network),
+    get enhanced() {
+      if (!apiKey) {
+        throw new Error(
+          "An API key is required to use webhooks/enhanced transactions. Provide apiKey in createHelius() options."
+        );
+      }
+      return makeEnhancedTxClientEager(apiKey, network);
+    },
 
     // Transaction helpers
     tx: makeTxHelpersEager(baseRpc as unknown as Rpc<SolanaRpcApi>),
