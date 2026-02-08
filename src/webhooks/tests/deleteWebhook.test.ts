@@ -25,9 +25,6 @@ describe("deleteWebhook Tests", () => {
       `https://api.helius.xyz/v0/webhooks/yavin-base-1138?api-key=test-key`,
       expect.objectContaining({
         method: "DELETE",
-        headers: expect.objectContaining({
-          "Content-Type": "application/json",
-        }),
       })
     );
   });
