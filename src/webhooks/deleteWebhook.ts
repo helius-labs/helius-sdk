@@ -9,7 +9,6 @@ export const deleteWebhook = async (
   const response = await fetch(url, {
     method: "DELETE",
     headers: {
-      "Content-Type": "application/json",
       "User-Agent": SDK_USER_AGENT,
     },
   });
