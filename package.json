@@ -59,6 +59,11 @@
       "import": "./dist/esm/zk/*.js",
       "require": "./dist/cjs/zk/*.cjs"
     },
+    "./wallet/*": {
+      "types": "./dist/esm/wallet/*.d.ts",
+      "import": "./dist/esm/wallet/*.js",
+      "require": "./dist/cjs/wallet/*.cjs"
+    },
     "./types/*": {
       "types": "./dist/esm/types/*.d.ts",
       "import": "./dist/esm/types/*.js",
