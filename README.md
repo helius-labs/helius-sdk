@@ -222,3 +222,14 @@ Estimate optimal priority fees for Solana transactions. Available on the `helius
 - [`getMultipleNewAddressProofsV2()`](https://www.helius.dev/docs/api-reference/zk-compression/getmultiplenewaddressProofsv2): Returns proofs that the new addresses are not taken already and can be created.
 - [`getTransactionWithCompressionInfo()`](https://www.helius.dev/docs/api-reference/zk-compression/gettransactionwithcompressioninfo): Returns the transaction data for the transaction with the given signature along with parsed compression info.
 - [`getValidityProof()`](https://www.helius.dev/docs/api-reference/zk-compression/getvalidityproof): Returns a single ZK Proof used by the compression program to verify that the given accounts are valid and that the new addresses can be created.
+
+[**Wallet API**](https://www.helius.dev/docs/wallet-api) **(Beta)**
+
+Query wallet data including identity, balances, history, and transfers. Available on the `helius.wallet` namespace.
+
+- [`getIdentity()`](https://www.helius.dev/docs/api-reference/wallet-api/identity): Get wallet identity for known addresses (e.g., exchanges, protocols)
+- [`getBatchIdentity()`](https://www.helius.dev/docs/api-reference/wallet-api/identity): Batch identity lookup for up to 100 addresses
+- [`getBalances()`](https://www.helius.dev/docs/api-reference/wallet-api/balances): Get all token and NFT balances with USD values and pagination
+- [`getHistory()`](https://www.helius.dev/docs/api-reference/wallet-api/history): Fetch transaction history with balance changes and pagination
+- [`getTransfers()`](https://www.helius.dev/docs/api-reference/wallet-api/transfers): Get all token transfer activity with sender/recipient information
+- [`getFundedBy()`](https://www.helius.dev/docs/api-reference/wallet-api/funded-by): Discover the original funding source for a wallet
