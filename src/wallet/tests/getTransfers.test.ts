@@ -16,7 +16,8 @@ describe("getTransfers Tests", () => {
     const mockResponse: GetTransfersResponse = {
       data: [
         {
-          signature: "5wHu1qwD7Jsj3xqWjdSEJmYr3Q5f5RjXqjqQJ7jqEj7jqEj7jqEj7jqEj7jqEj7jqE",
+          signature:
+            "5wHu1qwD7Jsj3xqWjdSEJmYr3Q5f5RjXqjqQJ7jqEj7jqEj7jqEj7jqEj7jqEj7jqE",
           timestamp: 1704067200,
           direction: "in",
           counterparty: "HXsKP7wrBWaQ8T2Vtjry3Nj3oUgwYcqq9vrHDM12G664",

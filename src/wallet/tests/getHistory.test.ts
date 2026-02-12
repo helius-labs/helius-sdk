@@ -16,7 +16,8 @@ describe("getHistory Tests", () => {
     const mockResponse: GetHistoryResponse = {
       data: [
         {
-          signature: "5wHu1qwD7Jsj3xqWjdSEJmYr3Q5f5RjXqjqQJ7jqEj7jqEj7jqEj7jqEj7jqEj7jqE",
+          signature:
+            "5wHu1qwD7Jsj3xqWjdSEJmYr3Q5f5RjXqjqQJ7jqEj7jqEj7jqEj7jqEj7jqEj7jqE",
           timestamp: 1704067200,
           slot: 250000000,
           fee: 0.000005,

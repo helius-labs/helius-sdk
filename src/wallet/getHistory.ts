@@ -1,4 +1,9 @@
-import { BASE_URL, buildQueryString, handleResponse, getHeaders } from "./utils";
+import {
+  BASE_URL,
+  buildQueryString,
+  handleResponse,
+  getHeaders,
+} from "./utils";
 import type { GetHistoryRequest, GetHistoryResponse } from "./types";
 
 /**

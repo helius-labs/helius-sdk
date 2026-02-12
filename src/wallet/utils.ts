@@ -17,14 +17,11 @@ export const BASE_URL = "https://api.helius.xyz/v1/wallet";
  * // Returns: "?api-key=test&page=1"
  * ```
  */
-export const buildQueryString = (
-  params: Record<string, unknown>
-): string => {
+export const buildQueryString = (params: Record<string, unknown>): string => {
   const filtered = Object.entries(params)
     .filter(([, v]) => v !== undefined && v !== null)
     .map(
-      ([k, v]) =>
-        `${encodeURIComponent(k)}=${encodeURIComponent(String(v))}`
+      ([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(String(v))}`
     )
     .join("&");
 

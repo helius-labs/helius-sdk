@@ -5,7 +5,7 @@
  *
  * For complete API documentation, see:
  * https://www.helius.dev/docs/api-reference/wallet-api
- * 
+ *
  * For agents, see:
  * https://www.helius.dev/docs/api-reference/wallet-api/llms.txt
  */
