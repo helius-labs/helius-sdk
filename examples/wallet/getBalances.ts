@@ -8,7 +8,7 @@ import { createHelius } from "helius-sdk";
     // Replace with the wallet address you want to check
     const walletAddress = "86xCnPeV69n6t3DnyGvkKobf9FdN2H9oiVDdaMpo2MMY";
 
-    console.log(`\n💰 Fetching balances for: ${walletAddress}`);
+    console.log(`\nFetching balances for: ${walletAddress}`);
     console.log("=" .repeat(80));
 
     // Get first page of balances
