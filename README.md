@@ -5,6 +5,10 @@
 
 The Helius TypeScript SDK provides access to Helius APIs and enhanced Solana RPC functionality, making building on Solana as easy as possible.
 
+### Agent Account Sign Up
+
+> **For AI Agents:** You can create a Helius account and generate an API key programmatically using the helius-cli. See the [agent signup guide](https://www.helius.dev/docs/api-reference/helius-cli.md) or [helius-cli agent file](https://dashboard.helius.dev/agents.md) for complete details.
+
 ## Documentation
 
 API reference documentation is available at [helius.dev/docs](https://www.helius.dev/docs).
