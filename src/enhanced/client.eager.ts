@@ -4,7 +4,7 @@ import {
   type GetEnhancedTransactionsByAddressRequest,
   type GetEnhancedTransactionsByAddressResponse,
 } from "./types";
-import { SDK_USER_AGENT } from "../http";
+import { getUserAgent } from "../http";
 
 export interface EnhancedTxClient {
   getTransactions: (
@@ -45,7 +45,8 @@ const handle = async <T>(res: Response): Promise<T> => {
 
 export const makeEnhancedTxClientEager = (
   apiKey: string,
-  network: "mainnet" | "devnet" = "mainnet"
+  network: "mainnet" | "devnet" = "mainnet",
+  userAgent?: string
 ): EnhancedTxClient => {
   const base =
     network === "devnet"
@@ -62,7 +63,7 @@ export const makeEnhancedTxClientEager = (
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "User-Agent": SDK_USER_AGENT,
+        "User-Agent": getUserAgent(userAgent),
       },
       body: JSON.stringify({ transactions }),
     });
@@ -112,7 +113,7 @@ export const makeEnhancedTxClientEager = (
 
       const res = await fetch(url, {
         method: "GET",
-        headers: { "User-Agent": SDK_USER_AGENT },
+        headers: { "User-Agent": getUserAgent(userAgent) },
       });
       return handle<GetEnhancedTransactionsByAddressResponse>(res);
     };

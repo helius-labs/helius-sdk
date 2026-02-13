@@ -5,7 +5,7 @@ import {
   DEFAULT_RPC_CONFIG,
 } from "@solana/kit";
 
-import { SDK_USER_AGENT } from "../http";
+import { getUserAgent } from "../http";
 
 import { wrapAutoSend } from "./wrapAutoSend";
 import type { WebhookClient } from "../webhooks/client";
@@ -101,6 +101,7 @@ export const createHelius = ({
   network = "mainnet",
   rebateAddress,
   baseUrl,
+  userAgent,
 }: HeliusRpcOptions): HeliusClient => {
   // Use custom baseUrl if provided, otherwise construct from network
   const resolvedBaseUrl = baseUrl ?? `https://${network}.helius-rpc.com/`;
@@ -120,7 +121,7 @@ export const createHelius = ({
   const solanaApi = createSolanaRpcApi(DEFAULT_RPC_CONFIG);
   const baseTransport = createDefaultRpcTransport({
     url,
-    headers: { "User-Agent": SDK_USER_AGENT },
+    headers: { "User-Agent": getUserAgent(userAgent) },
   });
   const transport = async <TResponse>(
     request: Parameters<typeof baseTransport>[0]
@@ -368,7 +369,7 @@ export const createHelius = ({
       // This one import is enough since the sub-methods in the webhook client
       // are themselves lazily imported inside makeWebhookClient
       const { makeWebhookClient } = await import("../webhooks/client.js");
-      return makeWebhookClient(apiKey);
+      return makeWebhookClient(apiKey, userAgent);
     }
   );
 
@@ -382,7 +383,7 @@ export const createHelius = ({
         );
       }
       const { makeEnhancedTxClientLazy } = await import("../enhanced");
-      return makeEnhancedTxClientLazy(apiKey, network);
+      return makeEnhancedTxClientLazy(apiKey, network, userAgent);
     }
   );
 

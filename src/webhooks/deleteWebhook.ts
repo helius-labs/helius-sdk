@@ -1,16 +1,15 @@
-import { SDK_USER_AGENT } from "../http";
+import { getSDKHeaders } from "../http";
 
 export const deleteWebhook = async (
   apiKey: string,
-  webhookID: string
+  webhookID: string,
+  userAgent?: string
 ): Promise<boolean> => {
   const url = `https://api.helius.xyz/v0/webhooks/${webhookID}?api-key=${apiKey}`;
 
   const response = await fetch(url, {
     method: "DELETE",
-    headers: {
-      "User-Agent": SDK_USER_AGENT,
-    },
+    headers: { ...getSDKHeaders(userAgent) },
   });
 
   if (!response.ok) {

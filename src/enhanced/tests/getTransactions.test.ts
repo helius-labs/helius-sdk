@@ -64,6 +64,27 @@ describe("Enhanced getTransactions Tests", () => {
     expect(init.headers).toMatchObject({ "Content-Type": "application/json" });
   });
 
+  it("Sends custom userAgent in User-Agent header", async () => {
+    const customClient = makeEnhancedTxClientEager(
+      apiKey,
+      "mainnet",
+      "my-app/1.0"
+    );
+
+    fetchMock.mockResolvedValue({
+      ok: true,
+      status: 200,
+      text: async () => JSON.stringify([]),
+    } as Response);
+
+    await customClient.getTransactions({ transactions: ["0xTEST..."] });
+
+    const [, init] = fetchMock.mock.calls[0];
+    expect(init.headers["User-Agent"]).toMatch(
+      /^my-app\/1\.0 helius-node-sdk\//
+    );
+  });
+
   it("Throws on non-2xx response", async () => {
     fetchMock.mockResolvedValue({
       ok: false,
