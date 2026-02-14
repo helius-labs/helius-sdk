@@ -119,7 +119,11 @@ export const makeWalletClient = (
   getIdentity: async (p) =>
     (await import("./getIdentity.js")).getIdentity(apiKey, p, userAgent),
   getBatchIdentity: async (p) =>
-    (await import("./getBatchIdentity.js")).getBatchIdentity(apiKey, p, userAgent),
+    (await import("./getBatchIdentity.js")).getBatchIdentity(
+      apiKey,
+      p,
+      userAgent
+    ),
   getBalances: async (p) =>
     (await import("./getBalances.js")).getBalances(apiKey, p, userAgent),
   getHistory: async (p) =>

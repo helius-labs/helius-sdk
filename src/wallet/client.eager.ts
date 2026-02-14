@@ -48,7 +48,8 @@ export const makeWalletClientEager = (
     getIdentity(apiKey, p, userAgent),
   getBatchIdentity: (
     p: GetBatchIdentityRequest
-  ): Promise<GetBatchIdentityResponse> => getBatchIdentity(apiKey, p, userAgent),
+  ): Promise<GetBatchIdentityResponse> =>
+    getBatchIdentity(apiKey, p, userAgent),
   getBalances: (p: GetBalancesRequest): Promise<GetBalancesResponse> =>
     getBalances(apiKey, p, userAgent),
   getHistory: (p: GetHistoryRequest): Promise<GetHistoryResponse> =>
