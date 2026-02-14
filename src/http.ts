@@ -21,9 +21,7 @@ export const sanitizeClient = (raw: string): string | undefined => {
  * - When a consumer `clientId` is provided (e.g. `helius-mcp/0.3.0`), it is sent
  *   as the `X-Helius-Client` header instead of being stacked in `User-Agent`.
  */
-export const getSDKHeaders = (
-  clientId?: string
-): Record<string, string> => {
+export const getSDKHeaders = (clientId?: string): Record<string, string> => {
   const headers: Record<string, string> = {
     "User-Agent": SDK_USER_AGENT,
   };
