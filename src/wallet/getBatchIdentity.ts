@@ -1,4 +1,9 @@
-import { buildQueryString, handleResponse, getHeaders } from "./utils";
+import {
+  BASE_URL,
+  buildQueryString,
+  handleResponse,
+  getHeaders,
+} from "./utils";
 import type {
   GetBatchIdentityRequest,
   GetBatchIdentityResponse,
@@ -32,7 +37,7 @@ export const getBatchIdentity = async (
   apiKey: string,
   params: GetBatchIdentityRequest
 ): Promise<GetBatchIdentityResponse> => {
-  const url = `https://api.helius.xyz/v1/wallet/batch-identity${buildQueryString({ "api-key": apiKey })}`;
+  const url = `${BASE_URL}/batch-identity${buildQueryString({ "api-key": apiKey })}`;
 
   const response = await fetch(url, {
     method: "POST",

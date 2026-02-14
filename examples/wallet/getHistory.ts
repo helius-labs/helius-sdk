@@ -41,9 +41,8 @@ import { createHelius } from "helius-sdk";
         console.log(`   Balance Changes:`);
         tx.balanceChanges.forEach((change) => {
           const sign = change.amount > 0 ? "+" : "";
-          const amount = (change.amount / 10 ** change.decimals).toFixed(6);
           console.log(
-            `      ${sign}${amount} ${change.mint === "SOL" ? "SOL" : change.mint.slice(0, 8) + "..."}`
+            `      ${sign}${change.amount} ${change.mint === "SOL" ? "SOL" : change.mint.slice(0, 8) + "..."}`
           );
         });
       }
