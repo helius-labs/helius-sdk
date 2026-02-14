@@ -3,4 +3,5 @@ export interface HeliusRpcOptions {
   network?: "mainnet" | "devnet";
   rebateAddress?: string;
   baseUrl?: string;
+  userAgent?: string;
 }

@@ -112,17 +112,24 @@ export interface WalletClient {
  * const identity = await walletClient.getIdentity({ wallet: "..." });
  * ```
  */
-export const makeWalletClient = (apiKey: string): WalletClient => ({
+export const makeWalletClient = (
+  apiKey: string,
+  userAgent?: string
+): WalletClient => ({
   getIdentity: async (p) =>
-    (await import("./getIdentity.js")).getIdentity(apiKey, p),
+    (await import("./getIdentity.js")).getIdentity(apiKey, p, userAgent),
   getBatchIdentity: async (p) =>
-    (await import("./getBatchIdentity.js")).getBatchIdentity(apiKey, p),
+    (await import("./getBatchIdentity.js")).getBatchIdentity(
+      apiKey,
+      p,
+      userAgent
+    ),
   getBalances: async (p) =>
-    (await import("./getBalances.js")).getBalances(apiKey, p),
+    (await import("./getBalances.js")).getBalances(apiKey, p, userAgent),
   getHistory: async (p) =>
-    (await import("./getHistory.js")).getHistory(apiKey, p),
+    (await import("./getHistory.js")).getHistory(apiKey, p, userAgent),
   getTransfers: async (p) =>
-    (await import("./getTransfers.js")).getTransfers(apiKey, p),
+    (await import("./getTransfers.js")).getTransfers(apiKey, p, userAgent),
   getFundedBy: async (p) =>
-    (await import("./getFundedBy.js")).getFundedBy(apiKey, p),
+    (await import("./getFundedBy.js")).getFundedBy(apiKey, p, userAgent),
 });

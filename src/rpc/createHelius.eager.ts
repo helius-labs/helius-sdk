@@ -8,6 +8,7 @@ import {
 } from "@solana/kit";
 import { wrapAutoSend } from "./wrapAutoSend";
 import { makeRpcCaller } from "./caller";
+import { getSDKHeaders } from "../http";
 
 import { GetAssetFn, makeGetAsset } from "./methods/getAsset";
 import { GetAssetBatchFn, makeGetAssetBatch } from "./methods/getAssetBatch";
@@ -124,6 +125,7 @@ export const createHeliusEager = ({
   network = "mainnet",
   rebateAddress,
   baseUrl,
+  userAgent,
 }: HeliusRpcOptions): HeliusClientEager => {
   // Use custom baseUrl if provided, otherwise construct from network
   const resolvedBaseUrl = baseUrl ?? `https://${network}.helius-rpc.com/`;
@@ -141,7 +143,10 @@ export const createHeliusEager = ({
   const url = `${resolvedBaseUrl}${queryString}`;
 
   const solanaApi = createSolanaRpcApi(DEFAULT_RPC_CONFIG);
-  const transport = createDefaultRpcTransport({ url });
+  const transport = createDefaultRpcTransport({
+    url,
+    headers: getSDKHeaders(userAgent),
+  });
 
   let baseRpc = createRpc({ api: solanaApi, transport });
   // Cast to any because I cba to go down this type rabbit hole
@@ -183,7 +188,7 @@ export const createHeliusEager = ({
           "An API key is required to use webhooks/enhanced transactions. Provide apiKey in createHelius() options."
         );
       }
-      return makeWebhookClientEager(apiKey);
+      return makeWebhookClientEager(apiKey, userAgent);
     },
 
     // Enhanced Transactions
@@ -193,7 +198,7 @@ export const createHeliusEager = ({
           "An API key is required to use webhooks/enhanced transactions. Provide apiKey in createHelius() options."
         );
       }
-      return makeEnhancedTxClientEager(apiKey, network);
+      return makeEnhancedTxClientEager(apiKey, network, userAgent);
     },
 
     // Transaction helpers
@@ -206,7 +211,7 @@ export const createHeliusEager = ({
           "An API key is required to use the Wallet API. Provide apiKey in createHelius() options."
         );
       }
-      return makeWalletClientEager(apiKey);
+      return makeWalletClientEager(apiKey, userAgent);
     },
   };
 };

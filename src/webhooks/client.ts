@@ -12,14 +12,23 @@ export interface WebhookClient {
   delete(webhookID: string): Promise<boolean>;
 }
 
-export const makeWebhookClient = (apiKey: string): WebhookClient => ({
+export const makeWebhookClient = (
+  apiKey: string,
+  userAgent?: string
+): WebhookClient => ({
   create: async (p) =>
-    (await import("./createWebhook.js")).createWebhook(apiKey, p),
-  get: async (id) => (await import("./getWebhook.js")).getWebhook(apiKey, id),
+    (await import("./createWebhook.js")).createWebhook(apiKey, p, userAgent),
+  get: async (id) =>
+    (await import("./getWebhook.js")).getWebhook(apiKey, id, userAgent),
   getAll: async () =>
-    (await import("./getAllWebhooks.js")).getAllWebhooks(apiKey),
+    (await import("./getAllWebhooks.js")).getAllWebhooks(apiKey, userAgent),
   update: async (id, p) =>
-    (await import("./updateWebhook.js")).updateWebhook(apiKey, id, p),
+    (await import("./updateWebhook.js")).updateWebhook(
+      apiKey,
+      id,
+      p,
+      userAgent
+    ),
   delete: async (id) =>
-    (await import("./deleteWebhook.js")).deleteWebhook(apiKey, id),
+    (await import("./deleteWebhook.js")).deleteWebhook(apiKey, id, userAgent),
 });

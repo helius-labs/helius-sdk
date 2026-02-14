@@ -73,6 +73,38 @@ describe("createWebhook Tests", () => {
     );
   });
 
+  it("Sends custom userAgent as X-Helius-Client header", async () => {
+    const customRpc = createHelius({
+      apiKey: "test-key",
+      userAgent: "my-app/1.0",
+    });
+
+    const mockParams: CreateWebhookRequest = {
+      webhookURL: "https://hogwarts.edu/owlery",
+      transactionTypes: ["SPELL_CAST"],
+      accountAddresses: ["albusdumbledore.sol"],
+      webhookType: "enhanced",
+    };
+
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        webhookID: "test-id",
+        wallet: "albusdumbledore.sol",
+        webhookURL: "https://hogwarts.edu/owlery",
+        transactionTypes: ["SPELL_CAST"],
+        accountAddresses: ["albusdumbledore.sol"],
+        webhookType: "enhanced",
+      }),
+    });
+
+    await customRpc.webhooks.create(mockParams);
+
+    const [, init] = mockFetch.mock.calls[0];
+    expect(init.headers["User-Agent"]).toMatch(/^helius-node-sdk\//);
+    expect(init.headers["X-Helius-Client"]).toBe("my-app/1.0");
+  });
+
   it("Handles Helius API errors", async () => {
     const mockParams: CreateWebhookRequest = {
       webhookURL: "https://hogwarts.edu/owlery",

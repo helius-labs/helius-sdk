@@ -30,7 +30,8 @@ import type { GetIdentityRequest, GetIdentityResponse } from "./types";
  */
 export const getIdentity = async (
   apiKey: string,
-  params: GetIdentityRequest
+  params: GetIdentityRequest,
+  userAgent?: string
 ): Promise<GetIdentityResponse> => {
   const { wallet } = params;
 
@@ -42,7 +43,7 @@ export const getIdentity = async (
 
   const response = await fetch(url, {
     method: "GET",
-    headers: getHeaders(),
+    headers: getHeaders(false, userAgent),
   });
 
   return handleResponse<GetIdentityResponse>(response);
