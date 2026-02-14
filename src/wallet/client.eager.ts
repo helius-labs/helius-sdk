@@ -40,18 +40,21 @@ export type { WalletClient };
  * const identity = await walletClient.getIdentity({ wallet: "..." });
  * ```
  */
-export const makeWalletClientEager = (apiKey: string): WalletClient => ({
+export const makeWalletClientEager = (
+  apiKey: string,
+  userAgent?: string
+): WalletClient => ({
   getIdentity: (p: GetIdentityRequest): Promise<GetIdentityResponse> =>
-    getIdentity(apiKey, p),
+    getIdentity(apiKey, p, userAgent),
   getBatchIdentity: (
     p: GetBatchIdentityRequest
-  ): Promise<GetBatchIdentityResponse> => getBatchIdentity(apiKey, p),
+  ): Promise<GetBatchIdentityResponse> => getBatchIdentity(apiKey, p, userAgent),
   getBalances: (p: GetBalancesRequest): Promise<GetBalancesResponse> =>
-    getBalances(apiKey, p),
+    getBalances(apiKey, p, userAgent),
   getHistory: (p: GetHistoryRequest): Promise<GetHistoryResponse> =>
-    getHistory(apiKey, p),
+    getHistory(apiKey, p, userAgent),
   getTransfers: (p: GetTransfersRequest): Promise<GetTransfersResponse> =>
-    getTransfers(apiKey, p),
+    getTransfers(apiKey, p, userAgent),
   getFundedBy: (p: GetFundedByRequest): Promise<GetFundedByResponse> =>
-    getFundedBy(apiKey, p),
+    getFundedBy(apiKey, p, userAgent),
 });

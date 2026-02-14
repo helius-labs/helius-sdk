@@ -1,4 +1,4 @@
-import { SDK_USER_AGENT } from "../http";
+import { getUserAgent } from "../http";
 
 /**
  * Base URL for Wallet API endpoints
@@ -75,10 +75,11 @@ export const handleResponse = async <T>(res: Response): Promise<T> => {
  * ```
  */
 export const getHeaders = (
-  includeContentType = false
+  includeContentType = false,
+  userAgent?: string
 ): Record<string, string> => {
   const headers: Record<string, string> = {
-    "User-Agent": SDK_USER_AGENT,
+    "User-Agent": getUserAgent(userAgent),
   };
 
   if (includeContentType) {

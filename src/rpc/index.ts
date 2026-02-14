@@ -429,7 +429,7 @@ export const createHelius = ({
         );
       }
       const { makeWalletClient } = await import("../wallet/client.js");
-      return makeWalletClient(apiKey);
+      return makeWalletClient(apiKey, userAgent);
     }
   );
 

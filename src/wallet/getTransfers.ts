@@ -45,7 +45,8 @@ import type { GetTransfersRequest, GetTransfersResponse } from "./types";
  */
 export const getTransfers = async (
   apiKey: string,
-  params: GetTransfersRequest
+  params: GetTransfersRequest,
+  userAgent?: string
 ): Promise<GetTransfersResponse> => {
   const { wallet, limit, cursor } = params;
 
@@ -59,7 +60,7 @@ export const getTransfers = async (
 
   const response = await fetch(url, {
     method: "GET",
-    headers: getHeaders(),
+    headers: getHeaders(false, userAgent),
   });
 
   return handleResponse<GetTransfersResponse>(response);

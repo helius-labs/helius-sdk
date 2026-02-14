@@ -35,13 +35,14 @@ import type {
  */
 export const getBatchIdentity = async (
   apiKey: string,
-  params: GetBatchIdentityRequest
+  params: GetBatchIdentityRequest,
+  userAgent?: string
 ): Promise<GetBatchIdentityResponse> => {
   const url = `${BASE_URL}/batch-identity${buildQueryString({ "api-key": apiKey })}`;
 
   const response = await fetch(url, {
     method: "POST",
-    headers: getHeaders(true), // Include Content-Type for POST
+    headers: getHeaders(true, userAgent), // Include Content-Type for POST
     body: JSON.stringify(params),
   });
 

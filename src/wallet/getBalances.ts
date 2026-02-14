@@ -51,7 +51,8 @@ import type { GetBalancesRequest, GetBalancesResponse } from "./types";
  */
 export const getBalances = async (
   apiKey: string,
-  params: GetBalancesRequest
+  params: GetBalancesRequest,
+  userAgent?: string
 ): Promise<GetBalancesResponse> => {
   const { wallet, page, limit, showZeroBalance, showNative, showNfts } = params;
 
@@ -68,7 +69,7 @@ export const getBalances = async (
 
   const response = await fetch(url, {
     method: "GET",
-    headers: getHeaders(),
+    headers: getHeaders(false, userAgent),
   });
 
   return handleResponse<GetBalancesResponse>(response);

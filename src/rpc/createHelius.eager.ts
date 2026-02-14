@@ -211,7 +211,7 @@ export const createHeliusEager = ({
           "An API key is required to use the Wallet API. Provide apiKey in createHelius() options."
         );
       }
-      return makeWalletClientEager(apiKey);
+      return makeWalletClientEager(apiKey, userAgent);
     },
   };
 };

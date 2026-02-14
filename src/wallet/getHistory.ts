@@ -58,7 +58,8 @@ import type { GetHistoryRequest, GetHistoryResponse } from "./types";
  */
 export const getHistory = async (
   apiKey: string,
-  params: GetHistoryRequest
+  params: GetHistoryRequest,
+  userAgent?: string
 ): Promise<GetHistoryResponse> => {
   const { wallet, limit, before, after, type, tokenAccounts } = params;
 
@@ -75,7 +76,7 @@ export const getHistory = async (
 
   const response = await fetch(url, {
     method: "GET",
-    headers: getHeaders(),
+    headers: getHeaders(false, userAgent),
   });
 
   return handleResponse<GetHistoryResponse>(response);

@@ -37,7 +37,8 @@ import type { GetFundedByRequest, GetFundedByResponse } from "./types";
  */
 export const getFundedBy = async (
   apiKey: string,
-  params: GetFundedByRequest
+  params: GetFundedByRequest,
+  userAgent?: string
 ): Promise<GetFundedByResponse> => {
   const { wallet } = params;
 
@@ -49,7 +50,7 @@ export const getFundedBy = async (
 
   const response = await fetch(url, {
     method: "GET",
-    headers: getHeaders(),
+    headers: getHeaders(false, userAgent),
   });
 
   return handleResponse<GetFundedByResponse>(response);
