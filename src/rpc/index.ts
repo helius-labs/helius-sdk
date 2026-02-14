@@ -5,7 +5,7 @@ import {
   DEFAULT_RPC_CONFIG,
 } from "@solana/kit";
 
-import { getUserAgent } from "../http";
+import { getSDKHeaders } from "../http";
 
 import { wrapAutoSend } from "./wrapAutoSend";
 import type { WebhookClient } from "../webhooks/client";
@@ -125,7 +125,7 @@ export const createHelius = ({
   const solanaApi = createSolanaRpcApi(DEFAULT_RPC_CONFIG);
   const baseTransport = createDefaultRpcTransport({
     url,
-    headers: { "User-Agent": getUserAgent(userAgent) },
+    headers: getSDKHeaders(userAgent),
   });
   const transport = async <TResponse>(
     request: Parameters<typeof baseTransport>[0]

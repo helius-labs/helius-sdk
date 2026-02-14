@@ -1,4 +1,4 @@
-import { getUserAgent } from "../http";
+import { getSDKHeaders } from "../http";
 
 /**
  * Base URL for Wallet API endpoints
@@ -79,7 +79,7 @@ export const getHeaders = (
   userAgent?: string
 ): Record<string, string> => {
   const headers: Record<string, string> = {
-    "User-Agent": getUserAgent(userAgent),
+    ...getSDKHeaders(userAgent),
   };
 
   if (includeContentType) {

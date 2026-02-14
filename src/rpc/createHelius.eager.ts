@@ -8,7 +8,7 @@ import {
 } from "@solana/kit";
 import { wrapAutoSend } from "./wrapAutoSend";
 import { makeRpcCaller } from "./caller";
-import { getUserAgent } from "../http";
+import { getSDKHeaders } from "../http";
 
 import { GetAssetFn, makeGetAsset } from "./methods/getAsset";
 import { GetAssetBatchFn, makeGetAssetBatch } from "./methods/getAssetBatch";
@@ -145,7 +145,7 @@ export const createHeliusEager = ({
   const solanaApi = createSolanaRpcApi(DEFAULT_RPC_CONFIG);
   const transport = createDefaultRpcTransport({
     url,
-    headers: { "User-Agent": getUserAgent(userAgent) },
+    headers: getSDKHeaders(userAgent),
   });
 
   let baseRpc = createRpc({ api: solanaApi, transport });

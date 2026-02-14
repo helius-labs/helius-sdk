@@ -73,7 +73,7 @@ describe("createWebhook Tests", () => {
     );
   });
 
-  it("Sends custom userAgent in User-Agent header", async () => {
+  it("Sends custom userAgent as X-Helius-Client header", async () => {
     const customRpc = createHelius({
       apiKey: "test-key",
       userAgent: "my-app/1.0",
@@ -101,9 +101,8 @@ describe("createWebhook Tests", () => {
     await customRpc.webhooks.create(mockParams);
 
     const [, init] = mockFetch.mock.calls[0];
-    expect(init.headers["User-Agent"]).toMatch(
-      /^my-app\/1\.0 helius-node-sdk\//
-    );
+    expect(init.headers["User-Agent"]).toMatch(/^helius-node-sdk\//);
+    expect(init.headers["X-Helius-Client"]).toBe("my-app/1.0");
   });
 
   it("Handles Helius API errors", async () => {

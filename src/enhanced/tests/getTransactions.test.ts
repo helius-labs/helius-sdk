@@ -64,7 +64,7 @@ describe("Enhanced getTransactions Tests", () => {
     expect(init.headers).toMatchObject({ "Content-Type": "application/json" });
   });
 
-  it("Sends custom userAgent in User-Agent header", async () => {
+  it("Sends custom userAgent as X-Helius-Client header", async () => {
     const customClient = makeEnhancedTxClientEager(
       apiKey,
       "mainnet",
@@ -80,9 +80,8 @@ describe("Enhanced getTransactions Tests", () => {
     await customClient.getTransactions({ transactions: ["0xTEST..."] });
 
     const [, init] = fetchMock.mock.calls[0];
-    expect(init.headers["User-Agent"]).toMatch(
-      /^my-app\/1\.0 helius-node-sdk\//
-    );
+    expect(init.headers["User-Agent"]).toMatch(/^helius-node-sdk\//);
+    expect(init.headers["X-Helius-Client"]).toBe("my-app/1.0");
   });
 
   it("Throws on non-2xx response", async () => {
