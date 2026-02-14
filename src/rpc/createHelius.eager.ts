@@ -39,6 +39,10 @@ import {
   type WebhookClient,
 } from "../webhooks/client.eager";
 import {
+  makeWalletClientEager,
+  type WalletClient,
+} from "../wallet/client.eager";
+import {
   GetAssetsByOwnerFn,
   makeGetAssetsByOwner,
 } from "./methods/getAssetsByOwner";
@@ -112,6 +116,8 @@ export interface HeliusClientEager {
   enhanced: EnhancedTxClient;
 
   tx: TxHelpersEager;
+
+  wallet: WalletClient;
 }
 
 export const createHeliusEager = ({
@@ -197,5 +203,15 @@ export const createHeliusEager = ({
 
     // Transaction helpers
     tx: makeTxHelpersEager(baseRpc as unknown as Rpc<SolanaRpcApi>),
+
+    // Wallet API
+    get wallet() {
+      if (!apiKey) {
+        throw new Error(
+          "An API key is required to use the Wallet API. Provide apiKey in createHelius() options."
+        );
+      }
+      return makeWalletClientEager(apiKey);
+    },
   };
 };
