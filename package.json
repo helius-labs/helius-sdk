@@ -1,6 +1,6 @@
 {
   "name": "helius-sdk",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "description": "A Helius TypeScript SDK for building the future of Solana",
   "type": "module",
   "exports": {
