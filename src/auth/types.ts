@@ -119,16 +119,12 @@ export interface AuthClient {
   walletSignup(
     msg: string,
     sig: string,
-    address: string,
+    address: string
   ): Promise<SignupResponse>;
   listProjects(jwt: string): Promise<ProjectListItem[]>;
   createProject(jwt: string): Promise<Project>;
   getProject(jwt: string, id: string): Promise<ProjectDetails>;
-  createApiKey(
-    jwt: string,
-    projectId: string,
-    wallet: string,
-  ): Promise<ApiKey>;
+  createApiKey(jwt: string, projectId: string, wallet: string): Promise<ApiKey>;
   checkSolBalance(address: string): Promise<bigint>;
   checkUsdcBalance(address: string): Promise<bigint>;
   payUSDC(secretKey: Uint8Array): Promise<string>;

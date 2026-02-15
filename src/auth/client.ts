@@ -28,7 +28,6 @@ export function makeAuthClient(userAgent?: string): AuthClient {
     checkSolBalance,
     checkUsdcBalance,
     payUSDC,
-    agenticSignup: (options) =>
-      agenticSignup({ ...options, userAgent }),
+    agenticSignup: (options) => agenticSignup({ ...options, userAgent }),
   };
 }

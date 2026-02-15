@@ -3,7 +3,7 @@ import { authRequest } from "./utils";
 
 export async function createProject(
   jwt: string,
-  userAgent?: string,
+  userAgent?: string
 ): Promise<Project> {
   return authRequest<Project>(
     "/projects/create",
@@ -12,6 +12,6 @@ export async function createProject(
       headers: { Authorization: `Bearer ${jwt}` },
       body: JSON.stringify({}),
     },
-    userAgent,
+    userAgent
   );
 }

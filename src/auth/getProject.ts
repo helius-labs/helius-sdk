@@ -4,7 +4,7 @@ import { authRequest } from "./utils";
 export async function getProject(
   jwt: string,
   id: string,
-  userAgent?: string,
+  userAgent?: string
 ): Promise<ProjectDetails> {
   return authRequest<ProjectDetails>(
     `/projects/${id}`,
@@ -12,6 +12,6 @@ export async function getProject(
       method: "GET",
       headers: { Authorization: `Bearer ${jwt}` },
     },
-    userAgent,
+    userAgent
   );
 }

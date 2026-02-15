@@ -5,7 +5,7 @@ export async function createApiKey(
   jwt: string,
   projectId: string,
   walletAddress: string,
-  userAgent?: string,
+  userAgent?: string
 ): Promise<ApiKey> {
   return authRequest<ApiKey>(
     `/projects/${projectId}/add-key`,
@@ -14,6 +14,6 @@ export async function createApiKey(
       headers: { Authorization: `Bearer ${jwt}` },
       body: JSON.stringify({ userId: walletAddress }),
     },
-    userAgent,
+    userAgent
   );
 }

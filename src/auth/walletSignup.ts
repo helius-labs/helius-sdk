@@ -5,7 +5,7 @@ export async function walletSignup(
   message: string,
   signature: string,
   address: string,
-  userAgent?: string,
+  userAgent?: string
 ): Promise<SignupResponse> {
   return authRequest<SignupResponse>(
     "/wallet-signup",
@@ -13,6 +13,6 @@ export async function walletSignup(
       method: "POST",
       body: JSON.stringify({ message, signature, userID: address }),
     },
-    userAgent,
+    userAgent
   );
 }

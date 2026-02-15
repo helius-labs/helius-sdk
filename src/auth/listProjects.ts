@@ -3,7 +3,7 @@ import { authRequest } from "./utils";
 
 export async function listProjects(
   jwt: string,
-  userAgent?: string,
+  userAgent?: string
 ): Promise<ProjectListItem[]> {
   return authRequest<ProjectListItem[]>(
     "/projects",
@@ -11,6 +11,6 @@ export async function listProjects(
       method: "GET",
       headers: { Authorization: `Bearer ${jwt}` },
     },
-    userAgent,
+    userAgent
   );
 }

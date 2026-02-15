@@ -17,7 +17,13 @@ import {
   findAssociatedTokenPda,
   TOKEN_PROGRAM_ADDRESS,
 } from "@solana-program/token";
-import { TREASURY, USDC_MINT, PAYMENT_AMOUNT, RPC_URL, WS_URL } from "./constants";
+import {
+  TREASURY,
+  USDC_MINT,
+  PAYMENT_AMOUNT,
+  RPC_URL,
+  WS_URL,
+} from "./constants";
 
 export async function payUSDC(secretKey: Uint8Array): Promise<string> {
   const rpc = createSolanaRpc(RPC_URL);
@@ -55,7 +61,7 @@ export async function payUSDC(secretKey: Uint8Array): Promise<string> {
     createTransactionMessage({ version: 0 }),
     (tx) => setTransactionMessageFeePayerSigner(signer, tx),
     (tx) => setTransactionMessageLifetimeUsingBlockhash(latestBlockhash, tx),
-    (tx) => appendTransactionMessageInstructions([transferIx], tx),
+    (tx) => appendTransactionMessageInstructions([transferIx], tx)
   );
 
   const signedTransaction =
@@ -70,7 +76,7 @@ export async function payUSDC(secretKey: Uint8Array): Promise<string> {
 
   await sendAndConfirm(
     transactionWithBlockHeight as Parameters<typeof sendAndConfirm>[0],
-    { commitment: "confirmed" },
+    { commitment: "confirmed" }
   );
 
   return getSignatureFromTransaction(signedTransaction);

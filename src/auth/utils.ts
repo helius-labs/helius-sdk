@@ -4,7 +4,7 @@ import { API_URL } from "./constants";
 export async function authRequest<T>(
   endpoint: string,
   options: RequestInit = {},
-  userAgent?: string,
+  userAgent?: string
 ): Promise<T> {
   const url = `${API_URL}${endpoint}`;
   const response = await fetch(url, {

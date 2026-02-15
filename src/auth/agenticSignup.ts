@@ -20,7 +20,7 @@ async function createProjectWithRetry(
   jwt: string,
   userAgent: string | undefined,
   maxRetries = 3,
-  delayMs = 2000,
+  delayMs = 2000
 ): Promise<Project> {
   let lastError: Error | null = null;
 
@@ -39,7 +39,7 @@ async function createProjectWithRetry(
 }
 
 export async function agenticSignup(
-  options: AgenticSignupOptions,
+  options: AgenticSignupOptions
 ): Promise<AgenticSignupResult> {
   const { secretKey, userAgent } = options;
 
@@ -80,14 +80,14 @@ export async function agenticSignup(
   const solBalance = await checkSolBalance(walletAddress);
   if (solBalance < MIN_SOL_FOR_TX) {
     throw new Error(
-      `Insufficient SOL for transaction fees. Have: ${Number(solBalance) / 1_000_000_000} SOL, need: ~0.001 SOL. Fund address: ${walletAddress}`,
+      `Insufficient SOL for transaction fees. Have: ${Number(solBalance) / 1_000_000_000} SOL, need: ~0.001 SOL. Fund address: ${walletAddress}`
     );
   }
 
   const usdcBalance = await checkUsdcBalance(walletAddress);
   if (usdcBalance < PAYMENT_AMOUNT) {
     throw new Error(
-      `Insufficient USDC. Have: ${Number(usdcBalance) / 1_000_000} USDC, need: 1 USDC. Fund address: ${walletAddress}`,
+      `Insufficient USDC. Have: ${Number(usdcBalance) / 1_000_000} USDC, need: 1 USDC. Fund address: ${walletAddress}`
     );
   }
 
@@ -98,9 +98,7 @@ export async function agenticSignup(
   const project = await createProjectWithRetry(jwt, userAgent, 3, 2000);
   const projectDetails = await getProject(jwt, project.id, userAgent);
   const apiKey =
-    projectDetails.apiKeys?.[0]?.keyId ||
-    project.apiKeys?.[0]?.keyId ||
-    null;
+    projectDetails.apiKeys?.[0]?.keyId || project.apiKeys?.[0]?.keyId || null;
 
   return {
     status: "success",
