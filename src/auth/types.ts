@@ -92,6 +92,44 @@ export interface Project extends ProjectListItem {
   prepaidCreditsLink?: string;
 }
 
+export type PaymentType = "subscription" | "upgrade" | "renewal" | "prepaid_credits" | "overages";
+export type PaymentIntentStatus = "pending" | "completed" | "expired" | "failed";
+
+export interface CheckoutInitializeRequest {
+  paymentType: PaymentType;
+  plan?: string;
+  creditAmount?: number;
+  projectId?: string;
+}
+
+export interface CheckoutInitializeResponse {
+  paymentIntentId: string;
+  treasuryWallet: string;
+  amount: number;
+  memo: string;
+  solanaPayUrl: string;
+  expiresAt: string;
+}
+
+export interface CheckoutStatusResponse {
+  paymentIntentId: string;
+  status: PaymentIntentStatus;
+  txSignature?: string;
+  payerWallet?: string;
+  confirmedAt?: string;
+  failedAt?: string;
+  failureReason?: string;
+}
+
+export interface CheckoutResult {
+  paymentIntentId: string;
+  txSignature: string | null;
+  status: "completed" | "expired" | "failed" | "timeout";
+  projectId?: string;
+  apiKey?: string;
+  error?: string;
+}
+
 export interface AgenticSignupOptions {
   secretKey: Uint8Array;
   userAgent?: string;
@@ -128,5 +166,8 @@ export interface AuthClient {
   checkSolBalance(address: string): Promise<bigint>;
   checkUsdcBalance(address: string): Promise<bigint>;
   payUSDC(secretKey: Uint8Array): Promise<string>;
+  initializeCheckout(jwt: string, request: CheckoutInitializeRequest): Promise<CheckoutInitializeResponse>;
+  executeCheckout(secretKey: Uint8Array, jwt: string, request: CheckoutInitializeRequest): Promise<CheckoutResult>;
+  payWithMemo(secretKey: Uint8Array, treasury: string, amount: bigint, memo: string): Promise<string>;
   agenticSignup(options: AgenticSignupOptions): Promise<AgenticSignupResult>;
 }

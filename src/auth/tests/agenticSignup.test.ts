@@ -28,14 +28,6 @@ jest.mock("../listProjects", () => ({
   listProjects: jest.fn().mockResolvedValue([]),
 }));
 
-jest.mock("../createProject", () => ({
-  createProject: jest.fn().mockResolvedValue({
-    id: "proj-new",
-    name: "New Project",
-    apiKeys: [{ keyId: "key-abc" }],
-  }),
-}));
-
 jest.mock("../getProject", () => ({
   getProject: jest.fn().mockResolvedValue({
     apiKeys: [{ keyId: "key-abc" }],
@@ -50,19 +42,19 @@ jest.mock("../getProject", () => ({
   }),
 }));
 
-jest.mock("../checkBalances", () => ({
-  checkSolBalance: jest.fn().mockResolvedValue(5_000_000_000n),
-  checkUsdcBalance: jest.fn().mockResolvedValue(10_000_000n),
-}));
-
-jest.mock("../payUSDC", () => ({
-  payUSDC: jest.fn().mockResolvedValue("tx-sig-abc123"),
+jest.mock("../checkout", () => ({
+  executeCheckout: jest.fn().mockResolvedValue({
+    paymentIntentId: "pi_test",
+    txSignature: "tx-sig-abc123",
+    status: "completed",
+    projectId: "proj-new",
+    apiKey: "key-abc",
+  }),
 }));
 
 import { agenticSignup } from "../agenticSignup";
 import { listProjects } from "../listProjects";
-import { checkSolBalance, checkUsdcBalance } from "../checkBalances";
-import { payUSDC } from "../payUSDC";
+import { executeCheckout } from "../checkout";
 
 describe("agenticSignup", () => {
   beforeEach(() => {
@@ -82,6 +74,12 @@ describe("agenticSignup", () => {
       mainnet: "https://mainnet.helius-rpc.com/?api-key=key-abc",
       devnet: "https://devnet.helius-rpc.com/?api-key=key-abc",
     });
+    expect(executeCheckout).toHaveBeenCalledWith(
+      new Uint8Array(64),
+      "jwt-token-123",
+      { paymentType: "subscription" },
+      undefined,
+    );
   });
 
   it("returns existing project when one exists", async () => {
@@ -101,23 +99,31 @@ describe("agenticSignup", () => {
 
     expect(result.status).toBe("existing_project");
     expect(result.projectId).toBe("proj-existing");
-    expect(payUSDC).not.toHaveBeenCalled();
+    expect(executeCheckout).not.toHaveBeenCalled();
   });
 
-  it("throws on insufficient SOL", async () => {
-    (checkSolBalance as jest.Mock).mockResolvedValueOnce(0n);
+  it("throws when checkout fails", async () => {
+    (executeCheckout as jest.Mock).mockResolvedValueOnce({
+      paymentIntentId: "pi_test",
+      txSignature: "tx-sig-abc123",
+      status: "failed",
+    });
 
     await expect(
       agenticSignup({ secretKey: new Uint8Array(64) })
-    ).rejects.toThrow("Insufficient SOL");
+    ).rejects.toThrow("Checkout failed");
   });
 
-  it("throws on insufficient USDC", async () => {
-    (checkUsdcBalance as jest.Mock).mockResolvedValueOnce(0n);
+  it("throws when checkout times out and includes tx signature", async () => {
+    (executeCheckout as jest.Mock).mockResolvedValueOnce({
+      paymentIntentId: "pi_test",
+      txSignature: "tx-sig-timeout",
+      status: "timeout",
+    });
 
     await expect(
       agenticSignup({ secretKey: new Uint8Array(64) })
-    ).rejects.toThrow("Insufficient USDC");
+    ).rejects.toThrow("TX: tx-sig-timeout");
   });
 
   it("passes userAgent through", async () => {
@@ -133,6 +139,13 @@ describe("agenticSignup", () => {
       "auth-sig",
       "WalletAddress123",
       "test-agent/1.0"
+    );
+
+    expect(executeCheckout).toHaveBeenCalledWith(
+      new Uint8Array(64),
+      "jwt-token-123",
+      { paymentType: "subscription" },
+      "test-agent/1.0",
     );
   });
 });

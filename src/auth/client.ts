@@ -10,6 +10,8 @@ import { getProject } from "./getProject";
 import { createApiKey } from "./createApiKey";
 import { checkSolBalance, checkUsdcBalance } from "./checkBalances";
 import { payUSDC } from "./payUSDC";
+import { payWithMemo } from "./payWithMemo";
+import { initializeCheckout, executeCheckout } from "./checkout";
 import { agenticSignup } from "./agenticSignup";
 
 export function makeAuthClient(userAgent?: string): AuthClient {
@@ -28,6 +30,9 @@ export function makeAuthClient(userAgent?: string): AuthClient {
     checkSolBalance,
     checkUsdcBalance,
     payUSDC,
+    initializeCheckout: (jwt, req) => initializeCheckout(jwt, req, userAgent),
+    executeCheckout: (sk, jwt, req) => executeCheckout(sk, jwt, req, userAgent),
+    payWithMemo,
     agenticSignup: (options) => agenticSignup({ ...options, userAgent }),
   };
 }

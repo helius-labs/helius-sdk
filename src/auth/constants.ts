@@ -19,6 +19,14 @@ export const PAYMENT_AMOUNT = 1_000_000n;
 /** Minimum SOL needed for transaction fees (~0.001 SOL) */
 export const MIN_SOL_FOR_TX = 1_000_000n;
 
+export const MEMO_PROGRAM_ID =
+  "MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr" as Address;
+
+export const CHECKOUT_POLL_INTERVAL_MS = 1_000;
+export const CHECKOUT_POLL_TIMEOUT_MS = 60_000;
+export const PROJECT_POLL_INTERVAL_MS = 2_000;
+export const PROJECT_POLL_TIMEOUT_MS = 30_000;
+
 const RPC_URL = "https://api.mainnet-beta.solana.com";
 const WS_URL = "wss://api.mainnet-beta.solana.com";
 
