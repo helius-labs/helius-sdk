@@ -92,8 +92,17 @@ export interface Project extends ProjectListItem {
   prepaidCreditsLink?: string;
 }
 
-export type PaymentType = "subscription" | "upgrade" | "renewal" | "prepaid_credits" | "overages";
-export type PaymentIntentStatus = "pending" | "completed" | "expired" | "failed";
+export type PaymentType =
+  | "subscription"
+  | "upgrade"
+  | "renewal"
+  | "prepaid_credits"
+  | "overages";
+export type PaymentIntentStatus =
+  | "pending"
+  | "completed"
+  | "expired"
+  | "failed";
 
 export interface CheckoutInitializeRequest {
   paymentType: PaymentType;
@@ -166,8 +175,20 @@ export interface AuthClient {
   checkSolBalance(address: string): Promise<bigint>;
   checkUsdcBalance(address: string): Promise<bigint>;
   payUSDC(secretKey: Uint8Array): Promise<string>;
-  initializeCheckout(jwt: string, request: CheckoutInitializeRequest): Promise<CheckoutInitializeResponse>;
-  executeCheckout(secretKey: Uint8Array, jwt: string, request: CheckoutInitializeRequest): Promise<CheckoutResult>;
-  payWithMemo(secretKey: Uint8Array, treasury: string, amount: bigint, memo: string): Promise<string>;
+  initializeCheckout(
+    jwt: string,
+    request: CheckoutInitializeRequest
+  ): Promise<CheckoutInitializeResponse>;
+  executeCheckout(
+    secretKey: Uint8Array,
+    jwt: string,
+    request: CheckoutInitializeRequest
+  ): Promise<CheckoutResult>;
+  payWithMemo(
+    secretKey: Uint8Array,
+    treasury: string,
+    amount: bigint,
+    memo: string
+  ): Promise<string>;
   agenticSignup(options: AgenticSignupOptions): Promise<AgenticSignupResult>;
 }

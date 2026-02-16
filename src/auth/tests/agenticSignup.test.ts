@@ -78,7 +78,7 @@ describe("agenticSignup", () => {
       new Uint8Array(64),
       "jwt-token-123",
       { paymentType: "subscription" },
-      undefined,
+      undefined
     );
   });
 
@@ -145,7 +145,7 @@ describe("agenticSignup", () => {
       new Uint8Array(64),
       "jwt-token-123",
       { paymentType: "subscription" },
-      "test-agent/1.0",
+      "test-agent/1.0"
     );
   });
 });

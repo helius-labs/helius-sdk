@@ -9,7 +9,9 @@ jest.mock("@solana/kit", () => ({
   }),
 }));
 
-const mockBuildAndSend = buildAndSendTokenTransfer as jest.MockedFunction<typeof buildAndSendTokenTransfer>;
+const mockBuildAndSend = buildAndSendTokenTransfer as jest.MockedFunction<
+  typeof buildAndSendTokenTransfer
+>;
 
 describe("payWithMemo", () => {
   const mockSecretKey = new Uint8Array(64).fill(1);
@@ -24,7 +26,7 @@ describe("payWithMemo", () => {
       mockSecretKey,
       "TreasuryAddress111111111111111111",
       1_000_000n,
-      "pi_test123",
+      "pi_test123"
     );
 
     expect(sig).toBe("tx-signature-abc");
@@ -42,7 +44,7 @@ describe("payWithMemo", () => {
       mockSecretKey,
       "TreasuryAddress111111111111111111",
       1_000_000n,
-      "pi_test123",
+      "pi_test123"
     );
 
     const callArgs = mockBuildAndSend.mock.calls[0][0];
@@ -50,7 +52,9 @@ describe("payWithMemo", () => {
 
     const memoIx = callArgs.additionalInstructions![0];
     expect(memoIx.programAddress).toBe(MEMO_PROGRAM_ID);
-    expect(new TextDecoder().decode(memoIx.data as Uint8Array)).toBe("pi_test123");
+    expect(new TextDecoder().decode(memoIx.data as Uint8Array)).toBe(
+      "pi_test123"
+    );
   });
 
   it("includes signer in memo instruction accounts", async () => {
@@ -58,7 +62,7 @@ describe("payWithMemo", () => {
       mockSecretKey,
       "TreasuryAddress111111111111111111",
       1_000_000n,
-      "memo-content",
+      "memo-content"
     );
 
     const memoIx = mockBuildAndSend.mock.calls[0][0].additionalInstructions![0];

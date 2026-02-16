@@ -1,7 +1,4 @@
-import type {
-  AgenticSignupOptions,
-  AgenticSignupResult,
-} from "./types";
+import type { AgenticSignupOptions, AgenticSignupResult } from "./types";
 import { loadKeypair } from "./loadKeypair";
 import { getAddress } from "./getAddress";
 import { signAuthMessage } from "./signAuthMessage";
@@ -49,13 +46,18 @@ export async function agenticSignup(
   }
 
   // Execute checkout flow (init → balance check → pay → poll → project)
-  const checkoutResult = await executeCheckout(secretKey, jwt, {
-    paymentType: "subscription",
-  }, userAgent);
+  const checkoutResult = await executeCheckout(
+    secretKey,
+    jwt,
+    {
+      paymentType: "subscription",
+    },
+    userAgent
+  );
 
   if (checkoutResult.status !== "completed") {
     throw new Error(
-      `Checkout ${checkoutResult.status}${checkoutResult.txSignature ? `. TX: ${checkoutResult.txSignature}` : ""}`,
+      `Checkout ${checkoutResult.status}${checkoutResult.txSignature ? `. TX: ${checkoutResult.txSignature}` : ""}`
     );
   }
 

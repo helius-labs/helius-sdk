@@ -24,7 +24,7 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 export async function initializeCheckout(
   jwt: string,
   request: CheckoutInitializeRequest,
-  userAgent?: string,
+  userAgent?: string
 ): Promise<CheckoutInitializeResponse> {
   return authRequest<CheckoutInitializeResponse>(
     "/checkout/initialize",
@@ -33,7 +33,7 @@ export async function initializeCheckout(
       headers: { Authorization: `Bearer ${jwt}` },
       body: JSON.stringify(request),
     },
-    userAgent,
+    userAgent
   );
 }
 
@@ -41,7 +41,7 @@ export async function pollCheckoutCompletion(
   jwt: string,
   paymentIntentId: string,
   userAgent?: string,
-  options?: { timeoutMs?: number; intervalMs?: number },
+  options?: { timeoutMs?: number; intervalMs?: number }
 ): Promise<CheckoutStatusResponse> {
   const timeoutMs = options?.timeoutMs ?? CHECKOUT_POLL_TIMEOUT_MS;
   const intervalMs = options?.intervalMs ?? CHECKOUT_POLL_INTERVAL_MS;
@@ -54,10 +54,14 @@ export async function pollCheckoutCompletion(
         method: "GET",
         headers: { Authorization: `Bearer ${jwt}` },
       },
-      userAgent,
+      userAgent
     );
 
-    if (status.status === "completed" || status.status === "expired" || status.status === "failed") {
+    if (
+      status.status === "completed" ||
+      status.status === "expired" ||
+      status.status === "failed"
+    ) {
       return status;
     }
 
@@ -74,7 +78,7 @@ export async function executeCheckout(
   secretKey: Uint8Array,
   jwt: string,
   request: CheckoutInitializeRequest,
-  userAgent?: string,
+  userAgent?: string
 ): Promise<CheckoutResult> {
   // 1. Initialize checkout
   const intent = await initializeCheckout(jwt, request, userAgent);
@@ -89,14 +93,14 @@ export async function executeCheckout(
   const solBalance = await checkSolBalance(walletAddress);
   if (solBalance < MIN_SOL_FOR_TX) {
     throw new Error(
-      `Insufficient SOL for transaction fees. Have: ${Number(solBalance) / 1_000_000_000} SOL, need: ~0.001 SOL. Fund address: ${walletAddress}`,
+      `Insufficient SOL for transaction fees. Have: ${Number(solBalance) / 1_000_000_000} SOL, need: ~0.001 SOL. Fund address: ${walletAddress}`
     );
   }
 
   const usdcBalance = await checkUsdcBalance(walletAddress);
   if (usdcBalance < amountRaw) {
     throw new Error(
-      `Insufficient USDC. Have: ${Number(usdcBalance) / 1_000_000} USDC, need: ${intent.amount} USDC. Fund address: ${walletAddress}`,
+      `Insufficient USDC. Have: ${Number(usdcBalance) / 1_000_000} USDC, need: ${intent.amount} USDC. Fund address: ${walletAddress}`
     );
   }
 
@@ -107,7 +111,7 @@ export async function executeCheckout(
       secretKey,
       intent.treasuryWallet,
       amountRaw,
-      intent.memo,
+      intent.memo
     );
   } catch (error) {
     return {
@@ -122,14 +126,15 @@ export async function executeCheckout(
   const checkoutStatus = await pollCheckoutCompletion(
     jwt,
     intent.paymentIntentId,
-    userAgent,
+    userAgent
   );
 
   if (checkoutStatus.status !== "completed") {
     return {
       paymentIntentId: intent.paymentIntentId,
       txSignature,
-      status: checkoutStatus.status === "pending" ? "timeout" : checkoutStatus.status,
+      status:
+        checkoutStatus.status === "pending" ? "timeout" : checkoutStatus.status,
       error: checkoutStatus.failureReason,
     };
   }

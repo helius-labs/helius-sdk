@@ -1,4 +1,8 @@
-import { initializeCheckout, pollCheckoutCompletion, executeCheckout } from "../checkout";
+import {
+  initializeCheckout,
+  pollCheckoutCompletion,
+  executeCheckout,
+} from "../checkout";
 import { authRequest } from "../utils";
 import { checkSolBalance, checkUsdcBalance } from "../checkBalances";
 import { payWithMemo } from "../payWithMemo";
@@ -25,10 +29,16 @@ jest.mock("../constants", () => ({
 }));
 
 const mockAuthRequest = authRequest as jest.MockedFunction<typeof authRequest>;
-const mockCheckSolBalance = checkSolBalance as jest.MockedFunction<typeof checkSolBalance>;
-const mockCheckUsdcBalance = checkUsdcBalance as jest.MockedFunction<typeof checkUsdcBalance>;
+const mockCheckSolBalance = checkSolBalance as jest.MockedFunction<
+  typeof checkSolBalance
+>;
+const mockCheckUsdcBalance = checkUsdcBalance as jest.MockedFunction<
+  typeof checkUsdcBalance
+>;
 const mockPayWithMemo = payWithMemo as jest.MockedFunction<typeof payWithMemo>;
-const mockListProjects = listProjects as jest.MockedFunction<typeof listProjects>;
+const mockListProjects = listProjects as jest.MockedFunction<
+  typeof listProjects
+>;
 const mockGetProject = getProject as jest.MockedFunction<typeof getProject>;
 const mockLoadKeypair = loadKeypair as jest.MockedFunction<typeof loadKeypair>;
 const mockGetAddress = getAddress as jest.MockedFunction<typeof getAddress>;
@@ -62,7 +72,11 @@ describe("initializeCheckout", () => {
     };
     mockAuthRequest.mockResolvedValue(mockResponse);
 
-    const result = await initializeCheckout("jwt-token", { paymentType: "subscription" }, "test-agent");
+    const result = await initializeCheckout(
+      "jwt-token",
+      { paymentType: "subscription" },
+      "test-agent"
+    );
 
     expect(mockAuthRequest).toHaveBeenCalledWith(
       "/checkout/initialize",
@@ -71,7 +85,7 @@ describe("initializeCheckout", () => {
         headers: { Authorization: "Bearer jwt-token" },
         body: JSON.stringify({ paymentType: "subscription" }),
       },
-      "test-agent",
+      "test-agent"
     );
     expect(result).toEqual(mockResponse);
   });
@@ -117,7 +131,10 @@ describe("pollCheckoutCompletion", () => {
     mockAuthRequest
       .mockResolvedValueOnce({ paymentIntentId: "pi_123", status: "pending" })
       .mockResolvedValueOnce({ paymentIntentId: "pi_123", status: "pending" })
-      .mockResolvedValueOnce({ paymentIntentId: "pi_123", status: "completed" });
+      .mockResolvedValueOnce({
+        paymentIntentId: "pi_123",
+        status: "completed",
+      });
 
     const result = await pollCheckoutCompletion("jwt", "pi_123", undefined, {
       intervalMs: 10,
@@ -129,7 +146,10 @@ describe("pollCheckoutCompletion", () => {
   });
 
   it("returns pending on timeout", async () => {
-    mockAuthRequest.mockResolvedValue({ paymentIntentId: "pi_123", status: "pending" });
+    mockAuthRequest.mockResolvedValue({
+      paymentIntentId: "pi_123",
+      status: "pending",
+    });
 
     const result = await pollCheckoutCompletion("jwt", "pi_123", undefined, {
       intervalMs: 10,
@@ -144,12 +164,17 @@ describe("executeCheckout", () => {
   const mockSecretKey = new Uint8Array(64).fill(1);
 
   function setupDefaultMocks() {
-    mockLoadKeypair.mockReturnValue({ publicKey: new Uint8Array(32), secretKey: mockSecretKey });
+    mockLoadKeypair.mockReturnValue({
+      publicKey: new Uint8Array(32),
+      secretKey: mockSecretKey,
+    });
     mockGetAddress.mockResolvedValue("WalletAddress111111111111111111");
     mockCheckSolBalance.mockResolvedValue(10_000_000n);
     mockCheckUsdcBalance.mockResolvedValue(2_000_000n);
     mockPayWithMemo.mockResolvedValue("tx-sig-abc");
-    mockListProjects.mockResolvedValue([{ id: "proj-1", name: "Test" }] as never);
+    mockListProjects.mockResolvedValue([
+      { id: "proj-1", name: "Test" },
+    ] as never);
     mockGetProject.mockResolvedValue({
       apiKeys: [{ keyId: "key-123" }],
     } as never);
@@ -181,7 +206,9 @@ describe("executeCheckout", () => {
     mockCheckSolBalance.mockResolvedValue(100n);
 
     await expect(
-      executeCheckout(mockSecretKey, "jwt-token", { paymentType: "subscription" }),
+      executeCheckout(mockSecretKey, "jwt-token", {
+        paymentType: "subscription",
+      })
     ).rejects.toThrow("Insufficient SOL");
   });
 
@@ -189,7 +216,9 @@ describe("executeCheckout", () => {
     mockCheckUsdcBalance.mockResolvedValue(500_000n);
 
     await expect(
-      executeCheckout(mockSecretKey, "jwt-token", { paymentType: "subscription" }),
+      executeCheckout(mockSecretKey, "jwt-token", {
+        paymentType: "subscription",
+      })
     ).rejects.toThrow("Insufficient USDC");
   });
 

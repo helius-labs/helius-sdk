@@ -1,7 +1,4 @@
-import {
-  createKeyPairSignerFromBytes,
-  type Instruction,
-} from "@solana/kit";
+import { createKeyPairSignerFromBytes, type Instruction } from "@solana/kit";
 import { USDC_MINT, MEMO_PROGRAM_ID } from "./constants";
 import { buildAndSendTokenTransfer } from "./buildTokenTransfer";
 
@@ -9,7 +6,7 @@ export async function payWithMemo(
   secretKey: Uint8Array,
   treasuryAddress: string,
   amount: bigint,
-  memo: string,
+  memo: string
 ): Promise<string> {
   const signer = await createKeyPairSignerFromBytes(secretKey);
 

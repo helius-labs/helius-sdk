@@ -1,4 +1,7 @@
-import { buildAndSendTokenTransfer, type TokenTransferParams } from "../buildTokenTransfer";
+import {
+  buildAndSendTokenTransfer,
+  type TokenTransferParams,
+} from "../buildTokenTransfer";
 
 // Mock @solana/kit
 const mockSend = jest.fn();
@@ -27,9 +30,15 @@ jest.mock("@solana/kit", () => {
       return result;
     }),
     createTransactionMessage: jest.fn(() => ({})),
-    setTransactionMessageFeePayerSigner: jest.fn((_signer: unknown, tx: unknown) => tx),
-    setTransactionMessageLifetimeUsingBlockhash: jest.fn((_bh: unknown, tx: unknown) => tx),
-    appendTransactionMessageInstructions: jest.fn((_ixs: unknown, tx: unknown) => tx),
+    setTransactionMessageFeePayerSigner: jest.fn(
+      (_signer: unknown, tx: unknown) => tx
+    ),
+    setTransactionMessageLifetimeUsingBlockhash: jest.fn(
+      (_bh: unknown, tx: unknown) => tx
+    ),
+    appendTransactionMessageInstructions: jest.fn(
+      (_ixs: unknown, tx: unknown) => tx
+    ),
     signTransactionMessageWithSigners: jest.fn().mockResolvedValue({}),
     getSignatureFromTransaction: jest.fn(() => "mock-signature-123"),
   };
@@ -68,8 +77,13 @@ describe("buildAndSendTokenTransfer", () => {
   });
 
   it("includes additional instructions when provided", async () => {
-    const { appendTransactionMessageInstructions } = jest.requireMock("@solana/kit");
-    const memoIx = { programAddress: "Memo", accounts: [], data: new Uint8Array([1, 2, 3]) };
+    const { appendTransactionMessageInstructions } =
+      jest.requireMock("@solana/kit");
+    const memoIx = {
+      programAddress: "Memo",
+      accounts: [],
+      data: new Uint8Array([1, 2, 3]),
+    };
 
     const params: TokenTransferParams = {
       secretKey: mockSecretKey,
