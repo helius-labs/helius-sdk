@@ -48,7 +48,7 @@ export async function agenticSignup(
   const walletAddress = await getAddress(keypair);
 
   // Authenticate
-  const { message, signature } = signAuthMessage(secretKey);
+  const { message, signature } = await signAuthMessage(secretKey);
   const auth = await walletSignup(message, signature, walletAddress, userAgent);
   const jwt = auth.token;
 

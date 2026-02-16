@@ -109,13 +109,13 @@ export interface AgenticSignupResult {
 }
 
 export interface AuthClient {
-  generateKeypair(): { publicKey: Uint8Array; secretKey: Uint8Array };
+  generateKeypair(): Promise<{ publicKey: Uint8Array; secretKey: Uint8Array }>;
   loadKeypair(bytes: Uint8Array): WalletKeypair;
   getAddress(keypair: WalletKeypair): Promise<string>;
-  signAuthMessage(secretKey: Uint8Array): {
+  signAuthMessage(secretKey: Uint8Array): Promise<{
     message: string;
     signature: string;
-  };
+  }>;
   walletSignup(
     msg: string,
     sig: string,

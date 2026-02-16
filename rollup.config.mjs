@@ -8,7 +8,7 @@ const inputs = globSync('src/**/*.ts', {
   ignore: ['**/*.test.ts', '**/*.spec.ts', 'src/main.ts'],
 });
 
-const external = ["@solana/kit", "@solana-program/compute-budget", "@solana-program/stake", "@solana-program/system", "@solana-program/token", "bs58", "tweetnacl"];
+const external = ["@solana/kit", "@solana-program/compute-budget", "@solana-program/stake", "@solana-program/system", "@solana-program/token", "bs58"];
 
 const baseConfig = {
   input: inputs,
