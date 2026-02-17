@@ -92,42 +92,81 @@ export interface Project extends ProjectListItem {
   prepaidCreditsLink?: string;
 }
 
-export type PaymentType =
-  | "subscription"
-  | "upgrade"
-  | "renewal"
-  | "prepaid_credits"
-  | "overages";
 export type PaymentIntentStatus =
   | "pending"
   | "completed"
   | "expired"
   | "failed";
 
+export type CheckoutPhase = "confirming" | "activating" | "complete" | "failed" | "expired";
+
 export interface CheckoutInitializeRequest {
-  paymentType: PaymentType;
-  plan?: string;
-  creditAmount?: number;
-  projectId?: string;
+  priceId: string;           // OpenPay price ID — use resolvePriceId() or PLAN_CATALOG
+  refId: string;             // User ID (base58 from walletSignup) or project UUID
+  email?: string;
+  firstName?: string;
+  lastName?: string;
+  walletAddress?: string;
+  couponCode?: string;
 }
 
 export interface CheckoutInitializeResponse {
-  paymentIntentId: string;
-  treasuryWallet: string;
-  amount: number;
-  memo: string;
+  id: string;                        // Payment intent ID — also used as memo
+  status: PaymentIntentStatus;
+  amount: number;                    // Amount in CENTS (4900 = $49.00)
+  destinationWallet: string;         // Merchant USDC wallet
   solanaPayUrl: string;
   expiresAt: string;
-}
-
-export interface CheckoutStatusResponse {
-  paymentIntentId: string;
-  status: PaymentIntentStatus;
+  createdAt: string;
+  priceId: string;
+  refId: string;
+  couponCode?: string;
+  originalAmountCents?: number;
+  discountAmountCents?: number;
   txSignature?: string;
   payerWallet?: string;
   confirmedAt?: string;
   failedAt?: string;
   failureReason?: string;
+}
+
+export interface CheckoutStatusResponse {
+  status: PaymentIntentStatus;
+  phase: CheckoutPhase;
+  subscriptionActive: boolean;
+  readyToRedirect: boolean;
+  message: string;
+  messageSecondary?: string;
+}
+
+export interface CheckoutPreviewCoupon {
+  code: string;
+  valid: boolean;
+  percentOff?: number;
+  amountOff?: number;        // cents
+  description?: string;
+  invalidReason?: string;
+}
+
+export interface CheckoutPreviewCustomerInfo {
+  email: string;
+  firstName: string;
+  lastName: string;
+}
+
+export interface CheckoutPreviewResponse {
+  planName: string;
+  period: "monthly" | "yearly";
+  baseAmount: number;          // cents
+  subtotal: number;            // cents
+  appliedCredits: number;      // cents
+  proratedCredits: number;     // cents
+  discounts: number;           // cents
+  dueToday: number;            // cents — final amount after credits/discounts
+  destinationWallet: string;
+  note: string;
+  coupon?: CheckoutPreviewCoupon | null;
+  customerInfo?: CheckoutPreviewCustomerInfo;
 }
 
 export interface CheckoutResult {
@@ -142,6 +181,8 @@ export interface CheckoutResult {
 export interface AgenticSignupOptions {
   secretKey: Uint8Array;
   userAgent?: string;
+  priceId?: string;    // Override default Developer monthly price
+  email?: string;
 }
 
 export interface AgenticSignupResult {
@@ -191,4 +232,10 @@ export interface AuthClient {
     memo: string
   ): Promise<string>;
   agenticSignup(options: AgenticSignupOptions): Promise<AgenticSignupResult>;
+  getCheckoutPreview(jwt: string, priceId: string, refId: string, couponCode?: string): Promise<CheckoutPreviewResponse>;
+  getPaymentIntent(jwt: string, paymentIntentId: string): Promise<CheckoutInitializeResponse>;
+  getPaymentStatus(jwt: string, paymentIntentId: string): Promise<CheckoutStatusResponse>;
+  payPaymentIntent(secretKey: Uint8Array, intent: CheckoutInitializeResponse): Promise<string>;
+  executeUpgrade(secretKey: Uint8Array, jwt: string, priceId: string, projectId: string, couponCode?: string): Promise<CheckoutResult>;
+  executeRenewal(secretKey: Uint8Array, jwt: string, paymentIntentId: string): Promise<CheckoutResult>;
 }

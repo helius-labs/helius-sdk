@@ -55,13 +55,14 @@ jest.mock("../checkout", () => ({
 import { agenticSignup } from "../agenticSignup";
 import { listProjects } from "../listProjects";
 import { executeCheckout } from "../checkout";
+import { DEFAULT_DEVELOPER_MONTHLY_PRICE_ID } from "../constants";
 
 describe("agenticSignup", () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
-  it("creates a new project when none exist", async () => {
+  it("creates a new project with correct priceId and refId", async () => {
     const result = await agenticSignup({ secretKey: new Uint8Array(64) });
 
     expect(result.status).toBe("success");
@@ -77,9 +78,16 @@ describe("agenticSignup", () => {
     expect(executeCheckout).toHaveBeenCalledWith(
       new Uint8Array(64),
       "jwt-token-123",
-      { paymentType: "subscription" },
+      { priceId: DEFAULT_DEVELOPER_MONTHLY_PRICE_ID, refId: "ref-1", email: undefined },
       undefined
     );
+  });
+
+  it("passes auth.refId to executeCheckout", async () => {
+    await agenticSignup({ secretKey: new Uint8Array(64) });
+
+    const callArgs = (executeCheckout as jest.Mock).mock.calls[0];
+    expect(callArgs[2].refId).toBe("ref-1");
   });
 
   it("returns existing project when one exists", async () => {
@@ -144,8 +152,28 @@ describe("agenticSignup", () => {
     expect(executeCheckout).toHaveBeenCalledWith(
       new Uint8Array(64),
       "jwt-token-123",
-      { paymentType: "subscription" },
+      { priceId: DEFAULT_DEVELOPER_MONTHLY_PRICE_ID, refId: "ref-1", email: undefined },
       "test-agent/1.0"
     );
+  });
+
+  it("passes custom priceId override", async () => {
+    await agenticSignup({
+      secretKey: new Uint8Array(64),
+      priceId: "price_custom_123",
+    });
+
+    const callArgs = (executeCheckout as jest.Mock).mock.calls[0];
+    expect(callArgs[2].priceId).toBe("price_custom_123");
+  });
+
+  it("passes email through to executeCheckout", async () => {
+    await agenticSignup({
+      secretKey: new Uint8Array(64),
+      email: "user@example.com",
+    });
+
+    const callArgs = (executeCheckout as jest.Mock).mock.calls[0];
+    expect(callArgs[2].email).toBe("user@example.com");
   });
 });

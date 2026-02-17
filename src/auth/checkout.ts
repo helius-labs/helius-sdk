@@ -2,6 +2,7 @@ import type {
   CheckoutInitializeRequest,
   CheckoutInitializeResponse,
   CheckoutStatusResponse,
+  CheckoutPreviewResponse,
   CheckoutResult,
 } from "./types";
 import { authRequest } from "./utils";
@@ -37,6 +38,55 @@ export async function initializeCheckout(
   );
 }
 
+export async function getCheckoutPreview(
+  jwt: string,
+  priceId: string,
+  refId: string,
+  couponCode?: string,
+  userAgent?: string,
+): Promise<CheckoutPreviewResponse> {
+  const params = new URLSearchParams({ priceId, refId });
+  if (couponCode) params.set("couponCode", couponCode);
+  return authRequest<CheckoutPreviewResponse>(
+    `/checkout/preview?${params.toString()}`,
+    {
+      method: "GET",
+      headers: { Authorization: `Bearer ${jwt}` },
+    },
+    userAgent
+  );
+}
+
+export async function getPaymentIntent(
+  jwt: string,
+  paymentIntentId: string,
+  userAgent?: string,
+): Promise<CheckoutInitializeResponse> {
+  return authRequest<CheckoutInitializeResponse>(
+    `/checkout/${paymentIntentId}`,
+    {
+      method: "GET",
+      headers: { Authorization: `Bearer ${jwt}` },
+    },
+    userAgent
+  );
+}
+
+export async function getPaymentStatus(
+  jwt: string,
+  paymentIntentId: string,
+  userAgent?: string,
+): Promise<CheckoutStatusResponse> {
+  return authRequest<CheckoutStatusResponse>(
+    `/checkout/${paymentIntentId}/status`,
+    {
+      method: "GET",
+      headers: { Authorization: `Bearer ${jwt}` },
+    },
+    userAgent
+  );
+}
+
 export async function pollCheckoutCompletion(
   jwt: string,
   paymentIntentId: string,
@@ -48,20 +98,35 @@ export async function pollCheckoutCompletion(
   const deadline = Date.now() + timeoutMs;
 
   while (Date.now() < deadline) {
-    const status = await authRequest<CheckoutStatusResponse>(
-      `/checkout/${paymentIntentId}/status`,
-      {
-        method: "GET",
-        headers: { Authorization: `Bearer ${jwt}` },
-      },
-      userAgent
-    );
+    let status: CheckoutStatusResponse;
+    try {
+      status = await authRequest<CheckoutStatusResponse>(
+        `/checkout/${paymentIntentId}/status`,
+        {
+          method: "GET",
+          headers: { Authorization: `Bearer ${jwt}` },
+        },
+        userAgent
+      );
+    } catch (error) {
+      // HTTP 410 Gone — intent expired
+      if (error instanceof Error && error.message.includes("410")) {
+        return {
+          status: "expired",
+          phase: "expired",
+          subscriptionActive: false,
+          readyToRedirect: false,
+          message: "Payment intent expired",
+        };
+      }
+      throw error;
+    }
 
-    if (
-      status.status === "completed" ||
-      status.status === "expired" ||
-      status.status === "failed"
-    ) {
+    if (status.readyToRedirect) {
+      return status;
+    }
+
+    if (status.phase === "failed" || status.phase === "expired") {
       return status;
     }
 
@@ -69,26 +134,25 @@ export async function pollCheckoutCompletion(
   }
 
   return {
-    paymentIntentId,
     status: "pending",
+    phase: "confirming",
+    subscriptionActive: false,
+    readyToRedirect: false,
+    message: "Polling timed out",
   };
 }
 
-export async function executeCheckout(
+export async function payPaymentIntent(
   secretKey: Uint8Array,
-  jwt: string,
-  request: CheckoutInitializeRequest,
-  userAgent?: string
-): Promise<CheckoutResult> {
-  // 1. Initialize checkout
-  const intent = await initializeCheckout(jwt, request, userAgent);
+  intent: CheckoutInitializeResponse,
+): Promise<string> {
+  // $0 intents are auto-completed by backend — no transaction needed
+  if (intent.amount === 0) {
+    return "";
+  }
 
-  // 2. Derive wallet address
   const keypair = loadKeypair(secretKey);
   const walletAddress = await getAddress(keypair);
-
-  // 3. Check balances
-  const amountRaw = BigInt(Math.round(intent.amount * 1_000_000));
 
   const solBalance = await checkSolBalance(walletAddress);
   if (solBalance < MIN_SOL_FOR_TX) {
@@ -97,69 +161,187 @@ export async function executeCheckout(
     );
   }
 
+  // Convert cents → USDC 6-decimal raw: 4900 cents × 10,000 = 49,000,000 raw = 49.000000 USDC
+  const amountRaw = BigInt(intent.amount) * 10_000n;
+
   const usdcBalance = await checkUsdcBalance(walletAddress);
   if (usdcBalance < amountRaw) {
     throw new Error(
-      `Insufficient USDC. Have: ${Number(usdcBalance) / 1_000_000} USDC, need: ${intent.amount} USDC. Fund address: ${walletAddress}`
+      `Insufficient USDC. Have: ${Number(usdcBalance) / 1_000_000} USDC, need: ${intent.amount / 100} USDC. Fund address: ${walletAddress}`
     );
   }
 
-  // 4. Send payment with memo
+  // memo is intent.id
+  return payWithMemo(secretKey, intent.destinationWallet, amountRaw, intent.id);
+}
+
+export async function executeCheckout(
+  secretKey: Uint8Array,
+  jwt: string,
+  request: CheckoutInitializeRequest,
+  userAgent?: string,
+  options?: { skipProjectPolling?: boolean },
+): Promise<CheckoutResult> {
+  // 1. Initialize checkout
+  const intent = await initializeCheckout(jwt, request, userAgent);
+
+  // 2. Send payment (handles $0 case)
   let txSignature: string | null = null;
   try {
-    txSignature = await payWithMemo(
-      secretKey,
-      intent.treasuryWallet,
-      amountRaw,
-      intent.memo
-    );
+    txSignature = await payPaymentIntent(secretKey, intent) || null;
   } catch (error) {
     return {
-      paymentIntentId: intent.paymentIntentId,
+      paymentIntentId: intent.id,
       txSignature: null,
       status: "failed",
       error: error instanceof Error ? error.message : String(error),
     };
   }
 
-  // 5. Poll for payment confirmation
+  // 3. Poll for payment confirmation
   const checkoutStatus = await pollCheckoutCompletion(
     jwt,
-    intent.paymentIntentId,
+    intent.id,
     userAgent
   );
 
-  if (checkoutStatus.status !== "completed") {
+  if (checkoutStatus.phase === "failed") {
     return {
-      paymentIntentId: intent.paymentIntentId,
+      paymentIntentId: intent.id,
       txSignature,
-      status:
-        checkoutStatus.status === "pending" ? "timeout" : checkoutStatus.status,
-      error: checkoutStatus.failureReason,
+      status: "failed",
+      error: checkoutStatus.message,
     };
   }
 
-  // 6. Poll for project creation
-  const projectDeadline = Date.now() + PROJECT_POLL_TIMEOUT_MS;
-  let projectId: string | undefined;
-  let apiKey: string | undefined;
+  if (checkoutStatus.phase === "expired") {
+    return {
+      paymentIntentId: intent.id,
+      txSignature,
+      status: "expired",
+      error: checkoutStatus.message,
+    };
+  }
 
-  while (Date.now() < projectDeadline) {
-    const projects = await listProjects(jwt, userAgent);
-    if (projects.length > 0) {
-      projectId = projects[0].id;
-      const details = await getProject(jwt, projectId, userAgent);
-      apiKey = details.apiKeys?.[0]?.keyId;
-      break;
+  if (!checkoutStatus.readyToRedirect) {
+    return {
+      paymentIntentId: intent.id,
+      txSignature,
+      status: "timeout",
+    };
+  }
+
+  // 4. Optionally poll for project creation
+  if (!options?.skipProjectPolling) {
+    const projectDeadline = Date.now() + PROJECT_POLL_TIMEOUT_MS;
+    let projectId: string | undefined;
+    let apiKey: string | undefined;
+
+    while (Date.now() < projectDeadline) {
+      const projects = await listProjects(jwt, userAgent);
+      if (projects.length > 0) {
+        projectId = projects[0].id;
+        const details = await getProject(jwt, projectId, userAgent);
+        apiKey = details.apiKeys?.[0]?.keyId;
+        break;
+      }
+      await sleep(PROJECT_POLL_INTERVAL_MS);
     }
-    await sleep(PROJECT_POLL_INTERVAL_MS);
+
+    return {
+      paymentIntentId: intent.id,
+      txSignature,
+      status: "completed",
+      projectId,
+      apiKey,
+    };
   }
 
   return {
-    paymentIntentId: intent.paymentIntentId,
+    paymentIntentId: intent.id,
     txSignature,
     status: "completed",
-    projectId,
-    apiKey,
   };
+}
+
+export async function executeUpgrade(
+  secretKey: Uint8Array,
+  jwt: string,
+  priceId: string,
+  projectId: string,
+  couponCode?: string,
+  userAgent?: string,
+): Promise<CheckoutResult> {
+  const intent = await initializeCheckout(
+    jwt,
+    { priceId, refId: projectId, couponCode },
+    userAgent
+  );
+
+  let txSignature: string | null = null;
+  try {
+    txSignature = await payPaymentIntent(secretKey, intent) || null;
+  } catch (error) {
+    return {
+      paymentIntentId: intent.id,
+      txSignature: null,
+      status: "failed",
+      error: error instanceof Error ? error.message : String(error),
+    };
+  }
+
+  const status = await pollCheckoutCompletion(jwt, intent.id, userAgent);
+
+  if (status.phase === "failed") {
+    return { paymentIntentId: intent.id, txSignature, status: "failed", error: status.message };
+  }
+  if (status.phase === "expired") {
+    return { paymentIntentId: intent.id, txSignature, status: "expired", error: status.message };
+  }
+  if (!status.readyToRedirect) {
+    return { paymentIntentId: intent.id, txSignature, status: "timeout" };
+  }
+
+  return { paymentIntentId: intent.id, txSignature, status: "completed" };
+}
+
+export async function executeRenewal(
+  secretKey: Uint8Array,
+  jwt: string,
+  paymentIntentId: string,
+  userAgent?: string,
+): Promise<CheckoutResult> {
+  const intent = await getPaymentIntent(jwt, paymentIntentId, userAgent);
+
+  if (intent.status !== "pending") {
+    throw new Error(
+      `Payment intent is ${intent.status}, cannot pay. Only pending intents can be paid.`
+    );
+  }
+
+  let txSignature: string | null = null;
+  try {
+    txSignature = await payPaymentIntent(secretKey, intent) || null;
+  } catch (error) {
+    return {
+      paymentIntentId: intent.id,
+      txSignature: null,
+      status: "failed",
+      error: error instanceof Error ? error.message : String(error),
+    };
+  }
+
+  const status = await pollCheckoutCompletion(jwt, intent.id, userAgent);
+
+  if (status.phase === "failed") {
+    return { paymentIntentId: intent.id, txSignature, status: "failed", error: status.message };
+  }
+  if (status.phase === "expired") {
+    return { paymentIntentId: intent.id, txSignature, status: "expired", error: status.message };
+  }
+  if (!status.readyToRedirect) {
+    return { paymentIntentId: intent.id, txSignature, status: "timeout" };
+  }
+
+  return { paymentIntentId: intent.id, txSignature, status: "completed" };
 }

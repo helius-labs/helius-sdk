@@ -6,11 +6,12 @@ import { walletSignup } from "./walletSignup";
 import { listProjects } from "./listProjects";
 import { getProject } from "./getProject";
 import { executeCheckout } from "./checkout";
+import { DEFAULT_DEVELOPER_MONTHLY_PRICE_ID } from "./constants";
 
 export async function agenticSignup(
   options: AgenticSignupOptions
 ): Promise<AgenticSignupResult> {
-  const { secretKey, userAgent } = options;
+  const { secretKey, userAgent, priceId, email } = options;
 
   // Load keypair and derive address
   const keypair = loadKeypair(secretKey);
@@ -50,7 +51,9 @@ export async function agenticSignup(
     secretKey,
     jwt,
     {
-      paymentType: "subscription",
+      priceId: priceId ?? DEFAULT_DEVELOPER_MONTHLY_PRICE_ID,
+      refId: auth.refId,
+      email,
     },
     userAgent
   );
