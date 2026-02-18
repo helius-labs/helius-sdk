@@ -51,7 +51,7 @@ const helius = createHelius({
   network: "mainnet",           // "mainnet" (default) or "devnet"
   baseUrl: "https://custom..",  // Override RPC URL (optional)
   rebateAddress: "wallet",      // Wallet for RPC rebates (optional)
-  userAgent: "my-agent/1.0",   // Custom User-Agent (optional)
+  userAgent: "my-agent/1.0",   // Sent as X-Helius-Client header (does not override SDK User-Agent)
 });
 ```
 
