@@ -39,7 +39,7 @@ const txs = await helius.getTransactionsForAddress([
 const sig = await helius.tx.sendTransactionWithSender({
   instructions: [transferInstruction],
   signers: [walletSigner],
-  region: "US_EAST",
+  region: "US_EAST",  // Default, US_SLC, US_EAST, EU_WEST, EU_CENTRAL, EU_NORTH, AP_SINGAPORE, AP_TOKYO
 });
 ```
 
@@ -69,6 +69,21 @@ const helius = createHelius({
 | ZK Compression | `helius.zk.*` | Compressed accounts & proofs |
 | Wallet API | `helius.wallet.*` | Balances, history, identity lookups |
 | Standard RPC | `helius.getBalance()`, `helius.getSlot()`, etc. | All standard Solana RPC methods via proxy |
+| Raw RPC | `helius.raw` | Direct access to the underlying @solana/kit `Rpc` client (see below) |
+| Auth | `import { makeAuthClient } from "helius-sdk/auth/client"` | Agent signup, keypair gen, project/API key management (standalone import) |
+
+### `helius.raw` — Direct @solana/kit RPC Access
+
+Standard Solana RPC methods are available directly on `helius.*` via a Proxy (e.g., `helius.getBalance(addr).send()`). The `helius.raw` property exposes the same underlying `Rpc` client explicitly, which is useful when you need to pass the client to @solana/kit helpers or third-party libraries that expect a standard `Rpc` object.
+
+```typescript
+// Via proxy (convenient)
+const balance = await helius.getBalance(address).send();
+
+// Via raw (explicit, pass to other libraries)
+const rpc = helius.raw;
+const balance = await rpc.getBalance(address).send();
+```
 
 ## Recommendations
 
@@ -117,7 +132,7 @@ For time-sensitive transactions (arbitrage, sniping, liquidations), reliability,
 const sig = await helius.tx.sendTransactionWithSender({
   instructions: [yourInstruction],
   signers: [walletSigner],
-  region: "US_EAST",          // US_EAST, US_WEST, EU, ASIA
+  region: "US_EAST",          // Default, US_SLC, US_EAST, EU_WEST, EU_CENTRAL, EU_NORTH, AP_SINGAPORE, AP_TOKYO
   swqosOnly: true,            // Route through SWQOS only
   pollTimeoutMs: 60_000,
   pollIntervalMs: 2_000,
@@ -226,7 +241,7 @@ When querying `getTransactionsForAddress`, the `tokenAccounts` filter controls w
 | Enhanced WebSockets | No | No | Yes | Yes |
 | LaserStream gRPC | No | Devnet | Devnet | Devnet + Mainnet |
 
-Monitor usage via the [Helius CLI](https://www.helius.dev/docs/api-reference/helius-cli) using the command `helius usage --json`
+Monitor usage via the [Helius CLI](https://www.helius.dev/docs/api-reference/helius-cli) using the command `helius usage --json`. Verify current limits at https://docs.helius.dev — the table above may be outdated.
 
 ## Error Handling & Retries
 
@@ -244,7 +259,7 @@ try {
 
 ### Retry Strategy
 
-Retry on 429 and 5xx errors with exponential backoff:
+Retry on 429 and 5xx errors with exponential backoff. The SDK throws native `Error` objects with the HTTP status code embedded in the message string (e.g., `"API error (429): ..."` or `"HTTP error! status: 500 - ..."`). There is no `.status` property on the error object, so status detection requires message parsing:
 
 ```typescript
 async function withRetry<T>(fn: () => Promise<T>, maxRetries = 3): Promise<T> {
@@ -252,8 +267,10 @@ async function withRetry<T>(fn: () => Promise<T>, maxRetries = 3): Promise<T> {
     try {
       return await fn();
     } catch (error) {
-      const status = error.message?.match(/HTTP (\d+)/)?.[1];
-      const retryable = status === "429" || status?.startsWith("5");
+      // SDK errors embed status in message: "API error (429): ..." or "HTTP error! status: 500 - ..."
+      const msg = error instanceof Error ? error.message : "";
+      const status = msg.match(/\b(\d{3})\b/)?.[1];
+      const retryable = status === "429" || (status && status.startsWith("5"));
       if (!retryable || attempt === maxRetries) throw error;
       await new Promise(r => setTimeout(r, 1000 * 2 ** attempt));
     }
@@ -286,6 +303,7 @@ async function withRetry<T>(fn: () => Promise<T>, maxRetries = 3): Promise<T> {
 helius.getAsset({ id })                                    // Single asset by mint
 helius.getAssetBatch({ ids })                              // Multiple assets
 helius.getAssetsByOwner({ ownerAddress, page, limit })     // Assets by wallet
+helius.getAssetsByAuthority({ authorityAddress })            // Assets by update authority
 helius.getAssetsByCreator({ creatorAddress })               // Assets by creator
 helius.getAssetsByGroup({ groupKey, groupValue })           // Assets by collection
 helius.searchAssets({ ownerAddress, tokenType, ... })       // Flexible search
@@ -344,9 +362,9 @@ helius.ws.close()                                           // Clean up connecti
 ### Staking
 
 ```typescript
-helius.stake.createStakeTransaction(signer, amountSol)      // Stake SOL
-helius.stake.createUnstakeTransaction(signer, stakeAccount)  // Unstake
-helius.stake.createWithdrawTransaction(signer, stakeAccount) // Withdraw
+helius.stake.createStakeTransaction(owner, amountSol)                           // Stake SOL
+helius.stake.createUnstakeTransaction(ownerSigner, stakeAccount)                 // Unstake
+helius.stake.createWithdrawTransaction(withdrawAuth, stakeAcct, dest, lamports)  // Withdraw
 helius.stake.getHeliusStakeAccounts(wallet)                  // List stake accounts
 ```
 
@@ -370,6 +388,23 @@ helius.zk.getCompressedTokenAccountsByOwner({ owner })      // Compressed tokens
 helius.zk.getCompressedAccountProof({ hash })               // Merkle proof
 helius.zk.getCompressedBalance({ address })                 // Balance
 helius.zk.getValidityProof({ hashes })                      // Validity proof
+```
+
+### Auth (Standalone Import)
+
+The auth module is not on the main `HeliusClient` — import it separately via `helius-sdk/auth/client`. This is used for programmatic agent signup flows.
+
+```typescript
+import { makeAuthClient } from "helius-sdk/auth/client";
+
+const auth = makeAuthClient();
+const keypair = await auth.generateKeypair();              // Generate Ed25519 keypair
+const address = auth.getAddress(keypair);                   // Get wallet address
+await auth.walletSignup(keypair);                           // Register wallet with Helius
+const projects = await auth.listProjects(keypair);          // List projects
+const project = await auth.createProject(keypair, name);    // Create project
+const apiKey = await auth.createApiKey(keypair, projectId); // Create API key
+await auth.agenticSignup(keypair);                          // Full automated signup flow
 ```
 
 ## Documentation
