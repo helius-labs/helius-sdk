@@ -6,6 +6,7 @@ import {
   getCheckoutPreview,
   getPaymentIntent,
   getPaymentStatus,
+  resolvePriceId,
 } from "../checkout";
 import { authRequest } from "../utils";
 import { checkSolBalance, checkUsdcBalance } from "../checkBalances";
@@ -14,6 +15,7 @@ import { listProjects } from "../listProjects";
 import { getProject } from "../getProject";
 import { loadKeypair } from "../loadKeypair";
 import { getAddress } from "../getAddress";
+import { fetchOpenPayPriceIds } from "../devPortalConfigs";
 
 jest.mock("../utils");
 jest.mock("../checkBalances");
@@ -22,6 +24,7 @@ jest.mock("../listProjects");
 jest.mock("../getProject");
 jest.mock("../loadKeypair");
 jest.mock("../getAddress");
+jest.mock("../devPortalConfigs");
 
 // Mock polling constants to make tests fast
 jest.mock("../constants", () => ({
@@ -40,6 +43,12 @@ const mockListProjects = listProjects as jest.MockedFunction<typeof listProjects
 const mockGetProject = getProject as jest.MockedFunction<typeof getProject>;
 const mockLoadKeypair = loadKeypair as jest.MockedFunction<typeof loadKeypair>;
 const mockGetAddress = getAddress as jest.MockedFunction<typeof getAddress>;
+const mockFetchOpenPayPriceIds = fetchOpenPayPriceIds as jest.MockedFunction<typeof fetchOpenPayPriceIds>;
+
+const MOCK_PRICE_IDS = {
+  Monthly: { DEVELOPER_V4: "price_dev_monthly", BUSINESS_V4: "price_biz_monthly", PROFESSIONAL_V4: "price_pro_monthly" },
+  Yearly: { DEVELOPER_V4: "price_dev_yearly", BUSINESS_V4: "price_biz_yearly", PROFESSIONAL_V4: "price_pro_yearly" },
+};
 
 const INIT_RESPONSE = {
   id: "pi_test",
@@ -49,7 +58,7 @@ const INIT_RESPONSE = {
   solanaPayUrl: "solana:...",
   expiresAt: "2026-01-01T00:00:00Z",
   createdAt: "2025-12-01T00:00:00Z",
-  priceId: "price_stg_EZrAwZiew077g1qd",
+  priceId: "price_dev_monthly",
   refId: "ref-1",
 };
 
@@ -61,6 +70,50 @@ const POLL_COMPLETED_RESPONSE = {
   message: "Payment successful!",
 };
 
+describe("resolvePriceId", () => {
+  beforeEach(() => jest.resetAllMocks());
+
+  it("resolves developer monthly", async () => {
+    mockFetchOpenPayPriceIds.mockResolvedValue(MOCK_PRICE_IDS);
+    const result = await resolvePriceId("jwt", "developer", "monthly");
+    expect(result).toBe("price_dev_monthly");
+  });
+
+  it("resolves business yearly", async () => {
+    mockFetchOpenPayPriceIds.mockResolvedValue(MOCK_PRICE_IDS);
+    const result = await resolvePriceId("jwt", "business", "yearly");
+    expect(result).toBe("price_biz_yearly");
+  });
+
+  it("is case-insensitive for plan name", async () => {
+    mockFetchOpenPayPriceIds.mockResolvedValue(MOCK_PRICE_IDS);
+    const result = await resolvePriceId("jwt", "Developer", "monthly");
+    expect(result).toBe("price_dev_monthly");
+  });
+
+  it("throws for unknown plan", async () => {
+    await expect(resolvePriceId("jwt", "enterprise", "monthly")).rejects.toThrow(
+      "Unknown plan: enterprise"
+    );
+  });
+
+  it("includes available plans in error", async () => {
+    await expect(resolvePriceId("jwt", "invalid", "monthly")).rejects.toThrow(
+      "Available: developer, business, professional"
+    );
+  });
+
+  it("throws when priceId not found in configs", async () => {
+    mockFetchOpenPayPriceIds.mockResolvedValue({
+      Monthly: {},
+      Yearly: {},
+    });
+    await expect(resolvePriceId("jwt", "developer", "monthly")).rejects.toThrow(
+      "No priceId found for developer (monthly)"
+    );
+  });
+});
+
 describe("initializeCheckout", () => {
   beforeEach(() => jest.resetAllMocks());
 
@@ -69,7 +122,7 @@ describe("initializeCheckout", () => {
 
     const result = await initializeCheckout(
       "jwt-token",
-      { priceId: "price_stg_EZrAwZiew077g1qd", refId: "ref-1" },
+      { priceId: "price_dev_monthly", refId: "ref-1" },
       "test-agent"
     );
 
@@ -78,7 +131,7 @@ describe("initializeCheckout", () => {
       {
         method: "POST",
         headers: { Authorization: "Bearer jwt-token" },
-        body: JSON.stringify({ priceId: "price_stg_EZrAwZiew077g1qd", refId: "ref-1" }),
+        body: JSON.stringify({ priceId: "price_dev_monthly", refId: "ref-1" }),
       },
       "test-agent"
     );
@@ -175,6 +228,7 @@ describe("executeCheckout", () => {
   const mockSecretKey = new Uint8Array(64).fill(1);
 
   function setupDefaultMocks() {
+    mockFetchOpenPayPriceIds.mockResolvedValue(MOCK_PRICE_IDS);
     mockLoadKeypair.mockReturnValue({
       publicKey: new Uint8Array(32),
       secretKey: mockSecretKey,
@@ -203,7 +257,8 @@ describe("executeCheckout", () => {
 
   it("completes the full checkout flow", async () => {
     const result = await executeCheckout(mockSecretKey, "jwt-token", {
-      priceId: "price_stg_EZrAwZiew077g1qd",
+      plan: "developer",
+      period: "monthly",
       refId: "ref-1",
     });
 
@@ -226,7 +281,8 @@ describe("executeCheckout", () => {
     mockCheckSolBalance.mockResolvedValue(100n);
 
     const result = await executeCheckout(mockSecretKey, "jwt-token", {
-      priceId: "price_stg_EZrAwZiew077g1qd",
+      plan: "developer",
+      period: "monthly",
       refId: "ref-1",
     });
 
@@ -239,7 +295,8 @@ describe("executeCheckout", () => {
     mockCheckUsdcBalance.mockResolvedValue(500_000n); // 0.5 USDC
 
     const result = await executeCheckout(mockSecretKey, "jwt-token", {
-      priceId: "price_stg_EZrAwZiew077g1qd",
+      plan: "developer",
+      period: "monthly",
       refId: "ref-1",
     });
 
@@ -252,7 +309,8 @@ describe("executeCheckout", () => {
     mockPayWithMemo.mockRejectedValue(new Error("Transaction failed"));
 
     const result = await executeCheckout(mockSecretKey, "jwt-token", {
-      priceId: "price_stg_EZrAwZiew077g1qd",
+      plan: "developer",
+      period: "monthly",
       refId: "ref-1",
     });
 
@@ -272,7 +330,8 @@ describe("executeCheckout", () => {
       });
 
     const result = await executeCheckout(mockSecretKey, "jwt-token", {
-      priceId: "price_stg_EZrAwZiew077g1qd",
+      plan: "developer",
+      period: "monthly",
       refId: "ref-1",
     });
 
@@ -288,7 +347,8 @@ describe("executeCheckout", () => {
       .mockResolvedValueOnce(POLL_COMPLETED_RESPONSE);
 
     const result = await executeCheckout(mockSecretKey, "jwt-token", {
-      priceId: "price_stg_EZrAwZiew077g1qd",
+      plan: "developer",
+      period: "monthly",
       refId: "ref-1",
     });
 
@@ -302,7 +362,7 @@ describe("executeCheckout", () => {
     const result = await executeCheckout(
       mockSecretKey,
       "jwt-token",
-      { priceId: "price_stg_EZrAwZiew077g1qd", refId: "ref-1" },
+      { plan: "developer", period: "monthly", refId: "ref-1" },
       undefined,
       { skipProjectPolling: true },
     );
@@ -315,9 +375,12 @@ describe("executeCheckout", () => {
 });
 
 describe("getCheckoutPreview", () => {
-  beforeEach(() => jest.resetAllMocks());
+  beforeEach(() => {
+    jest.resetAllMocks();
+    mockFetchOpenPayPriceIds.mockResolvedValue(MOCK_PRICE_IDS);
+  });
 
-  it("sends GET to /checkout/preview with query params", async () => {
+  it("resolves priceId and sends GET to /checkout/preview with query params", async () => {
     const mockPreview = {
       planName: "Business",
       period: "monthly",
@@ -332,10 +395,10 @@ describe("getCheckoutPreview", () => {
     };
     mockAuthRequest.mockResolvedValue(mockPreview);
 
-    const result = await getCheckoutPreview("jwt", "price_123", "proj-1", "SAVE10", "agent");
+    const result = await getCheckoutPreview("jwt", "business", "monthly", "proj-1", "SAVE10", "agent");
 
     expect(mockAuthRequest).toHaveBeenCalledWith(
-      "/checkout/preview?priceId=price_123&refId=proj-1&couponCode=SAVE10",
+      "/checkout/preview?priceId=price_biz_monthly&refId=proj-1&couponCode=SAVE10",
       { method: "GET", headers: { Authorization: "Bearer jwt" } },
       "agent"
     );
@@ -345,10 +408,10 @@ describe("getCheckoutPreview", () => {
   it("sends GET without couponCode when not provided", async () => {
     mockAuthRequest.mockResolvedValue({});
 
-    await getCheckoutPreview("jwt", "price_123", "proj-1");
+    await getCheckoutPreview("jwt", "developer", "monthly", "proj-1");
 
     expect(mockAuthRequest).toHaveBeenCalledWith(
-      "/checkout/preview?priceId=price_123&refId=proj-1",
+      "/checkout/preview?priceId=price_dev_monthly&refId=proj-1",
       { method: "GET", headers: { Authorization: "Bearer jwt" } },
       undefined
     );

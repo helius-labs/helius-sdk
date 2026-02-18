@@ -55,14 +55,13 @@ jest.mock("../checkout", () => ({
 import { agenticSignup } from "../agenticSignup";
 import { listProjects } from "../listProjects";
 import { executeCheckout } from "../checkout";
-import { DEFAULT_DEVELOPER_MONTHLY_PRICE_ID } from "../constants";
 
 describe("agenticSignup", () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
-  it("creates a new project with correct priceId and refId", async () => {
+  it("creates a new project with correct plan+period and refId", async () => {
     const result = await agenticSignup({ secretKey: new Uint8Array(64) });
 
     expect(result.status).toBe("success");
@@ -78,7 +77,7 @@ describe("agenticSignup", () => {
     expect(executeCheckout).toHaveBeenCalledWith(
       new Uint8Array(64),
       "jwt-token-123",
-      { priceId: DEFAULT_DEVELOPER_MONTHLY_PRICE_ID, refId: "ref-1", email: undefined },
+      { plan: "developer", period: "monthly", refId: "ref-1", email: undefined },
       undefined
     );
   });
@@ -152,19 +151,21 @@ describe("agenticSignup", () => {
     expect(executeCheckout).toHaveBeenCalledWith(
       new Uint8Array(64),
       "jwt-token-123",
-      { priceId: DEFAULT_DEVELOPER_MONTHLY_PRICE_ID, refId: "ref-1", email: undefined },
+      { plan: "developer", period: "monthly", refId: "ref-1", email: undefined },
       "test-agent/1.0"
     );
   });
 
-  it("passes custom priceId override", async () => {
+  it("passes custom plan+period override", async () => {
     await agenticSignup({
       secretKey: new Uint8Array(64),
-      priceId: "price_custom_123",
+      plan: "business",
+      period: "yearly",
     });
 
     const callArgs = (executeCheckout as jest.Mock).mock.calls[0];
-    expect(callArgs[2].priceId).toBe("price_custom_123");
+    expect(callArgs[2].plan).toBe("business");
+    expect(callArgs[2].period).toBe("yearly");
   });
 
   it("passes email through to executeCheckout", async () => {

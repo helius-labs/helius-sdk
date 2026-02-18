@@ -6,12 +6,11 @@ import { walletSignup } from "./walletSignup";
 import { listProjects } from "./listProjects";
 import { getProject } from "./getProject";
 import { executeCheckout } from "./checkout";
-import { DEFAULT_DEVELOPER_MONTHLY_PRICE_ID } from "./constants";
 
 export async function agenticSignup(
   options: AgenticSignupOptions
 ): Promise<AgenticSignupResult> {
-  const { secretKey, userAgent, priceId, email } = options;
+  const { secretKey, userAgent, email } = options;
 
   // Load keypair and derive address
   const keypair = loadKeypair(secretKey);
@@ -46,12 +45,13 @@ export async function agenticSignup(
     };
   }
 
-  // Execute checkout flow (init → balance check → pay → poll → project)
+  // Execute checkout flow (resolve priceId → init → balance check → pay → poll → project)
   const checkoutResult = await executeCheckout(
     secretKey,
     jwt,
     {
-      priceId: priceId ?? DEFAULT_DEVELOPER_MONTHLY_PRICE_ID,
+      plan: options.plan ?? "developer",
+      period: options.period ?? "monthly",
       refId: auth.refId,
       email,
     },

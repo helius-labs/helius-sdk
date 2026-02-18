@@ -100,8 +100,19 @@ export type PaymentIntentStatus =
 
 export type CheckoutPhase = "confirming" | "activating" | "complete" | "failed" | "expired";
 
+export interface CheckoutRequest {
+  plan: string;                // 'developer' | 'business' | 'professional'
+  period: "monthly" | "yearly";
+  refId: string;
+  email?: string;
+  firstName?: string;
+  lastName?: string;
+  walletAddress?: string;
+  couponCode?: string;
+}
+
 export interface CheckoutInitializeRequest {
-  priceId: string;           // OpenPay price ID — use resolvePriceId() or PLAN_CATALOG
+  priceId: string;           // OpenPay price ID — resolved internally from plan+period
   refId: string;             // User ID (base58 from walletSignup) or project UUID
   email?: string;
   firstName?: string;
@@ -181,7 +192,8 @@ export interface CheckoutResult {
 export interface AgenticSignupOptions {
   secretKey: Uint8Array;
   userAgent?: string;
-  priceId?: string;    // Override default Developer monthly price
+  plan?: string;                  // Override default 'developer'
+  period?: "monthly" | "yearly";  // Override default 'monthly'
   email?: string;
 }
 
@@ -223,7 +235,7 @@ export interface AuthClient {
   executeCheckout(
     secretKey: Uint8Array,
     jwt: string,
-    request: CheckoutInitializeRequest
+    request: CheckoutRequest
   ): Promise<CheckoutResult>;
   payWithMemo(
     secretKey: Uint8Array,
@@ -232,10 +244,10 @@ export interface AuthClient {
     memo: string
   ): Promise<string>;
   agenticSignup(options: AgenticSignupOptions): Promise<AgenticSignupResult>;
-  getCheckoutPreview(jwt: string, priceId: string, refId: string, couponCode?: string): Promise<CheckoutPreviewResponse>;
+  getCheckoutPreview(jwt: string, plan: string, period: "monthly" | "yearly", refId: string, couponCode?: string): Promise<CheckoutPreviewResponse>;
   getPaymentIntent(jwt: string, paymentIntentId: string): Promise<CheckoutInitializeResponse>;
   getPaymentStatus(jwt: string, paymentIntentId: string): Promise<CheckoutStatusResponse>;
   payPaymentIntent(secretKey: Uint8Array, intent: CheckoutInitializeResponse): Promise<string>;
-  executeUpgrade(secretKey: Uint8Array, jwt: string, priceId: string, projectId: string, couponCode?: string): Promise<CheckoutResult>;
+  executeUpgrade(secretKey: Uint8Array, jwt: string, plan: string, period: "monthly" | "yearly", projectId: string, couponCode?: string): Promise<CheckoutResult>;
   executeRenewal(secretKey: Uint8Array, jwt: string, paymentIntentId: string): Promise<CheckoutResult>;
 }

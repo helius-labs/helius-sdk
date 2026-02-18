@@ -43,13 +43,13 @@ export function makeAuthClient(userAgent?: string): AuthClient {
     executeCheckout: (sk, jwt, req) => executeCheckout(sk, jwt, req, userAgent),
     payWithMemo,
     agenticSignup: (options) => agenticSignup({ ...options, userAgent }),
-    getCheckoutPreview: (jwt, priceId, refId, coupon) =>
-      getCheckoutPreview(jwt, priceId, refId, coupon, userAgent),
+    getCheckoutPreview: (jwt, plan, period, refId, coupon) =>
+      getCheckoutPreview(jwt, plan, period, refId, coupon, userAgent),
     getPaymentIntent: (jwt, id) => getPaymentIntent(jwt, id, userAgent),
     getPaymentStatus: (jwt, id) => getPaymentStatus(jwt, id, userAgent),
     payPaymentIntent,
-    executeUpgrade: (sk, jwt, priceId, projectId, coupon) =>
-      executeUpgrade(sk, jwt, priceId, projectId, coupon, userAgent),
+    executeUpgrade: (sk, jwt, plan, period, projectId, coupon) =>
+      executeUpgrade(sk, jwt, plan, period, projectId, coupon, userAgent),
     executeRenewal: (sk, jwt, id) => executeRenewal(sk, jwt, id, userAgent),
   };
 }

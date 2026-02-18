@@ -4,6 +4,7 @@ import type {
   CheckoutStatusResponse,
   CheckoutPreviewResponse,
   CheckoutResult,
+  CheckoutRequest,
 } from "./types";
 import { authRequest } from "./utils";
 import { loadKeypair } from "./loadKeypair";
@@ -18,9 +19,32 @@ import {
   CHECKOUT_POLL_TIMEOUT_MS,
   PROJECT_POLL_INTERVAL_MS,
   PROJECT_POLL_TIMEOUT_MS,
+  PLAN_TO_USAGE_PLAN,
 } from "./constants";
+import { fetchOpenPayPriceIds } from "./devPortalConfigs";
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+export async function resolvePriceId(
+  jwt: string,
+  plan: string,
+  period: "monthly" | "yearly",
+  userAgent?: string,
+): Promise<string> {
+  const usagePlan = PLAN_TO_USAGE_PLAN[plan.toLowerCase()];
+  if (!usagePlan) {
+    throw new Error(
+      `Unknown plan: ${plan}. Available: ${Object.keys(PLAN_TO_USAGE_PLAN).join(", ")}`
+    );
+  }
+  const priceIds = await fetchOpenPayPriceIds(jwt, userAgent);
+  const periodKey = period === "monthly" ? "Monthly" : "Yearly";
+  const priceId = priceIds[periodKey][usagePlan];
+  if (!priceId) {
+    throw new Error(`No priceId found for ${plan} (${period})`);
+  }
+  return priceId;
+}
 
 export async function initializeCheckout(
   jwt: string,
@@ -40,11 +64,13 @@ export async function initializeCheckout(
 
 export async function getCheckoutPreview(
   jwt: string,
-  priceId: string,
+  plan: string,
+  period: "monthly" | "yearly",
   refId: string,
   couponCode?: string,
   userAgent?: string,
 ): Promise<CheckoutPreviewResponse> {
+  const priceId = await resolvePriceId(jwt, plan, period, userAgent);
   const params = new URLSearchParams({ priceId, refId });
   if (couponCode) params.set("couponCode", couponCode);
   return authRequest<CheckoutPreviewResponse>(
@@ -178,12 +204,14 @@ export async function payPaymentIntent(
 export async function executeCheckout(
   secretKey: Uint8Array,
   jwt: string,
-  request: CheckoutInitializeRequest,
+  request: CheckoutRequest,
   userAgent?: string,
   options?: { skipProjectPolling?: boolean },
 ): Promise<CheckoutResult> {
-  // 1. Initialize checkout
-  const intent = await initializeCheckout(jwt, request, userAgent);
+  // 1. Resolve priceId from plan+period, then initialize checkout
+  const priceId = await resolvePriceId(jwt, request.plan, request.period, userAgent);
+  const { plan: _, period: __, ...rest } = request;
+  const intent = await initializeCheckout(jwt, { priceId, ...rest }, userAgent);
 
   // 2. Send payment (handles $0 case)
   let txSignature: string | null = null;
@@ -267,11 +295,13 @@ export async function executeCheckout(
 export async function executeUpgrade(
   secretKey: Uint8Array,
   jwt: string,
-  priceId: string,
+  plan: string,
+  period: "monthly" | "yearly",
   projectId: string,
   couponCode?: string,
   userAgent?: string,
 ): Promise<CheckoutResult> {
+  const priceId = await resolvePriceId(jwt, plan, period, userAgent);
   const intent = await initializeCheckout(
     jwt,
     { priceId, refId: projectId, couponCode },
