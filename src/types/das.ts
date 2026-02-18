@@ -708,7 +708,7 @@ export interface SearchAssetsRequest {
   creatorVerified?: boolean;
   /** Filter by authority address (e.g. update authority). */
   authorityAddress?: string;
-  /** Filter by owner wallet address. */
+  /** Filter by ownership model (e.g. single or token). */
   ownerType?: OwnershipModel;
   /** Filter by group membership (e.g. `["collection", "<address>"]`). */
   grouping?: string[];

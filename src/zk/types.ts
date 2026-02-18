@@ -40,7 +40,7 @@ export interface GetCompressedAccountValue {
 
 /** Response from `getCompressedAccount`. */
 export interface GetCompressedAccountResponse {
-  /** The compressed account data, or `null` if not found. */
+  /** The compressed account data. */
   value: GetCompressedAccountValue;
   /** The slot context for this response. */
   context: { slot: number };
@@ -78,7 +78,7 @@ export type GetCompressedAccountProofResponse = Readonly<{
 
 /** Request parameters for `getCompressedAccountsByOwner`. */
 export interface GetCompressedAccountsByOwnerRequest {
-  /** Base58-encoded public key of the owner program whose accounts to retrieve. */
+  /** Base58-encoded public key of the owner wallet whose accounts to retrieve. */
   owner: string;
   /** Base58-encoded pagination cursor from a previous response's `cursor` field; omit to start from the beginning. */
   cursor?: string | null;

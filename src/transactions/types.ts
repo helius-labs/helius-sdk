@@ -23,7 +23,7 @@ import { GetComputeUnitsFn } from "./getComputeUnits";
 export interface GetComputeUnitsOpts {
   /** Minimum CU floor for very small transactions. Defaults to 1,000. */
   min?: number;
-  /** Buffer percentage added on top of simulated CU. Defaults to 10 (10%). */
+  /** Buffer percentage added on top of simulated CU. Defaults to 0.1 (10%). */
   bufferPct?: number;
 }
 
@@ -145,7 +145,7 @@ export interface BroadcastOptions {
    * When `true`, routes exclusively through SWQOS infrastructure.
    * Has a lower minimum tip requirement than the default dual-routing mode.
    */
-  swqos_only?: boolean;
+  swqosOnly?: boolean;
 }
 
 /** Options for polling transaction confirmation status. */
@@ -210,7 +210,7 @@ export const senderPingUrl = (region: SenderRegion) =>
 
 /** Input for `createSmartTransactionWithTip` — adds a Jito/sender tip instruction. */
 export interface CreateSmartTxWithTipInput extends CreateSmartTxInput {
-  /** Tip amount in lamports. Defaults to 1,000. */
+  /** Tip amount in lamports. Defaults to 500,000. */
   tipAmount?: number;
 }
 
