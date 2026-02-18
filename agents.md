@@ -231,6 +231,28 @@ When querying `getTransactionsForAddress`, the `tokenAccounts` filter controls w
 | `"balanceChanged"` | Also includes token transactions that changed a balance | **Recommended for most agents** — shows token sends/receives without noise |
 | `"all"` | Includes all token account transactions | You need complete token activity (can return many results) |
 
+## `changedSinceSlot` — Incremental Account Fetching
+
+`getProgramAccountsV2` and `getTokenAccountsByOwnerV2` (and their auto-paginating `getAll*` variants) support `changedSinceSlot`, a Helius-specific parameter that returns only accounts modified after a given slot. This is useful for syncing or indexing workflows where you've already fetched a baseline and only need the delta.
+
+```typescript
+// First fetch: get all accounts
+const baseline = await helius.getProgramAccountsV2([programId, { limit: 10_000 }]);
+const lastSlot = currentSlot; // save the slot you fetched at
+
+// Later: only get accounts that changed since your last fetch
+const updates = await helius.getProgramAccountsV2([
+  programId,
+  { limit: 10_000, changedSinceSlot: lastSlot },
+]);
+```
+
+| Use `changedSinceSlot` when | Don't use it when |
+|-----|------|
+| Polling for account updates on a schedule | Doing a one-time full fetch |
+| Building an indexer that tracks state changes | You need the complete set regardless of recency |
+| Reducing response size on large programs (thousands of accounts) | The program has very few accounts |
+
 ## Rate Limits & Plans
 
 | Feature | Free | Developer $49/mo | Business $499/mo | Professional $999/mo |
