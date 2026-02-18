@@ -196,6 +196,7 @@ do {
 } while (paginationToken);
 
 // getProgramAccountsV2 — uses paginationKey
+// getTokenAccountsByOwnerV2 follows the same shape (paginationKey, accounts, totalResults)
 let paginationKey = null;
 do {
   const result = await helius.getProgramAccountsV2([
@@ -317,9 +318,9 @@ helius.getSignaturesForAsset({ id })                        // Transaction histo
 ### RPC V2 Methods
 
 ```typescript
-helius.getTransactionsForAddress([address, config])         // Transaction history
-helius.getProgramAccountsV2([programId, config])            // Program accounts (paginated)
-helius.getTokenAccountsByOwnerV2([owner, filter, config])   // Token accounts (paginated)
+helius.getTransactionsForAddress([address, config])         // Transaction history (paginationToken)
+helius.getProgramAccountsV2([programId, config])            // Program accounts (paginationKey)
+helius.getTokenAccountsByOwnerV2([owner, filter?, config?]) // Token accounts — same shape as gPAv2 (paginationKey)
 helius.getPriorityFeeEstimate({ accountKeys, options })     // Fee estimates
 ```
 
