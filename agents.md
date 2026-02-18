@@ -392,19 +392,25 @@ helius.zk.getValidityProof({ hashes })                      // Validity proof
 
 ### Auth (Standalone Import)
 
-The auth module is not on the main `HeliusClient` — import it separately via `helius-sdk/auth/client`. This is used for programmatic agent signup flows.
+The auth module is not on the main `HeliusClient` — import it separately via `helius-sdk/auth/client`. This is used for programmatic agent signup flows. The step-by-step flow requires signing an auth message first to obtain a JWT, then using that JWT for all subsequent API calls.
 
 ```typescript
 import { makeAuthClient } from "helius-sdk/auth/client";
 
 const auth = makeAuthClient();
-const keypair = await auth.generateKeypair();              // Generate Ed25519 keypair
-const address = auth.getAddress(keypair);                   // Get wallet address
-await auth.walletSignup(keypair);                           // Register wallet with Helius
-const projects = await auth.listProjects(keypair);          // List projects
-const project = await auth.createProject(keypair, name);    // Create project
-const apiKey = await auth.createApiKey(keypair, projectId); // Create API key
-await auth.agenticSignup(keypair);                          // Full automated signup flow
+
+// Step-by-step flow (JWT-based):
+const keypair = await auth.generateKeypair();                             // Generate Ed25519 keypair
+const address = await auth.getAddress(keypair);                           // Get wallet address (async)
+const { message, signature } = await auth.signAuthMessage(keypair.secretKey); // Sign auth message
+const { token } = await auth.walletSignup(message, signature, address);   // Get JWT via signup
+const projects = await auth.listProjects(token);                          // List projects (needs JWT)
+const project = await auth.createProject(token);                          // Create project (needs JWT)
+const apiKey = await auth.createApiKey(token, project.id, address);       // Create API key (needs JWT)
+
+// Or use the all-in-one shortcut:
+const result = await auth.agenticSignup({ secretKey: keypair.secretKey }); // Full automated flow
+// result: { jwt, walletAddress, projectId, apiKey, endpoints, credits }
 ```
 
 ## Documentation
