@@ -181,7 +181,7 @@ Coverage threshold: 65% across branches, functions, lines, and statements.
 - **Never commit:** API keys, secrets, .env files, private keys, seed phrases
 - **Never break tree-shaking:** No top-level side effects, no barrel re-exports with side effects
 - **Don't edit generated files:** `src/version.ts` and `dist/` are build artifacts
-- **Match Helius API specs:** See https://docs.helius.dev
+- **Match Helius API specs:** See https://www.helius.dev/docs
 - **Maintain dual ESM/CJS:** Both formats must work
 - **Minimum Node.js 20:** Relies on native fetch
 - **Use @solana/kit:** Not @solana/web3.js (see MIGRATION.md for context)
