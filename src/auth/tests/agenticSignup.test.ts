@@ -61,6 +61,7 @@ jest.mock("../payUSDC", () => ({
 
 import { agenticSignup } from "../agenticSignup";
 import { listProjects } from "../listProjects";
+import { createProject } from "../createProject";
 import { checkSolBalance, checkUsdcBalance } from "../checkBalances";
 import { payUSDC } from "../payUSDC";
 
@@ -118,6 +119,33 @@ describe("agenticSignup", () => {
     await expect(
       agenticSignup({ secretKey: new Uint8Array(64) })
     ).rejects.toThrow("Insufficient USDC");
+  });
+
+  it("retries on 5xx errors", async () => {
+    (createProject as jest.Mock)
+      .mockRejectedValueOnce(new Error("API error (500): Internal Server Error"))
+      .mockResolvedValueOnce({
+        id: "proj-retry",
+        name: "Retry Project",
+        apiKeys: [{ keyId: "key-retry" }],
+      });
+
+    const result = await agenticSignup({ secretKey: new Uint8Array(64) });
+
+    expect(createProject).toHaveBeenCalledTimes(2);
+    expect(result.projectId).toBe("proj-retry");
+  });
+
+  it("does not retry on 4xx errors", async () => {
+    (createProject as jest.Mock).mockRejectedValueOnce(
+      new Error("API error (400): Bad Request")
+    );
+
+    await expect(
+      agenticSignup({ secretKey: new Uint8Array(64) })
+    ).rejects.toThrow("API error (400): Bad Request");
+
+    expect(createProject).toHaveBeenCalledTimes(1);
   });
 
   it("passes userAgent through", async () => {

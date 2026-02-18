@@ -7,12 +7,8 @@ import { RPC_URL, USDC_MINT } from "./constants";
 
 export async function checkSolBalance(walletAddress: string): Promise<bigint> {
   const rpc = createSolanaRpc(RPC_URL);
-  try {
-    const response = await rpc.getBalance(toAddress(walletAddress)).send();
-    return response.value;
-  } catch {
-    return 0n;
-  }
+  const response = await rpc.getBalance(toAddress(walletAddress)).send();
+  return response.value;
 }
 
 export async function checkUsdcBalance(walletAddress: string): Promise<bigint> {
@@ -28,6 +24,7 @@ export async function checkUsdcBalance(walletAddress: string): Promise<bigint> {
     const response = await rpc.getTokenAccountBalance(ata).send();
     return BigInt(response.value.amount);
   } catch {
+    // Token account doesn't exist yet — no USDC balance
     return 0n;
   }
 }

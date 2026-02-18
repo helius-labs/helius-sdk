@@ -28,7 +28,7 @@ describe("createApiKey", () => {
 
     expect(result).toEqual(mockKey);
     expect(mockFetch).toHaveBeenCalledWith(
-      "https://dev-api.helius.xyz/v0/projects/proj-1/add-key",
+      "https://api.helius.xyz/v0/projects/proj-1/add-key",
       expect.objectContaining({
         method: "POST",
         headers: expect.objectContaining({

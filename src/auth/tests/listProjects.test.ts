@@ -20,7 +20,7 @@ describe("listProjects", () => {
 
     expect(result).toEqual(mockProjects);
     expect(mockFetch).toHaveBeenCalledWith(
-      "https://dev-api.helius.xyz/v0/projects",
+      "https://api.helius.xyz/v0/projects",
       expect.objectContaining({
         method: "GET",
         headers: expect.objectContaining({

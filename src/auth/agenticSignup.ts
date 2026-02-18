@@ -16,6 +16,26 @@ import { MIN_SOL_FOR_TX, PAYMENT_AMOUNT } from "./constants";
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
+function buildEndpoints(apiKey: string) {
+  return {
+    mainnet: `https://mainnet.helius-rpc.com/?api-key=${apiKey}`,
+    devnet: `https://devnet.helius-rpc.com/?api-key=${apiKey}`,
+  };
+}
+
+function isRetryableError(error: unknown): boolean {
+  if (error instanceof Error) {
+    const match = error.message.match(/API error \((\d+)\)/);
+    if (match) {
+      const status = parseInt(match[1], 10);
+      return status >= 500;
+    }
+    // Network errors (no status code) are retryable
+    return true;
+  }
+  return true;
+}
+
 async function createProjectWithRetry(
   jwt: string,
   userAgent: string | undefined,
@@ -29,6 +49,9 @@ async function createProjectWithRetry(
       return await createProject(jwt, userAgent);
     } catch (error) {
       lastError = error instanceof Error ? error : new Error(String(error));
+      if (!isRetryableError(error)) {
+        throw lastError;
+      }
       if (i < maxRetries - 1) {
         await sleep(delayMs);
       }
@@ -66,12 +89,7 @@ export async function agenticSignup(
       walletAddress,
       projectId: project.id,
       apiKey,
-      endpoints: apiKey
-        ? {
-            mainnet: `https://mainnet.helius-rpc.com/?api-key=${apiKey}`,
-            devnet: `https://devnet.helius-rpc.com/?api-key=${apiKey}`,
-          }
-        : null,
+      endpoints: apiKey ? buildEndpoints(apiKey) : null,
       credits: projectDetails.creditsUsage?.remainingCredits ?? null,
     };
   }
@@ -106,13 +124,8 @@ export async function agenticSignup(
     walletAddress,
     projectId: project.id,
     apiKey,
-    endpoints: apiKey
-      ? {
-          mainnet: `https://mainnet.helius-rpc.com/?api-key=${apiKey}`,
-          devnet: `https://devnet.helius-rpc.com/?api-key=${apiKey}`,
-        }
-      : null,
-    credits: projectDetails.creditsUsage?.remainingCredits ?? 1000000,
+    endpoints: apiKey ? buildEndpoints(apiKey) : null,
+    credits: projectDetails.creditsUsage?.remainingCredits ?? null,
     txSignature,
   };
 }

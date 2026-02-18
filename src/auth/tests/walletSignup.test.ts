@@ -20,7 +20,7 @@ describe("walletSignup", () => {
 
     expect(result).toEqual(mockResponse);
     expect(mockFetch).toHaveBeenCalledWith(
-      "https://dev-api.helius.xyz/v0/wallet-signup",
+      "https://api.helius.xyz/v0/wallet-signup",
       expect.objectContaining({
         method: "POST",
         body: JSON.stringify({
