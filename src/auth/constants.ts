@@ -1,6 +1,6 @@
 import type { Address } from "@solana/kit";
 
-export const API_URL = "https://api.helius.xyz/v0";
+export const API_URL = "https://dev-api.helius.xyz/v0";
 
 export const TREASURY =
   "CEs84tEowsXpH8u4VBf8rJSVgSRypFMfXw9CpGRtQgb6" as Address;
