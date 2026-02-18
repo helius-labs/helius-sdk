@@ -123,7 +123,9 @@ describe("agenticSignup", () => {
 
   it("retries on 5xx errors", async () => {
     (createProject as jest.Mock)
-      .mockRejectedValueOnce(new Error("API error (500): Internal Server Error"))
+      .mockRejectedValueOnce(
+        new Error("API error (500): Internal Server Error")
+      )
       .mockResolvedValueOnce({
         id: "proj-retry",
         name: "Retry Project",

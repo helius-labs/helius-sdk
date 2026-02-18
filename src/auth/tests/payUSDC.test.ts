@@ -30,14 +30,18 @@ jest.mock("@solana/kit", () => {
     setTransactionMessageLifetimeUsingBlockhash: jest.fn((_, tx) => tx),
     appendTransactionMessageInstructions: jest.fn((_, tx) => tx),
     signTransactionMessageWithSigners: jest.fn().mockResolvedValue({
-      signatures: { SignerAddress1111111111111111111111111111111: new Uint8Array(64) },
+      signatures: {
+        SignerAddress1111111111111111111111111111111: new Uint8Array(64),
+      },
     }),
     getSignatureFromTransaction: jest.fn(() => "tx-signature-abc123"),
   };
 });
 
 jest.mock("@solana-program/token", () => ({
-  findAssociatedTokenPda: jest.fn().mockResolvedValue(["MockAta111111111111111111111111111111111111"]),
+  findAssociatedTokenPda: jest
+    .fn()
+    .mockResolvedValue(["MockAta111111111111111111111111111111111111"]),
   TOKEN_PROGRAM_ADDRESS: "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
   getTransferInstruction: jest.fn(() => ({ programAddress: "token" })),
 }));
@@ -49,7 +53,10 @@ import {
   createKeyPairSignerFromBytes,
   getSignatureFromTransaction,
 } from "@solana/kit";
-import { findAssociatedTokenPda, getTransferInstruction } from "@solana-program/token";
+import {
+  findAssociatedTokenPda,
+  getTransferInstruction,
+} from "@solana-program/token";
 
 const MOCK_SECRET_KEY = new Uint8Array(64);
 
@@ -103,10 +110,9 @@ describe("payUSDC", () => {
   it("sends and confirms the transaction", async () => {
     await payUSDC(MOCK_SECRET_KEY);
 
-    expect(mockSendAndConfirm).toHaveBeenCalledWith(
-      expect.anything(),
-      { commitment: "confirmed" }
-    );
+    expect(mockSendAndConfirm).toHaveBeenCalledWith(expect.anything(), {
+      commitment: "confirmed",
+    });
   });
 
   it("returns the transaction signature", async () => {
@@ -125,6 +131,8 @@ describe("payUSDC", () => {
   it("propagates send-and-confirm failures", async () => {
     mockSendAndConfirm.mockRejectedValue(new Error("Transaction failed"));
 
-    await expect(payUSDC(MOCK_SECRET_KEY)).rejects.toThrow("Transaction failed");
+    await expect(payUSDC(MOCK_SECRET_KEY)).rejects.toThrow(
+      "Transaction failed"
+    );
   });
 });
