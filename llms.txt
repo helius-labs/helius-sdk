@@ -328,6 +328,7 @@ try {
 ## Documentation
 
 - API Reference: https://www.helius.dev/docs/llms.txt
+- Changelog: https://github.com/helius-labs/helius-sdk/blob/main/CHANGELOG.md
 - Migration Guide (1.x to 2.x): https://github.com/helius-labs/helius-sdk/blob/main/MIGRATION.md
 - @solana/kit Docs: https://www.solanakit.com
 

@@ -1,0 +1,5 @@
+{
+  "template": "keepachangelog",
+  "commitLimit": 0,
+  "ignoreCommitPattern": "^(Bump|Version|build\\(deps|chore\\(release\\)|Flatten Dist|Build release|Ignore Claude|\\d+\\.\\d+\\.\\d+\\s|Tag Version)"
+}
