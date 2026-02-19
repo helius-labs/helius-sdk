@@ -1,13 +1,10 @@
-name: Format Check
+name: Publish to npm
 
 on:
-  push:
-    branches: ["main", "dev"]
-  pull_request:
-    branches: ["main", "dev"]
+  workflow_dispatch:
 
 jobs:
-  format-check:
+  publish:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -17,11 +14,12 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "20"
+          registry-url: "https://registry.npmjs.org"
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v4 
+        uses: pnpm/action-setup@v4
         with:
-          version: 9            
+          version: 9
           run_install: false
 
       - name: Cache dependencies
@@ -32,18 +30,16 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pnpm-
 
-      - name: Clean up disk space
-        run: |
-          sudo rm -rf /usr/share/dotnet
-          sudo rm -rf /usr/local/lib/android
-          sudo rm -rf /opt/ghc
-          df -h
-
       - name: Install dependencies
         run: pnpm install --prefer-offline
 
-      - name: Run Prettier format check
-        run: pnpm run format:check
+      - name: Run tests
+        run: pnpm test
 
-      - name: Show disk usage after check
-        run: df -h
+      - name: Build
+        run: pnpm build
+
+      - name: Publish to npm
+        run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

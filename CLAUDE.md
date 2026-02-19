@@ -17,7 +17,7 @@ pnpm check-bundle         # Build + verify tree-shakability + bundle sizes
 
 Before submitting a PR, run: `pnpm format && pnpm lint && pnpm test && pnpm check-bundle`
 
-CI only runs format checks — it does NOT run tests or build. You must verify locally for the time being.
+CI runs formatting, linting, tests, build, tree-shake checks, and bundle size checks on every push and PR to `main`.
 
 ## Project Structure
 
@@ -174,7 +174,7 @@ Coverage threshold: 65% across branches, functions, lines, and statements.
 - PR title format: `feat(namespace): Title` or `fix(namespace): Title`
 - Include `Co-Authored-By` for AI contributions
 - Reference issues: `Closes #123`
-- CI runs `pnpm format:check` on PRs to `main` and `dev`
+- CI runs lint, test, and build jobs on pushes and PRs to `main`
 
 ## Boundaries
 

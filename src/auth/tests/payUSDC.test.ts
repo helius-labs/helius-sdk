@@ -48,8 +48,6 @@ jest.mock("@solana-program/token", () => ({
 
 import { payUSDC } from "../payUSDC";
 import {
-  createSolanaRpc,
-  sendAndConfirmTransactionFactory,
   createKeyPairSignerFromBytes,
   getSignatureFromTransaction,
 } from "@solana/kit";

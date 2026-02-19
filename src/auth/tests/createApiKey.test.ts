@@ -1,4 +1,5 @@
 import { createApiKey } from "../createApiKey";
+import { API_URL } from "../constants";
 
 const mockFetch = jest.fn();
 global.fetch = mockFetch as jest.Mock;
@@ -28,7 +29,7 @@ describe("createApiKey", () => {
 
     expect(result).toEqual(mockKey);
     expect(mockFetch).toHaveBeenCalledWith(
-      "https://api.helius.xyz/v0/projects/proj-1/add-key",
+      `${API_URL}/projects/proj-1/add-key`,
       expect.objectContaining({
         method: "POST",
         headers: expect.objectContaining({

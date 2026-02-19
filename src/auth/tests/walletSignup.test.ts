@@ -1,4 +1,5 @@
 import { walletSignup } from "../walletSignup";
+import { API_URL } from "../constants";
 
 const mockFetch = jest.fn();
 global.fetch = mockFetch as jest.Mock;
@@ -20,7 +21,7 @@ describe("walletSignup", () => {
 
     expect(result).toEqual(mockResponse);
     expect(mockFetch).toHaveBeenCalledWith(
-      "https://api.helius.xyz/v0/wallet-signup",
+      `${API_URL}/wallet-signup`,
       expect.objectContaining({
         method: "POST",
         body: JSON.stringify({
