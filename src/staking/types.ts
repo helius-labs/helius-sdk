@@ -26,13 +26,13 @@ export const HELIUS_VALIDATOR_ID: Address =
   "he1iusunGwqrNtafDtLdhsUQDFvo13z9sUa36PauBtk" as Address;
 
 /** Max u64 value — active stake accounts have their deactivation epoch set to this. */
-export const U64_MAX = "18446744073709551615" as unknown as BigInt;
+export const U64_MAX = "18446744073709551615" as unknown as bigint;
 
 /** Size of a stake account in bytes. */
 export const STAKE_STATE_LEN = 200;
 
 /** Lamports per SOL as a BigInt-compatible value. */
-export const LAMPORTS_PER_SOL_BIGINT = "1_000_000_000" as unknown as BigInt;
+export const LAMPORTS_PER_SOL_BIGINT = "1_000_000_000" as unknown as bigint;
 
 /** Create a signed stake transaction delegating to the Helius validator. Returns the serialized tx and new stake account pubkey. */
 export type CreateStakeTransactionFn = (
