@@ -1,4 +1,5 @@
 import { createProject } from "../createProject";
+import { API_URL } from "../constants";
 
 const mockFetch = jest.fn();
 global.fetch = mockFetch as jest.Mock;
@@ -20,7 +21,7 @@ describe("createProject", () => {
 
     expect(result).toEqual(mockProject);
     expect(mockFetch).toHaveBeenCalledWith(
-      "https://api.helius.xyz/v0/projects/create",
+      `${API_URL}/projects/create`,
       expect.objectContaining({
         method: "POST",
         headers: expect.objectContaining({

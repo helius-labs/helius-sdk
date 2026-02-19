@@ -1,4 +1,5 @@
 import { getProject } from "../getProject";
+import { API_URL } from "../constants";
 
 const mockFetch = jest.fn();
 global.fetch = mockFetch as jest.Mock;
@@ -30,7 +31,7 @@ describe("getProject", () => {
 
     expect(result).toEqual(mockDetails);
     expect(mockFetch).toHaveBeenCalledWith(
-      "https://api.helius.xyz/v0/projects/proj-123",
+      `${API_URL}/projects/proj-123`,
       expect.objectContaining({
         method: "GET",
         headers: expect.objectContaining({
