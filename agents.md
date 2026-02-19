@@ -440,6 +440,7 @@ const result = await auth.agenticSignup({ secretKey: keypair.secretKey }); // Fu
 
 - Full API Reference: https://docs.helius.dev
 - LLM-Optimized Docs: https://www.helius.dev/docs/llms.txt
+- Changelog: https://github.com/helius-labs/helius-sdk/blob/main/CHANGELOG.md
 - @solana/kit Docs: https://www.solanakit.com
 - Examples: https://github.com/helius-labs/helius-sdk/tree/main/examples
 - Migration Guide (1.x to 2.x): https://github.com/helius-labs/helius-sdk/blob/main/MIGRATION.md
