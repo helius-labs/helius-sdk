@@ -1,5 +1,7 @@
 # GitHub Copilot Instructions — Helius TypeScript SDK
 
+<!-- Keep this file in sync with CLAUDE.md. Both describe the same codebase conventions; changes to one should be reflected in the other. -->
+
 TypeScript SDK for Helius APIs and Solana development. Built on `@solana/kit` with dual ESM/CJS output, lazy loading, and tree-shaking. For full contributor details see [CLAUDE.md](../CLAUDE.md).
 
 ## Critical: Use `@solana/kit`, Not `@solana/web3.js`
@@ -66,7 +68,7 @@ export const makeYourMethod = (call: RpcCaller): YourMethodFn => async (params) 
 ```
 src/
   rpc/
-    index.ts                      # HeliusClient — add lazy registrations here
+    index.ts                      # HeliusClient entry point - add lazy registrations here
     lazy.ts                       # defineLazyMethod / defineLazyNamespace helpers
     caller.ts                     # RpcCaller abstraction
     wrapAutoSend.ts               # Auto-send transaction wrapper
@@ -130,7 +132,6 @@ src/
     enums.ts                      # Shared enums (Network, TransactionDetails, etc.)
     webhooks.ts                   # Webhook types
   http.ts                         # HTTP client with SDK User-Agent header
-  main.ts                         # Main entry point / createHelius
   version.ts                      # Auto-generated at build time — do not edit
 ```
 
