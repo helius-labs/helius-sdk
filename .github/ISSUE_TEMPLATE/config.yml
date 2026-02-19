@@ -9,7 +9,7 @@ contact_links:
     url: https://www.helius.dev/docs
     about: Check out our docs for common questions and detailed guides
   - name: Security vulnerability disclosure
-    url: mailto:support@helius.xyz
+    url: mailto:security@helius.xyz
     about: Please email us privately to report security issues
   - name: Status Page
     url: https://helius.statuspage.io/
