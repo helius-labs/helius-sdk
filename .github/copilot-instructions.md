@@ -183,7 +183,19 @@ describe("getAsset", () => {
 - Entry points (e.g., `dist/esm/rpc/index.js`): `<2kb`
 - Run `pnpm check-bundle` to verify — never merge if this fails
 
+## API Docs
+
+TypeDoc generates the API reference from JSDoc comments and TypeScript types.
+
+```bash
+pnpm run docs:build   # Generate docs to docs/ (gitignored)
+pnpm run docs:open    # Generate and open in browser
+```
+
+Docs are auto-deployed to GitHub Pages on every release via `publish.yml`. Do not commit the `docs/` directory — it is gitignored.
+
 ## Do Not Edit
 
 - `src/version.ts` — auto-generated at build time
 - `dist/` — build output, never commit changes here
+- `docs/` — TypeDoc output, never commit changes here
