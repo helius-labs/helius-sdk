@@ -90,7 +90,9 @@
     "bundle:size": "bundlemon",
     "check-all-tree": "node check-all-tree-shake.js",
     "check-bundle": "pnpm run build && pnpm check-all-tree && bundlemon",
-    "changelog": "auto-changelog --template keepachangelog"
+    "changelog": "auto-changelog --template keepachangelog",
+    "docs:build": "typedoc",
+    "docs:open": "typedoc && npx --yes http-server docs -o -c-1"
   },
   "keywords": [
     "helius",
@@ -144,6 +146,7 @@
     "ts-jest": "^29.4.0",
     "ts-node": "^10.9.2",
     "tsx": "^4.20.3",
+    "typedoc": "^0.28.17",
     "typescript": "^5.8.3"
   }
 }

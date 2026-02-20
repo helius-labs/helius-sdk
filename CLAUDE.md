@@ -13,6 +13,8 @@ pnpm format               # Format with Prettier
 pnpm format:check         # Check formatting (CI runs this)
 pnpm lint                 # Lint with ESLint
 pnpm check-bundle         # Build + verify tree-shakability + bundle sizes
+pnpm run docs:build       # Generate TypeDoc API docs to docs/ (gitignored)
+pnpm run docs:open        # Generate docs and open in browser via local HTTP server
 ```
 
 Before submitting a PR, run: `pnpm format && pnpm lint && pnpm test && pnpm check-bundle`
@@ -180,7 +182,7 @@ Coverage threshold: 65% across branches, functions, lines, and statements.
 
 - **Never commit:** API keys, secrets, .env files, private keys, seed phrases
 - **Never break tree-shaking:** No top-level side effects, no barrel re-exports with side effects
-- **Don't edit generated files:** `src/version.ts` and `dist/` are build artifacts
+- **Don't edit generated files:** `src/version.ts`, `dist/`, and `docs/` are build artifacts
 - **Match Helius API specs:** See https://www.helius.dev/docs
 - **Maintain dual ESM/CJS:** Both formats must work
 - **Minimum Node.js 20:** Relies on native fetch

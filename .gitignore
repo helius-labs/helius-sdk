@@ -3,6 +3,7 @@
 
 # Build/Output
 /dist
+/docs
 /coverage
 src/version.ts
 
@@ -33,3 +34,4 @@ Thumbs.db
 *.bak
 .claude
 src/main.ts
+nul
