@@ -13,7 +13,9 @@
     "src/zk/types.ts",
     "src/wallet/client.ts",
     "src/wallet/types.ts",
-    "src/webhooks/client.ts"
+    "src/webhooks/client.ts",
+    "src/auth/client.ts",
+    "src/auth/types.ts"
   ],
   "entryPointStrategy": "expand",
   "exclude": [
