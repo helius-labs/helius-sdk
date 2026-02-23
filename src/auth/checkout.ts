@@ -221,6 +221,7 @@ export async function executeCheckout(
     request.period,
     userAgent
   );
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { plan: _, period: __, ...rest } = request;
   const intent = await initializeCheckout(jwt, { priceId, ...rest }, userAgent);
 

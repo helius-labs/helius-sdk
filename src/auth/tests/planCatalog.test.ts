@@ -8,7 +8,7 @@ describe("PLAN_CATALOG", () => {
   });
 
   it("each plan has required fields", () => {
-    for (const [key, plan] of Object.entries(PLAN_CATALOG)) {
+    for (const plan of Object.values(PLAN_CATALOG)) {
       expect(plan.name).toBeTruthy();
       expect(plan.monthlyPrice).toBeGreaterThan(0);
       expect(plan.yearlyPrice).toBeGreaterThan(0);
