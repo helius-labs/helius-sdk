@@ -1,4 +1,5 @@
-import { PLAN_CATALOG, PLAN_TO_USAGE_PLAN } from "../constants";
+import { PLAN_CATALOG } from "../planCatalog";
+import { PLAN_TO_USAGE_PLAN } from "../constants";
 
 describe("PLAN_CATALOG", () => {
   it("has developer, business, and professional plans", () => {

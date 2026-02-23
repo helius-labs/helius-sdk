@@ -16,40 +16,6 @@ export const USDC_MINT = USDC_MINT_DEVNET;
 /** Legacy: 1 USDC (6 decimals). Only used by payUSDC. */
 export const PAYMENT_AMOUNT = 1_000_000n;
 
-// ── Plan Catalog ──
-
-export interface PlanInfo {
-  name: string;
-  monthlyPrice: number; // cents
-  yearlyPrice: number; // cents
-  credits: number; // included credits
-  requestsPerSecond: number;
-}
-
-export const PLAN_CATALOG: Record<string, PlanInfo> = {
-  developer: {
-    name: "Developer",
-    monthlyPrice: 4900,
-    yearlyPrice: 49000,
-    credits: 10_000_000,
-    requestsPerSecond: 50,
-  },
-  business: {
-    name: "Business",
-    monthlyPrice: 49900,
-    yearlyPrice: 499000,
-    credits: 100_000_000,
-    requestsPerSecond: 200,
-  },
-  professional: {
-    name: "Professional",
-    monthlyPrice: 99900,
-    yearlyPrice: 999000,
-    credits: 200_000_000,
-    requestsPerSecond: 500,
-  },
-};
-
 /** Maps plan catalog keys to the keys returned by /dev-portal/configs openPay.priceIds */
 export const PLAN_TO_USAGE_PLAN: Record<string, string> = {
   developer: "developer_v4",
