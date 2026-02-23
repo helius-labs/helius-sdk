@@ -63,6 +63,11 @@ export const MIN_SOL_FOR_TX = 1_000_000n;
 export const MEMO_PROGRAM_ID =
   "MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr" as Address;
 
+// ── OpenPay Plan Names (single source of truth) ──
+
+export const OPENPAY_PLANS = ["developer", "business", "professional"] as const;
+export type OpenPayPlan = (typeof OPENPAY_PLANS)[number];
+
 export const CHECKOUT_POLL_INTERVAL_MS = 1_000;
 export const CHECKOUT_POLL_TIMEOUT_MS = 60_000;
 export const PROJECT_POLL_INTERVAL_MS = 2_000;

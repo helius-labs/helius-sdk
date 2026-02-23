@@ -192,13 +192,14 @@ export interface CheckoutResult {
 export interface AgenticSignupOptions {
   secretKey: Uint8Array;
   userAgent?: string;
-  plan?: string;                  // Override default 'developer'
-  period?: "monthly" | "yearly";  // Override default 'monthly'
-  email?: string;
+  plan?: string;                  // 'basic' ($1, default) | 'developer' | 'business' | 'professional'
+  period?: "monthly" | "yearly";  // Only for OpenPay plans, default 'monthly'
+  email?: string;                 // Only for OpenPay plans
+  couponCode?: string;            // Only for OpenPay plans
 }
 
 export interface AgenticSignupResult {
-  status: "success" | "existing_project";
+  status: "success" | "existing_project" | "upgraded";
   jwt: string;
   walletAddress: string;
   projectId: string;
