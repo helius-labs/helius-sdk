@@ -62,7 +62,7 @@ describe("checkUsdcBalance", () => {
     expect(balance).toBe(2_000_000n);
   });
 
-  it("returns 0n on error", async () => {
+  it("returns 0n when token account does not exist", async () => {
     mockSend.mockRejectedValue(new Error("Account not found"));
 
     const balance = await checkUsdcBalance(VALID_ADDRESS);

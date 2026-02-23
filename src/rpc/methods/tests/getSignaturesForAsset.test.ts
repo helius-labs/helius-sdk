@@ -66,7 +66,7 @@ describe("getSignaturesForAsset Tests", () => {
     });
 
     await expect(
-      rpc.getSignaturesForAsset({ id: "not-a-real-asset" })
+      rpc.getSignaturesForAsset({ id: "not-a-real-asset", page: 1 })
     ).rejects.toThrow(/Invalid params/);
   });
 });

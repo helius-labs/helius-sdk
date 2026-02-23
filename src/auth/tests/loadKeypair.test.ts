@@ -8,7 +8,8 @@ describe("loadKeypair", () => {
 
     const result = loadKeypair(bytes);
 
-    expect(result.secretKey).toBe(bytes);
+    expect(result.secretKey).toEqual(bytes);
+    expect(result.secretKey).not.toBe(bytes); // must be a copy
     expect(result.secretKey.length).toBe(64);
     expect(result.publicKey).toEqual(bytes.slice(32));
     expect(result.publicKey.length).toBe(32);

@@ -5,11 +5,14 @@ import type {
   GetEnhancedTransactionsByAddressResponse,
 } from "./types";
 
+/** Client for the Helius Enhanced Transactions API. Parses raw transactions into human-readable format. */
 export interface EnhancedTxClientLazy {
+  /** Parse one or more transactions by their signatures. */
   getTransactions(
     params: GetEnhancedTransactionsRequest
   ): Promise<GetEnhancedTransactionsResponse>;
 
+  /** Get parsed transactions for a wallet or program address. */
   getTransactionsByAddress(
     params: GetEnhancedTransactionsByAddressRequest
   ): Promise<GetEnhancedTransactionsByAddressResponse>;

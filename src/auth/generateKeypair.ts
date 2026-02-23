@@ -14,7 +14,7 @@ export async function generateKeypair(): Promise<{
     await crypto.subtle.exportKey("pkcs8", keyPair.privateKey)
   );
 
-  // Ed25519 PKCS8: 16-byte ASN.1 header followed by 32-byte seed
+  // Ed25519 PKCS8 wraps the 32-byte seed after an ASN.1 header; extract the last 32 bytes
   const seed = pkcs8.slice(-32);
 
   // Solana keypair format: [32-byte seed | 32-byte public key]

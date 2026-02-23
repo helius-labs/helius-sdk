@@ -3,6 +3,7 @@
 
 # Build/Output
 /dist
+/docs
 /coverage
 src/version.ts
 

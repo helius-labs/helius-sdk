@@ -28,6 +28,7 @@ export async function checkUsdcBalance(walletAddress: string): Promise<bigint> {
     const response = await rpc.getTokenAccountBalance(ata).send();
     return BigInt(response.value.amount);
   } catch {
+    // Token account doesn't exist yet — no USDC balance
     return 0n;
   }
 }

@@ -167,7 +167,7 @@ describe("agenticSignup", () => {
 
     it("retries createProject on 5xx errors", async () => {
       (createProject as jest.Mock)
-        .mockRejectedValueOnce(new Error("HTTP 500"))
+        .mockRejectedValueOnce(new Error("API error (500): Internal Server Error"))
         .mockResolvedValueOnce({
           id: "proj-retry",
           name: "Retry Project",
@@ -185,11 +185,11 @@ describe("agenticSignup", () => {
     });
 
     it("does not retry createProject on 4xx errors", async () => {
-      (createProject as jest.Mock).mockRejectedValueOnce(new Error("HTTP 400 Bad Request"));
+      (createProject as jest.Mock).mockRejectedValueOnce(new Error("API error (400): Bad Request"));
 
       await expect(
         agenticSignup({ secretKey: new Uint8Array(64) })
-      ).rejects.toThrow("HTTP 400");
+      ).rejects.toThrow("API error (400)");
       expect(createProject).toHaveBeenCalledTimes(1);
     });
 

@@ -29,32 +29,64 @@ import type {
   GetCompressedAccountFn,
 } from "./types";
 
+/**
+ * Client for ZK compression RPC methods (Light Protocol).
+ *
+ * Provides access to compressed accounts, compressed tokens, Merkle proofs,
+ * validity proofs, and compression-related transaction history.
+ */
 export interface ZkClientLazy {
+  /** Get a single compressed account by address or hash. */
   getCompressedAccount: GetCompressedAccountFn;
+  /** Get a Merkle proof for a compressed account. */
   getCompressedAccountProof: GetCompressedAccountProofFn;
+  /** Get compressed accounts owned by a program. */
   getCompressedAccountsByOwner: GetCompressedAccountsByOwnerFn;
+  /** Get the lamport balance of a compressed account. */
   getCompressedBalance: GetCompressedBalanceFn;
+  /** Get the total compressed lamport balance for an owner. */
   getCompressedBalanceByOwner: GetCompressedBalanceByOwnerFn;
+  /** Get all holders of a compressed token mint. */
   getCompressedMintTokenHolders: GetCompressedMintTokenHoldersFn;
+  /** Get the token balance of a compressed token account. */
   getCompressedTokenAccountBalance: GetCompressedTokenAccountBalanceFn;
+  /** Get compressed token accounts by their delegate. */
   getCompressedTokenAccountsByDelegate: GetCompressedTokenAccountsByDelegateFn;
+  /** Get compressed token accounts owned by a wallet. */
   getCompressedTokenAccountsByOwner: GetCompressedTokenAccountsByOwnerFn;
+  /** Get compressed token balances by owner (V1). */
   getCompressedTokenBalancesByOwner: GetCompressedTokenBalancesByOwnerFn;
+  /** Get compressed token balances by owner (V2 — uses `items` instead of `token_balances`). */
   getCompressedTokenBalancesByOwnerV2: GetCompressedTokenBalancesByOwnerV2Fn;
+  /** Get signatures for a specific compressed account. */
   getCompressionSignaturesForAccount: GetCompressionSignaturesForAccountFn;
+  /** Get compression-related signatures for an address. */
   getCompressionSignaturesForAddress: GetCompressionSignaturesForAddressFn;
+  /** Get compression-related signatures for an owner. */
   getCompressionSignaturesForOwner: GetCompressionSignaturesForOwnerFn;
+  /** Get compression-related signatures for a token owner. */
   getCompressionSignaturesForTokenOwner: GetCompressionSignaturesForTokenOwnerFn;
+  /** Check whether the compression indexer is healthy. */
   getIndexerHealth: GetIndexerHealthFn;
+  /** Get the latest slot indexed by the compression indexer. */
   getIndexerSlot: GetIndexerSlotFn;
+  /** Get the most recent compression-related signatures. */
   getLatestCompressionSignatures: GetLatestCompressionSignaturesFn;
+  /** Get the most recent non-voting signatures. */
   getLatestNonVotingSignatures: GetLatestNonVotingSignaturesFn;
+  /** Get Merkle proofs for multiple compressed accounts in a batch. */
   getMultipleCompressedAccountProofs: GetMultipleCompressedAccountProofsFn;
+  /** Get multiple compressed accounts by address or hash. */
   getMultipleCompressedAccounts: GetMultipleCompressedAccountsFn;
+  /** Get new address non-inclusion proofs (V1). */
   getMultipleNewAddressProofs: GetMultipleNewAddressProofsFn;
+  /** Get new address non-inclusion proofs (V2 — with tree specification). */
   getMultipleNewAddressProofsV2: GetMultipleNewAddressProofsV2Fn;
+  /** Get a transaction with its compression state changes. */
   getTransactionWithCompressionInfo: GetTransactionWithCompressionInfoFn;
+  /** Get a ZK validity proof for account inclusion and address non-inclusion. */
   getValidityProof: GetValidityProofFn;
+  /** Get signatures for a compressed asset. */
   getSignaturesForAsset: GetSignaturesForAssetFn;
 }
 

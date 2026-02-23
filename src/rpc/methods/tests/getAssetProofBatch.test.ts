@@ -20,8 +20,8 @@ describe("getAssetProofBatch Tests", () => {
   });
 
   it("Successfully fetches asset proofs for multiple IDs", async () => {
-    const mockProofs: GetAssetProofBatchResponse = [
-      {
+    const mockProofs: GetAssetProofBatchResponse = {
+      "elder-wand-artifact": {
         root: "hogwarts-sorting-hat-root",
         proof: ["proof1", "proof2", "proof3"],
         node_index: 1991,
@@ -29,7 +29,7 @@ describe("getAssetProofBatch Tests", () => {
         tree_id: "wizarding-tree",
         burnt: false,
       },
-      {
+      "philosophers-stone-artifact": {
         root: "diagon-alley-root",
         proof: ["proof4", "proof5", "proof6"],
         node_index: 1997,
@@ -37,7 +37,7 @@ describe("getAssetProofBatch Tests", () => {
         tree_id: "hallows-tree",
         burnt: false,
       },
-    ];
+    };
 
     transportMock.mockResolvedValue({
       jsonrpc: "2.0",
@@ -63,7 +63,7 @@ describe("getAssetProofBatch Tests", () => {
   });
 
   it("Handles empty ID array", async () => {
-    const mockProofs: GetAssetProofBatchResponse = [];
+    const mockProofs: GetAssetProofBatchResponse = {};
 
     transportMock.mockResolvedValue({
       jsonrpc: "2.0",

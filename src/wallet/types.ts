@@ -77,7 +77,7 @@ export interface TokenBalance {
   usdValue: number | null;
   /** URL to token logo image (if available) */
   logoUri: string | null;
-  /** Token program type */
+  /** Token program type (`spl-token` for legacy SPL tokens, `token-2022` for the new Token Extensions standard). */
   tokenProgram: TokenProgram;
 }
 
@@ -123,7 +123,7 @@ export interface GetBalancesRequest {
 export interface GetBalancesResponse {
   /**
    * Array of token balances for the current page.
-   * When showNative=true, SOL appears with mint address So11111111111111111111111111111111111111111.
+   * When showNative=true, SOL appears with mint address So11111111111111111111111111111111111111112.
    * Results are sorted by USD value (descending).
    */
   balances: TokenBalance[];
@@ -250,7 +250,7 @@ export interface Transfer {
   direction: TransferDirection;
   /** The other party in the transfer (sender if "in", recipient if "out") */
   counterparty: string;
-  /** Token mint address (So11111111111111111111111111111111111111111 for SOL) */
+  /** Token mint address (`So11111111111111111111111111111111111111112` for SOL). */
   mint: string;
   /** Token symbol if known */
   symbol: string | null;

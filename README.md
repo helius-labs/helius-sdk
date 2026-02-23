@@ -13,6 +13,8 @@ The Helius TypeScript SDK provides access to Helius APIs and enhanced Solana RPC
 
 API reference documentation is available at [helius.dev/docs](https://www.helius.dev/docs).
 
+See the [CHANGELOG](https://github.com/helius-labs/helius-sdk/blob/main/CHANGELOG.md) for version history and release notes.
+
 ## Contributions
 
 Interested in contributing? Read the following [contributions guide](https://github.com/helius-labs/helius-sdk/blob/main/CONTRIBUTING.md) before opening a PR.

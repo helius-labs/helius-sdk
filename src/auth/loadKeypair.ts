@@ -7,8 +7,8 @@ export function loadKeypair(bytes: Uint8Array): WalletKeypair {
     );
   }
 
-  const secretKey = bytes;
-  const publicKey = bytes.slice(32);
+  const secretKey = new Uint8Array(bytes);
+  const publicKey = secretKey.slice(32);
 
   return { publicKey, secretKey };
 }

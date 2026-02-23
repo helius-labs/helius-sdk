@@ -1,4 +1,8 @@
-import type { AgenticSignupOptions, AgenticSignupResult } from "./types";
+import type {
+  AgenticSignupOptions,
+  AgenticSignupResult,
+  Project,
+} from "./types";
 import { loadKeypair } from "./loadKeypair";
 import { getAddress } from "./getAddress";
 import { signAuthMessage } from "./signAuthMessage";
@@ -24,20 +28,25 @@ function buildEndpoints(apiKey: string) {
 
 function isRetryableError(error: unknown): boolean {
   if (error instanceof Error) {
-    const msg = error.message;
-    return msg.includes("500") || msg.includes("502") || msg.includes("503") || msg.includes("504");
+    const match = error.message.match(/API error \((\d+)\)/);
+    if (match) {
+      const status = parseInt(match[1], 10);
+      return status >= 500;
+    }
+    // Network errors (no status code) are retryable
+    return true;
   }
-  return false;
+  return true;
 }
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 async function createProjectWithRetry(
   jwt: string,
-  userAgent?: string,
+  userAgent: string | undefined,
   maxRetries = 3,
-  delayMs = 2000,
-) {
+  delayMs = 2000
+): Promise<Project> {
   let lastError: Error | null = null;
 
   for (let i = 0; i < maxRetries; i++) {
@@ -45,8 +54,12 @@ async function createProjectWithRetry(
       return await createProject(jwt, userAgent);
     } catch (error) {
       lastError = error instanceof Error ? error : new Error(String(error));
-      if (!isRetryableError(error) || i >= maxRetries - 1) break;
-      await sleep(delayMs);
+      if (!isRetryableError(error)) {
+        throw lastError;
+      }
+      if (i < maxRetries - 1) {
+        await sleep(delayMs);
+      }
     }
   }
 

@@ -1,0 +1,45 @@
+{
+  "name": "Helius SDK",
+  "entryPoints": [
+    "src/rpc/index.ts",
+    "src/rpc/methods",
+    "src/types",
+    "src/enhanced/index.ts",
+    "src/transactions/index.ts",
+    "src/websockets/wsAsync.ts",
+    "src/staking/client.ts",
+    "src/staking/types.ts",
+    "src/zk/client.ts",
+    "src/zk/types.ts",
+    "src/wallet/client.ts",
+    "src/wallet/types.ts",
+    "src/webhooks/client.ts",
+    "src/auth/client.ts",
+    "src/auth/types.ts"
+  ],
+  "entryPointStrategy": "expand",
+  "exclude": [
+    "**/*.test.ts",
+    "**/tests/**",
+    "src/rpc/caller.ts",
+    "src/rpc/lazy.ts",
+    "src/rpc/heliusRpcApi.ts",
+    "src/rpc/wrapAutoSend.ts",
+    "src/rpc/createHelius.eager.ts",
+    "src/version.ts",
+    "src/main.ts",
+    "src/http.ts"
+  ],
+  "out": "docs",
+  "skipErrorChecking": true,
+  "excludeExternals": true,
+  "excludePrivate": true,
+  "excludeInternal": true,
+  "readme": "README.md",
+  "includeVersion": true,
+  "navigationLinks": {
+    "GitHub": "https://github.com/helius-labs/helius-sdk",
+    "npm": "https://www.npmjs.com/package/helius-sdk",
+    "Helius Docs": "https://docs.helius.dev"
+  }
+}
