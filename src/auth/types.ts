@@ -195,6 +195,8 @@ export interface AgenticSignupOptions {
   plan?: string;                  // 'basic' ($1, default) | 'developer' | 'business' | 'professional'
   period?: "monthly" | "yearly";  // Only for OpenPay plans, default 'monthly'
   email?: string;                 // Only for OpenPay plans
+  firstName?: string;             // Only for OpenPay plans
+  lastName?: string;              // Only for OpenPay plans
   couponCode?: string;            // Only for OpenPay plans
 }
 

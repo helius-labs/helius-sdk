@@ -215,10 +215,13 @@ describe("agenticSignup", () => {
   // ── OpenPay signup (new user) ──
 
   describe("OpenPay signup (new user)", () => {
+    const CONTACT = { email: "user@example.com", firstName: "Test", lastName: "User" };
+
     it("uses executeCheckout for developer plan", async () => {
       const result = await agenticSignup({
         secretKey: new Uint8Array(64),
         plan: "developer",
+        ...CONTACT,
       });
 
       expect(result.status).toBe("success");
@@ -229,7 +232,7 @@ describe("agenticSignup", () => {
       expect(executeCheckout).toHaveBeenCalledWith(
         new Uint8Array(64),
         "jwt-token-123",
-        { plan: "developer", period: "monthly", refId: "ref-1", email: undefined, couponCode: undefined },
+        { plan: "developer", period: "monthly", refId: "ref-1", ...CONTACT, couponCode: undefined },
         undefined
       );
       expect(payUSDC).not.toHaveBeenCalled();
@@ -241,7 +244,7 @@ describe("agenticSignup", () => {
         plan: "business",
         period: "yearly",
         couponCode: "SAVE10",
-        email: "user@example.com",
+        ...CONTACT,
       });
 
       const callArgs = (executeCheckout as jest.Mock).mock.calls[0];
@@ -251,16 +254,17 @@ describe("agenticSignup", () => {
       expect(callArgs[2].email).toBe("user@example.com");
     });
 
-    it("throws when checkout fails", async () => {
+    it("throws when checkout fails and includes error reason", async () => {
       (executeCheckout as jest.Mock).mockResolvedValueOnce({
         paymentIntentId: "pi_test",
         txSignature: "tx-sig-abc123",
         status: "failed",
+        error: "Insufficient USDC",
       });
 
       await expect(
-        agenticSignup({ secretKey: new Uint8Array(64), plan: "developer" })
-      ).rejects.toThrow("Checkout failed");
+        agenticSignup({ secretKey: new Uint8Array(64), plan: "developer", ...CONTACT })
+      ).rejects.toThrow("Checkout failed: Insufficient USDC");
     });
 
     it("throws when checkout times out and includes tx signature", async () => {
@@ -271,7 +275,7 @@ describe("agenticSignup", () => {
       });
 
       await expect(
-        agenticSignup({ secretKey: new Uint8Array(64), plan: "developer" })
+        agenticSignup({ secretKey: new Uint8Array(64), plan: "developer", ...CONTACT })
       ).rejects.toThrow("TX: tx-sig-timeout");
     });
 
@@ -280,14 +284,27 @@ describe("agenticSignup", () => {
         secretKey: new Uint8Array(64),
         plan: "developer",
         userAgent: "test-agent/1.0",
+        ...CONTACT,
       });
 
       expect(executeCheckout).toHaveBeenCalledWith(
         new Uint8Array(64),
         "jwt-token-123",
-        { plan: "developer", period: "monthly", refId: "ref-1", email: undefined, couponCode: undefined },
+        { plan: "developer", period: "monthly", refId: "ref-1", ...CONTACT, couponCode: undefined },
         "test-agent/1.0"
       );
+    });
+
+    it("throws when contact info missing for new user on paid plan", async () => {
+      await expect(
+        agenticSignup({ secretKey: new Uint8Array(64), plan: "developer" })
+      ).rejects.toThrow("Missing: email, firstName, lastName");
+    });
+
+    it("throws listing specific missing fields", async () => {
+      await expect(
+        agenticSignup({ secretKey: new Uint8Array(64), plan: "developer", email: "a@b.com" })
+      ).rejects.toThrow("Missing: firstName, lastName");
     });
   });
 
@@ -323,17 +340,18 @@ describe("agenticSignup", () => {
       expect(payUSDC).not.toHaveBeenCalled();
     });
 
-    it("throws when upgrade fails", async () => {
+    it("throws when upgrade fails and includes error reason", async () => {
       (listProjects as jest.Mock).mockResolvedValueOnce([EXISTING_PROJECT]);
       (executeUpgrade as jest.Mock).mockResolvedValueOnce({
         paymentIntentId: "pi_upgrade",
         txSignature: null,
         status: "failed",
+        error: "Cannot downgrade from professional_v4 to business_v4",
       });
 
       await expect(
         agenticSignup({ secretKey: new Uint8Array(64), plan: "professional" })
-      ).rejects.toThrow("Checkout failed");
+      ).rejects.toThrow("Checkout failed: Cannot downgrade");
     });
   });
 

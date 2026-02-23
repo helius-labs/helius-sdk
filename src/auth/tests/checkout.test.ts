@@ -46,8 +46,8 @@ const mockGetAddress = getAddress as jest.MockedFunction<typeof getAddress>;
 const mockFetchOpenPayPriceIds = fetchOpenPayPriceIds as jest.MockedFunction<typeof fetchOpenPayPriceIds>;
 
 const MOCK_PRICE_IDS = {
-  Monthly: { DEVELOPER_V4: "price_dev_monthly", BUSINESS_V4: "price_biz_monthly", PROFESSIONAL_V4: "price_pro_monthly" },
-  Yearly: { DEVELOPER_V4: "price_dev_yearly", BUSINESS_V4: "price_biz_yearly", PROFESSIONAL_V4: "price_pro_yearly" },
+  Monthly: { developer_v4: "price_dev_monthly", business_v4: "price_biz_monthly", professional_v4: "price_pro_monthly" },
+  Yearly: { developer_v4: "price_dev_yearly", business_v4: "price_biz_yearly", professional_v4: "price_pro_yearly" },
 };
 
 const INIT_RESPONSE = {
@@ -103,13 +103,23 @@ describe("resolvePriceId", () => {
     );
   });
 
-  it("throws when priceId not found in configs", async () => {
+  it("throws when priceId not found in configs (empty)", async () => {
     mockFetchOpenPayPriceIds.mockResolvedValue({
       Monthly: {},
       Yearly: {},
     });
     await expect(resolvePriceId("jwt", "developer", "monthly")).rejects.toThrow(
-      "No priceId found for developer (monthly)"
+      "pricing configuration is empty"
+    );
+  });
+
+  it("throws with available keys when key mismatch", async () => {
+    mockFetchOpenPayPriceIds.mockResolvedValue({
+      Monthly: { some_other_plan: "price_unknown" },
+      Yearly: {},
+    });
+    await expect(resolvePriceId("jwt", "developer", "monthly")).rejects.toThrow(
+      'Expected key "developer_v4" but available keys are: [some_other_plan]'
     );
   });
 });

@@ -56,7 +56,7 @@ async function createProjectWithRetry(
 export async function agenticSignup(
   options: AgenticSignupOptions
 ): Promise<AgenticSignupResult> {
-  const { secretKey, userAgent, email } = options;
+  const { secretKey, userAgent, email, firstName, lastName } = options;
 
   // Normalize plan: undefined/empty → "basic"
   const rawPlan = options.plan?.trim() || "";
@@ -98,7 +98,7 @@ export async function agenticSignup(
 
       if (upgradeResult.status !== "completed") {
         throw new Error(
-          `Checkout ${upgradeResult.status}${upgradeResult.txSignature ? `. TX: ${upgradeResult.txSignature}` : ""}`
+          `Checkout ${upgradeResult.status}${upgradeResult.error ? `: ${upgradeResult.error}` : ""}${upgradeResult.txSignature ? `. TX: ${upgradeResult.txSignature}` : ""}`
         );
       }
 
@@ -129,6 +129,15 @@ export async function agenticSignup(
   // ── New user paths ──
 
   if (isOpenPayPlan(plan)) {
+    // Validate required contact info for new subscriptions
+    if (!email || !firstName || !lastName) {
+      const missing = [!email && "email", !firstName && "firstName", !lastName && "lastName"].filter(Boolean);
+      throw new Error(
+        `Paid plans require contact info for new accounts. Missing: ${missing.join(", ")}. ` +
+        `Pass --email, --first-name, and --last-name.`
+      );
+    }
+
     // OpenPay checkout for developer/business/professional
     const checkoutResult = await executeCheckout(
       secretKey,
@@ -138,6 +147,8 @@ export async function agenticSignup(
         period: options.period ?? "monthly",
         refId: auth.refId,
         email,
+        firstName,
+        lastName,
         couponCode: options.couponCode,
       },
       userAgent
@@ -145,7 +156,7 @@ export async function agenticSignup(
 
     if (checkoutResult.status !== "completed") {
       throw new Error(
-        `Checkout ${checkoutResult.status}${checkoutResult.txSignature ? `. TX: ${checkoutResult.txSignature}` : ""}`
+        `Checkout ${checkoutResult.status}${checkoutResult.error ? `: ${checkoutResult.error}` : ""}${checkoutResult.txSignature ? `. TX: ${checkoutResult.txSignature}` : ""}`
       );
     }
 

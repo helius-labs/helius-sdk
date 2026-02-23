@@ -39,9 +39,15 @@ export async function resolvePriceId(
   }
   const priceIds = await fetchOpenPayPriceIds(jwt, userAgent);
   const periodKey = period === "monthly" ? "Monthly" : "Yearly";
-  const priceId = priceIds[periodKey][usagePlan];
+  const priceId = priceIds[periodKey]?.[usagePlan];
   if (!priceId) {
-    throw new Error(`No priceId found for ${plan} (${period})`);
+    const available = Object.keys(priceIds[periodKey] ?? {});
+    throw new Error(
+      `No priceId found for plan "${plan}" (${period}). ` +
+      (available.length === 0
+        ? "The pricing configuration is empty — the backend may not be fully deployed yet."
+        : `Expected key "${usagePlan}" but available keys are: [${available.join(", ")}]`)
+    );
   }
   return priceId;
 }

@@ -9,8 +9,8 @@ const mockAuthRequest = authRequest as jest.MockedFunction<typeof authRequest>;
 const mockFetchOpenPayPriceIds = fetchOpenPayPriceIds as jest.MockedFunction<typeof fetchOpenPayPriceIds>;
 
 const MOCK_PRICE_IDS = {
-  Monthly: { DEVELOPER_V4: "price_dev_monthly", BUSINESS_V4: "price_biz_monthly", PROFESSIONAL_V4: "price_pro_monthly" },
-  Yearly: { DEVELOPER_V4: "price_dev_yearly", BUSINESS_V4: "price_biz_yearly", PROFESSIONAL_V4: "price_pro_yearly" },
+  Monthly: { developer_v4: "price_dev_monthly", business_v4: "price_biz_monthly", professional_v4: "price_pro_monthly" },
+  Yearly: { developer_v4: "price_dev_yearly", business_v4: "price_biz_yearly", professional_v4: "price_pro_yearly" },
 };
 
 describe("getCheckoutPreview", () => {

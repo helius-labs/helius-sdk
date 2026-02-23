@@ -19,10 +19,10 @@ describe("PLAN_CATALOG", () => {
 });
 
 describe("PLAN_TO_USAGE_PLAN", () => {
-  it("maps all catalog plans to usage plan names", () => {
-    expect(PLAN_TO_USAGE_PLAN.developer).toBe("DEVELOPER_V4");
-    expect(PLAN_TO_USAGE_PLAN.business).toBe("BUSINESS_V4");
-    expect(PLAN_TO_USAGE_PLAN.professional).toBe("PROFESSIONAL_V4");
+  it("maps all catalog plans to backend config keys", () => {
+    expect(PLAN_TO_USAGE_PLAN.developer).toBe("developer_v4");
+    expect(PLAN_TO_USAGE_PLAN.business).toBe("business_v4");
+    expect(PLAN_TO_USAGE_PLAN.professional).toBe("professional_v4");
   });
 
   it("has entries for all plans in PLAN_CATALOG", () => {

@@ -50,11 +50,11 @@ export const PLAN_CATALOG: Record<string, PlanInfo> = {
   },
 };
 
-/** Maps plan catalog keys to backend UsagePlan names (from dev-portal/configs) */
+/** Maps plan catalog keys to the keys returned by /dev-portal/configs openPay.priceIds */
 export const PLAN_TO_USAGE_PLAN: Record<string, string> = {
-  developer: "DEVELOPER_V4",
-  business: "BUSINESS_V4",
-  professional: "PROFESSIONAL_V4",
+  developer: "developer_v4",
+  business: "business_v4",
+  professional: "professional_v4",
 };
 
 /** Minimum SOL needed for transaction fees (~0.001 SOL) */
