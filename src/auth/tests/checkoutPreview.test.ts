@@ -6,11 +6,21 @@ jest.mock("../utils");
 jest.mock("../devPortalConfigs");
 
 const mockAuthRequest = authRequest as jest.MockedFunction<typeof authRequest>;
-const mockFetchOpenPayPriceIds = fetchOpenPayPriceIds as jest.MockedFunction<typeof fetchOpenPayPriceIds>;
+const mockFetchOpenPayPriceIds = fetchOpenPayPriceIds as jest.MockedFunction<
+  typeof fetchOpenPayPriceIds
+>;
 
 const MOCK_PRICE_IDS = {
-  Monthly: { developer_v4: "price_dev_monthly", business_v4: "price_biz_monthly", professional_v4: "price_pro_monthly" },
-  Yearly: { developer_v4: "price_dev_yearly", business_v4: "price_biz_yearly", professional_v4: "price_pro_yearly" },
+  Monthly: {
+    developer_v4: "price_dev_monthly",
+    business_v4: "price_biz_monthly",
+    professional_v4: "price_pro_monthly",
+  },
+  Yearly: {
+    developer_v4: "price_dev_yearly",
+    business_v4: "price_biz_yearly",
+    professional_v4: "price_pro_yearly",
+  },
 };
 
 describe("getCheckoutPreview", () => {
@@ -31,11 +41,23 @@ describe("getCheckoutPreview", () => {
       dueToday: 42400,
       destinationWallet: "Treasury111",
       note: "Prorated for remaining billing cycle",
-      coupon: { code: "SAVE10", valid: true, percentOff: 10, description: "10% off" },
+      coupon: {
+        code: "SAVE10",
+        valid: true,
+        percentOff: 10,
+        description: "10% off",
+      },
     };
     mockAuthRequest.mockResolvedValue(mockPreview);
 
-    const result = await getCheckoutPreview("jwt", "business", "monthly", "proj-1", "SAVE10", "agent");
+    const result = await getCheckoutPreview(
+      "jwt",
+      "business",
+      "monthly",
+      "proj-1",
+      "SAVE10",
+      "agent"
+    );
 
     expect(result.planName).toBe("Business");
     expect(result.dueToday).toBe(42400);
@@ -57,7 +79,12 @@ describe("getCheckoutPreview", () => {
       note: "",
     });
 
-    const result = await getCheckoutPreview("jwt", "developer", "monthly", "proj-1");
+    const result = await getCheckoutPreview(
+      "jwt",
+      "developer",
+      "monthly",
+      "proj-1"
+    );
 
     expect(mockAuthRequest).toHaveBeenCalledWith(
       "/checkout/preview?priceId=price_dev_monthly&refId=proj-1",

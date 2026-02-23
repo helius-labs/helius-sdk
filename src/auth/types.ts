@@ -98,10 +98,15 @@ export type PaymentIntentStatus =
   | "expired"
   | "failed";
 
-export type CheckoutPhase = "confirming" | "activating" | "complete" | "failed" | "expired";
+export type CheckoutPhase =
+  | "confirming"
+  | "activating"
+  | "complete"
+  | "failed"
+  | "expired";
 
 export interface CheckoutRequest {
-  plan: string;                // 'developer' | 'business' | 'professional'
+  plan: string; // 'developer' | 'business' | 'professional'
   period: "monthly" | "yearly";
   refId: string;
   email?: string;
@@ -112,8 +117,8 @@ export interface CheckoutRequest {
 }
 
 export interface CheckoutInitializeRequest {
-  priceId: string;           // OpenPay price ID — resolved internally from plan+period
-  refId: string;             // User ID (base58 from walletSignup) or project UUID
+  priceId: string; // OpenPay price ID — resolved internally from plan+period
+  refId: string; // User ID (base58 from walletSignup) or project UUID
   email?: string;
   firstName?: string;
   lastName?: string;
@@ -122,10 +127,10 @@ export interface CheckoutInitializeRequest {
 }
 
 export interface CheckoutInitializeResponse {
-  id: string;                        // Payment intent ID — also used as memo
+  id: string; // Payment intent ID — also used as memo
   status: PaymentIntentStatus;
-  amount: number;                    // Amount in CENTS (4900 = $49.00)
-  destinationWallet: string;         // Merchant USDC wallet
+  amount: number; // Amount in CENTS (4900 = $49.00)
+  destinationWallet: string; // Merchant USDC wallet
   solanaPayUrl: string;
   expiresAt: string;
   createdAt: string;
@@ -154,7 +159,7 @@ export interface CheckoutPreviewCoupon {
   code: string;
   valid: boolean;
   percentOff?: number;
-  amountOff?: number;        // cents
+  amountOff?: number; // cents
   description?: string;
   invalidReason?: string;
 }
@@ -168,12 +173,12 @@ export interface CheckoutPreviewCustomerInfo {
 export interface CheckoutPreviewResponse {
   planName: string;
   period: "monthly" | "yearly";
-  baseAmount: number;          // cents
-  subtotal: number;            // cents
-  appliedCredits: number;      // cents
-  proratedCredits: number;     // cents
-  discounts: number;           // cents
-  dueToday: number;            // cents — final amount after credits/discounts
+  baseAmount: number; // cents
+  subtotal: number; // cents
+  appliedCredits: number; // cents
+  proratedCredits: number; // cents
+  discounts: number; // cents
+  dueToday: number; // cents — final amount after credits/discounts
   destinationWallet: string;
   note: string;
   coupon?: CheckoutPreviewCoupon | null;
@@ -192,12 +197,12 @@ export interface CheckoutResult {
 export interface AgenticSignupOptions {
   secretKey: Uint8Array;
   userAgent?: string;
-  plan?: string;                  // 'basic' ($1, default) | 'developer' | 'business' | 'professional'
-  period?: "monthly" | "yearly";  // Only for OpenPay plans, default 'monthly'
-  email?: string;                 // Only for OpenPay plans
-  firstName?: string;             // Only for OpenPay plans
-  lastName?: string;              // Only for OpenPay plans
-  couponCode?: string;            // Only for OpenPay plans
+  plan?: string; // 'basic' ($1, default) | 'developer' | 'business' | 'professional'
+  period?: "monthly" | "yearly"; // Only for OpenPay plans, default 'monthly'
+  email?: string; // Only for OpenPay plans
+  firstName?: string; // Only for OpenPay plans
+  lastName?: string; // Only for OpenPay plans
+  couponCode?: string; // Only for OpenPay plans
 }
 
 export interface AgenticSignupResult {
@@ -247,10 +252,36 @@ export interface AuthClient {
     memo: string
   ): Promise<string>;
   agenticSignup(options: AgenticSignupOptions): Promise<AgenticSignupResult>;
-  getCheckoutPreview(jwt: string, plan: string, period: "monthly" | "yearly", refId: string, couponCode?: string): Promise<CheckoutPreviewResponse>;
-  getPaymentIntent(jwt: string, paymentIntentId: string): Promise<CheckoutInitializeResponse>;
-  getPaymentStatus(jwt: string, paymentIntentId: string): Promise<CheckoutStatusResponse>;
-  payPaymentIntent(secretKey: Uint8Array, intent: CheckoutInitializeResponse): Promise<string>;
-  executeUpgrade(secretKey: Uint8Array, jwt: string, plan: string, period: "monthly" | "yearly", projectId: string, couponCode?: string): Promise<CheckoutResult>;
-  executeRenewal(secretKey: Uint8Array, jwt: string, paymentIntentId: string): Promise<CheckoutResult>;
+  getCheckoutPreview(
+    jwt: string,
+    plan: string,
+    period: "monthly" | "yearly",
+    refId: string,
+    couponCode?: string
+  ): Promise<CheckoutPreviewResponse>;
+  getPaymentIntent(
+    jwt: string,
+    paymentIntentId: string
+  ): Promise<CheckoutInitializeResponse>;
+  getPaymentStatus(
+    jwt: string,
+    paymentIntentId: string
+  ): Promise<CheckoutStatusResponse>;
+  payPaymentIntent(
+    secretKey: Uint8Array,
+    intent: CheckoutInitializeResponse
+  ): Promise<string>;
+  executeUpgrade(
+    secretKey: Uint8Array,
+    jwt: string,
+    plan: string,
+    period: "monthly" | "yearly",
+    projectId: string,
+    couponCode?: string
+  ): Promise<CheckoutResult>;
+  executeRenewal(
+    secretKey: Uint8Array,
+    jwt: string,
+    paymentIntentId: string
+  ): Promise<CheckoutResult>;
 }

@@ -52,7 +52,8 @@ describe("executeRenewal", () => {
   it("fetches existing intent, pays, and polls", async () => {
     mockAuthRequest
       .mockResolvedValueOnce(PENDING_INTENT) // getPaymentIntent
-      .mockResolvedValueOnce({ // pollCheckoutCompletion
+      .mockResolvedValueOnce({
+        // pollCheckoutCompletion
         status: "completed",
         phase: "complete",
         subscriptionActive: true,

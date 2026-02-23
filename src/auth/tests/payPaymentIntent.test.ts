@@ -9,8 +9,12 @@ jest.mock("../payWithMemo");
 jest.mock("../loadKeypair");
 jest.mock("../getAddress");
 
-const mockCheckSolBalance = checkSolBalance as jest.MockedFunction<typeof checkSolBalance>;
-const mockCheckUsdcBalance = checkUsdcBalance as jest.MockedFunction<typeof checkUsdcBalance>;
+const mockCheckSolBalance = checkSolBalance as jest.MockedFunction<
+  typeof checkSolBalance
+>;
+const mockCheckUsdcBalance = checkUsdcBalance as jest.MockedFunction<
+  typeof checkUsdcBalance
+>;
 const mockPayWithMemo = payWithMemo as jest.MockedFunction<typeof payWithMemo>;
 const mockLoadKeypair = loadKeypair as jest.MockedFunction<typeof loadKeypair>;
 const mockGetAddress = getAddress as jest.MockedFunction<typeof getAddress>;
@@ -43,7 +47,10 @@ describe("payPaymentIntent", () => {
   });
 
   it("returns empty string for $0 amount", async () => {
-    const result = await payPaymentIntent(mockSecretKey, { ...BASE_INTENT, amount: 0 });
+    const result = await payPaymentIntent(mockSecretKey, {
+      ...BASE_INTENT,
+      amount: 0,
+    });
     expect(result).toBe("");
     expect(mockPayWithMemo).not.toHaveBeenCalled();
     expect(mockCheckSolBalance).not.toHaveBeenCalled();
@@ -56,12 +63,15 @@ describe("payPaymentIntent", () => {
       mockSecretKey,
       "Treasury111",
       49_000_000n, // 4900 * 10_000
-      "pi_test"    // memo = intent.id
+      "pi_test" // memo = intent.id
     );
   });
 
   it("uses intent.id as memo", async () => {
-    await payPaymentIntent(mockSecretKey, { ...BASE_INTENT, id: "pi_custom_memo" });
+    await payPaymentIntent(mockSecretKey, {
+      ...BASE_INTENT,
+      id: "pi_custom_memo",
+    });
 
     expect(mockPayWithMemo).toHaveBeenCalledWith(
       mockSecretKey,
@@ -74,17 +84,17 @@ describe("payPaymentIntent", () => {
   it("throws on insufficient SOL", async () => {
     mockCheckSolBalance.mockResolvedValue(100n);
 
-    await expect(
-      payPaymentIntent(mockSecretKey, BASE_INTENT)
-    ).rejects.toThrow("Insufficient SOL");
+    await expect(payPaymentIntent(mockSecretKey, BASE_INTENT)).rejects.toThrow(
+      "Insufficient SOL"
+    );
   });
 
   it("throws on insufficient USDC with amount in USDC not cents", async () => {
     mockCheckUsdcBalance.mockResolvedValue(1_000_000n); // 1 USDC
 
-    await expect(
-      payPaymentIntent(mockSecretKey, BASE_INTENT)
-    ).rejects.toThrow("need: 49 USDC");
+    await expect(payPaymentIntent(mockSecretKey, BASE_INTENT)).rejects.toThrow(
+      "need: 49 USDC"
+    );
   });
 
   it("handles large amounts correctly", async () => {

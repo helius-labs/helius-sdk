@@ -36,18 +36,34 @@ jest.mock("../constants", () => ({
 }));
 
 const mockAuthRequest = authRequest as jest.MockedFunction<typeof authRequest>;
-const mockCheckSolBalance = checkSolBalance as jest.MockedFunction<typeof checkSolBalance>;
-const mockCheckUsdcBalance = checkUsdcBalance as jest.MockedFunction<typeof checkUsdcBalance>;
+const mockCheckSolBalance = checkSolBalance as jest.MockedFunction<
+  typeof checkSolBalance
+>;
+const mockCheckUsdcBalance = checkUsdcBalance as jest.MockedFunction<
+  typeof checkUsdcBalance
+>;
 const mockPayWithMemo = payWithMemo as jest.MockedFunction<typeof payWithMemo>;
-const mockListProjects = listProjects as jest.MockedFunction<typeof listProjects>;
+const mockListProjects = listProjects as jest.MockedFunction<
+  typeof listProjects
+>;
 const mockGetProject = getProject as jest.MockedFunction<typeof getProject>;
 const mockLoadKeypair = loadKeypair as jest.MockedFunction<typeof loadKeypair>;
 const mockGetAddress = getAddress as jest.MockedFunction<typeof getAddress>;
-const mockFetchOpenPayPriceIds = fetchOpenPayPriceIds as jest.MockedFunction<typeof fetchOpenPayPriceIds>;
+const mockFetchOpenPayPriceIds = fetchOpenPayPriceIds as jest.MockedFunction<
+  typeof fetchOpenPayPriceIds
+>;
 
 const MOCK_PRICE_IDS = {
-  Monthly: { developer_v4: "price_dev_monthly", business_v4: "price_biz_monthly", professional_v4: "price_pro_monthly" },
-  Yearly: { developer_v4: "price_dev_yearly", business_v4: "price_biz_yearly", professional_v4: "price_pro_yearly" },
+  Monthly: {
+    developer_v4: "price_dev_monthly",
+    business_v4: "price_biz_monthly",
+    professional_v4: "price_pro_monthly",
+  },
+  Yearly: {
+    developer_v4: "price_dev_yearly",
+    business_v4: "price_biz_yearly",
+    professional_v4: "price_pro_yearly",
+  },
 };
 
 const INIT_RESPONSE = {
@@ -92,9 +108,9 @@ describe("resolvePriceId", () => {
   });
 
   it("throws for unknown plan", async () => {
-    await expect(resolvePriceId("jwt", "enterprise", "monthly")).rejects.toThrow(
-      "Unknown plan: enterprise"
-    );
+    await expect(
+      resolvePriceId("jwt", "enterprise", "monthly")
+    ).rejects.toThrow("Unknown plan: enterprise");
   });
 
   it("includes available plans in error", async () => {
@@ -190,12 +206,18 @@ describe("pollCheckoutCompletion", () => {
   it("polls until readyToRedirect", async () => {
     mockAuthRequest
       .mockResolvedValueOnce({
-        status: "pending", phase: "confirming",
-        subscriptionActive: false, readyToRedirect: false, message: "Confirming..."
+        status: "pending",
+        phase: "confirming",
+        subscriptionActive: false,
+        readyToRedirect: false,
+        message: "Confirming...",
       })
       .mockResolvedValueOnce({
-        status: "pending", phase: "activating",
-        subscriptionActive: false, readyToRedirect: false, message: "Activating..."
+        status: "pending",
+        phase: "activating",
+        subscriptionActive: false,
+        readyToRedirect: false,
+        message: "Activating...",
       })
       .mockResolvedValueOnce(POLL_COMPLETED_RESPONSE);
 
@@ -210,8 +232,11 @@ describe("pollCheckoutCompletion", () => {
 
   it("returns timeout status on timeout", async () => {
     mockAuthRequest.mockResolvedValue({
-      status: "pending", phase: "confirming",
-      subscriptionActive: false, readyToRedirect: false, message: "Still waiting"
+      status: "pending",
+      phase: "confirming",
+      subscriptionActive: false,
+      readyToRedirect: false,
+      message: "Still waiting",
     });
 
     const result = await pollCheckoutCompletion("jwt", "pi_123", undefined, {
@@ -283,7 +308,7 @@ describe("executeCheckout", () => {
       mockSecretKey,
       "Treasury111",
       49_000_000n, // 4900 cents * 10_000
-      "pi_test"    // intent.id as memo
+      "pi_test" // intent.id as memo
     );
   });
 
@@ -335,8 +360,11 @@ describe("executeCheckout", () => {
       .mockResolvedValueOnce(INIT_RESPONSE)
       // All subsequent calls return non-ready status
       .mockResolvedValue({
-        status: "pending", phase: "confirming",
-        subscriptionActive: false, readyToRedirect: false, message: "Waiting"
+        status: "pending",
+        phase: "confirming",
+        subscriptionActive: false,
+        readyToRedirect: false,
+        message: "Waiting",
       });
 
     const result = await executeCheckout(mockSecretKey, "jwt-token", {
@@ -374,7 +402,7 @@ describe("executeCheckout", () => {
       "jwt-token",
       { plan: "developer", period: "monthly", refId: "ref-1" },
       undefined,
-      { skipProjectPolling: true },
+      { skipProjectPolling: true }
     );
 
     expect(result.status).toBe("completed");
@@ -405,7 +433,14 @@ describe("getCheckoutPreview", () => {
     };
     mockAuthRequest.mockResolvedValue(mockPreview);
 
-    const result = await getCheckoutPreview("jwt", "business", "monthly", "proj-1", "SAVE10", "agent");
+    const result = await getCheckoutPreview(
+      "jwt",
+      "business",
+      "monthly",
+      "proj-1",
+      "SAVE10",
+      "agent"
+    );
 
     expect(mockAuthRequest).toHaveBeenCalledWith(
       "/checkout/preview?priceId=price_biz_monthly&refId=proj-1&couponCode=SAVE10",

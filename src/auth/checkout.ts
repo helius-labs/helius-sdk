@@ -29,7 +29,7 @@ export async function resolvePriceId(
   jwt: string,
   plan: string,
   period: "monthly" | "yearly",
-  userAgent?: string,
+  userAgent?: string
 ): Promise<string> {
   const usagePlan = PLAN_TO_USAGE_PLAN[plan.toLowerCase()];
   if (!usagePlan) {
@@ -44,9 +44,9 @@ export async function resolvePriceId(
     const available = Object.keys(priceIds[periodKey] ?? {});
     throw new Error(
       `No priceId found for plan "${plan}" (${period}). ` +
-      (available.length === 0
-        ? "The pricing configuration is empty — the backend may not be fully deployed yet."
-        : `Expected key "${usagePlan}" but available keys are: [${available.join(", ")}]`)
+        (available.length === 0
+          ? "The pricing configuration is empty — the backend may not be fully deployed yet."
+          : `Expected key "${usagePlan}" but available keys are: [${available.join(", ")}]`)
     );
   }
   return priceId;
@@ -74,7 +74,7 @@ export async function getCheckoutPreview(
   period: "monthly" | "yearly",
   refId: string,
   couponCode?: string,
-  userAgent?: string,
+  userAgent?: string
 ): Promise<CheckoutPreviewResponse> {
   const priceId = await resolvePriceId(jwt, plan, period, userAgent);
   const params = new URLSearchParams({ priceId, refId });
@@ -92,7 +92,7 @@ export async function getCheckoutPreview(
 export async function getPaymentIntent(
   jwt: string,
   paymentIntentId: string,
-  userAgent?: string,
+  userAgent?: string
 ): Promise<CheckoutInitializeResponse> {
   return authRequest<CheckoutInitializeResponse>(
     `/checkout/${paymentIntentId}`,
@@ -107,7 +107,7 @@ export async function getPaymentIntent(
 export async function getPaymentStatus(
   jwt: string,
   paymentIntentId: string,
-  userAgent?: string,
+  userAgent?: string
 ): Promise<CheckoutStatusResponse> {
   return authRequest<CheckoutStatusResponse>(
     `/checkout/${paymentIntentId}/status`,
@@ -176,7 +176,7 @@ export async function pollCheckoutCompletion(
 
 export async function payPaymentIntent(
   secretKey: Uint8Array,
-  intent: CheckoutInitializeResponse,
+  intent: CheckoutInitializeResponse
 ): Promise<string> {
   // $0 intents are auto-completed by backend — no transaction needed
   if (intent.amount === 0) {
@@ -212,17 +212,22 @@ export async function executeCheckout(
   jwt: string,
   request: CheckoutRequest,
   userAgent?: string,
-  options?: { skipProjectPolling?: boolean },
+  options?: { skipProjectPolling?: boolean }
 ): Promise<CheckoutResult> {
   // 1. Resolve priceId from plan+period, then initialize checkout
-  const priceId = await resolvePriceId(jwt, request.plan, request.period, userAgent);
+  const priceId = await resolvePriceId(
+    jwt,
+    request.plan,
+    request.period,
+    userAgent
+  );
   const { plan: _, period: __, ...rest } = request;
   const intent = await initializeCheckout(jwt, { priceId, ...rest }, userAgent);
 
   // 2. Send payment (handles $0 case)
   let txSignature: string | null = null;
   try {
-    txSignature = await payPaymentIntent(secretKey, intent) || null;
+    txSignature = (await payPaymentIntent(secretKey, intent)) || null;
   } catch (error) {
     return {
       paymentIntentId: intent.id,
@@ -305,7 +310,7 @@ export async function executeUpgrade(
   period: "monthly" | "yearly",
   projectId: string,
   couponCode?: string,
-  userAgent?: string,
+  userAgent?: string
 ): Promise<CheckoutResult> {
   const priceId = await resolvePriceId(jwt, plan, period, userAgent);
   const intent = await initializeCheckout(
@@ -316,7 +321,7 @@ export async function executeUpgrade(
 
   let txSignature: string | null = null;
   try {
-    txSignature = await payPaymentIntent(secretKey, intent) || null;
+    txSignature = (await payPaymentIntent(secretKey, intent)) || null;
   } catch (error) {
     return {
       paymentIntentId: intent.id,
@@ -329,10 +334,20 @@ export async function executeUpgrade(
   const status = await pollCheckoutCompletion(jwt, intent.id, userAgent);
 
   if (status.phase === "failed") {
-    return { paymentIntentId: intent.id, txSignature, status: "failed", error: status.message };
+    return {
+      paymentIntentId: intent.id,
+      txSignature,
+      status: "failed",
+      error: status.message,
+    };
   }
   if (status.phase === "expired") {
-    return { paymentIntentId: intent.id, txSignature, status: "expired", error: status.message };
+    return {
+      paymentIntentId: intent.id,
+      txSignature,
+      status: "expired",
+      error: status.message,
+    };
   }
   if (!status.readyToRedirect) {
     return { paymentIntentId: intent.id, txSignature, status: "timeout" };
@@ -345,7 +360,7 @@ export async function executeRenewal(
   secretKey: Uint8Array,
   jwt: string,
   paymentIntentId: string,
-  userAgent?: string,
+  userAgent?: string
 ): Promise<CheckoutResult> {
   const intent = await getPaymentIntent(jwt, paymentIntentId, userAgent);
 
@@ -357,7 +372,7 @@ export async function executeRenewal(
 
   let txSignature: string | null = null;
   try {
-    txSignature = await payPaymentIntent(secretKey, intent) || null;
+    txSignature = (await payPaymentIntent(secretKey, intent)) || null;
   } catch (error) {
     return {
       paymentIntentId: intent.id,
@@ -370,10 +385,20 @@ export async function executeRenewal(
   const status = await pollCheckoutCompletion(jwt, intent.id, userAgent);
 
   if (status.phase === "failed") {
-    return { paymentIntentId: intent.id, txSignature, status: "failed", error: status.message };
+    return {
+      paymentIntentId: intent.id,
+      txSignature,
+      status: "failed",
+      error: status.message,
+    };
   }
   if (status.phase === "expired") {
-    return { paymentIntentId: intent.id, txSignature, status: "expired", error: status.message };
+    return {
+      paymentIntentId: intent.id,
+      txSignature,
+      status: "expired",
+      error: status.message,
+    };
   }
   if (!status.readyToRedirect) {
     return { paymentIntentId: intent.id, txSignature, status: "timeout" };

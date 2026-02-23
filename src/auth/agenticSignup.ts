@@ -77,7 +77,9 @@ export async function agenticSignup(
 
   // Validate plan
   if (plan !== "basic" && !isOpenPayPlan(plan)) {
-    throw new Error(`Unknown plan: ${plan}. Available: basic, ${OPENPAY_PLANS.join(", ")}`);
+    throw new Error(
+      `Unknown plan: ${plan}. Available: basic, ${OPENPAY_PLANS.join(", ")}`
+    );
   }
 
   // Load keypair and derive address
@@ -106,7 +108,7 @@ export async function agenticSignup(
         options.period ?? "monthly",
         project.id,
         options.couponCode,
-        userAgent,
+        userAgent
       );
 
       if (upgradeResult.status !== "completed") {
@@ -144,10 +146,14 @@ export async function agenticSignup(
   if (isOpenPayPlan(plan)) {
     // Validate required contact info for new subscriptions
     if (!email || !firstName || !lastName) {
-      const missing = [!email && "email", !firstName && "firstName", !lastName && "lastName"].filter(Boolean);
+      const missing = [
+        !email && "email",
+        !firstName && "firstName",
+        !lastName && "lastName",
+      ].filter(Boolean);
       throw new Error(
         `Paid plans require contact info for new accounts. Missing: ${missing.join(", ")}. ` +
-        `Pass --email, --first-name, and --last-name.`
+          `Pass --email, --first-name, and --last-name.`
       );
     }
 
@@ -179,7 +185,9 @@ export async function agenticSignup(
       walletAddress,
       projectId: checkoutResult.projectId!,
       apiKey: checkoutResult.apiKey || null,
-      endpoints: checkoutResult.apiKey ? buildEndpoints(checkoutResult.apiKey) : null,
+      endpoints: checkoutResult.apiKey
+        ? buildEndpoints(checkoutResult.apiKey)
+        : null,
       credits: null,
       txSignature: checkoutResult.txSignature ?? undefined,
     };
@@ -204,7 +212,8 @@ export async function agenticSignup(
   const project = await createProjectWithRetry(jwt, userAgent);
 
   const projectDetails = await getProject(jwt, project.id, userAgent);
-  const apiKey = projectDetails.apiKeys?.[0]?.keyId || project.apiKeys?.[0]?.keyId || null;
+  const apiKey =
+    projectDetails.apiKeys?.[0]?.keyId || project.apiKeys?.[0]?.keyId || null;
 
   return {
     status: "success",

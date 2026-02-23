@@ -20,9 +20,9 @@ export const PAYMENT_AMOUNT = 1_000_000n;
 
 export interface PlanInfo {
   name: string;
-  monthlyPrice: number;   // cents
-  yearlyPrice: number;    // cents
-  credits: number;        // included credits
+  monthlyPrice: number; // cents
+  yearlyPrice: number; // cents
+  credits: number; // included credits
   requestsPerSecond: number;
 }
 
@@ -72,7 +72,6 @@ export const CHECKOUT_POLL_INTERVAL_MS = 1_000;
 export const CHECKOUT_POLL_TIMEOUT_MS = 60_000;
 export const PROJECT_POLL_INTERVAL_MS = 2_000;
 export const PROJECT_POLL_TIMEOUT_MS = 30_000;
-
 
 const RPC_URL = "https://api.mainnet-beta.solana.com";
 const WS_URL = "wss://api.mainnet-beta.solana.com";

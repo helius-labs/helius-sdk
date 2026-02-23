@@ -123,7 +123,10 @@ describe("agenticSignup", () => {
     });
 
     it("creates a new project via payUSDC when plan='basic'", async () => {
-      const result = await agenticSignup({ secretKey: new Uint8Array(64), plan: "basic" });
+      const result = await agenticSignup({
+        secretKey: new Uint8Array(64),
+        plan: "basic",
+      });
 
       expect(result.status).toBe("success");
       expect(payUSDC).toHaveBeenCalled();
@@ -167,7 +170,9 @@ describe("agenticSignup", () => {
 
     it("retries createProject on 5xx errors", async () => {
       (createProject as jest.Mock)
-        .mockRejectedValueOnce(new Error("API error (500): Internal Server Error"))
+        .mockRejectedValueOnce(
+          new Error("API error (500): Internal Server Error")
+        )
         .mockResolvedValueOnce({
           id: "proj-retry",
           name: "Retry Project",
@@ -185,7 +190,9 @@ describe("agenticSignup", () => {
     });
 
     it("does not retry createProject on 4xx errors", async () => {
-      (createProject as jest.Mock).mockRejectedValueOnce(new Error("API error (400): Bad Request"));
+      (createProject as jest.Mock).mockRejectedValueOnce(
+        new Error("API error (400): Bad Request")
+      );
 
       await expect(
         agenticSignup({ secretKey: new Uint8Array(64) })
@@ -208,14 +215,21 @@ describe("agenticSignup", () => {
         "test-agent/1.0"
       );
 
-      expect(createProject).toHaveBeenCalledWith("jwt-token-123", "test-agent/1.0");
+      expect(createProject).toHaveBeenCalledWith(
+        "jwt-token-123",
+        "test-agent/1.0"
+      );
     });
   });
 
   // ── OpenPay signup (new user) ──
 
   describe("OpenPay signup (new user)", () => {
-    const CONTACT = { email: "user@example.com", firstName: "Test", lastName: "User" };
+    const CONTACT = {
+      email: "user@example.com",
+      firstName: "Test",
+      lastName: "User",
+    };
 
     it("uses executeCheckout for developer plan", async () => {
       const result = await agenticSignup({
@@ -232,7 +246,13 @@ describe("agenticSignup", () => {
       expect(executeCheckout).toHaveBeenCalledWith(
         new Uint8Array(64),
         "jwt-token-123",
-        { plan: "developer", period: "monthly", refId: "ref-1", ...CONTACT, couponCode: undefined },
+        {
+          plan: "developer",
+          period: "monthly",
+          refId: "ref-1",
+          ...CONTACT,
+          couponCode: undefined,
+        },
         undefined
       );
       expect(payUSDC).not.toHaveBeenCalled();
@@ -263,7 +283,11 @@ describe("agenticSignup", () => {
       });
 
       await expect(
-        agenticSignup({ secretKey: new Uint8Array(64), plan: "developer", ...CONTACT })
+        agenticSignup({
+          secretKey: new Uint8Array(64),
+          plan: "developer",
+          ...CONTACT,
+        })
       ).rejects.toThrow("Checkout failed: Insufficient USDC");
     });
 
@@ -275,7 +299,11 @@ describe("agenticSignup", () => {
       });
 
       await expect(
-        agenticSignup({ secretKey: new Uint8Array(64), plan: "developer", ...CONTACT })
+        agenticSignup({
+          secretKey: new Uint8Array(64),
+          plan: "developer",
+          ...CONTACT,
+        })
       ).rejects.toThrow("TX: tx-sig-timeout");
     });
 
@@ -290,7 +318,13 @@ describe("agenticSignup", () => {
       expect(executeCheckout).toHaveBeenCalledWith(
         new Uint8Array(64),
         "jwt-token-123",
-        { plan: "developer", period: "monthly", refId: "ref-1", ...CONTACT, couponCode: undefined },
+        {
+          plan: "developer",
+          period: "monthly",
+          refId: "ref-1",
+          ...CONTACT,
+          couponCode: undefined,
+        },
         "test-agent/1.0"
       );
     });
@@ -303,7 +337,11 @@ describe("agenticSignup", () => {
 
     it("throws listing specific missing fields", async () => {
       await expect(
-        agenticSignup({ secretKey: new Uint8Array(64), plan: "developer", email: "a@b.com" })
+        agenticSignup({
+          secretKey: new Uint8Array(64),
+          plan: "developer",
+          email: "a@b.com",
+        })
       ).rejects.toThrow("Missing: firstName, lastName");
     });
   });
@@ -334,7 +372,7 @@ describe("agenticSignup", () => {
         "yearly",
         "proj-existing",
         "UPGRADE10",
-        undefined,
+        undefined
       );
       expect(executeCheckout).not.toHaveBeenCalled();
       expect(payUSDC).not.toHaveBeenCalled();
