@@ -1,8 +1,0 @@
-{
-  "mcpServers": {
-    "helius": {
-      "command": "node",
-      "args": ["/Users/nathan/Desktop/dev/core-ai/helius-mcp/dist/index.js"]
-    }
-  }
-}

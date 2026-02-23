@@ -1,6 +1,9 @@
 import { getSDKHeaders } from "../http";
 import { API_URL } from "./constants";
 
+export const sleep = (ms: number) =>
+  new Promise((resolve) => setTimeout(resolve, ms));
+
 export async function authRequest<T>(
   endpoint: string,
   options: RequestInit = {},

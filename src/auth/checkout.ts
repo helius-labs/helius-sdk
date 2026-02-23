@@ -6,7 +6,7 @@ import type {
   CheckoutResult,
   CheckoutRequest,
 } from "./types";
-import { authRequest } from "./utils";
+import { authRequest, sleep } from "./utils";
 import { loadKeypair } from "./loadKeypair";
 import { getAddress } from "./getAddress";
 import { checkSolBalance, checkUsdcBalance } from "./checkBalances";
@@ -22,8 +22,6 @@ import {
   PLAN_TO_USAGE_PLAN,
 } from "./constants";
 import { fetchOpenPayPriceIds } from "./devPortalConfigs";
-
-const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export async function resolvePriceId(
   jwt: string,
@@ -221,9 +219,19 @@ export async function executeCheckout(
     request.period,
     userAgent
   );
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { plan: _, period: __, ...rest } = request;
-  const intent = await initializeCheckout(jwt, { priceId, ...rest }, userAgent);
+  const intent = await initializeCheckout(
+    jwt,
+    {
+      priceId,
+      refId: request.refId,
+      email: request.email,
+      firstName: request.firstName,
+      lastName: request.lastName,
+      walletAddress: request.walletAddress,
+      couponCode: request.couponCode,
+    },
+    userAgent
+  );
 
   // 2. Send payment (handles $0 case)
   let txSignature: string | null = null;

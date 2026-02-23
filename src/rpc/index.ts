@@ -41,6 +41,7 @@ import { makeWsAsync, WsAsync } from "../websockets/wsAsync";
 import { StakeClientLazy } from "../staking/client";
 import { ZkClientLazy } from "../zk/client";
 import type { WalletClient } from "../wallet/client";
+import type { AuthClient } from "../auth/types";
 import type { HeliusRpcOptions } from "./types";
 
 export type { HeliusRpcOptions };
@@ -140,6 +141,9 @@ export type HeliusClient = ResolvedHeliusRpcApi & {
 
   /** Wallet API client. Requires an API key. */
   wallet: WalletClient;
+
+  /** Auth client for agentic signup, checkout, and account management. */
+  auth: AuthClient;
 };
 
 /**
@@ -493,6 +497,11 @@ export const createHelius = ({
       return makeWalletClient(apiKey, userAgent);
     }
   );
+
+  defineLazyNamespace<HeliusClient, AuthClient>(client, "auth", async () => {
+    const { makeAuthClient } = await import("../auth/client.js");
+    return makeAuthClient(userAgent);
+  });
 
   // So we can send standard RPC calls
   const merged = new Proxy(client as any, {
