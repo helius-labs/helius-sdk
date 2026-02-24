@@ -7,8 +7,12 @@ import { RPC_URL, USDC_MINT } from "./constants";
 
 export async function checkSolBalance(walletAddress: string): Promise<bigint> {
   const rpc = createSolanaRpc(RPC_URL);
-  const response = await rpc.getBalance(toAddress(walletAddress)).send();
-  return response.value;
+  try {
+    const response = await rpc.getBalance(toAddress(walletAddress)).send();
+    return response.value;
+  } catch {
+    return 0n;
+  }
 }
 
 export async function checkUsdcBalance(walletAddress: string): Promise<bigint> {

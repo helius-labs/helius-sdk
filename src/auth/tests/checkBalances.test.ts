@@ -40,10 +40,12 @@ describe("checkSolBalance", () => {
     expect(mockGetBalance).toHaveBeenCalled();
   });
 
-  it("propagates RPC errors", async () => {
+  it("returns 0n on error", async () => {
     mockSend.mockRejectedValue(new Error("RPC error"));
 
-    await expect(checkSolBalance(VALID_ADDRESS)).rejects.toThrow("RPC error");
+    const balance = await checkSolBalance(VALID_ADDRESS);
+
+    expect(balance).toBe(0n);
   });
 });
 

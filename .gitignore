@@ -33,4 +33,5 @@ Thumbs.db
 # Misc
 *.bak
 .claude
+.mcp.json
 src/main.ts

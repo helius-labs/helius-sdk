@@ -10,6 +10,17 @@ import { getProject } from "./getProject";
 import { createApiKey } from "./createApiKey";
 import { checkSolBalance, checkUsdcBalance } from "./checkBalances";
 import { payUSDC } from "./payUSDC";
+import { payWithMemo } from "./payWithMemo";
+import {
+  initializeCheckout,
+  executeCheckout,
+  getCheckoutPreview,
+  getPaymentIntent,
+  getPaymentStatus,
+  payPaymentIntent,
+  executeUpgrade,
+  executeRenewal,
+} from "./checkout";
 import { agenticSignup } from "./agenticSignup";
 
 export function makeAuthClient(userAgent?: string): AuthClient {
@@ -28,6 +39,17 @@ export function makeAuthClient(userAgent?: string): AuthClient {
     checkSolBalance,
     checkUsdcBalance,
     payUSDC,
+    initializeCheckout: (jwt, req) => initializeCheckout(jwt, req, userAgent),
+    executeCheckout: (sk, jwt, req) => executeCheckout(sk, jwt, req, userAgent),
+    payWithMemo,
     agenticSignup: (options) => agenticSignup({ ...options, userAgent }),
+    getCheckoutPreview: (jwt, plan, period, refId, coupon) =>
+      getCheckoutPreview(jwt, plan, period, refId, coupon, userAgent),
+    getPaymentIntent: (jwt, id) => getPaymentIntent(jwt, id, userAgent),
+    getPaymentStatus: (jwt, id) => getPaymentStatus(jwt, id, userAgent),
+    payPaymentIntent,
+    executeUpgrade: (sk, jwt, plan, period, projectId, coupon) =>
+      executeUpgrade(sk, jwt, plan, period, projectId, coupon, userAgent),
+    executeRenewal: (sk, jwt, id) => executeRenewal(sk, jwt, id, userAgent),
   };
 }
