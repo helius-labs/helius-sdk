@@ -1,0 +1,21 @@
+{
+  "parser": "@typescript-eslint/parser",
+  "extends": [
+    "airbnb-base",
+    "plugin:@typescript-eslint/recommended",
+    "prettier"
+  ],
+  "plugins": ["@typescript-eslint", "prettier"],
+  "rules": {
+    "prettier/prettier": "error",
+    "import/extensions": "off",
+    "no-console": "error",
+    "@typescript-eslint/no-unused-vars": "error",
+    "prefer-arrow-callback": "error",
+    "quotes": ["error", "double", { "avoidEscape": true }]
+  },
+  "env": {
+    "node": true,
+    "jest": true
+  }
+}

@@ -1,0 +1,190 @@
+<!DOCTYPE html><html class="default" lang="en" data-base="./"><head><meta charset="utf-8"/><meta http-equiv="x-ua-compatible" content="IE=edge"/><title>Helius SDK - v2.2.2</title><meta name="description" content="Documentation for Helius SDK"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="stylesheet" href="assets/style.css"/><link rel="stylesheet" href="assets/highlight.css"/><script defer src="assets/main.js"></script><script async src="assets/icons.js" id="tsd-icons-script"></script><script async src="assets/search.js" id="tsd-search-script"></script><script async src="assets/navigation.js" id="tsd-nav-script"></script><script async src="assets/hierarchy.js" id="tsd-hierarchy-script"></script></head><body><script>document.documentElement.dataset.theme = localStorage.getItem("tsd-theme") || "os";document.body.style.display="none";setTimeout(() => window.app?app.showPage():document.body.style.removeProperty("display"),500)</script><header class="tsd-page-toolbar"><div class="tsd-toolbar-contents container"><a href="index.html" class="title">Helius SDK - v2.2.2</a><div id="tsd-toolbar-links"><a href="https://github.com/helius-labs/helius-sdk">GitHub</a><a href="https://www.npmjs.com/package/helius-sdk">npm</a><a href="https://docs.helius.dev">Helius Docs</a></div><button id="tsd-search-trigger" class="tsd-widget" aria-label="Search"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><use href="assets/icons.svg#icon-search"></use></svg></button><dialog id="tsd-search" aria-label="Search"><input role="combobox" id="tsd-search-input" aria-controls="tsd-search-results" aria-autocomplete="list" aria-expanded="true" autocapitalize="off" autocomplete="off" placeholder="Search the docs" maxLength="100"/><ul role="listbox" id="tsd-search-results"></ul><div id="tsd-search-status" aria-live="polite" aria-atomic="true"><div>Preparing search index...</div></div></dialog><a href="#" class="tsd-widget menu" id="tsd-toolbar-menu-trigger" data-toggle="menu" aria-label="Menu"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><use href="assets/icons.svg#icon-menu"></use></svg></a></div></header><div class="container container-main"><div class="col-content"><div class="tsd-page-title"><h1>Helius SDK - v2.2.2</h1></div><div class="tsd-panel tsd-typography"><h1 id="helius-typescript-sdk" class="tsd-anchor-link">Helius TypeScript SDK<a href="#helius-typescript-sdk" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h1>
+<p><a href="https://www.npmjs.org/package/helius-sdk"><img src="https://img.shields.io/npm/v/helius-sdk" alt="Version"></a>
+<img src="https://img.shields.io/npm/dm/helius-sdk" alt="Downloads"></p>
+<p>The Helius TypeScript SDK provides access to Helius APIs and enhanced Solana RPC functionality, making building on Solana as easy as possible.</p>
+<h3 id="agent-account-sign-up" class="tsd-anchor-link">Agent Account Sign Up<a href="#agent-account-sign-up" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<blockquote>
+<p><strong>For AI Agents:</strong> You can create a Helius account and generate an API key programmatically using the helius-cli. See the <a href="https://www.helius.dev/docs/api-reference/helius-cli.md">agent signup guide</a> or <a href="https://dashboard.helius.dev/agents.md">helius-cli agent file</a> for complete details.</p>
+</blockquote>
+<h2 id="documentation" class="tsd-anchor-link">Documentation<a href="#documentation" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h2>
+<p>API reference documentation is available at <a href="https://www.helius.dev/docs">helius.dev/docs</a>.</p>
+<p>See the <a href="https://github.com/helius-labs/helius-sdk/blob/main/CHANGELOG.md">CHANGELOG</a> for version history and release notes.</p>
+<h2 id="contributions" class="tsd-anchor-link">Contributions<a href="#contributions" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h2>
+<p>Interested in contributing? Read the following <a href="https://github.com/helius-labs/helius-sdk/blob/main/CONTRIBUTING.md">contributions guide</a> before opening a PR.</p>
+<h2 id="installation" class="tsd-anchor-link">Installation<a href="#installation" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h2>
+<p>Using pnpm (recommended):</p>
+<pre><code class="shell"><span class="hl-0">pnpm</span><span class="hl-1"> </span><span class="hl-2">add</span><span class="hl-1"> </span><span class="hl-2">helius-sdk</span>
+</code><button type="button">Copy</button></pre>
+
+<p>Using npm:</p>
+<pre><code class="shell"><span class="hl-0">npm</span><span class="hl-1"> </span><span class="hl-2">install</span><span class="hl-1"> </span><span class="hl-2">helius-sdk</span>
+</code><button type="button">Copy</button></pre>
+
+<p>Using yarn:</p>
+<pre><code class="shell"><span class="hl-0">yarn</span><span class="hl-1"> </span><span class="hl-2">add</span><span class="hl-1"> </span><span class="hl-2">helius-sdk</span>
+</code><button type="button">Copy</button></pre>
+
+<h2 id="usage" class="tsd-anchor-link">Usage<a href="#usage" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h2>
+<p>The package needs to be configured with your account's API key, which is available in the <a href="https://dashboard.helius.dev/">Helius Dashboard</a>.</p>
+<pre><code class="ts"><span class="hl-3">import</span><span class="hl-1"> { </span><span class="hl-4">createHelius</span><span class="hl-1"> } </span><span class="hl-3">from</span><span class="hl-1"> </span><span class="hl-2">&quot;helius-sdk&quot;</span><span class="hl-1">;</span><br/><br/><span class="hl-1">(</span><span class="hl-5">async</span><span class="hl-1"> () </span><span class="hl-5">=&gt;</span><span class="hl-1"> {</span><br/><span class="hl-1">  </span><span class="hl-5">const</span><span class="hl-1"> </span><span class="hl-6">apiKey</span><span class="hl-1"> = </span><span class="hl-2">&quot;&quot;</span><span class="hl-1">; </span><span class="hl-7">// From Helius dashboard</span><br/><span class="hl-1">  </span><span class="hl-5">const</span><span class="hl-1"> </span><span class="hl-6">helius</span><span class="hl-1"> = </span><span class="hl-0">createHelius</span><span class="hl-1">({ </span><span class="hl-4">apiKey</span><span class="hl-1"> });</span><br/><br/><span class="hl-1">  </span><span class="hl-3">try</span><span class="hl-1"> {</span><br/><span class="hl-1">    </span><span class="hl-5">const</span><span class="hl-1"> </span><span class="hl-6">assets</span><span class="hl-1"> = </span><span class="hl-3">await</span><span class="hl-1"> </span><span class="hl-4">helius</span><span class="hl-1">.</span><span class="hl-0">getAssetsByOwner</span><span class="hl-1">({</span><br/><span class="hl-1">      </span><span class="hl-4">ownerAddress:</span><span class="hl-1"> </span><span class="hl-2">&quot;owner_address_goes_here&quot;</span><span class="hl-1">,</span><br/><span class="hl-1">      </span><span class="hl-4">page:</span><span class="hl-1"> </span><span class="hl-8">1</span><span class="hl-1">,</span><br/><span class="hl-1">      </span><span class="hl-4">limit:</span><span class="hl-1"> </span><span class="hl-8">50</span><span class="hl-1">,</span><br/><span class="hl-1">      </span><span class="hl-4">sortBy:</span><span class="hl-1"> { </span><span class="hl-4">sortBy:</span><span class="hl-1"> </span><span class="hl-2">&quot;created&quot;</span><span class="hl-1">, </span><span class="hl-4">sortDirection:</span><span class="hl-1"> </span><span class="hl-2">&quot;asc&quot;</span><span class="hl-1"> },</span><br/><span class="hl-1">    });</span><br/><br/><span class="hl-1">    </span><span class="hl-4">console</span><span class="hl-1">.</span><span class="hl-0">log</span><span class="hl-1">(</span><span class="hl-2">&quot;Fetched assets:&quot;</span><span class="hl-1">, </span><span class="hl-4">assets</span><span class="hl-1">);</span><br/><span class="hl-1">  } </span><span class="hl-3">catch</span><span class="hl-1"> (</span><span class="hl-4">error</span><span class="hl-1">) {</span><br/><span class="hl-1">    </span><span class="hl-4">console</span><span class="hl-1">.</span><span class="hl-0">error</span><span class="hl-1">(</span><span class="hl-2">&quot;Error:&quot;</span><span class="hl-1">, </span><span class="hl-4">error</span><span class="hl-1">);</span><br/><span class="hl-1">  }</span><br/><span class="hl-1">})();</span>
+</code><button type="button">Copy</button></pre>
+
+<h3 id="migrating-to-200" class="tsd-anchor-link">Migrating to <code>helius-sdk</code> 2.0.0<a href="#migrating-to-200" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<p>The Helius Node.js SDK has been rewritten from the ground up in version 2.0.0 to use <a href="https://www.npmjs.com/package/@solana/kit"><code>@solana/kit</code> (i.e., Kit)</a> under the hood, replacing the dependency on <code>@solana/web3.js</code> versions higher than 1.73.2.</p>
+<p>We've gone to great lengths to ensure that the developer experience remains largely the same, with minimal impact on existing code. The API methods and namespaces are designed to be intuitive and an improvement on previous versions, so migrating to the latest version is relatively straightforward. There are a plethora of examples found in the <code>examples</code> directory, organized by namespace, to aid in this migration.</p>
+<p>For more detailed migration help, refer to the following <a href="https://github.com/helius-labs/helius-sdk/blob/main/MIGRATION.md">migration guide</a></p>
+<p>For general help with Kit, please refer to <a href="https://www.solanakit.com/">Kit's new documentation site</a></p>
+<h2 id="handling-errors" class="tsd-anchor-link">Handling errors<a href="#handling-errors" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h2>
+<p>When the API returns a non-success status code (4xx or 5xx response), an error message will be thrown:</p>
+<pre><code class="ts"><span class="hl-3">try</span><span class="hl-1"> {</span><br/><span class="hl-1">  </span><span class="hl-5">const</span><span class="hl-1"> </span><span class="hl-6">assets</span><span class="hl-1"> = </span><span class="hl-3">await</span><span class="hl-1"> </span><span class="hl-4">helius</span><span class="hl-1">.</span><span class="hl-0">getAssetsByOwner</span><span class="hl-1">({</span><br/><span class="hl-1">    </span><span class="hl-4">ownerAddress:</span><span class="hl-1"> </span><span class="hl-2">&quot;owner_address_goes_here&quot;</span><span class="hl-1">,</span><br/><span class="hl-1">    </span><span class="hl-4">page:</span><span class="hl-1"> </span><span class="hl-8">1</span><span class="hl-1">,</span><br/><span class="hl-1">    </span><span class="hl-4">limit:</span><span class="hl-1"> </span><span class="hl-8">50</span><span class="hl-1">,</span><br/><span class="hl-1">    </span><span class="hl-4">sortBy:</span><span class="hl-1"> { </span><span class="hl-4">sortBy:</span><span class="hl-1"> </span><span class="hl-2">&quot;created&quot;</span><span class="hl-1">, </span><span class="hl-4">sortDirection:</span><span class="hl-1"> </span><span class="hl-2">&quot;asc&quot;</span><span class="hl-1"> },</span><br/><span class="hl-1">  });</span><br/><br/><span class="hl-1">  </span><span class="hl-4">console</span><span class="hl-1">.</span><span class="hl-0">log</span><span class="hl-1">(</span><span class="hl-2">&quot;Fetched assets:&quot;</span><span class="hl-1">, </span><span class="hl-4">assets</span><span class="hl-1">);</span><br/><span class="hl-1">} </span><span class="hl-3">catch</span><span class="hl-1"> (</span><span class="hl-4">error</span><span class="hl-1">) {</span><br/><span class="hl-1">  </span><span class="hl-4">console</span><span class="hl-1">.</span><span class="hl-0">error</span><span class="hl-1">(</span><span class="hl-2">&quot;Error:&quot;</span><span class="hl-1">, </span><span class="hl-4">error</span><span class="hl-1">);</span><br/><span class="hl-1">}</span>
+</code><button type="button">Copy</button></pre>
+
+<h3 id="common-error-codes" class="tsd-anchor-link">Common Error Codes<a href="#common-error-codes" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<p>When working with the Helius SDK, you may encounter several error codes. Below is a table detailing some of the common error codes along with additional information to help you troubleshoot:</p>
+<table>
+<thead>
+<tr>
+<th>Error Code</th>
+<th>Error Message</th>
+<th>More Information</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>401</td>
+<td>Unauthorized</td>
+<td>This occurs when an invalid API key is provided or access is restricted due to RPC rules.</td>
+</tr>
+<tr>
+<td>429</td>
+<td>Too Many Requests</td>
+<td>This indicates that the user has exceeded the request limit in a given timeframe or is out of credits.</td>
+</tr>
+<tr>
+<td>5XX</td>
+<td>Internal Server Error</td>
+<td>This is a generic error message for server-side issues. Please contact Helius support for assistance.</td>
+</tr>
+</tbody>
+</table>
+<p>If you encounter any of these errors, refer to the Helius documentation for further guidance, or reach out to the Helius support team for more detailed assistance.</p>
+<h2 id="using-the-helius-sdk" class="tsd-anchor-link">Using the Helius SDK<a href="#using-the-helius-sdk" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h2>
+<p>Our SDK is designed to give you a seamless experience when building on Solana. We've separated the core functionality into various segments. Examples for individual methods can be found in the <code>examples</code> directory, with examples organized by namespace.</p>
+<p><a href="https://www.helius.dev/docs/das-api"><strong>DAS API</strong></a></p>
+<p>Comprehensive and performant API for tokens, NFTs, and compressed NFTs on Solana. Available on the <code>helius</code> namespace.</p>
+<ul>
+<li><a href="https://www.helius.dev/docs/api-reference/das/getasset"><code>getAsset()</code></a>: Get an asset by its ID.</li>
+<li><a href="https://www.helius.dev/docs/api-reference/das/getassetbatch"><code>getAssetBatch()</code></a>: Get multiple assets by their IDs (up to 1k).</li>
+<li><a href="https://www.helius.dev/docs/api-reference/das/getassetproof"><code>getAssetProof()</code></a>: Get a Merkle proof for a compressed asset by its ID.</li>
+<li><a href="https://www.helius.dev/docs/api-reference/das/getassetproofbatch"><code>getAssetProofBatch()</code></a>: Get Merkle proofs for a set of compressed assets by their IDs.</li>
+<li><a href="https://www.helius.dev/docs/api-reference/das/getassetsbyauthority"><code>getAssetsByAuthority()</code></a>: Get a list of assets with a specific authority.</li>
+<li><a href="https://www.helius.dev/docs/api-reference/das/getassetsbycreator"><code>getAssetsByCreator()</code></a>: Get a list of assets created by an address.</li>
+<li><a href="https://www.helius.dev/docs/api-reference/das/getassetsbygroup"><code>getAssetsByGroup()</code></a>: Get a list of assets by a group key and value. This endpoint is very useful for getting the mint list for NFT Collections.</li>
+<li><a href="https://www.helius.dev/docs/api-reference/das/getassetsbyowner"><code>getAssetsByOwner()</code></a>: Get a list of assets owned by an address. This is the fastest way to get all the NFTs and fungible tokens that are owned by a wallet on Solana.</li>
+<li><a href="https://www.helius.dev/docs/api-reference/das/getnfteditions"><code>getNftEditions()</code></a>: Get information about all the edition NFTs for a specific master NFT.</li>
+<li><a href="https://www.helius.dev/docs/api-reference/das/gettokenaccounts"><code>getTokenAccounts()</code></a>: Get information about all token accounts for a specific mint or a specific owner.</li>
+<li><a href="https://www.helius.dev/docs/api-reference/das/searchassets"><code>searchAssets()</code></a>: Search for assets by a variety of parameters. This is very useful for token-gating.</li>
+</ul>
+<p><strong>RPC V2 Methods</strong></p>
+<p>Enhanced RPC methods, available only with Helius.</p>
+<ul>
+<li><a href="https://www.helius.dev/docs/api-reference/rpc/http/getprogramaccountsv2"><code>getProgramAccountsV2()</code></a>: Enhanced version of <code>getProgramAccounts</code> with cursor-based pagination and <code>changedSinceSlot</code> support for efficiently querying large sets of accounts owned by specific Solana programs with incremental updates.</li>
+<li><code>getAllProgramAccounts()</code>: Auto-paginates through all program accounts. Use with caution on larger programs.</li>
+<li><a href="https://www.helius.dev/docs/api-reference/rpc/http/gettokenaccountsbyownerv2"><code>getTokenAccountsByOwnerV2()</code></a>: An enhanced version of <code>getTokenAccountsByOwner</code> with cursor-based pagination and <code>changedSinceSlot</code> support to incrementally retrieve SPL token accounts owned by a given mint.</li>
+<li><code>getAllTokenAccountsByOwner()</code>: Auto-paginates all token accounts for a given owner.</li>
+<li><a href="https://www.helius.dev/docs/rpc/gettransactionsforaddress"><code>getTransactionsForAddress()</code></a>: Get transaction history for an address with advanced filtering by slot, time, and bidirectional sorting options. Supports both signature-only and full transaction details. Optionally include transactions from associated token accounts.</li>
+</ul>
+<p><a href="https://www.helius.dev/docs/staking/how-to-stake-with-helius-programmatically"><strong>Staking</strong></a></p>
+<p>The easiest way to stake with Helius programmatically. Available on the <code>helius.staking</code> namespace.</p>
+<ul>
+<li><code>createStakeTransaction()</code>: Generate a transaction to create + delegate a new stake account to the Helius validator.</li>
+<li><code>createUnstakeTransaction()</code>: Generate a transaction to deactivate a stake account.</li>
+<li><code>createWithdrawTransaction()</code>: Generate a transaction to withdraw lamports from a stake account (after cooldown).</li>
+<li><code>getStakeInstructions()</code>: Return only the instructions for creating and delegating a stake account.</li>
+<li><code>getUnstakeInstruction()</code>: Return the instruction to deactivate a stake account.</li>
+<li><code>getWithdrawInstruction()</code>: Return the instruction to withdraw lamports from a stake account.</li>
+<li><code>getWithdrawableAmount()</code>: Determine how many lamports are withdrawable (with optional rent-exempt inclusion).</li>
+<li><code>getHeliusStakeAccounts()</code>: Return all stake accounts delegated to the Helius validator for a given wallet.</li>
+</ul>
+<p><a href="https://docs.helius.dev/solana-rpc-nodes/sending-transactions-on-solana#sending-smart-transactions"><strong>Transactions</strong></a></p>
+<p>Simply create, send, and land transactions as fast as possible. Available on the <code>helius.tx</code> namespace.</p>
+<ul>
+<li><code>getComputeUnits()</code>: Fetches the total compute units the transaction provided is expected to consume</li>
+<li><code>broadcastTransaction()</code>: Broadcasts a fully signed transaction (object or serialized) and polls for its confirmation.</li>
+<li><code>pollTransactionConfirmation()</code>: Polls a transaction to check whether it has been confirmed</li>
+<li><code>createSmartTransaction()</code>: Creates a smart transaction with the provided configuration</li>
+<li><code>sendSmartTransaction()</code>: Builds and sends an optimized transaction</li>
+<li><code>sendTransaction()</code>: Wrapper for <a href="https://www.helius.dev/docs/api-reference/rpc/http/sendtransaction"><code>sendTransaction</code> RPC call</a> that includes support for a <code>validatorAcls</code> parameter (i.e., JSON-based allow and deny lists).</li>
+<li><code>sendTransactionWithSender()</code>: Ultra-low latency Solana transaction submission with dual routing to validators and Jito infra via <a href="https://www.helius.dev/docs/sending-transactions/sender">Helius Sender</a>.</li>
+</ul>
+<p><a href="https://github.com/helius-labs/helius-sdk/blob/main/examples/EXAMPLES_OVERVIEW.md#helper-methods"><strong>Priority Fee API</strong></a></p>
+<p>Estimate optimal priority fees for Solana transactions. Available on the <code>helius</code> namespace.</p>
+<ul>
+<li><a href="https://github.com/helius-labs/helius-sdk/blob/main/examples/EXAMPLES_OVERVIEW.md#getpriorityfeeestimate"><code>getPriorityFeeEstimate()</code></a>: Returns an estimated priority fee based on a set of predefined priority levels (percentiles).</li>
+</ul>
+<p><a href="https://www.helius.dev/docs/enhanced-transactions"><strong>Enhanced Transactions API</strong></a></p>
+<p>Transform complex Solana transactions into human-readable data. Available on the <code>helius.enhanced</code> namespace.</p>
+<ul>
+<li><a href="https://www.helius.dev/docs/api-reference/enhanced-transactions/gettransactions"><code>getTransactions()</code></a>: Converts raw Solana transactions into enhanced, human-readable formats with decoded instruction data and contextual information.</li>
+<li><a href="https://www.helius.dev/docs/api-reference/enhanced-transactions/gettransactionsbyaddress"><code>getTransactionsByAddress()</code></a>: Retrieves a comprehensive transaction history for a given address with human-readable decoded data.</li>
+</ul>
+<p><a href="https://www.helius.dev/docs/webhooks"><strong>Webhooks</strong></a></p>
+<p>Provides methods for setting up, editing, and managing webhooks, crucial for listening to on-chain Solana events (e.g., sales, listings, swaps) and triggering actions when these events happen. Available on the <code>helius.webhooks</code> namespace.</p>
+<ul>
+<li><a href="https://www.helius.dev/docs/api-reference/webhooks/create-webhook"><code>createWebhook()</code></a>: Creates a new webhook with the provided request.</li>
+<li><a href="https://www.helius.dev/docs/api-reference/webhooks/get-webhook"><code>getWebhookByID()</code></a>: Retrieves a single webhook by its ID.</li>
+<li><a href="https://www.helius.dev/docs/api-reference/webhooks/get-all-webhooks"><code>getAllWebhooks()</code></a>: Retrieves a list of all webhooks.</li>
+<li><a href="https://www.helius.dev/docs/api-reference/webhooks/update-webhook"><code>updateWebhook()</code></a>: Edits an existing webhook by its ID with the provided request.</li>
+<li><a href="https://www.helius.dev/docs/api-reference/webhooks/delete-webhook"><code>deleteWebhook()</code></a>: Deletes a webhook by its ID.</li>
+</ul>
+<p><a href="https://www.helius.dev/docs/rpc/websocket"><strong>WebSockets</strong></a></p>
+<p>Stream real-time data with WebSockets using Kit's subscription methods. Available on the <code>helius.ws</code> namespace.</p>
+<ul>
+<li><a href="https://www.helius.dev/docs/api-reference/rpc/websocket/logssubscribe"><code>logsNotifications()</code></a>: Streams transaction logs for all transactions, all transactions including votes, or transactions that mention a specific set of addresses.</li>
+<li><a href="https://www.helius.dev/docs/api-reference/rpc/websocket/slotsubscribe"><code>slotNotifications()</code></a>: Streams notifications any time a slot is processed by a validator.</li>
+<li><a href="https://www.helius.dev/docs/api-reference/rpc/websocket/signaturesubscribe"><code>signatureNotifications()</code></a>: Streams notifications when a transaction with the provided signature reaches the specified commitment level.</li>
+<li><a href="https://www.helius.dev/docs/api-reference/rpc/websocket/programsubscribe"><code>programNotifications()</code></a>: Streams notifications when the lamports or data for an account owned by the specified program changes.</li>
+<li><a href="https://www.helius.dev/docs/api-reference/rpc/websocket/accountsubscribe"><code>accountNotifications()</code></a>: Streams notifications when the lamports or data for the specified account changes.</li>
+<li><code>close()</code>: Closes an open WebSocket connection via Kit's <code>dispose</code> method, falling back to <code>.close()</code>.</li>
+</ul>
+<p><a href="https://github.com/helius-labs/helius-sdk/blob/main/examples/EXAMPLES_OVERVIEW.md#helper-methods"><strong>ZK Compression</strong></a></p>
+<p>Estimate optimal priority fees for Solana transactions. Available on the <code>helius.zk</code> namespace.</p>
+<ul>
+<li><a href="https://www.helius.dev/docs/api-reference/das/getsignaturesforasset"><code>getSignaturesForAsset()</code></a>: Retrieves a complete chronological history of all transactions involving the provided compressed NFT (cNFT).</li>
+<li><a href="https://www.helius.dev/docs/api-reference/zk-compression/getcompressedaccount"><code>getCompressedAccount()</code></a>: Returns the compressed account for the address or hash provided.</li>
+<li><a href="https://www.helius.dev/docs/api-reference/zk-compression/getcompressedaccountproof"><code>getCompressedAccountProof()</code></a>: Returns a proof the compression program uses to verify that the given account is valid.</li>
+<li><a href="https://www.helius.dev/docs/api-reference/zk-compression/getcompressedaccountsbyowner"><code>getCompressedAccountsByOwner()</code></a>: Returns the owner’s compressed accounts.</li>
+<li><a href="https://www.helius.dev/docs/api-reference/zk-compression/getcompressedbalance"><code>getCompressedBalance()</code></a>: Returns the balance for the compressed account with the given address or hash.</li>
+<li><a href="https://www.helius.dev/docs/api-reference/zk-compression/getcompressedbalancebyowner"><code>getCompressedBalanceByOwner()</code></a>: Returns the total balance of the owner’s compressed accounts.</li>
+<li><a href="https://www.helius.dev/docs/api-reference/zk-compression/getcompressedminttokenholders"><code>getCompressedMintTokenHolders()</code></a>: Returns the owner balances for a given mint in descending order.</li>
+<li><a href="https://www.helius.dev/docs/api-reference/zk-compression/getcompressedtokenaccountbalance"><code>getCompressedTokenAccountBalance()</code></a>: Returns the balance for a given token account.</li>
+<li><a href="https://www.helius.dev/docs/api-reference/zk-compression/getcompressedtokenaccountsbydelegate"><code>getCompressedTokenAccountsByDelegate()</code></a>: Returns the compressed token accounts that are partially or fully delegated to the given delegate.</li>
+<li><a href="https://www.helius.dev/docs/api-reference/zk-compression/getcompressedtokenaccountsbyowner"><code>getCompressedTokenAccountsByOwner()</code></a>: Returns the compressed token accounts owned by a certain account.</li>
+<li><a href="https://www.helius.dev/docs/api-reference/zk-compression/getcompressedtokenbalancesbyowner"><code>getCompressedTokenBalancesByOwner()</code></a>: Returns the token balances for a given owner.</li>
+<li><a href="https://www.helius.dev/docs/api-reference/zk-compression/getcompressedtokenbalancesbyownerv2"><code>getCompressedTokenBalancesByOwnerV2()</code></a>: Returns the token balances for a given owner. The V2 version solves a minor naming issue.</li>
+<li><a href="https://www.helius.dev/docs/api-reference/zk-compression/getcompressionsignaturesforaccount"><code>getCompressionSignaturesForAccount()</code></a>: Return the signatures of the transactions that closed or opened a compressed account with the given hash.</li>
+<li><a href="https://www.helius.dev/docs/api-reference/zk-compression/getcompressionsignaturesforaddress"><code>getCompressionSignaturesForAddress()</code></a>: Return the signatures of the transactions that closed or opened a compressed account with the given address.</li>
+<li><a href="https://www.helius.dev/docs/api-reference/zk-compression/getcompressionsignaturesforowner"><code>getCompressionSignaturesForOwner()</code></a>: Returns the signatures of the transactions that have modified an owner’s compressed accounts.</li>
+<li><a href="https://www.helius.dev/docs/api-reference/zk-compression/getcompressionsignaturesfortokenowner"><code>getCompressionSignaturesForTokenOwner()</code></a>: Returns the signatures of the transactions that have modified an owner’s compressed token accounts.</li>
+<li><a href="https://www.helius.dev/docs/api-reference/zk-compression/getindexerhealth"><code>getIndexerHealth()</code></a>: Returns an error if the indexer is stale by more than a configurable number of blocks. Otherwise, it returns <code>ok</code>.</li>
+<li><a href="https://www.helius.dev/docs/api-reference/zk-compression/getindexerslot"><code>getIndexerSlot()</code></a>: Returns the slot of the last block indexed by the indexer.</li>
+<li><a href="https://www.helius.dev/docs/api-reference/zk-compression/getlatestcompressionsignatures"><code>getLatestCompressionSignatures()</code></a>: Returns the signatures of the latest transactions that used the compression program.</li>
+<li><a href="https://www.helius.dev/docs/api-reference/zk-compression/getlatestnonvotingsignatures"><code>getLatestNonVotingSignatures()</code></a>: Returns the signatures of the latest transactions that are not voting transactions.</li>
+<li><a href="https://www.helius.dev/docs/api-reference/zk-compression/getmultiplecompressedaccountproofs"><code>getMultipleCompressedAccountProofs()</code></a>: Returns multiple proofs used by the compression program to verify the accounts’ validity.</li>
+<li><a href="https://www.helius.dev/docs/api-reference/zk-compression/getmultiplecompressedaccounts"><code>getMultipleCompressedAccounts()</code></a>: Returns multiple compressed accounts with the given addresses or hashes.</li>
+<li><a href="https://www.helius.dev/docs/api-reference/zk-compression/getmultiplenewaddressproofs"><code>getMultipleNewAddressProofs()</code></a>: Returns proofs that the new addresses are not taken already and can be created.</li>
+<li><a href="https://www.helius.dev/docs/api-reference/zk-compression/getmultiplenewaddressProofsv2"><code>getMultipleNewAddressProofsV2()</code></a>: Returns proofs that the new addresses are not taken already and can be created.</li>
+<li><a href="https://www.helius.dev/docs/api-reference/zk-compression/gettransactionwithcompressioninfo"><code>getTransactionWithCompressionInfo()</code></a>: Returns the transaction data for the transaction with the given signature along with parsed compression info.</li>
+<li><a href="https://www.helius.dev/docs/api-reference/zk-compression/getvalidityproof"><code>getValidityProof()</code></a>: Returns a single ZK Proof used by the compression program to verify that the given accounts are valid and that the new addresses can be created.</li>
+</ul>
+<p><a href="https://www.helius.dev/docs/wallet-api"><strong>Wallet API</strong></a> <strong>(Beta)</strong></p>
+<p>Query wallet data including identity, balances, history, and transfers. Available on the <code>helius.wallet</code> namespace.</p>
+<ul>
+<li><a href="https://www.helius.dev/docs/api-reference/wallet-api/identity"><code>getIdentity()</code></a>: Get wallet identity for known addresses (e.g., exchanges, protocols)</li>
+<li><a href="https://www.helius.dev/docs/api-reference/wallet-api/identity"><code>getBatchIdentity()</code></a>: Batch identity lookup for up to 100 addresses</li>
+<li><a href="https://www.helius.dev/docs/api-reference/wallet-api/balances"><code>getBalances()</code></a>: Get all token and NFT balances with USD values and pagination</li>
+<li><a href="https://www.helius.dev/docs/api-reference/wallet-api/history"><code>getHistory()</code></a>: Fetch transaction history with balance changes and pagination</li>
+<li><a href="https://www.helius.dev/docs/api-reference/wallet-api/transfers"><code>getTransfers()</code></a>: Get all token transfer activity with sender/recipient information</li>
+<li><a href="https://www.helius.dev/docs/api-reference/wallet-api/funded-by"><code>getFundedBy()</code></a>: Discover the original funding source for a wallet</li>
+</ul>
+</div></div><div class="col-sidebar"><div class="page-menu"><div class="tsd-navigation settings"><details class="tsd-accordion"><summary class="tsd-accordion-summary"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="assets/icons.svg#icon-chevronDown"></use></svg><h3>Settings</h3></summary><div class="tsd-accordion-details"><div class="tsd-filter-visibility"><span class="settings-label">Member Visibility</span><ul id="tsd-filter-options"><li class="tsd-filter-item"><label class="tsd-filter-input"><input type="checkbox" id="tsd-filter-protected" name="protected"/><svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true"><rect class="tsd-checkbox-background" width="30" height="30" x="1" y="1" rx="6" fill="none"></rect><path class="tsd-checkbox-checkmark" d="M8.35422 16.8214L13.2143 21.75L24.6458 10.25" stroke="none" stroke-width="3.5" stroke-linejoin="round" fill="none"></path></svg><span>Protected</span></label></li><li class="tsd-filter-item"><label class="tsd-filter-input"><input type="checkbox" id="tsd-filter-inherited" name="inherited" checked/><svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true"><rect class="tsd-checkbox-background" width="30" height="30" x="1" y="1" rx="6" fill="none"></rect><path class="tsd-checkbox-checkmark" d="M8.35422 16.8214L13.2143 21.75L24.6458 10.25" stroke="none" stroke-width="3.5" stroke-linejoin="round" fill="none"></path></svg><span>Inherited</span></label></li></ul></div><div class="tsd-theme-toggle"><label class="settings-label" for="tsd-theme">Theme</label><select id="tsd-theme"><option value="os">OS</option><option value="light">Light</option><option value="dark">Dark</option></select></div></div></details></div><details open class="tsd-accordion tsd-page-navigation"><summary class="tsd-accordion-summary"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="assets/icons.svg#icon-chevronDown"></use></svg><h3>On This Page</h3></summary><div class="tsd-accordion-details"><a href="#helius-typescript-sdk"><span>Helius <wbr/>Type<wbr/>Script <wbr/>SDK</span></a><ul><li><ul><li><a href="#agent-account-sign-up"><span>Agent <wbr/>Account <wbr/>Sign <wbr/>Up</span></a></li></ul></li><li><a href="#documentation"><span>Documentation</span></a></li><li><a href="#contributions"><span>Contributions</span></a></li><li><a href="#installation"><span>Installation</span></a></li><li><a href="#usage"><span>Usage</span></a></li><li><ul><li><a href="#migrating-to-200"><span>Migrating to  2.0.0</span></a></li></ul></li><li><a href="#handling-errors"><span>Handling errors</span></a></li><li><ul><li><a href="#common-error-codes"><span>Common <wbr/>Error <wbr/>Codes</span></a></li></ul></li><li><a href="#using-the-helius-sdk"><span>Using the <wbr/>Helius <wbr/>SDK</span></a></li></ul></div></details></div><div class="site-menu"><nav id="tsd-sidebar-links" class="tsd-navigation"><a href="https://github.com/helius-labs/helius-sdk" class="tsd-nav-link">GitHub</a><a href="https://www.npmjs.com/package/helius-sdk" class="tsd-nav-link">npm</a><a href="https://docs.helius.dev" class="tsd-nav-link">Helius Docs</a></nav><nav class="tsd-navigation"><a href="modules.html">Helius SDK - v2.2.2</a><ul class="tsd-small-nested-navigation" id="tsd-nav-container"><li>Loading...</li></ul></nav></div></div></div><footer><p class="tsd-generator">Generated using <a href="https://typedoc.org/" target="_blank">TypeDoc</a></p></footer><div class="overlay"></div></body></html>

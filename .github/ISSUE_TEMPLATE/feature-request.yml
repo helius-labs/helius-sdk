@@ -1,0 +1,55 @@
+name: Feature Request
+description: Suggest an idea for the Helius Node.js SDK
+title: "[Feature]: "
+labels: ["enhancement"]
+assignees: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for helping us improve the SDK! Please help us understand your idea.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Feature Description
+      description: A clear and concise description of the new feature.
+      placeholder: Add support for executing swaps on platform X.
+    validations:
+      required: true
+
+  - type: textarea
+    id: use-case
+    attributes:
+      label: Use Case
+      description: Why do you need this? How would it benefit users or the SDK?
+      placeholder: This would allow users to integrate swaps on X with Sender more easily.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposed-solution
+    attributes:
+      label: Proposed Solution
+      description: Any thoughts on how this could be implemented? (Optional)
+      placeholder: Add a new method that creates the swap instruction(s), and sends them via Sender.
+      render: typescript
+    validations:
+      required: false
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: Are you currently using a workaround or any other solutions? (Optional)
+      placeholder: Currently making and sending the swaps myself with basic RPC calls.
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Additional Checks
+      options:
+        - label: I have searched for existing issues and this is not a duplicate.
+          required: true
