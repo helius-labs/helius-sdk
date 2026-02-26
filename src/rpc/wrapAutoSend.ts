@@ -1,5 +1,8 @@
-import type { PendingRpcRequest, Rpc } from "@solana/kit";
-
+/**
+ * Transforms an RPC client so every method that returns a pending request
+ * (i.e. an object with a `.send()` method) is automatically sent, returning
+ * a `Promise` directly instead.
+ */
 export type AutoSent<T> = {
   [K in keyof T]: T[K] extends (...args: infer A) => infer R
     ? R extends { send: (...b: any[]) => infer S }
@@ -8,11 +11,12 @@ export type AutoSent<T> = {
     : T[K];
 };
 
-const isPending = (x: unknown): x is PendingRpcRequest<any> => {
+/** Duck-type guard: anything with a `.send()` function is treated as a pending RPC request. */
+const isPending = (x: unknown): x is { send: () => unknown } => {
   return !!x && typeof (x as any).send === "function";
 };
 
-export const wrapAutoSend = <T extends Rpc<any>>(raw: T): AutoSent<T> => {
+export const wrapAutoSend = <T extends object>(raw: T): AutoSent<T> => {
   const added = new Map<string | symbol, any>();
 
   return new Proxy(raw, {

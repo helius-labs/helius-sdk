@@ -109,9 +109,11 @@
     "@solana-program/stake": "^0.5.0",
     "@solana-program/system": "^0.10.0",
     "@solana-program/token": "^0.9.0",
-    "@solana/kit": "^5.0.0",
     "bs58": "^6.0.0",
     "tslib": "^2.8.1"
+  },
+  "peerDependencies": {
+    "@solana/kit": "^5.0.0"
   },
   "pnpm": {
     "overrides": {
@@ -124,6 +126,7 @@
     }
   },
   "devDependencies": {
+    "@solana/kit": "^5.0.0",
     "@rollup/plugin-commonjs": "^28.0.6",
     "@rollup/plugin-node-resolve": "^16.0.1",
     "@rollup/plugin-typescript": "^12.1.4",
