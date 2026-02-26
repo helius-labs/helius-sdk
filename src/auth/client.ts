@@ -48,8 +48,8 @@ export function makeAuthClient(userAgent?: string): AuthClient {
     getPaymentIntent: (jwt, id) => getPaymentIntent(jwt, id, userAgent),
     getPaymentStatus: (jwt, id) => getPaymentStatus(jwt, id, userAgent),
     payPaymentIntent,
-    executeUpgrade: (sk, jwt, plan, period, projectId, coupon) =>
-      executeUpgrade(sk, jwt, plan, period, projectId, coupon, userAgent),
+    executeUpgrade: (sk, jwt, plan, period, projectId, coupon, _ua, customerInfo) =>
+      executeUpgrade(sk, jwt, plan, period, projectId, coupon, userAgent, customerInfo),
     executeRenewal: (sk, jwt, id) => executeRenewal(sk, jwt, id, userAgent),
   };
 }
