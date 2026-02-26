@@ -11,7 +11,7 @@ export type AutoSent<T> = {
     : T[K];
 };
 
-/** Duck-type guard: anything with a `.send()` function is treated as a pending RPC request. */
+/** Duck-type guard: anything with a `.send()` function is treated as a pending RPC request */
 const isPending = (x: unknown): x is { send: () => unknown } => {
   return !!x && typeof (x as any).send === "function";
 };
