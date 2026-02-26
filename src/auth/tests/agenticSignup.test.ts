@@ -372,7 +372,8 @@ describe("agenticSignup", () => {
         "yearly",
         "proj-existing",
         "UPGRADE10",
-        undefined
+        undefined,
+        { email: undefined, firstName: undefined, lastName: undefined }
       );
       expect(executeCheckout).not.toHaveBeenCalled();
       expect(payUSDC).not.toHaveBeenCalled();
