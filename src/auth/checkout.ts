@@ -312,20 +312,8 @@ export async function executeCheckout(
   };
 }
 
-/**
- * Execute a plan upgrade via OpenPay checkout.
- *
- * @param secretKey - Wallet secret key for signing the payment transaction
- * @param jwt - Authentication JWT from wallet signup
- * @param plan - Target plan name (e.g. "developer", "business", "professional")
- * @param period - Billing period
- * @param projectId - Existing project ID to upgrade (used as refId)
- * @param couponCode - Optional coupon code for discounts
- * @param userAgent - Optional User-Agent header for API requests
- * @param customerInfo - Optional customer contact info (email, firstName, lastName).
- *   If provided, all three fields should be present. Passed to the checkout API
- *   so the backend can associate contact details with the subscription.
- */
+/** Execute a plan upgrade via OpenPay checkout.
+ * @param customerInfo - Optional contact info (email, firstName, lastName); if any field is given, all three should be present. */
 export async function executeUpgrade(
   secretKey: Uint8Array,
   jwt: string,
