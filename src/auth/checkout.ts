@@ -319,12 +319,20 @@ export async function executeUpgrade(
   period: "monthly" | "yearly",
   projectId: string,
   couponCode?: string,
-  userAgent?: string
+  userAgent?: string,
+  customerInfo?: { email?: string; firstName?: string; lastName?: string }
 ): Promise<CheckoutResult> {
   const priceId = await resolvePriceId(jwt, plan, period, userAgent);
   const intent = await initializeCheckout(
     jwt,
-    { priceId, refId: projectId, couponCode },
+    {
+      priceId,
+      refId: projectId,
+      couponCode,
+      email: customerInfo?.email,
+      firstName: customerInfo?.firstName,
+      lastName: customerInfo?.lastName,
+    },
     userAgent
   );
 

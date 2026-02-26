@@ -52,7 +52,8 @@ export async function agenticSignup(
         options.period ?? "monthly",
         project.id,
         options.couponCode,
-        userAgent
+        userAgent,
+        { email, firstName, lastName }
       );
 
       if (upgradeResult.status !== "completed") {
