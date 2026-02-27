@@ -70,7 +70,7 @@ const helius = createHelius({
 | Wallet API | `helius.wallet.*` | Balances, history, identity lookups |
 | Standard RPC | `helius.getBalance()`, `helius.getSlot()`, etc. | All standard Solana RPC methods via proxy |
 | Raw RPC | `helius.raw` | Direct access to the underlying @solana/kit `Rpc` client (see below) |
-| Auth | `import { makeAuthClient } from "helius-sdk/auth/client"` | Agent signup, keypair gen, project/API key management (standalone import) |
+| Auth | `helius.auth.*` | Agent signup, keypair gen, project/API key management |
 
 ### `helius.raw` — Direct @solana/kit RPC Access
 
@@ -419,26 +419,22 @@ helius.zk.getCompressedBalance({ address })                 // Balance
 helius.zk.getValidityProof({ hashes })                      // Validity proof
 ```
 
-### Auth (Standalone Import)
+### Auth
 
-The auth module is not on the main `HeliusClient` — import it separately via `helius-sdk/auth/client`. This is used for programmatic agent signup flows. The step-by-step flow requires signing an auth message first to obtain a JWT, then using that JWT for all subsequent API calls.
+The auth namespace is available on the main `HeliusClient` as `helius.auth.*`. It is used for programmatic agent signup flows. The step-by-step flow requires signing an auth message first to obtain a JWT, then using that JWT for all subsequent API calls.
 
 ```typescript
-import { makeAuthClient } from "helius-sdk/auth/client";
-
-const auth = makeAuthClient();
-
 // Step-by-step flow (JWT-based):
-const keypair = await auth.generateKeypair();                             // Generate Ed25519 keypair
-const address = await auth.getAddress(keypair);                           // Get wallet address (async)
-const { message, signature } = await auth.signAuthMessage(keypair.secretKey); // Sign auth message
-const { token } = await auth.walletSignup(message, signature, address);   // Get JWT via signup
-const projects = await auth.listProjects(token);                          // List projects (needs JWT)
-const project = await auth.createProject(token);                          // Create project (needs JWT)
-const apiKey = await auth.createApiKey(token, project.id, address);       // Create API key (needs JWT)
+const keypair = await helius.auth.generateKeypair();                             // Generate Ed25519 keypair
+const address = await helius.auth.getAddress(keypair);                           // Get wallet address (async)
+const { message, signature } = await helius.auth.signAuthMessage(keypair.secretKey); // Sign auth message
+const { token } = await helius.auth.walletSignup(message, signature, address);   // Get JWT via signup
+const projects = await helius.auth.listProjects(token);                          // List projects (needs JWT)
+const project = await helius.auth.createProject(token);                          // Create project (needs JWT)
+const apiKey = await helius.auth.createApiKey(token, project.id, address);       // Create API key (needs JWT)
 
 // Or use the all-in-one shortcut:
-const result = await auth.agenticSignup({ secretKey: keypair.secretKey }); // Full automated flow
+const result = await helius.auth.agenticSignup({ secretKey: keypair.secretKey }); // Full automated flow
 // result: { jwt, walletAddress, projectId, apiKey, endpoints, credits }
 ```
 
