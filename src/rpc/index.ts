@@ -214,6 +214,34 @@ export const createHelius = ({
   const wsUrl = new URL(url);
   wsUrl.protocol = "wss:";
 
+  // Build Enhanced WebSocket URL for Helius Enhanced WS subscriptions
+  let enhancedWsUrl: string | undefined;
+  let enhancedDisabledReason: string | undefined;
+
+  const resolvedNetwork = (() => {
+    if (baseUrl) {
+      try {
+        const host = new URL(baseUrl).hostname;
+        if (host === "devnet.helius-rpc.com") return "devnet";
+        if (host === "mainnet.helius-rpc.com") return "mainnet";
+      } catch {
+        // Malformed baseUrl — fall through to non-Helius path
+      }
+      return null; // non-Helius or unparseable host
+    }
+    return network;
+  })();
+
+  if (!apiKey) {
+    enhancedDisabledReason =
+      "An API key is required for Enhanced WebSocket subscriptions. Provide apiKey in createHelius() options.";
+  } else if (resolvedNetwork === null) {
+    enhancedDisabledReason = `Enhanced WebSocket subscriptions require a standard Helius endpoint (mainnet.helius-rpc.com or devnet.helius-rpc.com). Custom baseUrl '${baseUrl}' is not supported.`;
+  } else {
+    const net = resolvedNetwork === "devnet" ? "devnet" : "mainnet";
+    enhancedWsUrl = `wss://atlas-${net}.helius-rpc.com/?api-key=${apiKey}`;
+  }
+
   // Lazily create when/if transaction helpers need it
   let rpcSubscriptionsPromise:
     | ReturnType<typeof import("@solana/kit").createSolanaRpcSubscriptions>
@@ -235,7 +263,11 @@ export const createHelius = ({
   defineLazyNamespace<HeliusClient, WsAsync>(client, "ws", async () => {
     // Promisified facade; individual methods return Promise<...>
     // so: await helius.ws.logsNotifications(...).subscribe(...) and no stupid TypeScript warnings
-    const ws = makeWsAsync(wsUrl.toString());
+    const ws = makeWsAsync(
+      wsUrl.toString(),
+      enhancedWsUrl,
+      enhancedDisabledReason
+    );
     client.close = () => ws.close();
     return ws;
   });
