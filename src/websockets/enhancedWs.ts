@@ -58,17 +58,21 @@ export const makeEnhancedWsClient = (
   const pendingRequests = new Map<number, PendingRequest>();
   const subscriptions = new Map<number, SubscriptionSink<any>>();
 
-  const cleanup = () => {
+  const cleanup = (reason?: Error) => {
     if (keepaliveTimer) {
       clearInterval(keepaliveTimer);
       keepaliveTimer = undefined;
     }
     for (const [, req] of pendingRequests) {
-      req.reject(new Error("Enhanced WebSocket client closed"));
+      req.reject(reason ?? new Error("Enhanced WebSocket client closed"));
     }
     pendingRequests.clear();
     for (const [, sub] of subscriptions) {
-      sub.done();
+      if (reason) {
+        sub.error(reason);
+      } else {
+        sub.done();
+      }
     }
     subscriptions.clear();
     ws = undefined;
@@ -151,12 +155,13 @@ export const makeEnhancedWsClient = (
       };
 
       socket.onerror = () => {
-        cleanup();
-        reject(new Error("Enhanced WebSocket connection error"));
+        const err = new Error("Enhanced WebSocket connection error");
+        cleanup(err);
+        reject(err);
       };
 
       socket.onclose = () => {
-        cleanup();
+        cleanup(new Error("Enhanced WebSocket connection closed unexpectedly"));
       };
 
       socket.onmessage = (event) => {
@@ -323,10 +328,11 @@ export const makeEnhancedWsClient = (
 
     close() {
       closed = true;
-      if (ws) {
-        ws.close();
-      }
+      const socket = ws;
       cleanup();
+      if (socket) {
+        socket.close();
+      }
     },
   };
 };

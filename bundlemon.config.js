@@ -21,7 +21,7 @@ export default {
     },
     {
       path: 'dist/esm/websockets/wsAsync.js',
-      maxSize: '1kb',
+      maxSize: '1.5kb',
     },
     {
       path: 'dist/**/*.js',
