@@ -20,6 +20,10 @@ export default {
       maxSize: '1.5kb',
     },
     {
+      path: 'dist/esm/websockets/wsAsync.js',
+      maxSize: '1kb',
+    },
+    {
       path: 'dist/**/*.js',
       maxSize: '2.5kb',  // No file should be larger than 2.5kb
       maxPercentIncrease: 15
