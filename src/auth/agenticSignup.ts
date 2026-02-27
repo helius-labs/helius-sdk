@@ -5,7 +5,7 @@ import { signAuthMessage } from "./signAuthMessage";
 import { walletSignup } from "./walletSignup";
 import { listProjects } from "./listProjects";
 import { getProject } from "./getProject";
-import { executeCheckout, executeUpgrade } from "./checkout";
+import { executeCheckout } from "./checkout";
 import { OPENPAY_PLANS } from "./constants";
 import { isOpenPayPlan, buildEndpoints } from "./signupHelpers";
 import { executeBasicSignup } from "./basicSignup";
@@ -45,14 +45,33 @@ export async function agenticSignup(
 
     // Existing user + OpenPay plan → upgrade
     if (isOpenPayPlan(plan)) {
-      const upgradeResult = await executeUpgrade(
+      // All-or-none customer info validation
+      const hasAny = email || firstName || lastName;
+      if (hasAny && (!email || !firstName || !lastName)) {
+        const missing = [
+          !email && "email",
+          !firstName && "firstName",
+          !lastName && "lastName",
+        ].filter(Boolean);
+        throw new Error(
+          `Partial customer info provided. If any of email/firstName/lastName is given, all three are required. Missing: ${missing.join(", ")}`
+        );
+      }
+
+      const upgradeResult = await executeCheckout(
         secretKey,
         jwt,
-        plan,
-        options.period ?? "monthly",
-        project.id,
-        options.couponCode,
-        userAgent
+        {
+          plan,
+          period: options.period ?? "monthly",
+          refId: project.id,
+          couponCode: options.couponCode,
+          email,
+          firstName,
+          lastName,
+        },
+        userAgent,
+        { skipProjectPolling: true }
       );
 
       if (upgradeResult.status !== "completed") {

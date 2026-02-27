@@ -349,7 +349,45 @@ describe("agenticSignup", () => {
   // ── Existing user + paid plan → upgrade ──
 
   describe("existing user + paid plan (upgrade)", () => {
-    it("calls executeUpgrade for existing user with paid plan", async () => {
+    it("calls executeCheckout for existing user with paid plan", async () => {
+      (listProjects as jest.Mock).mockResolvedValueOnce([EXISTING_PROJECT]);
+
+      const result = await agenticSignup({
+        secretKey: new Uint8Array(64),
+        plan: "business",
+        period: "yearly",
+        couponCode: "UPGRADE10",
+        email: "user@example.com",
+        firstName: "Test",
+        lastName: "User",
+      });
+
+      expect(result.status).toBe("upgraded");
+      expect(result.projectId).toBe("proj-existing");
+      expect(result.apiKey).toBe("key-abc");
+      expect(result.txSignature).toBe("tx-sig-abc123");
+      expect(result.credits).toBeNull();
+
+      expect(executeCheckout).toHaveBeenCalledWith(
+        new Uint8Array(64),
+        "jwt-token-123",
+        {
+          plan: "business",
+          period: "yearly",
+          refId: "proj-existing",
+          couponCode: "UPGRADE10",
+          email: "user@example.com",
+          firstName: "Test",
+          lastName: "User",
+        },
+        undefined,
+        { skipProjectPolling: true }
+      );
+      expect(executeUpgrade).not.toHaveBeenCalled();
+      expect(payUSDC).not.toHaveBeenCalled();
+    });
+
+    it("calls executeCheckout without customer info for existing user", async () => {
       (listProjects as jest.Mock).mockResolvedValueOnce([EXISTING_PROJECT]);
 
       const result = await agenticSignup({
@@ -360,27 +398,40 @@ describe("agenticSignup", () => {
       });
 
       expect(result.status).toBe("upgraded");
-      expect(result.projectId).toBe("proj-existing");
-      expect(result.apiKey).toBe("key-abc");
-      expect(result.txSignature).toBe("tx-upgrade-123");
-      expect(result.credits).toBeNull();
 
-      expect(executeUpgrade).toHaveBeenCalledWith(
+      expect(executeCheckout).toHaveBeenCalledWith(
         new Uint8Array(64),
         "jwt-token-123",
-        "business",
-        "yearly",
-        "proj-existing",
-        "UPGRADE10",
-        undefined
+        {
+          plan: "business",
+          period: "yearly",
+          refId: "proj-existing",
+          couponCode: "UPGRADE10",
+          email: undefined,
+          firstName: undefined,
+          lastName: undefined,
+        },
+        undefined,
+        { skipProjectPolling: true }
       );
-      expect(executeCheckout).not.toHaveBeenCalled();
-      expect(payUSDC).not.toHaveBeenCalled();
+      expect(executeUpgrade).not.toHaveBeenCalled();
+    });
+
+    it("throws on partial customer info for existing user upgrade", async () => {
+      (listProjects as jest.Mock).mockResolvedValueOnce([EXISTING_PROJECT]);
+
+      await expect(
+        agenticSignup({
+          secretKey: new Uint8Array(64),
+          plan: "business",
+          email: "user@example.com",
+        })
+      ).rejects.toThrow("Missing: firstName, lastName");
     });
 
     it("throws when upgrade fails and includes error reason", async () => {
       (listProjects as jest.Mock).mockResolvedValueOnce([EXISTING_PROJECT]);
-      (executeUpgrade as jest.Mock).mockResolvedValueOnce({
+      (executeCheckout as jest.Mock).mockResolvedValueOnce({
         paymentIntentId: "pi_upgrade",
         txSignature: null,
         status: "failed",

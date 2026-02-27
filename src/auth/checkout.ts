@@ -312,6 +312,8 @@ export async function executeCheckout(
   };
 }
 
+/** Execute a plan upgrade via OpenPay checkout.
+ * @param customerInfo - Optional contact info (email, firstName, lastName); if any field is given, all three should be present. */
 export async function executeUpgrade(
   secretKey: Uint8Array,
   jwt: string,
@@ -319,12 +321,20 @@ export async function executeUpgrade(
   period: "monthly" | "yearly",
   projectId: string,
   couponCode?: string,
-  userAgent?: string
+  userAgent?: string,
+  customerInfo?: { email?: string; firstName?: string; lastName?: string }
 ): Promise<CheckoutResult> {
   const priceId = await resolvePriceId(jwt, plan, period, userAgent);
   const intent = await initializeCheckout(
     jwt,
-    { priceId, refId: projectId, couponCode },
+    {
+      priceId,
+      refId: projectId,
+      couponCode,
+      email: customerInfo?.email,
+      firstName: customerInfo?.firstName,
+      lastName: customerInfo?.lastName,
+    },
     userAgent
   );
 

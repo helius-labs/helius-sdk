@@ -277,7 +277,9 @@ export interface AuthClient {
     plan: string,
     period: "monthly" | "yearly",
     projectId: string,
-    couponCode?: string
+    couponCode?: string,
+    userAgent?: string,
+    customerInfo?: { email?: string; firstName?: string; lastName?: string }
   ): Promise<CheckoutResult>;
   executeRenewal(
     secretKey: Uint8Array,
