@@ -380,6 +380,12 @@ helius.ws.signatureNotifications(signature, config)         // Tx confirmation
 helius.ws.slotNotifications(config)                         // Slot updates
 helius.ws.programNotifications(programId, config)           // Program account changes
 helius.ws.close()                                           // Clean up connections
+
+// Enhanced WebSockets (Business+ plan)
+helius.ws.transactionSubscribe(filter, config)               // Real-time transaction streaming
+helius.ws.transactionUnsubscribe(subscriptionId)             // Unsubscribe from transactions
+helius.ws.accountSubscribe(account, config)                  // Real-time account changes
+helius.ws.accountUnsubscribe(subscriptionId)                 // Unsubscribe from account changes
 ```
 
 ### Staking

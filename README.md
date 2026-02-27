@@ -196,6 +196,26 @@ Stream real-time data with WebSockets using Kit's subscription methods. Availabl
 - [`accountNotifications()`](https://www.helius.dev/docs/api-reference/rpc/websocket/accountsubscribe): Streams notifications when the lamports or data for the specified account changes.
 - `close()`: Closes an open WebSocket connection via Kit's `dispose` method, falling back to `.close()`.
 
+[**Enhanced WebSockets**](https://www.helius.dev/docs/websockets) (Business+ plan)
+
+Real-time filtered streaming that's 1.5-2x faster than standard WebSockets. Supports up to 50,000 address filters. Available on the `helius.ws` namespace.
+
+- `transactionSubscribe(filter, config)`: Subscribe to real-time transaction notifications with advanced filtering (accounts, vote/failed status, signatures). Returns an `AsyncIterable` with an `unsubscribe()` method.
+- `transactionUnsubscribe(subscriptionId)`: Unsubscribe from a transaction subscription.
+- `accountSubscribe(account, config)`: Subscribe to real-time account change notifications via Enhanced WebSockets.
+- `accountUnsubscribe(subscriptionId)`: Unsubscribe from an enhanced account subscription.
+
+```typescript
+const sub = await helius.ws.transactionSubscribe(
+  { accountInclude: ["EPjF..."] },
+  { commitment: "confirmed", encoding: "jsonParsed" }
+);
+for await (const notif of sub) {
+  console.log(notif.signature, notif.slot);
+}
+await sub.unsubscribe();
+```
+
 [**ZK Compression**](https://github.com/helius-labs/helius-sdk/blob/main/examples/EXAMPLES_OVERVIEW.md#helper-methods)
 
 Estimate optimal priority fees for Solana transactions. Available on the `helius.zk` namespace.

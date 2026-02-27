@@ -227,6 +227,26 @@ await helius.ws.programNotifications(programId);        // Program account chang
 
 // Clean up
 helius.ws.close();
+
+// Enhanced WebSockets (Business+ plan) — 1.5-2x faster, up to 50k address filters
+const sub = await helius.ws.transactionSubscribe(
+  { accountInclude: ["EPjF..."] },
+  { commitment: "confirmed", encoding: "jsonParsed" }
+);
+for await (const notif of sub) {
+  console.log(notif.signature, notif.slot);
+}
+await sub.unsubscribe();
+
+// Enhanced account subscription
+const acctSub = await helius.ws.accountSubscribe("EPjF...", {
+  encoding: "jsonParsed",
+  commitment: "confirmed",
+});
+for await (const notif of acctSub) {
+  console.log(notif.value.lamports);
+}
+await acctSub.unsubscribe();
 ```
 
 ### ZK Compression
