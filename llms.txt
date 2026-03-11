@@ -201,6 +201,9 @@ const webhook = await helius.webhooks.create({
 // List all webhooks
 const all = await helius.webhooks.getAll();
 
+// Toggle a webhook on or off (re-enable auto-disabled webhooks, or pause deliveries)
+const toggled = await helius.webhooks.toggle("webhook_id", true);
+
 // Delete a webhook
 await helius.webhooks.delete("webhook_id");
 ```
