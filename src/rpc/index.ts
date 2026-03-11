@@ -122,6 +122,8 @@ export type HeliusClient = ResolvedHeliusRpcApi & {
     update(webhookID: string, params: UpdateWebhookRequest): Promise<Webhook>;
     /** Delete a webhook by its ID. */
     delete(webhookID: string): Promise<boolean>;
+    /** Enable or disable a webhook without deleting it. Use this to re-enable auto-disabled webhooks or temporarily pause deliveries. */
+    toggle(webhookID: string, active: boolean): Promise<Webhook>;
   } & WebhookClient;
 
   /** Enhanced transaction parsing client. Requires an API key. */

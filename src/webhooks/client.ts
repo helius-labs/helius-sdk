@@ -16,6 +16,8 @@ export interface WebhookClient {
   update(webhookID: string, params: UpdateWebhookRequest): Promise<Webhook>;
   /** Delete a webhook. Returns `true` on success. */
   delete(webhookID: string): Promise<boolean>;
+  /** Enable or disable a webhook without deleting it. Use this to re-enable auto-disabled webhooks or temporarily pause deliveries. */
+  toggle(webhookID: string, active: boolean): Promise<Webhook>;
 }
 
 export const makeWebhookClient = (
@@ -37,4 +39,11 @@ export const makeWebhookClient = (
     ),
   delete: async (id) =>
     (await import("./deleteWebhook.js")).deleteWebhook(apiKey, id, userAgent),
+  toggle: async (id, active) =>
+    (await import("./toggleWebhook.js")).toggleWebhook(
+      apiKey,
+      id,
+      active,
+      userAgent
+    ),
 });

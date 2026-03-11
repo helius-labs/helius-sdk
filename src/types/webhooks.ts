@@ -32,6 +32,8 @@ export interface Webhook {
   webhookType: string;
   /** Authorization header value sent with each webhook delivery request. */
   authHeader: string;
+  /** Whether the webhook is actively receiving deliveries. Webhooks may be automatically disabled if the endpoint has a high failure rate. */
+  active?: boolean;
 }
 
 /** Request parameters for updating an existing webhook. All fields are optional. */
