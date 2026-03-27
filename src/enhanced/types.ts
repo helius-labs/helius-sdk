@@ -24,6 +24,10 @@ export interface EnhancedTokenTransfer {
   fromUserAccount: string;
   /** Recipient wallet address. */
   toUserAccount: string;
+  /** Sender associated token account (ATA) */
+  fromTokenAccount: string;
+  /** Recipient associated token account (ATA) */
+  toTokenAccount: string;
   /** Token mint address. */
   mint: string;
   /** Amount transferred (UI amount or raw). */
