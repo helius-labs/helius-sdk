@@ -4,7 +4,7 @@ import { getAddress } from "./getAddress";
 import { checkSolBalance, checkUsdcBalance } from "./checkBalances";
 import { payWithMemo } from "./payWithMemo";
 import { paySponsoredIntent } from "./sponsoredPayment";
-import { getHttpStatus } from "./utils";
+import { getHttpStatus } from "./getHttpStatus";
 import { MIN_SOL_FOR_TX } from "./constants";
 
 /**
