@@ -114,6 +114,43 @@ describe("payPaymentIntent", () => {
     ).rejects.toThrow("Insufficient SOL");
   });
 
+  it("re-throws 4xx HTTP errors from sponsored payment", async () => {
+    mockPaySponsoredIntent.mockRejectedValue(
+      new Error("API error (400): Bad Request")
+    );
+
+    await expect(
+      payPaymentIntent(mockSecretKey, BASE_INTENT, "jwt-123")
+    ).rejects.toThrow("API error (400)");
+    expect(mockPayWithMemo).not.toHaveBeenCalled();
+  });
+
+  it("re-throws 403 Forbidden from sponsored payment", async () => {
+    mockPaySponsoredIntent.mockRejectedValue(
+      new Error("API error (403): Forbidden")
+    );
+
+    await expect(
+      payPaymentIntent(mockSecretKey, BASE_INTENT, "jwt-123")
+    ).rejects.toThrow("API error (403)");
+    expect(mockPayWithMemo).not.toHaveBeenCalled();
+  });
+
+  it("falls back to self-funded on 5xx from sponsored payment", async () => {
+    mockPaySponsoredIntent.mockRejectedValue(
+      new Error("API error (500): Internal Server Error")
+    );
+
+    const result = await payPaymentIntent(
+      mockSecretKey,
+      BASE_INTENT,
+      "jwt-123"
+    );
+
+    expect(mockPayWithMemo).toHaveBeenCalled();
+    expect(result).toBe("tx-sig-123");
+  });
+
   // ── No JWT (upgrades/renewals) — self-funded only ──
 
   it("skips sponsored when no JWT provided", async () => {

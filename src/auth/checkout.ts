@@ -216,6 +216,8 @@ export async function executeCheckout(
       walletAddress: request.walletAddress,
       couponCode: request.couponCode,
       paymentMode,
+      // walletAddress identifies the payer; signupWalletAddress tells the
+      // backend to create/associate a Helius account during sponsored signup.
       signupWalletAddress:
         paymentMode === "sponsored" ? request.walletAddress : undefined,
     },

@@ -1,15 +1,9 @@
-import { sleep } from "./utils";
+import { sleep, getHttpStatus } from "./utils";
 
 export function isRetryableError(error: unknown): boolean {
-  if (error instanceof Error) {
-    const match = error.message.match(/API error \((\d+)\)/);
-    if (match) {
-      const status = parseInt(match[1], 10);
-      return status >= 500;
-    }
-    // Network errors (no status code) are retryable
-    return true;
-  }
+  const status = getHttpStatus(error);
+  if (status !== undefined) return status >= 500;
+  // Network errors (no status code) are retryable
   return true;
 }
 

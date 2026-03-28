@@ -4,6 +4,7 @@ import { getAddress } from "./getAddress";
 import { checkSolBalance, checkUsdcBalance } from "./checkBalances";
 import { payWithMemo } from "./payWithMemo";
 import { paySponsoredIntent } from "./sponsoredPayment";
+import { getHttpStatus } from "./utils";
 import { MIN_SOL_FOR_TX } from "./constants";
 
 /**
@@ -26,7 +27,10 @@ export async function payPaymentIntent(
       // USDC errors re-throw — self-funded fallback would fail identically
       if (error instanceof Error && error.message.includes("Insufficient USDC"))
         throw error;
-      // Sponsorship infra issue — fall back to self-funded
+      // 4xx errors are permanent — self-funding won't help
+      const status = getHttpStatus(error);
+      if (status !== undefined && status >= 400 && status < 500) throw error;
+      // Sponsorship infra issue (5xx / network) — fall back to self-funded
       console.warn(
         `[helius-sdk] Sponsored payment failed: ${error instanceof Error ? error.message : String(error)}`
       );

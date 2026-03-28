@@ -57,7 +57,9 @@ export async function signAndSubmitSponsoredTx(
 
   const signer = await createKeyPairSignerFromBytes(secretKey);
 
-  // Decode the base64 wire-format transaction from the backend
+  // Decode the base64 wire-format transaction from the backend.
+  // In @solana/codecs, "Encoder" = encodes a domain value into bytes,
+  // so getBase64Encoder().encode(base64String) converts base64 → Uint8Array.
   const transactionBytes = getBase64Encoder().encode(transactionBase64);
   const transaction = getTransactionDecoder().decode(transactionBytes);
 
