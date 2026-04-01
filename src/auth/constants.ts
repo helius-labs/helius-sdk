@@ -18,7 +18,7 @@ export const PAYMENT_AMOUNT = 1_000_000n;
 
 /** Maps plan catalog keys to the keys returned by /dev-portal/configs openPay.priceIds */
 export const PLAN_TO_USAGE_PLAN: Record<string, string> = {
-  basic: "basic",
+  basic: "basic_v4",
   developer: "developer_v4",
   business: "business_v4",
   professional: "professional_v4",
