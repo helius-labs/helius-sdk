@@ -60,13 +60,13 @@ const mockPaySponsoredIntent = paySponsoredIntent as jest.MockedFunction<
 
 const MOCK_PRICE_IDS = {
   Monthly: {
-    basic: "price_basic_monthly",
+    basic_v4: "price_basic_monthly",
     developer_v4: "price_dev_monthly",
     business_v4: "price_biz_monthly",
     professional_v4: "price_pro_monthly",
   },
   Yearly: {
-    basic: "price_basic_yearly",
+    basic_v4: "price_basic_yearly",
     developer_v4: "price_dev_yearly",
     business_v4: "price_biz_yearly",
     professional_v4: "price_pro_yearly",
