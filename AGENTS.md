@@ -262,7 +262,7 @@ const updates = await helius.getProgramAccountsV2([
 | DAS & Enhanced API | 2 req/s | 10 req/s | 50 req/s | 100 req/s |
 | Helius Sender | 15/s | 15/s | 15/s | 15/s |
 | Enhanced WebSockets | No | No | Yes | Yes |
-| LaserStream gRPC | No | Devnet | Devnet | Devnet + Mainnet |
+| LaserStream gRPC (2 credits/0.1mb) | No | Devnet | Devnet + Mainnet | Devnet + Mainnet |
 
 Monitor usage via the [Helius CLI](https://www.helius.dev/docs/api-reference/helius-cli) using the command `helius usage --json`. Verify current limits at https://docs.helius.dev — the table above may be outdated.
 
