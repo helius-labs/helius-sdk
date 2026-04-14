@@ -257,3 +257,16 @@ Query wallet data including identity, balances, history, and transfers. Availabl
 - [`getHistory()`](https://www.helius.dev/docs/api-reference/wallet-api/history): Fetch transaction history with balance changes and pagination
 - [`getTransfers()`](https://www.helius.dev/docs/api-reference/wallet-api/transfers): Get all token transfer activity with sender/recipient information
 - [`getFundedBy()`](https://www.helius.dev/docs/api-reference/wallet-api/funded-by): Discover the original funding source for a wallet
+
+[**Admin API**](https://www.helius.dev/docs/admin-api)
+
+Query project-level administrative data that is authenticated with an API key and served from `https://admin-api.helius.xyz/v0`. Available on the `helius.admin` namespace.
+
+Admin API access is feature-gated per project. The API key must belong to the same project as the `projectId` you request.
+
+- [`getProjectUsage(projectId)`](https://www.helius.dev/docs/api-reference/admin-api/project-usage): Get current billing-period credit usage, remaining credits, prepaid credits, and per-product usage breakdown for a project.
+
+Examples:
+
+- [`examples/admin/getProjectUsage.ts`](https://github.com/helius-labs/helius-sdk/blob/main/examples/admin/getProjectUsage.ts): Use the root SDK client via `createHelius({ apiKey })`
+- [`examples/admin/makeAdminClient.ts`](https://github.com/helius-labs/helius-sdk/blob/main/examples/admin/makeAdminClient.ts): Use the direct admin client import via `helius-sdk/admin/client`

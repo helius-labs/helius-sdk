@@ -1,6 +1,6 @@
 /** Options for creating a Helius RPC client. */
 export interface HeliusRpcOptions {
-  /** Helius API key. Required for webhooks, enhanced transactions, and the Wallet API. */
+  /** Helius API key. Required for webhooks, enhanced transactions, the Wallet API, and the Admin API. */
   apiKey?: string;
   /** Solana network to connect to. Defaults to `"mainnet"`. */
   network?: "mainnet" | "devnet";
