@@ -74,6 +74,11 @@
       "import": "./dist/esm/auth/*.js",
       "require": "./dist/cjs/auth/*.cjs"
     },
+    "./admin/*": {
+      "types": "./dist/esm/admin/*.d.ts",
+      "import": "./dist/esm/admin/*.js",
+      "require": "./dist/cjs/admin/*.cjs"
+    },
     "./package.json": "./package.json"
   },
   "sideEffects": false,

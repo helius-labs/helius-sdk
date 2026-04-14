@@ -132,6 +132,16 @@ describe("createHelius", () => {
     });
   });
 
+  describe("admin without apiKey", () => {
+    it("throws error when accessing admin methods without apiKey", async () => {
+      const rpc = createHelius({ baseUrl: "https://custom-rpc.example.com/" });
+
+      await expect(rpc.admin.getProjectUsage("proj-123")).rejects.toThrow(
+        "An API key is required to use the Admin API. Provide apiKey in createHelius() options."
+      );
+    });
+  });
+
   describe("backward compatibility", () => {
     it("works normally with apiKey provided", () => {
       const apiKey = "test-api-key";
@@ -242,6 +252,18 @@ describe("createHeliusEager", () => {
         })
       ).toThrow(
         "An API key is required to use webhooks/enhanced transactions. Provide apiKey in createHelius() options."
+      );
+    });
+  });
+
+  describe("admin without apiKey", () => {
+    it("throws error when accessing admin methods without apiKey", () => {
+      const rpc = createHeliusEager({
+        baseUrl: "https://custom-rpc.example.com/",
+      });
+
+      expect(() => rpc.admin.getProjectUsage("proj-123")).toThrow(
+        "An API key is required to use the Admin API. Provide apiKey in createHelius() options."
       );
     });
   });

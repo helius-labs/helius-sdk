@@ -43,6 +43,10 @@ import {
   type WalletClient,
 } from "../wallet/client.eager";
 import {
+  makeAdminClientEager,
+  type AdminClient,
+} from "../admin/client.eager";
+import {
   GetAssetsByOwnerFn,
   makeGetAssetsByOwner,
 } from "./methods/getAssetsByOwner";
@@ -118,6 +122,8 @@ export interface HeliusClientEager {
   tx: TxHelpersEager;
 
   wallet: WalletClient;
+
+  admin: AdminClient;
 }
 
 export const createHeliusEager = ({
@@ -212,6 +218,16 @@ export const createHeliusEager = ({
         );
       }
       return makeWalletClientEager(apiKey, userAgent);
+    },
+
+    // Admin API
+    get admin() {
+      if (!apiKey) {
+        throw new Error(
+          "An API key is required to use the Admin API. Provide apiKey in createHelius() options."
+        );
+      }
+      return makeAdminClientEager(apiKey, userAgent);
     },
   };
 };

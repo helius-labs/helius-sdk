@@ -41,6 +41,7 @@ import { makeWsAsync, WsAsync } from "../websockets/wsAsync";
 import { StakeClientLazy } from "../staking/client";
 import { ZkClientLazy } from "../zk/client";
 import type { WalletClient } from "../wallet/client";
+import type { AdminClient } from "../admin/client";
 import type { AuthClient } from "../auth/types";
 import type { HeliusRpcOptions } from "./types";
 
@@ -56,7 +57,7 @@ export type { HeliusRpcOptions };
  * directly on this object via a Proxy that delegates to the underlying
  * `@solana/kit` RPC client.
  *
- * Sub-clients (`webhooks`, `enhanced`, `tx`, `ws`, `stake`, `zk`, `wallet`)
+ * Sub-clients (`webhooks`, `enhanced`, `tx`, `ws`, `stake`, `zk`, `wallet`, `admin`)
  * are lazily loaded on first access to keep the initial bundle minimal.
  */
 export type HeliusClient = ResolvedHeliusRpcApi & {
@@ -143,6 +144,9 @@ export type HeliusClient = ResolvedHeliusRpcApi & {
 
   /** Wallet API client. Requires an API key. */
   wallet: WalletClient;
+
+  /** Admin API client. Requires an API key. */
+  admin: AdminClient;
 
   /** Auth client for agentic signup, checkout, and account management. */
   auth: AuthClient;
@@ -531,6 +535,16 @@ export const createHelius = ({
       return makeWalletClient(apiKey, userAgent);
     }
   );
+
+  defineLazyNamespace<HeliusClient, AdminClient>(client, "admin", async () => {
+    if (!apiKey) {
+      throw new Error(
+        "An API key is required to use the Admin API. Provide apiKey in createHelius() options."
+      );
+    }
+    const { makeAdminClient } = await import("../admin/client.js");
+    return makeAdminClient(apiKey, userAgent);
+  });
 
   defineLazyNamespace<HeliusClient, AuthClient>(client, "auth", async () => {
     const { makeAuthClient } = await import("../auth/client.js");
