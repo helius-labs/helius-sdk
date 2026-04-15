@@ -42,10 +42,7 @@ import {
   makeWalletClientEager,
   type WalletClient,
 } from "../wallet/client.eager";
-import {
-  makeAdminClientEager,
-  type AdminClient,
-} from "../admin/client.eager";
+import { makeAdminClientEager, type AdminClient } from "../admin/client.eager";
 import {
   GetAssetsByOwnerFn,
   makeGetAssetsByOwner,
