@@ -20,6 +20,10 @@ export default {
       maxSize: '1.5kb',
     },
     {
+      path: 'dist/esm/rpc/index.js',
+      maxSize: '2.52kb',
+    },
+    {
       path: 'dist/esm/websockets/wsAsync.js',
       maxSize: '1.5kb',
     },
