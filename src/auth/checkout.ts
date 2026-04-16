@@ -16,7 +16,7 @@ import {
   PROJECT_POLL_TIMEOUT_MS,
   PLAN_TO_USAGE_PLAN,
 } from "./constants";
-import { fetchOpenPayPriceIds } from "./devPortalConfigs";
+import { fetchStripePriceIds } from "./devPortalConfigs";
 import { payPaymentIntent } from "./payPaymentIntent";
 
 export async function resolvePriceId(
@@ -31,7 +31,7 @@ export async function resolvePriceId(
       `Unknown plan: ${plan}. Available: ${Object.keys(PLAN_TO_USAGE_PLAN).join(", ")}`
     );
   }
-  const priceIds = await fetchOpenPayPriceIds(jwt, userAgent);
+  const priceIds = await fetchStripePriceIds(jwt, userAgent);
   const periodKey = period === "monthly" ? "Monthly" : "Yearly";
   const priceId = priceIds[periodKey]?.[usagePlan];
   if (!priceId) {
@@ -265,7 +265,7 @@ export async function executeCheckout(
   return result;
 }
 
-/** Execute a plan upgrade via OpenPay checkout.
+/** Execute a plan upgrade via checkout.
  * @param customerInfo - Optional contact info (email, firstName, lastName); if any field is given, all three should be present. */
 export async function executeUpgrade(
   secretKey: Uint8Array,

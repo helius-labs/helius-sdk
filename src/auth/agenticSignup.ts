@@ -6,10 +6,10 @@ import { walletSignup } from "./walletSignup";
 import { listProjects } from "./listProjects";
 import { getProject } from "./getProject";
 import { executeCheckout } from "./checkout";
-import { OPENPAY_PLANS } from "./constants";
-import { isOpenPayPlan, buildEndpoints } from "./signupHelpers";
+import { PAID_PLANS } from "./constants";
+import { isPaidPlan, buildEndpoints } from "./signupHelpers";
 
-const ALL_PLANS = ["basic", ...OPENPAY_PLANS];
+const ALL_PLANS = ["basic", ...PAID_PLANS];
 
 export async function agenticSignup(
   options: AgenticSignupOptions
@@ -21,7 +21,7 @@ export async function agenticSignup(
   const plan = rawPlan === "" ? "basic" : rawPlan.toLowerCase();
 
   // Validate plan
-  if (plan !== "basic" && !isOpenPayPlan(plan)) {
+  if (plan !== "basic" && !isPaidPlan(plan)) {
     throw new Error(
       `Unknown plan: ${plan}. Available: ${ALL_PLANS.join(", ")}`
     );
@@ -44,8 +44,8 @@ export async function agenticSignup(
     const projectDetails = await getProject(jwt, project.id, userAgent);
     const apiKey = projectDetails.apiKeys?.[0]?.keyId || null;
 
-    // Existing user + OpenPay plan → upgrade
-    if (isOpenPayPlan(plan)) {
+    // Existing user + paid plan → upgrade
+    if (isPaidPlan(plan)) {
       // All-or-none customer info validation
       const hasAny = email || firstName || lastName;
       if (hasAny && (!email || !firstName || !lastName)) {
@@ -107,7 +107,7 @@ export async function agenticSignup(
 
   // ── New user paths ── All plans go through checkout
 
-  if (isOpenPayPlan(plan)) {
+  if (isPaidPlan(plan)) {
     // Validate required contact info for new subscriptions
     if (!email || !firstName || !lastName) {
       const missing = [

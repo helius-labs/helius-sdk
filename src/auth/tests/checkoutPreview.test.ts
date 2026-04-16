@@ -1,13 +1,13 @@
 import { getCheckoutPreview } from "../checkout";
 import { authRequest } from "../utils";
-import { fetchOpenPayPriceIds } from "../devPortalConfigs";
+import { fetchStripePriceIds } from "../devPortalConfigs";
 
 jest.mock("../utils");
 jest.mock("../devPortalConfigs");
 
 const mockAuthRequest = authRequest as jest.MockedFunction<typeof authRequest>;
-const mockFetchOpenPayPriceIds = fetchOpenPayPriceIds as jest.MockedFunction<
-  typeof fetchOpenPayPriceIds
+const mockFetchStripePriceIds = fetchStripePriceIds as jest.MockedFunction<
+  typeof fetchStripePriceIds
 >;
 
 const MOCK_PRICE_IDS = {
@@ -26,7 +26,7 @@ const MOCK_PRICE_IDS = {
 describe("getCheckoutPreview", () => {
   beforeEach(() => {
     jest.resetAllMocks();
-    mockFetchOpenPayPriceIds.mockResolvedValue(MOCK_PRICE_IDS);
+    mockFetchStripePriceIds.mockResolvedValue(MOCK_PRICE_IDS);
   });
 
   it("fetches preview with all params", async () => {

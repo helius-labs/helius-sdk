@@ -177,9 +177,9 @@ describe("agenticSignup", () => {
     });
   });
 
-  // ── OpenPay signup (new user) ──
+  // ── Paid plan signup (new user) ──
 
-  describe("OpenPay signup (new user)", () => {
+  describe("Paid plan signup (new user)", () => {
     const CONTACT = {
       email: "user@example.com",
       firstName: "Test",

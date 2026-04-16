@@ -1,7 +1,14 @@
 import { authRequest } from "./utils";
 
 interface DevPortalConfigsResponse {
-  openPay: {
+  stripe: {
+    priceIds: {
+      Monthly: Record<string, string>;
+      Yearly: Record<string, string>;
+    };
+  };
+  // Keep openPay as optional for backwards compat during transition
+  openPay?: {
     priceIds: {
       Monthly: Record<string, string>;
       Yearly: Record<string, string>;
@@ -9,7 +16,7 @@ interface DevPortalConfigsResponse {
   };
 }
 
-export async function fetchOpenPayPriceIds(
+export async function fetchStripePriceIds(
   jwt: string,
   userAgent?: string
 ): Promise<{
@@ -24,5 +31,8 @@ export async function fetchOpenPayPriceIds(
     },
     userAgent
   );
-  return configs.openPay.priceIds;
+  return configs.stripe.priceIds;
 }
+
+/** @deprecated Use fetchStripePriceIds instead */
+export const fetchOpenPayPriceIds = fetchStripePriceIds;

@@ -121,7 +121,7 @@ export interface CheckoutRequest {
 }
 
 export interface CheckoutInitializeRequest {
-  priceId: string; // OpenPay price ID — resolved internally from plan+period
+  priceId: string; // Price ID — resolved internally from plan+period
   refId: string; // User ID (base58 from walletSignup) or project UUID
   email?: string;
   firstName?: string;
@@ -204,11 +204,11 @@ export interface AgenticSignupOptions {
   secretKey: Uint8Array;
   userAgent?: string;
   plan?: string; // 'basic' ($1, default) | 'developer' | 'business' | 'professional'
-  period?: "monthly" | "yearly"; // Only for OpenPay plans, default 'monthly'
-  email?: string; // Only for OpenPay plans
-  firstName?: string; // Only for OpenPay plans
-  lastName?: string; // Only for OpenPay plans
-  couponCode?: string; // Only for OpenPay plans
+  period?: "monthly" | "yearly"; // Only for paid plans, default 'monthly'
+  email?: string; // Only for paid plans
+  firstName?: string; // Only for paid plans
+  lastName?: string; // Only for paid plans
+  couponCode?: string; // Only for paid plans
 }
 
 export interface AgenticSignupResult {

@@ -16,7 +16,7 @@ export const USDC_MINT = USDC_MINT_MAINNET;
 /** Legacy: 1 USDC (6 decimals). Only used by payUSDC. */
 export const PAYMENT_AMOUNT = 1_000_000n;
 
-/** Maps plan catalog keys to the keys returned by /dev-portal/configs openPay.priceIds */
+/** Maps plan catalog keys to the keys returned by /dev-portal/configs stripe.priceIds */
 export const PLAN_TO_USAGE_PLAN: Record<string, string> = {
   basic: "basic",
   developer: "developer_v4",
@@ -30,10 +30,15 @@ export const MIN_SOL_FOR_TX = 1_000_000n;
 export const MEMO_PROGRAM_ID =
   "MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr" as Address;
 
-// ── OpenPay Plan Names (single source of truth) ──
+// ── Paid plan names (single source of truth) ──
 
-export const OPENPAY_PLANS = ["developer", "business", "professional"] as const;
-export type OpenPayPlan = (typeof OPENPAY_PLANS)[number];
+export const PAID_PLANS = ["developer", "business", "professional"] as const;
+export type PaidPlan = (typeof PAID_PLANS)[number];
+
+/** @deprecated Use PAID_PLANS instead */
+export const OPENPAY_PLANS = PAID_PLANS;
+/** @deprecated Use PaidPlan instead */
+export type OpenPayPlan = PaidPlan;
 
 export const CHECKOUT_POLL_INTERVAL_MS = 1_000;
 export const CHECKOUT_POLL_TIMEOUT_MS = 60_000;
