@@ -8,9 +8,7 @@ function getHeaderValue(
   if (!headers) return undefined;
   if (headers instanceof Headers) return headers.get(key) ?? undefined;
   if (Array.isArray(headers)) {
-    const entry = headers.find(
-      ([k]) => k.toLowerCase() === key.toLowerCase()
-    );
+    const entry = headers.find(([k]) => k.toLowerCase() === key.toLowerCase());
     return entry ? entry[1] : undefined;
   }
   const found = Object.entries(headers).find(
