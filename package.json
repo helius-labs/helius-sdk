@@ -88,7 +88,7 @@
     "test:coverage": "jest --coverage",
     "prebuild": "node -p \"'export const version = \\'' + require('./package.json').version + '\\';'\" > src/version.ts",
     "build": "rimraf dist && rollup -c",
-    "prepare": "pnpm run build",
+    "prepare": "simple-git-hooks && pnpm run build",
     "lint": "eslint src",
     "format": "prettier --write 'src/**/*.{js,ts,json,md}'",
     "format:check": "prettier --cache --check 'src/**/*.{js,ts,json,md}'",
@@ -130,15 +130,21 @@
       "diff": ">=4.0.4"
     }
   },
+  "simple-git-hooks": {
+    "pre-commit": "pnpm exec lint-staged"
+  },
+  "lint-staged": {
+    "src/**/*.{js,ts,json,md}": "prettier --write"
+  },
   "devDependencies": {
+    "@rollup/plugin-commonjs": "^28.0.6",
+    "@rollup/plugin-node-resolve": "^16.0.1",
+    "@rollup/plugin-typescript": "^12.1.4",
     "@solana-program/compute-budget": "^0.11.0",
     "@solana-program/stake": "^0.5.0",
     "@solana-program/system": "^0.10.0",
     "@solana-program/token": "^0.9.0",
     "@solana/kit": "^5.0.0",
-    "@rollup/plugin-commonjs": "^28.0.6",
-    "@rollup/plugin-node-resolve": "^16.0.1",
-    "@rollup/plugin-typescript": "^12.1.4",
     "@types/jest": "^30.0.0",
     "@typescript-eslint/eslint-plugin": "^8.36.0",
     "@typescript-eslint/parser": "^8.36.0",
@@ -152,9 +158,11 @@
     "eslint-plugin-prettier": "^5.5.1",
     "glob": "^11.0.3",
     "jest": "^30.0.4",
+    "lint-staged": "^16.4.0",
     "prettier": "^3.6.2",
     "rimraf": "^6.0.1",
     "rollup": "^4.44.2",
+    "simple-git-hooks": "^2.13.1",
     "ts-jest": "^29.4.0",
     "ts-node": "^10.9.2",
     "tsx": "^4.20.3",
