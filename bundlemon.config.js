@@ -20,6 +20,15 @@ export default {
       maxSize: '1.5kb',
     },
     {
+      // Opt out of the default 15% growth ratchet: this module exposes a
+      // small family of configs-fetch helpers (fetchDevPortalConfigs,
+      // fetchStripePriceIds, fetchPrepaidCreditsPriceIds, and the
+      // deprecated fetchOpenPayPriceIds wrapper). The absolute cap still
+      // gates unbounded growth.
+      path: 'dist/esm/auth/devPortalConfigs.js',
+      maxSize: '2.5kb',
+    },
+    {
       path: 'dist/esm/rpc/index.js',
       maxSize: '2.52kb',
     },
