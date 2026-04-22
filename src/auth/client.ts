@@ -23,6 +23,7 @@ import {
 } from "./checkout";
 import { getSignupQuote, initializeSignupFunding } from "./signupFunding";
 import { agenticSignup } from "./agenticSignup";
+import { purchaseCredits } from "./purchaseCredits";
 
 export function makeAuthClient(userAgent?: string): AuthClient {
   return {
@@ -74,5 +75,7 @@ export function makeAuthClient(userAgent?: string): AuthClient {
         customerInfo
       ),
     executeRenewal: (sk, jwt, id) => executeRenewal(sk, jwt, id, userAgent),
+    purchaseCredits: (sk, jwt, options) =>
+      purchaseCredits(sk, jwt, options, userAgent),
   };
 }

@@ -16,7 +16,7 @@ import {
   PROJECT_POLL_TIMEOUT_MS,
   PLAN_TO_USAGE_PLAN,
 } from "./constants";
-import { fetchOpenPayPriceIds } from "./devPortalConfigs";
+import { fetchStripePriceIds } from "./devPortalConfigs";
 import { payPaymentIntent } from "./payPaymentIntent";
 
 export async function resolvePriceId(
@@ -25,13 +25,35 @@ export async function resolvePriceId(
   period: "monthly" | "yearly",
   userAgent?: string
 ): Promise<string> {
-  const usagePlan = PLAN_TO_USAGE_PLAN[plan.toLowerCase()];
+  const planKey = plan.toLowerCase();
+  const usagePlan = PLAN_TO_USAGE_PLAN[planKey];
   if (!usagePlan) {
     throw new Error(
       `Unknown plan: ${plan}. Available: ${Object.keys(PLAN_TO_USAGE_PLAN).join(", ")}`
     );
   }
-  const priceIds = await fetchOpenPayPriceIds(jwt, userAgent);
+
+  // Agent plan lives at a flat path (stripe.priceIds.AgentPlan) and is
+  // only returned when the backend sees ?agent=cli. It has no period
+  // concept (one-time invoice), so `period` is ignored here.
+  if (planKey === "agent") {
+    const priceIds = await fetchStripePriceIds(
+      jwt,
+      { includeAgentPlan: true },
+      userAgent
+    );
+    const priceId = priceIds.AgentPlan;
+    if (!priceId) {
+      throw new Error(
+        `No priceId found for plan "agent". The backend did not return ` +
+          `stripe.priceIds.AgentPlan — likely the PRICE_ID_AGENT_PLAN ` +
+          `secret is not configured in this environment.`
+      );
+    }
+    return priceId;
+  }
+
+  const priceIds = await fetchStripePriceIds(jwt, undefined, userAgent);
   const periodKey = period === "monthly" ? "Monthly" : "Yearly";
   const priceId = priceIds[periodKey]?.[usagePlan];
   if (!priceId) {

@@ -16,12 +16,22 @@ export const USDC_MINT = USDC_MINT_MAINNET;
 /** Legacy: 1 USDC (6 decimals). Only used by payUSDC. */
 export const PAYMENT_AMOUNT = 1_000_000n;
 
-/** Maps plan catalog keys to the keys returned by /dev-portal/configs openPay.priceIds */
+/**
+ * Maps plan catalog keys to backend price lookup keys.
+ *
+ * For developer/business/professional, the value is the key under
+ * `stripe.priceIds.Monthly` / `Yearly` returned by `/dev-portal/configs`.
+ *
+ * For agent, the value is the backend `UsagePlan` enum (`agent_v4`) but
+ * the priceId itself lives at the flat path `stripe.priceIds.AgentPlan`
+ * and is only returned when the request includes `?agent=cli`.
+ * `resolvePriceId` branches on plan name to handle this.
+ */
 export const PLAN_TO_USAGE_PLAN: Record<string, string> = {
-  basic: "basic",
   developer: "developer_v4",
   business: "business_v4",
   professional: "professional_v4",
+  agent: "agent_v4",
 };
 
 /** Minimum SOL needed for transaction fees (~0.001 SOL) */
@@ -34,6 +44,15 @@ export const MEMO_PROGRAM_ID =
 
 export const OPENPAY_PLANS = ["developer", "business", "professional"] as const;
 export type OpenPayPlan = (typeof OPENPAY_PLANS)[number];
+
+/**
+ * The Agent Plan is a one-time 10 USDC purchase that ships with 1,000,000
+ * starting credits. Different billing semantics from the OpenPay-family
+ * plans (no Monthly/Yearly period, one-time Stripe invoice, Stripe-only
+ * provider), so it lives in its own set.
+ */
+export const AGENT_PLANS = ["agent"] as const;
+export type AgentPlan = (typeof AGENT_PLANS)[number];
 
 export const CHECKOUT_POLL_INTERVAL_MS = 1_000;
 export const CHECKOUT_POLL_TIMEOUT_MS = 60_000;

@@ -109,7 +109,13 @@ export type CheckoutPhase =
 export type PaymentMode = "self_funded" | "sponsored";
 
 export interface CheckoutRequest {
-  plan: string; // 'basic' | 'developer' | 'business' | 'professional'
+  plan: string; // 'developer' | 'business' | 'professional' | 'agent'
+  /**
+   * Ignored for `plan: 'agent'` — the Agent Plan is a one-time invoice,
+   * not a subscription, so period is not meaningful. Callers may still
+   * pass any value for type compatibility; it's dropped before the
+   * backend call.
+   */
   period: "monthly" | "yearly";
   refId: string;
   email?: string;
@@ -121,7 +127,7 @@ export interface CheckoutRequest {
 }
 
 export interface CheckoutInitializeRequest {
-  priceId: string; // OpenPay price ID — resolved internally from plan+period
+  priceId: string; // Stripe price ID — resolved internally from plan+period
   refId: string; // User ID (base58 from walletSignup) or project UUID
   email?: string;
   firstName?: string;
@@ -130,6 +136,12 @@ export interface CheckoutInitializeRequest {
   couponCode?: string;
   paymentMode?: PaymentMode;
   signupWalletAddress?: string;
+  /**
+   * Quantity multiplier for one-time purchases (prepaid credits). Each
+   * unit grants 1,000,000 credits at the backend. Ignored for
+   * subscription plans.
+   */
+  qty?: number;
 }
 
 export interface CheckoutInitializeResponse {
@@ -203,16 +215,38 @@ export interface CheckoutResult {
 export interface AgenticSignupOptions {
   secretKey: Uint8Array;
   userAgent?: string;
-  plan?: string; // 'basic' ($1, default) | 'developer' | 'business' | 'professional'
-  period?: "monthly" | "yearly"; // Only for OpenPay plans, default 'monthly'
-  email?: string; // Only for OpenPay plans
-  firstName?: string; // Only for OpenPay plans
-  lastName?: string; // Only for OpenPay plans
-  couponCode?: string; // Only for OpenPay plans
+  /** 'developer' | 'business' | 'professional' | 'agent' (default). */
+  plan?: string;
+  /**
+   * Only for subscription plans (developer/business/professional).
+   * Ignored for `plan: 'agent'` — the Agent Plan is a one-time invoice.
+   * Default 'monthly'.
+   */
+  period?: "monthly" | "yearly";
+  /** Required for paid plans (developer/business/professional/agent). */
+  email?: string;
+  /** Required for paid plans (developer/business/professional/agent). */
+  firstName?: string;
+  /** Required for paid plans (developer/business/professional/agent). */
+  lastName?: string;
+  /** Optional coupon code for paid plans (developer/business/professional/agent). */
+  couponCode?: string;
+  /**
+   * Pre-authenticated JWT from `walletSignup`. If provided, `refId` is
+   * required. Skips the internal re-authentication round trip so callers
+   * that have already invoked `walletSignup` (e.g. to fetch a pricing
+   * quote) don't force the user to sign the auth message twice.
+   */
+  jwt?: string;
+  /**
+   * `refId` returned by `walletSignup` alongside the JWT. Required when
+   * `jwt` is provided.
+   */
+  refId?: string;
 }
 
 export interface AgenticSignupResult {
-  status: "success" | "existing_project" | "upgraded";
+  status: "success" | "upgraded";
   jwt: string;
   walletAddress: string;
   projectId: string;
@@ -224,6 +258,11 @@ export interface AgenticSignupResult {
 
 export interface SignupQuote {
   plan: string;
+  /**
+   * Echoes the `period` value the caller passed to `getSignupQuote`. Not
+   * meaningful for `plan: 'agent'` (one-time invoice, no period) — the
+   * value is whatever the caller supplied.
+   */
   period: "monthly" | "yearly";
   baseAmountCents: number;
   discountCents: number;
@@ -246,6 +285,34 @@ export interface BuildSponsoredTxResponse {
   transaction: string;
   paymentIntentId: string;
   lastValidBlockHeight: number;
+}
+
+/**
+ * Known prepaid-credits tier keys the backend exposes today. `10_USDC` is
+ * the canonical agent top-up: 10 USDC → 1,000,000 additional credits,
+ * matching the agent plan's signup pricing and `overageCost`. The backend
+ * also exposes `4_USDC` and `5_USDC` tiers but only `10_USDC` is
+ * advertised by the CLI/MCP. The `string & {}` opening keeps the type
+ * future-proof for tiers added later without an SDK patch.
+ */
+export type PrepaidCreditsTier = "10_USDC" | (string & {});
+
+export interface PurchaseCreditsOptions {
+  /** Tier key from `stripe.prepaidCreditsPlans` — default `"10_USDC"`. */
+  tier?: PrepaidCreditsTier;
+  /** Quantity multiplier. Each unit grants 1,000,000 credits. Default 1. */
+  qty?: number;
+  /** Project receiving the credits. */
+  projectId: string;
+  couponCode?: string;
+}
+
+export interface PurchaseCreditsResult {
+  paymentIntentId: string;
+  txSignature: string | null;
+  status: "completed" | "expired" | "failed" | "timeout";
+  amountCents: number;
+  error?: string;
 }
 
 export interface AuthClient {
@@ -341,4 +408,14 @@ export interface AuthClient {
     jwt: string,
     paymentIntentId: string
   ): Promise<CheckoutResult>;
+  /**
+   * Buy additional prepaid credits for an agent-plan project. Agent-only
+   * in this release: pre-flight rejects non-agent projects before
+   * calling `/checkout/initialize` (see `src/auth/purchaseCredits.ts`).
+   */
+  purchaseCredits(
+    secretKey: Uint8Array,
+    jwt: string,
+    options: PurchaseCreditsOptions
+  ): Promise<PurchaseCreditsResult>;
 }

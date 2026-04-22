@@ -15,7 +15,7 @@ import { listProjects } from "../listProjects";
 import { getProject } from "../getProject";
 import { loadKeypair } from "../loadKeypair";
 import { getAddress } from "../getAddress";
-import { fetchOpenPayPriceIds } from "../devPortalConfigs";
+import { fetchStripePriceIds } from "../devPortalConfigs";
 import { paySponsoredIntent } from "../sponsoredPayment";
 
 jest.mock("../utils");
@@ -51,8 +51,8 @@ const mockListProjects = listProjects as jest.MockedFunction<
 const mockGetProject = getProject as jest.MockedFunction<typeof getProject>;
 const mockLoadKeypair = loadKeypair as jest.MockedFunction<typeof loadKeypair>;
 const mockGetAddress = getAddress as jest.MockedFunction<typeof getAddress>;
-const mockFetchOpenPayPriceIds = fetchOpenPayPriceIds as jest.MockedFunction<
-  typeof fetchOpenPayPriceIds
+const mockFetchStripePriceIds = fetchStripePriceIds as jest.MockedFunction<
+  typeof fetchStripePriceIds
 >;
 const mockPaySponsoredIntent = paySponsoredIntent as jest.MockedFunction<
   typeof paySponsoredIntent
@@ -60,17 +60,20 @@ const mockPaySponsoredIntent = paySponsoredIntent as jest.MockedFunction<
 
 const MOCK_PRICE_IDS = {
   Monthly: {
-    basic: "price_basic_monthly",
     developer_v4: "price_dev_monthly",
     business_v4: "price_biz_monthly",
     professional_v4: "price_pro_monthly",
   },
   Yearly: {
-    basic: "price_basic_yearly",
     developer_v4: "price_dev_yearly",
     business_v4: "price_biz_yearly",
     professional_v4: "price_pro_yearly",
   },
+};
+
+const MOCK_PRICE_IDS_WITH_AGENT = {
+  ...MOCK_PRICE_IDS,
+  AgentPlan: "price_agent_plan",
 };
 
 const INIT_RESPONSE = {
@@ -96,28 +99,58 @@ const POLL_COMPLETED_RESPONSE = {
 describe("resolvePriceId", () => {
   beforeEach(() => jest.resetAllMocks());
 
-  it("resolves basic monthly", async () => {
-    mockFetchOpenPayPriceIds.mockResolvedValue(MOCK_PRICE_IDS);
-    const result = await resolvePriceId("jwt", "basic", "monthly");
-    expect(result).toBe("price_basic_monthly");
-  });
-
   it("resolves developer monthly", async () => {
-    mockFetchOpenPayPriceIds.mockResolvedValue(MOCK_PRICE_IDS);
+    mockFetchStripePriceIds.mockResolvedValue(MOCK_PRICE_IDS);
     const result = await resolvePriceId("jwt", "developer", "monthly");
     expect(result).toBe("price_dev_monthly");
   });
 
   it("resolves business yearly", async () => {
-    mockFetchOpenPayPriceIds.mockResolvedValue(MOCK_PRICE_IDS);
+    mockFetchStripePriceIds.mockResolvedValue(MOCK_PRICE_IDS);
     const result = await resolvePriceId("jwt", "business", "yearly");
     expect(result).toBe("price_biz_yearly");
   });
 
   it("is case-insensitive for plan name", async () => {
-    mockFetchOpenPayPriceIds.mockResolvedValue(MOCK_PRICE_IDS);
+    mockFetchStripePriceIds.mockResolvedValue(MOCK_PRICE_IDS);
     const result = await resolvePriceId("jwt", "Developer", "monthly");
     expect(result).toBe("price_dev_monthly");
+  });
+
+  it("resolves agent plan and auto-sends ?agent=cli", async () => {
+    mockFetchStripePriceIds.mockResolvedValue(MOCK_PRICE_IDS_WITH_AGENT);
+    const result = await resolvePriceId("jwt", "agent", "monthly");
+    expect(result).toBe("price_agent_plan");
+    expect(mockFetchStripePriceIds).toHaveBeenCalledWith(
+      "jwt",
+      { includeAgentPlan: true },
+      undefined
+    );
+  });
+
+  it("ignores period for agent plan", async () => {
+    mockFetchStripePriceIds.mockResolvedValue(MOCK_PRICE_IDS_WITH_AGENT);
+    const monthly = await resolvePriceId("jwt", "agent", "monthly");
+    const yearly = await resolvePriceId("jwt", "agent", "yearly");
+    expect(monthly).toBe("price_agent_plan");
+    expect(yearly).toBe("price_agent_plan");
+  });
+
+  it("throws when AgentPlan is missing from response", async () => {
+    mockFetchStripePriceIds.mockResolvedValue(MOCK_PRICE_IDS);
+    await expect(resolvePriceId("jwt", "agent", "monthly")).rejects.toThrow(
+      /stripe\.priceIds\.AgentPlan|PRICE_ID_AGENT_PLAN/
+    );
+  });
+
+  it("does NOT send ?agent=cli for non-agent plans (dashboard regression guard)", async () => {
+    mockFetchStripePriceIds.mockResolvedValue(MOCK_PRICE_IDS);
+    await resolvePriceId("jwt", "developer", "monthly");
+    expect(mockFetchStripePriceIds).toHaveBeenCalledWith(
+      "jwt",
+      undefined,
+      undefined
+    );
   });
 
   it("throws for unknown plan", async () => {
@@ -126,14 +159,20 @@ describe("resolvePriceId", () => {
     ).rejects.toThrow("Unknown plan: enterprise");
   });
 
-  it("includes available plans in error", async () => {
+  it("rejects basic with Unknown plan error (removed from supported set)", async () => {
+    await expect(resolvePriceId("jwt", "basic", "monthly")).rejects.toThrow(
+      "Unknown plan: basic"
+    );
+  });
+
+  it("includes available plans in error (basic absent, agent present)", async () => {
     await expect(resolvePriceId("jwt", "invalid", "monthly")).rejects.toThrow(
-      "Available: basic, developer, business, professional"
+      "Available: developer, business, professional, agent"
     );
   });
 
   it("throws when priceId not found in configs (empty)", async () => {
-    mockFetchOpenPayPriceIds.mockResolvedValue({
+    mockFetchStripePriceIds.mockResolvedValue({
       Monthly: {},
       Yearly: {},
     });
@@ -143,7 +182,7 @@ describe("resolvePriceId", () => {
   });
 
   it("throws with available keys when key mismatch", async () => {
-    mockFetchOpenPayPriceIds.mockResolvedValue({
+    mockFetchStripePriceIds.mockResolvedValue({
       Monthly: { some_other_plan: "price_unknown" },
       Yearly: {},
     });
@@ -295,7 +334,7 @@ describe("executeCheckout", () => {
   const mockSecretKey = new Uint8Array(64).fill(1);
 
   function setupDefaultMocks() {
-    mockFetchOpenPayPriceIds.mockResolvedValue(MOCK_PRICE_IDS);
+    mockFetchStripePriceIds.mockResolvedValue(MOCK_PRICE_IDS);
     mockLoadKeypair.mockReturnValue({
       publicKey: new Uint8Array(32),
       secretKey: mockSecretKey,
@@ -476,7 +515,7 @@ describe("executeCheckout", () => {
 describe("getCheckoutPreview", () => {
   beforeEach(() => {
     jest.resetAllMocks();
-    mockFetchOpenPayPriceIds.mockResolvedValue(MOCK_PRICE_IDS);
+    mockFetchStripePriceIds.mockResolvedValue(MOCK_PRICE_IDS);
   });
 
   it("resolves priceId and sends GET to /checkout/preview with query params", async () => {
@@ -561,7 +600,7 @@ describe("getPaymentStatus", () => {
 describe("getSignupQuote", () => {
   beforeEach(() => {
     jest.resetAllMocks();
-    mockFetchOpenPayPriceIds.mockResolvedValue(MOCK_PRICE_IDS);
+    mockFetchStripePriceIds.mockResolvedValue(MOCK_PRICE_IDS);
   });
 
   it("returns simplified quote from checkout preview", async () => {
@@ -601,7 +640,7 @@ describe("getSignupQuote", () => {
 describe("initializeSignupFunding", () => {
   beforeEach(() => {
     jest.resetAllMocks();
-    mockFetchOpenPayPriceIds.mockResolvedValue(MOCK_PRICE_IDS);
+    mockFetchStripePriceIds.mockResolvedValue(MOCK_PRICE_IDS);
   });
 
   it("resolves priceId and returns funding intent with sponsored mode", async () => {
@@ -633,7 +672,7 @@ describe("initializeSignupFunding", () => {
     mockAuthRequest.mockResolvedValue(INIT_RESPONSE);
 
     const funding = await initializeSignupFunding("jwt", {
-      plan: "basic",
+      plan: "developer",
       period: "monthly",
       refId: "ref-1",
     });
