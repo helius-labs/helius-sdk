@@ -34,6 +34,7 @@ import type { GetAllProgramAccountsFn } from "./methods/getAllProgramAccounts";
 import type { GetTokenAccountsByOwnerV2Fn } from "./methods/getTokenAccountsByOwnerV2";
 import type { GetAllTokenAccountsByOwnerFn } from "./methods/getAllTokenAccountsByOwner.js";
 import type { GetTransactionsForAddressFn } from "./methods/getTransactionsForAddress";
+import type { GetTransfersByAddressFn } from "./methods/getTransfersByAddress";
 import type { EnhancedTxClientLazy } from "../enhanced";
 import { TxHelpersLazy } from "../transactions";
 import type { ResolvedHeliusRpcApi } from "./heliusRpcApi";
@@ -108,6 +109,8 @@ export type HeliusClient = ResolvedHeliusRpcApi & {
   getAllTokenAccountsByOwner: GetAllTokenAccountsByOwnerFn;
   /** Get transactions for a specific address with rich filtering and pagination. */
   getTransactionsForAddress: GetTransactionsForAddressFn;
+  /** Get parsed token and native SOL transfers for a specific address with rich filtering and pagination. */
+  getTransfersByAddress: GetTransfersByAddressFn;
 
   // ── Webhooks ──────────────────────────────────────────────────────
 
@@ -461,6 +464,17 @@ export const createHelius = ({
         "./methods/getTransactionsForAddress.js"
       );
       return makeGetTransactionsForAddress(call);
+    }
+  );
+
+  defineLazyMethod<HeliusClient, GetTransfersByAddressFn>(
+    client,
+    "getTransfersByAddress",
+    async () => {
+      const { makeGetTransfersByAddress } = await import(
+        "./methods/getTransfersByAddress.js"
+      );
+      return makeGetTransfersByAddress(call);
     }
   );
 

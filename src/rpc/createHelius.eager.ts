@@ -86,6 +86,10 @@ import {
   GetTransactionsForAddressFn,
   makeGetTransactionsForAddress,
 } from "./methods/getTransactionsForAddress";
+import {
+  GetTransfersByAddressFn,
+  makeGetTransfersByAddress,
+} from "./methods/getTransfersByAddress";
 import type { HeliusRpcOptions } from "./types";
 
 export interface HeliusClientEager {
@@ -111,6 +115,7 @@ export interface HeliusClientEager {
   getTokenAccountsByOwnerV2: GetTokenAccountsByOwnerV2Fn;
   getAllTokenAccountsByOwner: GetAllTokenAccountsByOwnerFn;
   getTransactionsForAddress: GetTransactionsForAddressFn;
+  getTransfersByAddress: GetTransfersByAddressFn;
 
   webhooks: WebhookClient;
 
@@ -183,6 +188,7 @@ export const createHeliusEager = ({
     getTokenAccountsByOwnerV2: makeGetTokenAccountsByOwnerV2(call),
     getAllTokenAccountsByOwner: makeGetAllTokenAccountsByOwner(call),
     getTransactionsForAddress: makeGetTransactionsForAddress(call),
+    getTransfersByAddress: makeGetTransfersByAddress(call),
 
     // Webhooks
     get webhooks() {

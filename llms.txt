@@ -52,6 +52,12 @@ const txs = await helius.getTransactionsForAddress([
   "wallet_address",
   { limit: 10, transactionDetails: "full" }
 ]);
+
+// Get parsed token and native SOL transfer history
+const transfers = await helius.getTransfersByAddress([
+  "wallet_address",
+  { limit: 10, direction: "in", mint: "token_mint" }
+]);
 ```
 
 ## Examples Directory
@@ -61,7 +67,7 @@ The `examples/` directory contains working code samples for every method in the 
 ```
 examples/
 ├── helius/das/       # DAS API: getAsset, getAssetsByOwner, searchAssets, etc.
-├── helius/           # RPC V2: getProgramAccountsV2, getTransactionsForAddress, etc.
+├── helius/           # RPC V2: getProgramAccountsV2, getTransactionsForAddress, getTransfersByAddress, etc.
 ├── transactions/     # Helius Sender, smart transactions, sendTransaction
 ├── enhanced/         # Enhanced transaction parsing
 ├── webhooks/         # Webhook CRUD operations
@@ -154,6 +160,19 @@ const page1 = await helius.getTransactionsForAddress(["address", { limit: 100 }]
 const page2 = await helius.getTransactionsForAddress([
   "address",
   { limit: 100, paginationToken: page1.paginationToken }
+]);
+
+// Get parsed token and native SOL transfers with filters
+const transfers = await helius.getTransfersByAddress([
+  "address",
+  {
+    limit: 100,
+    direction: "out",
+    filters: {
+      blockTime: { gte: unixTimestamp },
+      status: "succeeded",
+    },
+  },
 ]);
 
 // Get all program accounts with cursor pagination

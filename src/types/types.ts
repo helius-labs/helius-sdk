@@ -364,3 +364,110 @@ export type GetTransactionsForAddressResultFull = {
   data: ReadonlyArray<TransactionForAddressFull>;
   paginationToken: string | null;
 };
+
+// ── getTransfersByAddress ───────────────────────────────────────────
+
+/** Numeric comparison filter used by transfer amount, blockTime, and slot filters. */
+export type TransferComparisonFilter = {
+  /** Greater than */
+  gt?: number;
+  /** Greater than or equal to */
+  gte?: number;
+  /** Less than */
+  lt?: number;
+  /** Less than or equal to */
+  lte?: number;
+};
+
+/** Configuration for `getTransfersByAddress` transfer queries. */
+export type GetTransfersByAddressConfig = {
+  /** Filter by counterparty address. Returns only transfers to or from this address. */
+  with?: string;
+  /** Filter by transfer direction relative to the queried address. */
+  direction?: "in" | "out" | "any";
+  /** Filter by token mint address. Use native SOL or WSOL mint addresses for SOL filtering. */
+  mint?: string;
+  /** SOL/WSOL display mode. */
+  solMode?: "merged" | "separate";
+  /** Additional filters for amount, block time, slot, and status. */
+  filters?: {
+    /** Filter by raw transfer amount, not UI amount. */
+    amount?: TransferComparisonFilter;
+    /** Filter by block timestamp in Unix seconds. */
+    blockTime?: TransferComparisonFilter;
+    /** Filter by slot number. */
+    slot?: TransferComparisonFilter;
+    /** Transaction status. */
+    status?: "succeeded" | "failed" | "any";
+  };
+  /** Max transfers per page. */
+  limit?: number;
+  /** Pagination token from a previous response. `null` when no more pages. */
+  paginationToken?: string | null;
+  /** Data commitment level. */
+  commitment?: "finalized" | "confirmed";
+  /** Result ordering. */
+  sortOrder?: "asc" | "desc";
+};
+
+/** Request tuple for `getTransfersByAddress`: `[address, config?]`. */
+export type GetTransfersByAddressRequest = [
+  string,
+  GetTransfersByAddressConfig?,
+];
+
+/** Parsed, human-readable token or native SOL transfer record. */
+export type TokenTransfer = {
+  /** Base58-encoded transaction signature. */
+  signature: string;
+  /** Slot number containing the transaction. */
+  slot: number;
+  /** Unix timestamp in seconds for the block. */
+  blockTime: number;
+  /** Parsed transfer type. */
+  type:
+    | "transfer"
+    | "transferFee"
+    | "mint"
+    | "burn"
+    | "wrap"
+    | "unwrap"
+    | "changeAccountOwner"
+    | "withdrawWithheldFee";
+  /** Wallet address that sent the tokens, or `null` when no sender exists. */
+  fromUserAccount: string | null;
+  /** Wallet address that received the tokens, or `null` when no recipient exists. */
+  toUserAccount: string | null;
+  /** Source token account. Omitted when not applicable, such as native SOL transfers. */
+  fromTokenAccount?: string;
+  /** Destination token account. Omitted when not applicable, such as native SOL transfers. */
+  toTokenAccount?: string;
+  /** Token mint address. */
+  mint: string;
+  /** Raw transfer amount as a string to preserve precision. */
+  amount: string;
+  /** Transfer fee withheld by the Token-2022 transfer-fee extension. */
+  feeAmount?: string;
+  /** Token account associated with the withheld fee. */
+  feeAccount?: string;
+  /** Token decimals. Native SOL uses 9. */
+  decimals: number;
+  /** Human-readable amount. */
+  uiAmount: string;
+  /** Human-readable fee amount. Present only when `feeAmount` is present. */
+  feeUiAmount?: string;
+  /** Confirmation status. */
+  confirmationStatus: "finalized" | "confirmed";
+  /** Index of the transaction within the block. */
+  transactionIdx: number;
+  /** Index of the instruction within the transaction. */
+  instructionIdx: number;
+  /** Index within inner instructions. `0` when the transfer is top-level. */
+  innerInstructionIdx: number;
+};
+
+/** Paginated result with parsed transfer data. */
+export type GetTransfersByAddressResult = {
+  data: ReadonlyArray<TokenTransfer>;
+  paginationToken: string | null;
+};
