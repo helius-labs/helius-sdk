@@ -82,6 +82,13 @@ export interface ProjectDetails {
   billingCycle: BillingCycle;
   subscriptionPlanDetails: SubscriptionPlanDetails;
   prepaidCreditsLink: string;
+  /**
+   * Stripe price ID for the project's prepaid-credits top-up SKU.
+   * Resolved server-side from the plan's per-credit overage cost
+   * (e.g. agent_v4 → 10 USDC → 1M credits price). Only present when the
+   * plan exposes prepaid-credits top-ups; absent for FREE / enterprise.
+   */
+  prepaidCreditsPriceId?: string;
 }
 
 export interface Project extends ProjectListItem {
@@ -90,6 +97,7 @@ export interface Project extends ProjectListItem {
   billingCycle?: BillingCycle;
   subscriptionPlanDetails?: SubscriptionPlanDetails;
   prepaidCreditsLink?: string;
+  prepaidCreditsPriceId?: string;
 }
 
 export type PaymentIntentStatus =

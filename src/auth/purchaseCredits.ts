@@ -2,14 +2,13 @@ import type { PurchaseCreditsOptions, PurchaseCreditsResult } from "./types";
 import { getAddress } from "./getAddress";
 import { loadKeypair } from "./loadKeypair";
 import { listProjects } from "./listProjects";
-import { fetchPrepaidCreditsPriceIds } from "./devPortalConfigs";
+import { getProject } from "./getProject";
 import {
   initializeCheckout,
   pollCheckoutCompletion,
   payPaymentIntent,
 } from "./checkout";
 
-const DEFAULT_TIER = "10_USDC";
 const AGENT_PLAN_ID = "agent_v4";
 
 /**
@@ -31,7 +30,6 @@ export async function purchaseCredits(
   options: PurchaseCreditsOptions,
   userAgent?: string
 ): Promise<PurchaseCreditsResult> {
-  const tier = options.tier ?? DEFAULT_TIER;
   const qty = options.qty ?? 1;
 
   // 1. Pre-flight: confirm the project is on agent_v4.
@@ -51,17 +49,17 @@ export async function purchaseCredits(
     );
   }
 
-  // 2. Resolve tier → priceId from the flat prepaid-credits map.
-  const prepaidPriceIds = await fetchPrepaidCreditsPriceIds(jwt, userAgent);
-  const lookupKey = `prepaid_credits_${tier}`;
-  const priceId = prepaidPriceIds[lookupKey];
+  // 2. Resolve the top-up priceId from the project's own details.
+  // The backend derives this from planSpecifications.overageCost so it
+  // tracks each plan's prepaid-credits SKU automatically (agent_v4 →
+  // prepaid_credits_10_USDC). `tier` is unused in this SDK version.
+  const projectDetails = await getProject(jwt, options.projectId, userAgent);
+  const priceId = projectDetails.prepaidCreditsPriceId;
   if (!priceId) {
-    const available = Object.keys(prepaidPriceIds);
     throw new Error(
-      `Unknown prepaid-credits tier "${tier}". ` +
-        (available.length === 0
-          ? "The backend returned no prepaid-credits plans."
-          : `Available tiers: [${available.join(", ")}]`)
+      `Project ${options.projectId} does not expose a prepaid-credits priceId. ` +
+        `The backend may not have provisioned it yet — try again shortly, or ` +
+        `top up via the dashboard.`
     );
   }
 
