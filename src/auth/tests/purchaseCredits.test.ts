@@ -1,6 +1,6 @@
 import { purchaseCredits } from "../purchaseCredits";
 import { listProjects } from "../listProjects";
-import { fetchPrepaidCreditsPriceIds } from "../devPortalConfigs";
+import { getProject } from "../getProject";
 import {
   initializeCheckout,
   payPaymentIntent,
@@ -10,7 +10,7 @@ import { loadKeypair } from "../loadKeypair";
 import { getAddress } from "../getAddress";
 
 jest.mock("../listProjects");
-jest.mock("../devPortalConfigs");
+jest.mock("../getProject");
 jest.mock("../checkout");
 jest.mock("../loadKeypair");
 jest.mock("../getAddress");
@@ -18,10 +18,7 @@ jest.mock("../getAddress");
 const mockListProjects = listProjects as jest.MockedFunction<
   typeof listProjects
 >;
-const mockFetchPrepaidCreditsPriceIds =
-  fetchPrepaidCreditsPriceIds as jest.MockedFunction<
-    typeof fetchPrepaidCreditsPriceIds
-  >;
+const mockGetProject = getProject as jest.MockedFunction<typeof getProject>;
 const mockInitializeCheckout = initializeCheckout as jest.MockedFunction<
   typeof initializeCheckout
 >;
@@ -51,6 +48,15 @@ const DEVELOPER_PROJECT = {
   subscription: { plan: "developer_v4" },
   users: [],
   dnsRecords: [],
+} as never;
+
+const AGENT_PROJECT_DETAILS = {
+  apiKeys: [],
+  creditsUsage: {} as never,
+  billingCycle: {} as never,
+  subscriptionPlanDetails: {} as never,
+  prepaidCreditsLink: "",
+  prepaidCreditsPriceId: "price_prepaid_10",
 } as never;
 
 const INIT_RESPONSE = {
@@ -84,17 +90,13 @@ describe("purchaseCredits", () => {
     });
     mockGetAddress.mockResolvedValue("WalletAgent111");
     mockListProjects.mockResolvedValue([AGENT_PROJECT]);
-    mockFetchPrepaidCreditsPriceIds.mockResolvedValue({
-      prepaid_credits_4_USDC: "price_prepaid_4",
-      prepaid_credits_5_USDC: "price_prepaid_5",
-      prepaid_credits_10_USDC: "price_prepaid_10",
-    });
+    mockGetProject.mockResolvedValue(AGENT_PROJECT_DETAILS);
     mockInitializeCheckout.mockResolvedValue(INIT_RESPONSE);
     mockPayPaymentIntent.mockResolvedValue("tx-topup-sig");
     mockPollCheckoutCompletion.mockResolvedValue(POLL_COMPLETED);
   });
 
-  it("completes happy path for agent project with default 10_USDC tier", async () => {
+  it("completes happy path for agent project, sourcing priceId from getProject", async () => {
     const result = await purchaseCredits(secretKey, "jwt", {
       projectId: "proj-agent",
     });
@@ -104,7 +106,8 @@ describe("purchaseCredits", () => {
     expect(result.paymentIntentId).toBe("pi_topup");
     expect(result.amountCents).toBe(1000);
 
-    // Default tier resolves to prepaid_credits_10_USDC
+    // priceId comes from getProject(...).prepaidCreditsPriceId
+    expect(mockGetProject).toHaveBeenCalledWith("jwt", "proj-agent", undefined);
     expect(mockInitializeCheckout).toHaveBeenCalledWith(
       "jwt",
       expect.objectContaining({
@@ -134,6 +137,7 @@ describe("purchaseCredits", () => {
       purchaseCredits(secretKey, "jwt", { projectId: "proj-dev" })
     ).rejects.toThrow(/only supported for agent-plan projects/);
 
+    expect(mockGetProject).not.toHaveBeenCalled();
     expect(mockInitializeCheckout).not.toHaveBeenCalled();
     expect(mockPayPaymentIntent).not.toHaveBeenCalled();
   });
@@ -159,31 +163,19 @@ describe("purchaseCredits", () => {
     );
   });
 
-  it("throws with available tiers when tier is unknown", async () => {
+  it("throws when project has no prepaidCreditsPriceId", async () => {
+    mockGetProject.mockResolvedValue({
+      apiKeys: [],
+      creditsUsage: {} as never,
+      billingCycle: {} as never,
+      subscriptionPlanDetails: {} as never,
+      prepaidCreditsLink: "",
+      // prepaidCreditsPriceId intentionally omitted
+    } as never);
+
     await expect(
-      purchaseCredits(secretKey, "jwt", {
-        projectId: "proj-agent",
-        tier: "999_USDC",
-      })
-    ).rejects.toThrow(/Unknown prepaid-credits tier "999_USDC"/);
-  });
-
-  it("accepts an arbitrary tier key present on the backend (future-proof)", async () => {
-    mockFetchPrepaidCreditsPriceIds.mockResolvedValue({
-      prepaid_credits_25_USDC: "price_prepaid_25",
-    });
-
-    const result = await purchaseCredits(secretKey, "jwt", {
-      projectId: "proj-agent",
-      tier: "25_USDC",
-    });
-
-    expect(result.status).toBe("completed");
-    expect(mockInitializeCheckout).toHaveBeenCalledWith(
-      "jwt",
-      expect.objectContaining({ priceId: "price_prepaid_25" }),
-      undefined
-    );
+      purchaseCredits(secretKey, "jwt", { projectId: "proj-agent" })
+    ).rejects.toThrow(/does not expose a prepaid-credits priceId/);
   });
 
   it("returns failed status when payPaymentIntent throws", async () => {
@@ -229,13 +221,5 @@ describe("purchaseCredits", () => {
     });
 
     expect(result.status).toBe("timeout");
-  });
-
-  it("throws when backend returns no prepaid-credits plans", async () => {
-    mockFetchPrepaidCreditsPriceIds.mockResolvedValue({});
-
-    await expect(
-      purchaseCredits(secretKey, "jwt", { projectId: "proj-agent" })
-    ).rejects.toThrow(/returned no prepaid-credits plans/);
   });
 });
