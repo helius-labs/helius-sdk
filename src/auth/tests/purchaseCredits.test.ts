@@ -150,6 +150,22 @@ describe("purchaseCredits", () => {
     ).rejects.toThrow(/not found for this authenticated user/);
   });
 
+  it.each([0, -1, 1.5, NaN])(
+    "rejects non-positive-integer qty (%s) before any network calls",
+    async (badQty) => {
+      await expect(
+        purchaseCredits(secretKey, "jwt", {
+          projectId: "proj-agent",
+          qty: badQty,
+        })
+      ).rejects.toThrow(/`qty` must be a positive integer/);
+
+      expect(mockListProjects).not.toHaveBeenCalled();
+      expect(mockGetProject).not.toHaveBeenCalled();
+      expect(mockInitializeCheckout).not.toHaveBeenCalled();
+    }
+  );
+
   it("forwards qty > 1 to initializeCheckout", async () => {
     await purchaseCredits(secretKey, "jwt", {
       projectId: "proj-agent",

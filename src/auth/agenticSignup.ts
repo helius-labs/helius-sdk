@@ -11,6 +11,17 @@ import { isAgentPlan, isOpenPayPlan, buildEndpoints } from "./signupHelpers";
 
 const ALL_PLANS = [...OPENPAY_PLANS, ...AGENT_PLANS];
 
+/**
+ * Sign up or upgrade an account on the agent / OpenPay plans.
+ *
+ * Sponsorship asymmetry: new-account checkouts run in `paymentMode:
+ * "sponsored"` so Helius covers the on-chain payment. Existing-user
+ * upgrades — including agent-plan upgrades — are *not* sponsored: the
+ * backend rejects sponsored mode on the upgrade path, so this SDK falls
+ * back to a self-funded checkout for the second signup of the same
+ * wallet. If you need a sponsored agent setup, sign up with a fresh
+ * wallet rather than upgrading an existing project.
+ */
 export async function agenticSignup(
   options: AgenticSignupOptions
 ): Promise<AgenticSignupResult> {

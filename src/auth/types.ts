@@ -312,6 +312,7 @@ export interface PurchaseCreditsOptions {
   qty?: number;
   /** Project receiving the credits. */
   projectId: string;
+  /** Optional coupon code applied to the checkout. */
   couponCode?: string;
 }
 

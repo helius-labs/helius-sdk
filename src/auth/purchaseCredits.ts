@@ -31,6 +31,11 @@ export async function purchaseCredits(
   userAgent?: string
 ): Promise<PurchaseCreditsResult> {
   const qty = options.qty ?? 1;
+  if (!Number.isInteger(qty) || qty < 1) {
+    throw new Error(
+      `purchaseCredits: \`qty\` must be a positive integer, received ${qty}.`
+    );
+  }
 
   // 1. Pre-flight: confirm the project is on agent_v4.
   const projects = await listProjects(jwt, userAgent);
