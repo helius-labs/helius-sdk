@@ -123,7 +123,7 @@
   "pnpm": {
     "overrides": {
       "glob>minimatch": ">=10.2.1",
-      "axios": ">=1.13.5",
+      "axios": ">=1.15.2",
       "lodash-es": ">=4.17.23",
       "lodash": ">=4.17.23",
       "js-yaml": ">=4.1.1",
