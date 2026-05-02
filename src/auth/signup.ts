@@ -6,16 +6,10 @@ import { walletSignup } from "./walletSignup";
 import { listProjects } from "./listProjects";
 import { getProject } from "./getProject";
 import { createApiKey } from "./createApiKey";
-import {
-  resolvePriceId,
-  initializeCheckout,
-  getCheckoutPreview,
-} from "./checkout";
 import { buildEndpoints } from "./signupHelpers";
-import { buildPaymentUrl } from "./paymentUrl";
+import { createPayment } from "./createPayment";
 import type {
   Endpoints,
-  PaymentLink,
   PreauthenticatedSignupOptions,
   ProjectListItem,
   SecretKeySignupOptions,
@@ -39,15 +33,6 @@ const validatePlan = (plan: string): SupportedPlan => {
     );
   }
   return normalized;
-};
-
-const planNameFor = (
-  plan: SupportedPlan,
-  period: "monthly" | "yearly" | undefined
-): string => {
-  if (plan === "agent") return "Agent Plan";
-  const cap = plan.charAt(0).toUpperCase() + plan.slice(1);
-  return `${cap} (${period === "yearly" ? "Yearly" : "Monthly"})`;
 };
 
 /**
@@ -85,82 +70,6 @@ const authenticate = async (
   const auth = await walletSignup(message, signature, walletAddress);
   return { jwt: auth.token, refId: auth.refId, walletAddress };
 };
-
-/**
- * Internal — never exported. Resolves priceId, runs `getCheckoutPreview` to
- * detect zero-amount checkouts (rejected in Phase 1), then creates a
- * `payment_required` PaymentLink via `/checkout/initialize` in self-funded
- * mode.
- */
-async function createPayment(req: {
-  jwt: string;
-  refId: string;
-  plan: SupportedPlan;
-  period?: "monthly" | "yearly";
-  email?: string;
-  firstName?: string;
-  lastName?: string;
-  couponCode?: string;
-  walletAddress: string;
-  paymentHost?: string;
-}): Promise<PaymentLink> {
-  const period = req.period ?? "monthly";
-  const priceId = await resolvePriceId(req.jwt, req.plan, period);
-  // Best-effort zero-amount rejection. The preview endpoint requires an
-  // existing Stripe customer for one-time invoices (Agent Plan), which a
-  // fresh signup does not have — backend throws "Customer ID is required
-  // for one time preview". Swallow that case and continue to
-  // /checkout/initialize, which will create the customer + intent and
-  // surface its own error if the final amount really is zero. The check
-  // still catches 100%-coupon paths on flows where a customer exists
-  // (upgrades, re-checkouts).
-  try {
-    const preview = await getCheckoutPreview(
-      req.jwt,
-      req.plan,
-      period,
-      req.refId,
-      req.couponCode
-    );
-    if (preview.dueToday === 0) {
-      throw new Error(
-        "Zero-amount signups are not supported in this version. " +
-          "Remove the coupon or use a different plan."
-      );
-    }
-  } catch (error) {
-    // Re-throw our own zero-amount rejection.
-    if (
-      error instanceof Error &&
-      error.message.startsWith("Zero-amount signups")
-    ) {
-      throw error;
-    }
-    // Otherwise the preview is unreachable for this caller (typically
-    // fresh signup with no customer yet). Fall through to initialize.
-  }
-  const intent = await initializeCheckout(req.jwt, {
-    priceId,
-    refId: req.refId,
-    email: req.email,
-    firstName: req.firstName,
-    lastName: req.lastName,
-    walletAddress: req.walletAddress,
-    couponCode: req.couponCode,
-    paymentMode: "self_funded",
-  });
-  return {
-    kind: "payment_required",
-    paymentIntentId: intent.id,
-    amountCents: intent.amount,
-    destinationWallet: intent.destinationWallet,
-    memo: intent.id,
-    expiresAt: intent.expiresAt,
-    paymentUrl: buildPaymentUrl(intent.id, req.paymentHost),
-    solanaPayUrl: intent.solanaPayUrl,
-    planName: planNameFor(req.plan, period),
-  };
-}
 
 /**
  * Phase 1 unified signup. See `SignupResult` for the discriminated outcomes.
