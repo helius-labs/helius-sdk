@@ -452,10 +452,7 @@ export interface AuthClient {
    * subscription renews). Use {@link AuthClient.payRenewalAndPay} to
    * auto-pay from a local keypair.
    */
-  payRenewal(
-    jwt: string,
-    paymentIntentId: string
-  ): Promise<PayRenewalResult>;
+  payRenewal(jwt: string, paymentIntentId: string): Promise<PayRenewalResult>;
   payRenewalAndPay(
     secretKey: Uint8Array,
     jwt: string,
@@ -659,8 +656,10 @@ export interface UpgradePlanAndPayOptions extends UpgradePlanOptions {
   secretKey: Uint8Array;
 }
 
-export type UpgradePlanResult =
-  | { kind: "payment_required"; paymentLink: PaymentLink };
+export type UpgradePlanResult = {
+  kind: "payment_required";
+  paymentLink: PaymentLink;
+};
 
 export type UpgradePlanAndPayResult =
   | {
@@ -693,17 +692,22 @@ export interface PurchaseCreditsLinkOptions {
   paymentHost?: string;
 }
 
-export interface PurchaseCreditsAndPayOptions extends PurchaseCreditsLinkOptions {
+export interface PurchaseCreditsAndPayOptions
+  extends PurchaseCreditsLinkOptions {
   secretKey: Uint8Array;
 }
 
-export type PurchaseCreditsLinkResult =
-  | { kind: "payment_required"; paymentLink: PaymentLink };
+export type PurchaseCreditsLinkResult = {
+  kind: "payment_required";
+  paymentLink: PaymentLink;
+};
 
 /** Same shape as {@link UpgradePlanAndPayResult} — purchase has no project to short-circuit. */
 export type PurchaseCreditsAndPayResult = UpgradePlanAndPayResult;
 
-export type PayRenewalResult =
-  | { kind: "payment_required"; paymentLink: PaymentLink };
+export type PayRenewalResult = {
+  kind: "payment_required";
+  paymentLink: PaymentLink;
+};
 
 export type PayRenewalAndPayResult = UpgradePlanAndPayResult;

@@ -104,10 +104,7 @@ export const purchaseCreditsAndPay = async (
   while (Date.now() < deadline) {
     let status;
     try {
-      status = await getPaymentStatus(
-        options.jwt,
-        paymentLink.paymentIntentId
-      );
+      status = await getPaymentStatus(options.jwt, paymentLink.paymentIntentId);
     } catch (error) {
       if (error instanceof Error && error.message.includes("410")) {
         return {

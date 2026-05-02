@@ -6,10 +6,7 @@ import { getPaymentIntent, getPaymentStatus } from "./checkout";
 import { payPaymentLink } from "./payPaymentLink";
 import { buildPaymentUrl } from "./paymentUrl";
 import { sleep } from "./utils";
-import type {
-  PayRenewalAndPayResult,
-  PayRenewalResult,
-} from "./types";
+import type { PayRenewalAndPayResult, PayRenewalResult } from "./types";
 
 /**
  * Phase 2 — wrap an existing renewal payment intent as a {@link PaymentLink}.
