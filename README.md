@@ -7,6 +7,32 @@ The Helius TypeScript SDK provides access to Helius APIs and enhanced Solana RPC
 
 ### Agent Account Sign Up
 
+The SDK ships two signup helpers on `helius.auth`:
+
+- `signup(opts)` — authenticates the wallet, detects existing projects, and returns either `kind: "already_subscribed"`, `kind: "upgrade_required"`, or `kind: "payment_required"` with a hosted-checkout link the user opens in a browser.
+- `signupAndPay(opts)` — same as `signup`, plus auto-pays USDC + memo from the local keypair and polls activation. On poll timeout returns `kind: "pending"` with the `txSignature` so callers can resume later.
+
+```ts
+import { makeAuthClient } from "helius-sdk/auth/client";
+
+const auth = makeAuthClient();
+const { secretKey } = await auth.generateKeypair();
+
+const result = await auth.signup({
+  secretKey,
+  plan: "agent",
+  email: "you@example.com",
+  firstName: "Jane",
+  lastName: "Doe",
+});
+
+if (result.kind === "payment_required") {
+  console.log("Pay here:", result.paymentLink.paymentUrl);
+}
+```
+
+See [`examples/auth/signup.ts`](./examples/auth/signup.ts) and [`examples/auth/signupAndPay.ts`](./examples/auth/signupAndPay.ts) for full flows.
+
 > **For AI Agents:** You can create a Helius account and generate an API key programmatically using the helius-cli. See the [agent signup guide](https://www.helius.dev/docs/api-reference/helius-cli.md) or [helius-cli agent file](https://dashboard.helius.dev/agents.md) for complete details.
 
 ## Documentation

@@ -2,6 +2,17 @@ import type { Address } from "@solana/kit";
 
 export const API_URL = "https://dev-api.helius.xyz/v0";
 
+/**
+ * Host that serves the public hosted-checkout page used by `signup` /
+ * `signupAndPay`. The full URL is `${PAYMENT_HOST}/pay/<paymentIntentId>`.
+ *
+ * Override resolution order at call time:
+ *   1. explicit `paymentHost` arg passed to signup/signupAndPay
+ *   2. `process.env.HELIUS_PAYMENT_HOST` (browser/Deno-safe)
+ *   3. this constant
+ */
+export const PAYMENT_HOST = "https://dashboard.helius.dev";
+
 export const TREASURY =
   "CEs84tEowsXpH8u4VBf8rJSVgSRypFMfXw9CpGRtQgb6" as Address;
 

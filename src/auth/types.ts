@@ -113,7 +113,13 @@ export type CheckoutPhase =
   | "failed"
   | "expired";
 
-/** Internal — SDK always sets "sponsored" for new signups. "self_funded" kept for backend compat (upgrades, renewals). */
+/**
+ * Internal — Phase 1 SDK signup always sets `"self_funded"`. The
+ * `"sponsored"` variant is legacy: it's still understood by `executeCheckout`
+ * / `payPaymentIntent` (used by the deprecated `agenticSignup` path) and by
+ * the backend's `/checkout/build-sponsored-tx` route, both scheduled for
+ * removal in Phase 4.
+ */
 export type PaymentMode = "self_funded" | "sponsored";
 
 export interface CheckoutRequest {
@@ -427,4 +433,169 @@ export interface AuthClient {
     jwt: string,
     options: PurchaseCreditsOptions
   ): Promise<PurchaseCreditsResult>;
+  /**
+   * Phase 1 unified signup. Authenticates the wallet, detects existing
+   * projects, and either short-circuits (`already_subscribed`) or returns
+   * a hosted-checkout link (`payment_required`). Different-plan existing
+   * projects return `upgrade_required` (use `upgradePlan` in Phase 2).
+   *
+   * Zero-amount checkouts (e.g. 100% coupons) are rejected up front.
+   */
+  signup(options: SignupOptions): Promise<SignupResult>;
+  /**
+   * Same as `signup`, but when a payment is required, sends USDC + memo
+   * from the local keypair and polls activation until the project is
+   * provisioned. On poll timeout returns `kind: "pending"` with the
+   * `txSignature` so callers can resume later.
+   */
+  signupAndPay(options: SignupAndPayOptions): Promise<SignupAndPayResult>;
+  /**
+   * Send USDC + memo for a stored {@link PaymentLink}. Wraps {@link payWithMemo}
+   * with the cents → raw conversion (USDC has 6 decimals; cents × 10_000 →
+   * raw token units) and uses `paymentLink.paymentIntentId` as the memo.
+   * Used by the CLI `--pay` resume path; does not poll.
+   */
+  payPaymentLink(
+    secretKey: Uint8Array,
+    paymentLink: PaymentLink
+  ): Promise<{ txSignature: string }>;
 }
+
+// ── Phase 1 unified signup types ─────────────────────────────────────────
+
+/** Wallet-app endpoints handed back after a successful signup. */
+export interface Endpoints {
+  mainnet: string;
+  devnet: string;
+}
+
+export type SupportedPlan = "agent" | "developer" | "business" | "professional";
+
+/**
+ * Hosted-checkout link returned to the caller. The user clicks
+ * `paymentUrl` in a browser, OR an agent sends `amountCents` (× 10_000)
+ * USDC raw to `destinationWallet` with `memo` = `paymentIntentId`.
+ */
+export interface PaymentLink {
+  kind: "payment_required";
+  paymentIntentId: string;
+  amountCents: number;
+  destinationWallet: string;
+  /** Always equal to `paymentIntentId`. */
+  memo: string;
+  expiresAt: string;
+  /** e.g. `https://dashboard.helius.dev/pay/<paymentIntentId>` */
+  paymentUrl: string;
+  /** Raw `solana:` URI for wallet apps. */
+  solanaPayUrl: string;
+  /** Display name resolved from plan/period (e.g. `"Agent Plan"`). */
+  planName: string;
+}
+
+/** Default `signup()` shape — SDK signs the auth message itself. */
+export interface SecretKeySignupOptions {
+  secretKey: Uint8Array;
+  plan: SupportedPlan;
+  /** Ignored for `plan: "agent"`. Defaults to `"monthly"` for paid subscription plans. */
+  period?: "monthly" | "yearly";
+  email?: string;
+  firstName?: string;
+  lastName?: string;
+  couponCode?: string;
+  /** Override the hosted-page host. See {@link resolvePaymentHost}. */
+  paymentHost?: string;
+}
+
+/**
+ * Advanced `signup()` shape — caller already invoked `walletSignup` and
+ * carries the resulting JWT, refId, and wallet address. Skips the internal
+ * re-authentication round trip.
+ */
+export interface PreauthenticatedSignupOptions {
+  jwt: string;
+  refId: string;
+  walletAddress: string;
+  plan: SupportedPlan;
+  period?: "monthly" | "yearly";
+  email?: string;
+  firstName?: string;
+  lastName?: string;
+  couponCode?: string;
+  paymentHost?: string;
+}
+
+export type SignupOptions =
+  | SecretKeySignupOptions
+  | PreauthenticatedSignupOptions;
+
+/**
+ * `signupAndPay()` always needs the keypair to sign the USDC transfer, so
+ * even the preauthenticated shape must carry `secretKey`.
+ */
+export type SignupAndPayOptions =
+  | SecretKeySignupOptions
+  | (PreauthenticatedSignupOptions & { secretKey: Uint8Array });
+
+export type SignupResult =
+  | {
+      kind: "payment_required";
+      jwt: string;
+      refId: string;
+      walletAddress: string;
+      paymentLink: PaymentLink;
+    }
+  | {
+      kind: "already_subscribed";
+      jwt: string;
+      refId: string;
+      walletAddress: string;
+      projectId: string;
+      apiKey: string;
+      endpoints: Endpoints;
+    }
+  | {
+      kind: "upgrade_required";
+      jwt: string;
+      refId: string;
+      walletAddress: string;
+      currentPlan: string;
+      requestedPlan: string;
+    };
+
+export type SignupAndPayResult =
+  | Extract<SignupResult, { kind: "already_subscribed" }>
+  | Extract<SignupResult, { kind: "upgrade_required" }>
+  | {
+      kind: "completed";
+      jwt: string;
+      refId: string;
+      walletAddress: string;
+      projectId: string;
+      apiKey: string;
+      endpoints: Endpoints;
+      txSignature?: string;
+      paymentIntentId?: string;
+    }
+  | {
+      kind: "pending";
+      jwt: string;
+      refId: string;
+      walletAddress: string;
+      paymentLink: PaymentLink;
+      txSignature?: string;
+    }
+  | {
+      kind: "expired";
+      jwt: string;
+      refId: string;
+      walletAddress: string;
+      paymentIntentId: string;
+    }
+  | {
+      kind: "failed";
+      jwt: string;
+      refId: string;
+      walletAddress: string;
+      paymentIntentId: string;
+      reason?: string;
+    };
