@@ -1,19 +1,22 @@
-import { purchaseCredits } from "../purchaseCredits";
+jest.mock("../listProjects", () => ({ listProjects: jest.fn() }));
+jest.mock("../getProject", () => ({ getProject: jest.fn() }));
+jest.mock("../checkout", () => ({
+  resolvePriceId: jest.fn(),
+  initializeCheckout: jest.fn(),
+  getCheckoutPreview: jest.fn(),
+  getPaymentStatus: jest.fn(),
+}));
+jest.mock("../payPaymentLink", () => ({
+  payPaymentLink: jest
+    .fn()
+    .mockResolvedValue({ txSignature: "tx-sig-credits" }),
+}));
+
+import { purchaseCredits, purchaseCreditsAndPay } from "../purchaseCredits";
 import { listProjects } from "../listProjects";
 import { getProject } from "../getProject";
-import {
-  initializeCheckout,
-  payPaymentIntent,
-  pollCheckoutCompletion,
-} from "../checkout";
-import { loadKeypair } from "../loadKeypair";
-import { getAddress } from "../getAddress";
-
-jest.mock("../listProjects");
-jest.mock("../getProject");
-jest.mock("../checkout");
-jest.mock("../loadKeypair");
-jest.mock("../getAddress");
+import { initializeCheckout, getPaymentStatus } from "../checkout";
+import { payPaymentLink } from "../payPaymentLink";
 
 const mockListProjects = listProjects as jest.MockedFunction<
   typeof listProjects
@@ -22,220 +25,151 @@ const mockGetProject = getProject as jest.MockedFunction<typeof getProject>;
 const mockInitializeCheckout = initializeCheckout as jest.MockedFunction<
   typeof initializeCheckout
 >;
-const mockPayPaymentIntent = payPaymentIntent as jest.MockedFunction<
-  typeof payPaymentIntent
+const mockGetPaymentStatus = getPaymentStatus as jest.MockedFunction<
+  typeof getPaymentStatus
 >;
-const mockPollCheckoutCompletion =
-  pollCheckoutCompletion as jest.MockedFunction<typeof pollCheckoutCompletion>;
-const mockLoadKeypair = loadKeypair as jest.MockedFunction<typeof loadKeypair>;
-const mockGetAddress = getAddress as jest.MockedFunction<typeof getAddress>;
+const mockPayPaymentLink = payPaymentLink as jest.MockedFunction<
+  typeof payPaymentLink
+>;
 
-const AGENT_PROJECT = {
-  id: "proj-agent",
-  name: "Agent Project",
-  createdAt: "2025-01-01",
+const project = (plan = "agent_v4") => ({
+  id: "proj-1",
+  name: "p",
+  createdAt: "",
   verifiedEmail: null,
-  subscription: { plan: "agent_v4" },
+  subscription: {
+    id: "sub-1",
+    plan,
+    billingPeriodStart: "",
+    billingPeriodEnd: "",
+    cryptoSub: true,
+    paymentServiceProvider: "stripe",
+  },
   users: [],
   dnsRecords: [],
-} as never;
+});
 
-const DEVELOPER_PROJECT = {
-  id: "proj-dev",
-  name: "Dev Project",
-  createdAt: "2025-01-01",
-  verifiedEmail: null,
-  subscription: { plan: "developer_v4" },
-  users: [],
-  dnsRecords: [],
-} as never;
-
-const AGENT_PROJECT_DETAILS = {
-  apiKeys: [],
+const projectDetailsAgent = {
+  apiKeys: [] as never[],
   creditsUsage: {} as never,
-  billingCycle: {} as never,
+  billingCycle: { start: "", end: "" },
   subscriptionPlanDetails: {} as never,
   prepaidCreditsLink: "",
-  prepaidCreditsPriceId: "price_prepaid_10",
-} as never;
+  prepaidCreditsPriceId: "price_credits_10_usdc",
+};
 
-const INIT_RESPONSE = {
-  id: "pi_topup",
-  status: "pending",
-  destinationWallet: "Treasury111",
-  amount: 1000, // 10 USDC in cents
-  solanaPayUrl: "solana:...",
-  expiresAt: "2026-01-01T00:00:00Z",
-  createdAt: "2025-12-01T00:00:00Z",
-  priceId: "price_prepaid_10",
-  refId: "proj-agent",
-} as never;
+const intent = {
+  id: "pi_credits",
+  status: "pending" as const,
+  amount: 1000,
+  destinationWallet: "Treasury",
+  solanaPayUrl: "solana:Treasury?amount=10",
+  expiresAt: "2027-01-01T00:00:00Z",
+  createdAt: "2026-01-01T00:00:00Z",
+  priceId: "price_credits_10_usdc",
+  refId: "proj-1",
+};
 
-const POLL_COMPLETED = {
-  status: "completed",
-  phase: "complete",
-  subscriptionActive: true,
-  readyToRedirect: true,
-  message: "ok",
-} as never;
+describe("purchaseCredits — link mode", () => {
+  beforeEach(() => jest.clearAllMocks());
 
-describe("purchaseCredits", () => {
-  const secretKey = new Uint8Array(64);
+  it("returns a PaymentLink for an agent-plan project", async () => {
+    mockListProjects.mockResolvedValue([project()]);
+    mockGetProject.mockResolvedValue(projectDetailsAgent);
+    mockInitializeCheckout.mockResolvedValue(intent);
 
-  beforeEach(() => {
-    jest.resetAllMocks();
-    mockLoadKeypair.mockReturnValue({
-      publicKey: new Uint8Array(32),
-      secretKey,
-    });
-    mockGetAddress.mockResolvedValue("WalletAgent111");
-    mockListProjects.mockResolvedValue([AGENT_PROJECT]);
-    mockGetProject.mockResolvedValue(AGENT_PROJECT_DETAILS);
-    mockInitializeCheckout.mockResolvedValue(INIT_RESPONSE);
-    mockPayPaymentIntent.mockResolvedValue("tx-topup-sig");
-    mockPollCheckoutCompletion.mockResolvedValue(POLL_COMPLETED);
-  });
-
-  it("completes happy path for agent project, sourcing priceId from getProject", async () => {
-    const result = await purchaseCredits(secretKey, "jwt", {
-      projectId: "proj-agent",
+    const result = await purchaseCredits({
+      jwt: "jwt-1",
+      projectId: "proj-1",
+      qty: 2,
     });
 
-    expect(result.status).toBe("completed");
-    expect(result.txSignature).toBe("tx-topup-sig");
-    expect(result.paymentIntentId).toBe("pi_topup");
-    expect(result.amountCents).toBe(1000);
-
-    // priceId comes from getProject(...).prepaidCreditsPriceId
-    expect(mockGetProject).toHaveBeenCalledWith("jwt", "proj-agent", undefined);
+    expect(result.kind).toBe("payment_required");
+    expect(result.paymentLink.paymentIntentId).toBe("pi_credits");
     expect(mockInitializeCheckout).toHaveBeenCalledWith(
-      "jwt",
+      "jwt-1",
       expect.objectContaining({
-        priceId: "price_prepaid_10",
-        refId: "proj-agent",
-        qty: 1,
-        paymentMode: "sponsored",
-        signupWalletAddress: "WalletAgent111",
-        walletAddress: "WalletAgent111",
-      }),
-      undefined
-    );
-
-    // Sponsored payment flow receives jwt (enables sponsored-first attempt)
-    expect(mockPayPaymentIntent).toHaveBeenCalledWith(
-      secretKey,
-      INIT_RESPONSE,
-      "jwt",
-      undefined
+        priceId: "price_credits_10_usdc",
+        refId: "proj-1",
+        qty: 2,
+        paymentMode: "self_funded",
+      })
     );
   });
 
-  it("rejects non-agent projects in pre-flight before /checkout/initialize", async () => {
-    mockListProjects.mockResolvedValue([DEVELOPER_PROJECT]);
-
+  it("rejects qty < 1", async () => {
     await expect(
-      purchaseCredits(secretKey, "jwt", { projectId: "proj-dev" })
-    ).rejects.toThrow(/only supported for agent-plan projects/);
-
-    expect(mockGetProject).not.toHaveBeenCalled();
-    expect(mockInitializeCheckout).not.toHaveBeenCalled();
-    expect(mockPayPaymentIntent).not.toHaveBeenCalled();
+      purchaseCredits({ jwt: "jwt-1", projectId: "proj-1", qty: 0 })
+    ).rejects.toThrow(/positive integer/);
   });
 
-  it("rejects when project is not found for this user", async () => {
-    mockListProjects.mockResolvedValue([AGENT_PROJECT]);
-
+  it("rejects projects not on agent plan", async () => {
+    mockListProjects.mockResolvedValue([project("developer_v4")]);
     await expect(
-      purchaseCredits(secretKey, "jwt", { projectId: "proj-other" })
-    ).rejects.toThrow(/not found for this authenticated user/);
+      purchaseCredits({ jwt: "jwt-1", projectId: "proj-1" })
+    ).rejects.toThrow(/agent-plan/);
   });
 
-  it.each([0, -1, 1.5, NaN])(
-    "rejects non-positive-integer qty (%s) before any network calls",
-    async (badQty) => {
-      await expect(
-        purchaseCredits(secretKey, "jwt", {
-          projectId: "proj-agent",
-          qty: badQty,
-        })
-      ).rejects.toThrow(/`qty` must be a positive integer/);
-
-      expect(mockListProjects).not.toHaveBeenCalled();
-      expect(mockGetProject).not.toHaveBeenCalled();
-      expect(mockInitializeCheckout).not.toHaveBeenCalled();
-    }
-  );
-
-  it("forwards qty > 1 to initializeCheckout", async () => {
-    await purchaseCredits(secretKey, "jwt", {
-      projectId: "proj-agent",
-      qty: 3,
-    });
-
-    expect(mockInitializeCheckout).toHaveBeenCalledWith(
-      "jwt",
-      expect.objectContaining({ qty: 3 }),
-      undefined
-    );
-  });
-
-  it("throws when project has no prepaidCreditsPriceId", async () => {
+  it("errors clearly when prepaidCreditsPriceId is missing", async () => {
+    mockListProjects.mockResolvedValue([project()]);
     mockGetProject.mockResolvedValue({
       apiKeys: [],
       creditsUsage: {} as never,
-      billingCycle: {} as never,
+      billingCycle: { start: "", end: "" },
       subscriptionPlanDetails: {} as never,
       prepaidCreditsLink: "",
-      // prepaidCreditsPriceId intentionally omitted
-    } as never);
-
+    });
     await expect(
-      purchaseCredits(secretKey, "jwt", { projectId: "proj-agent" })
-    ).rejects.toThrow(/does not expose a prepaid-credits priceId/);
+      purchaseCredits({ jwt: "jwt-1", projectId: "proj-1" })
+    ).rejects.toThrow(/prepaid-credits priceId/);
   });
+});
 
-  it("returns failed status when payPaymentIntent throws", async () => {
-    mockPayPaymentIntent.mockRejectedValue(new Error("boom"));
+describe("purchaseCreditsAndPay", () => {
+  beforeEach(() => jest.clearAllMocks());
 
-    const result = await purchaseCredits(secretKey, "jwt", {
-      projectId: "proj-agent",
+  it("pays + polls + returns completed", async () => {
+    mockListProjects.mockResolvedValue([project()]);
+    mockGetProject.mockResolvedValue(projectDetailsAgent);
+    mockInitializeCheckout.mockResolvedValue(intent);
+    mockGetPaymentStatus.mockResolvedValue({
+      status: "completed",
+      phase: "complete",
+      subscriptionActive: true,
+      readyToRedirect: true,
+      message: "ok",
     });
 
-    expect(result.status).toBe("failed");
-    expect(result.txSignature).toBeNull();
-    expect(result.error).toBe("boom");
+    const result = await purchaseCreditsAndPay({
+      secretKey: new Uint8Array(64),
+      jwt: "jwt-1",
+      projectId: "proj-1",
+    });
+
+    expect(result.kind).toBe("completed");
+    if (result.kind !== "completed") throw new Error();
+    expect(result.txSignature).toBe("tx-sig-credits");
+    expect(mockPayPaymentLink).toHaveBeenCalledTimes(1);
   });
 
-  it("returns expired status when polling reports expired phase", async () => {
-    mockPollCheckoutCompletion.mockResolvedValue({
-      status: "expired",
-      phase: "expired",
+  it("returns failed when status reports failed", async () => {
+    mockListProjects.mockResolvedValue([project()]);
+    mockGetProject.mockResolvedValue(projectDetailsAgent);
+    mockInitializeCheckout.mockResolvedValue(intent);
+    mockGetPaymentStatus.mockResolvedValue({
+      status: "failed",
+      phase: "failed",
       subscriptionActive: false,
       readyToRedirect: false,
-      message: "Payment intent expired",
-    } as never);
-
-    const result = await purchaseCredits(secretKey, "jwt", {
-      projectId: "proj-agent",
+      message: "boom",
     });
 
-    expect(result.status).toBe("expired");
-    expect(result.txSignature).toBe("tx-topup-sig");
-  });
-
-  it("returns timeout status when polling does not reach readyToRedirect", async () => {
-    mockPollCheckoutCompletion.mockResolvedValue({
-      status: "pending",
-      phase: "confirming",
-      subscriptionActive: false,
-      readyToRedirect: false,
-      message: "Still waiting",
-    } as never);
-
-    const result = await purchaseCredits(secretKey, "jwt", {
-      projectId: "proj-agent",
+    const result = await purchaseCreditsAndPay({
+      secretKey: new Uint8Array(64),
+      jwt: "jwt-1",
+      projectId: "proj-1",
     });
 
-    expect(result.status).toBe("timeout");
+    expect(result.kind).toBe("failed");
   });
 });

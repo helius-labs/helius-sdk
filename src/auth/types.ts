@@ -424,15 +424,50 @@ export interface AuthClient {
     paymentIntentId: string
   ): Promise<CheckoutResult>;
   /**
-   * Buy additional prepaid credits for an agent-plan project. Agent-only
-   * in this release: pre-flight rejects non-agent projects before
-   * calling `/checkout/initialize` (see `src/auth/purchaseCredits.ts`).
+   * Phase 2 — buy additional prepaid credits for an agent-plan project.
+   * Agent-only in this release: pre-flight rejects non-agent projects.
+   * Returns a hosted-checkout `PaymentLink`; for autopay use
+   * {@link AuthClient.purchaseCreditsAndPay}.
    */
   purchaseCredits(
+    options: PurchaseCreditsLinkOptions
+  ): Promise<PurchaseCreditsLinkResult>;
+  /** Same as {@link AuthClient.purchaseCredits}, plus auto-pay + activation polling. */
+  purchaseCreditsAndPay(
+    options: PurchaseCreditsAndPayOptions
+  ): Promise<PurchaseCreditsAndPayResult>;
+  /**
+   * Phase 2 — upgrade an existing project to a new plan. Returns a
+   * hosted-checkout `PaymentLink`; for autopay use
+   * {@link AuthClient.upgradePlanAndPay}.
+   */
+  upgradePlan(options: UpgradePlanOptions): Promise<UpgradePlanResult>;
+  /** Same as {@link AuthClient.upgradePlan}, plus auto-pay + activation polling. */
+  upgradePlanAndPay(
+    options: UpgradePlanAndPayOptions
+  ): Promise<UpgradePlanAndPayResult>;
+  /**
+   * Phase 2 — wrap an existing renewal payment intent as a `PaymentLink`.
+   * The intent must already exist (created by the billing handler when a
+   * subscription renews). Use {@link AuthClient.payRenewalAndPay} to
+   * auto-pay from a local keypair.
+   */
+  payRenewal(
+    jwt: string,
+    paymentIntentId: string
+  ): Promise<PayRenewalResult>;
+  payRenewalAndPay(
     secretKey: Uint8Array,
     jwt: string,
-    options: PurchaseCreditsOptions
-  ): Promise<PurchaseCreditsResult>;
+    paymentIntentId: string
+  ): Promise<PayRenewalAndPayResult>;
+  /**
+   * Phase 2 — shared primitive that drives every paid flow. Exposed for
+   * advanced callers; signup / upgrade / credits / renewal-link wrap it.
+   */
+  createPayment(
+    request: import("./createPayment").CreatePaymentRequest
+  ): Promise<PaymentLink>;
   /**
    * Phase 1 unified signup. Authenticates the wallet, detects existing
    * projects, and either short-circuits (`already_subscribed`) or returns
@@ -599,3 +634,76 @@ export type SignupAndPayResult =
       paymentIntentId: string;
       reason?: string;
     };
+
+// ── Phase 2 — upgrade / credits / renewal-link types ──────────────────────
+
+export interface UpgradePlanOptions {
+  jwt: string;
+  /** Project UUID being upgraded. */
+  projectId: string;
+  plan: SupportedPlan;
+  period?: "monthly" | "yearly";
+  couponCode?: string;
+  /**
+   * Contact info — optional for upgrades; the backend auto-fetches from the
+   * project's existing Stripe customer. Pass them only on the first upgrade
+   * for a wallet that doesn't yet have a Stripe customer record.
+   */
+  email?: string;
+  firstName?: string;
+  lastName?: string;
+  paymentHost?: string;
+}
+
+export interface UpgradePlanAndPayOptions extends UpgradePlanOptions {
+  secretKey: Uint8Array;
+}
+
+export type UpgradePlanResult =
+  | { kind: "payment_required"; paymentLink: PaymentLink };
+
+export type UpgradePlanAndPayResult =
+  | {
+      kind: "completed";
+      txSignature?: string;
+      paymentIntentId: string;
+    }
+  | {
+      kind: "pending";
+      paymentLink: PaymentLink;
+      txSignature?: string;
+    }
+  | {
+      kind: "expired";
+      paymentIntentId: string;
+    }
+  | {
+      kind: "failed";
+      paymentIntentId: string;
+      reason?: string;
+    };
+
+export interface PurchaseCreditsLinkOptions {
+  jwt: string;
+  /** Project UUID receiving the credits. Must be on `agent_v4` in this release. */
+  projectId: string;
+  /** Quantity multiplier. Each unit = 1,000,000 credits. Defaults to 1. */
+  qty?: number;
+  couponCode?: string;
+  paymentHost?: string;
+}
+
+export interface PurchaseCreditsAndPayOptions extends PurchaseCreditsLinkOptions {
+  secretKey: Uint8Array;
+}
+
+export type PurchaseCreditsLinkResult =
+  | { kind: "payment_required"; paymentLink: PaymentLink };
+
+/** Same shape as {@link UpgradePlanAndPayResult} — purchase has no project to short-circuit. */
+export type PurchaseCreditsAndPayResult = UpgradePlanAndPayResult;
+
+export type PayRenewalResult =
+  | { kind: "payment_required"; paymentLink: PaymentLink };
+
+export type PayRenewalAndPayResult = UpgradePlanAndPayResult;

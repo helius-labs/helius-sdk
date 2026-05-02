@@ -23,10 +23,13 @@ import {
 } from "./checkout";
 import { getSignupQuote, initializeSignupFunding } from "./signupFunding";
 import { agenticSignup } from "./agenticSignup";
-import { purchaseCredits } from "./purchaseCredits";
+import { purchaseCredits, purchaseCreditsAndPay } from "./purchaseCredits";
+import { upgradePlan, upgradePlanAndPay } from "./upgradePlan";
+import { payRenewal, payRenewalAndPay } from "./payRenewal";
 import { signup } from "./signup";
 import { signupAndPay } from "./signupAndPay";
 import { payPaymentLink } from "./payPaymentLink";
+import { createPayment } from "./createPayment";
 
 export function makeAuthClient(userAgent?: string): AuthClient {
   return {
@@ -78,8 +81,13 @@ export function makeAuthClient(userAgent?: string): AuthClient {
         customerInfo
       ),
     executeRenewal: (sk, jwt, id) => executeRenewal(sk, jwt, id, userAgent),
-    purchaseCredits: (sk, jwt, options) =>
-      purchaseCredits(sk, jwt, options, userAgent),
+    purchaseCredits,
+    purchaseCreditsAndPay,
+    upgradePlan,
+    upgradePlanAndPay,
+    payRenewal,
+    payRenewalAndPay,
+    createPayment,
     signup,
     signupAndPay,
     payPaymentLink,

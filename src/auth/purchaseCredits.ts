@@ -1,129 +1,144 @@
-import type { PurchaseCreditsOptions, PurchaseCreditsResult } from "./types";
-import { getAddress } from "./getAddress";
-import { loadKeypair } from "./loadKeypair";
+import {
+  CHECKOUT_POLL_INTERVAL_MS,
+  CHECKOUT_POLL_TIMEOUT_MS,
+} from "./constants";
+import { createPayment } from "./createPayment";
+import { getPaymentStatus } from "./checkout";
+import { payPaymentLink } from "./payPaymentLink";
 import { listProjects } from "./listProjects";
 import { getProject } from "./getProject";
-import {
-  initializeCheckout,
-  pollCheckoutCompletion,
-  payPaymentIntent,
-} from "./checkout";
+import { sleep } from "./utils";
+import type {
+  PurchaseCreditsAndPayOptions,
+  PurchaseCreditsAndPayResult,
+  PurchaseCreditsLinkOptions,
+  PurchaseCreditsLinkResult,
+} from "./types";
 
 const AGENT_PLAN_ID = "agent_v4";
 
 /**
- * Buy additional prepaid credits for an agent-plan project.
- *
- * Agent-only in this release: the SDK pre-flights the target project's
- * plan before calling `/checkout/initialize`, because `payPaymentIntent`
- * re-throws 4xx sponsor failures (see `payPaymentIntent.ts:22-38`) and
- * a non-agent sponsored top-up would be rejected by the backend with a
- * 400 — the pre-flight surfaces a clean client-side error instead of
- * a raw backend rejection.
- *
- * Each unit of `qty` grants 1,000,000 credits (backend constant
- * `PREPAID_CREDITS_PER_UNIT_QTY`).
+ * Resolves the prepaid-credits priceId from the project's own details and
+ * pre-flights the agent-plan constraint. Backend exposes `prepaidCreditsPriceId`
+ * derived from `planSpecifications.overageCost`, so the SKU automatically
+ * tracks each plan's credits SKU (today only `agent_v4` → `prepaid_credits_10_USDC`).
  */
-export async function purchaseCredits(
-  secretKey: Uint8Array,
+const resolvePrepaidCreditsPriceId = async (
   jwt: string,
-  options: PurchaseCreditsOptions,
-  userAgent?: string
-): Promise<PurchaseCreditsResult> {
-  const qty = options.qty ?? 1;
-  if (!Number.isInteger(qty) || qty < 1) {
-    throw new Error(
-      `purchaseCredits: \`qty\` must be a positive integer, received ${qty}.`
-    );
-  }
-
-  // 1. Pre-flight: confirm the project is on agent_v4.
-  const projects = await listProjects(jwt, userAgent);
-  const project = projects.find((p) => p.id === options.projectId);
+  projectId: string
+): Promise<string> => {
+  const projects = await listProjects(jwt);
+  const project = projects.find((p) => p.id === projectId);
   if (!project) {
     throw new Error(
-      `Project ${options.projectId} not found for this authenticated user.`
+      `Project ${projectId} not found for this authenticated user.`
     );
   }
   const currentPlan = project.subscription?.plan;
   if (currentPlan !== AGENT_PLAN_ID) {
     throw new Error(
       `purchaseCredits is only supported for agent-plan projects in this ` +
-        `SDK version; project ${options.projectId} is on "${currentPlan ?? "unknown"}". ` +
+        `SDK version; project ${projectId} is on "${currentPlan ?? "unknown"}". ` +
         `Other plans must top up via the dashboard.`
     );
   }
-
-  // 2. Resolve the top-up priceId from the project's own details.
-  // The backend derives this from planSpecifications.overageCost so it
-  // tracks each plan's prepaid-credits SKU automatically (agent_v4 →
-  // prepaid_credits_10_USDC). `tier` is unused in this SDK version.
-  const projectDetails = await getProject(jwt, options.projectId, userAgent);
-  const priceId = projectDetails.prepaidCreditsPriceId;
+  const details = await getProject(jwt, projectId);
+  const priceId = details.prepaidCreditsPriceId;
   if (!priceId) {
     throw new Error(
-      `Project ${options.projectId} does not expose a prepaid-credits priceId. ` +
+      `Project ${projectId} does not expose a prepaid-credits priceId. ` +
         `The backend may not have provisioned it yet — try again shortly, or ` +
         `top up via the dashboard.`
     );
   }
+  return priceId;
+};
 
-  // 3. Initialize a sponsored checkout for the top-up.
-  const keypair = loadKeypair(secretKey);
-  const payerWallet = await getAddress(keypair);
-  const intent = await initializeCheckout(
-    jwt,
-    {
-      priceId,
-      refId: options.projectId,
-      qty,
-      paymentMode: "sponsored",
-      signupWalletAddress: payerWallet,
-      walletAddress: payerWallet,
-      couponCode: options.couponCode,
-    },
-    userAgent
+/**
+ * Phase 2 — buy additional prepaid credits for an agent-plan project.
+ *
+ * Returns a hosted-checkout link only. To auto-pay from a local keypair,
+ * use {@link purchaseCreditsAndPay}.
+ *
+ * Each unit of `qty` grants 1,000,000 credits (backend constant
+ * `PREPAID_CREDITS_PER_UNIT_QTY`).
+ */
+export const purchaseCredits = async (
+  options: PurchaseCreditsLinkOptions
+): Promise<PurchaseCreditsLinkResult> => {
+  const qty = options.qty ?? 1;
+  if (!Number.isInteger(qty) || qty < 1) {
+    throw new Error(
+      `purchaseCredits: \`qty\` must be a positive integer, received ${qty}.`
+    );
+  }
+  const priceId = await resolvePrepaidCreditsPriceId(
+    options.jwt,
+    options.projectId
   );
+  const paymentLink = await createPayment({
+    jwt: options.jwt,
+    refId: options.projectId,
+    priceId,
+    qty,
+    couponCode: options.couponCode,
+    paymentHost: options.paymentHost,
+    planNameOverride: `Prepaid credits (${qty} × 1M)`,
+  });
+  return { kind: "payment_required", paymentLink };
+};
 
-  // 4. Pay — sponsored-first with infrastructure-only fallback.
-  let txSignature: string | null = null;
-  try {
-    txSignature =
-      (await payPaymentIntent(secretKey, intent, jwt, userAgent)) || null;
-  } catch (error) {
-    return {
-      paymentIntentId: intent.id,
-      txSignature: null,
-      status: "failed",
-      amountCents: intent.amount,
-      error: error instanceof Error ? error.message : String(error),
-    };
+/**
+ * `purchaseCredits` + auto-pay USDC + memo from the local keypair, then
+ * poll authenticated status until activation. On poll timeout returns
+ * `kind: "pending"` with `paymentLink` + `txSignature` for `--resume`.
+ */
+export const purchaseCreditsAndPay = async (
+  options: PurchaseCreditsAndPayOptions
+): Promise<PurchaseCreditsAndPayResult> => {
+  const result = await purchaseCredits(options);
+  const { paymentLink } = result;
+  const { txSignature } = await payPaymentLink(options.secretKey, paymentLink);
+
+  const deadline = Date.now() + CHECKOUT_POLL_TIMEOUT_MS;
+  while (Date.now() < deadline) {
+    let status;
+    try {
+      status = await getPaymentStatus(
+        options.jwt,
+        paymentLink.paymentIntentId
+      );
+    } catch (error) {
+      if (error instanceof Error && error.message.includes("410")) {
+        return {
+          kind: "expired",
+          paymentIntentId: paymentLink.paymentIntentId,
+        };
+      }
+      throw error;
+    }
+    if (status.readyToRedirect) {
+      return {
+        kind: "completed",
+        txSignature,
+        paymentIntentId: paymentLink.paymentIntentId,
+      };
+    }
+    if (status.phase === "expired") {
+      return {
+        kind: "expired",
+        paymentIntentId: paymentLink.paymentIntentId,
+      };
+    }
+    if (status.phase === "failed") {
+      return {
+        kind: "failed",
+        paymentIntentId: paymentLink.paymentIntentId,
+        reason: status.message,
+      };
+    }
+    await sleep(CHECKOUT_POLL_INTERVAL_MS);
   }
 
-  // 5. Poll for backend confirmation.
-  const status = await pollCheckoutCompletion(jwt, intent.id, userAgent);
-
-  if (status.phase === "failed" || status.phase === "expired") {
-    return {
-      paymentIntentId: intent.id,
-      txSignature,
-      status: status.phase,
-      amountCents: intent.amount,
-      error: status.message,
-    };
-  }
-  if (!status.readyToRedirect) {
-    return {
-      paymentIntentId: intent.id,
-      txSignature,
-      status: "timeout",
-      amountCents: intent.amount,
-    };
-  }
-  return {
-    paymentIntentId: intent.id,
-    txSignature,
-    status: "completed",
-    amountCents: intent.amount,
-  };
-}
+  return { kind: "pending", paymentLink, txSignature };
+};

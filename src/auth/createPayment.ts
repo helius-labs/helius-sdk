@@ -7,74 +7,94 @@ import { buildPaymentUrl } from "./paymentUrl";
 import type { PaymentLink, SupportedPlan } from "./types";
 
 const planNameFor = (
-  plan: SupportedPlan,
-  period: "monthly" | "yearly" | undefined
+  plan: SupportedPlan | undefined,
+  period: "monthly" | "yearly" | undefined,
+  fallbackName?: string
 ): string => {
+  if (!plan) return fallbackName ?? "Helius";
   if (plan === "agent") return "Agent Plan";
   const cap = plan.charAt(0).toUpperCase() + plan.slice(1);
   return `${cap} (${period === "yearly" ? "Yearly" : "Monthly"})`;
 };
 
-interface CreatePaymentRequest {
+/**
+ * Shared primitive for every paid flow (signup, upgrade, credits, renewal-link).
+ *
+ * Two ways to specify pricing:
+ *  - `plan` + optional `period` — SDK resolves the priceId via
+ *    `/dev-portal/configs` (`stripe.priceIds`).
+ *  - `priceId` — caller supplies a Stripe price ID directly. Used by
+ *    `purchaseCredits` (the SKU lives on the project's `prepaidCreditsPriceId`
+ *    field) and by other flows where the plan/period helpers don't apply.
+ *
+ * The zero-amount check via `getCheckoutPreview` is best-effort. Preview needs
+ * an existing Stripe customer for one-time invoices (Agent Plan, prepaid
+ * credits) — fresh signups don't have one yet, and the backend throws
+ * "Customer ID is required for one time preview". That case is swallowed and
+ * the request falls through to `/checkout/initialize`, which surfaces its
+ * own error if the final amount truly is zero. The check still catches
+ * 100%-coupon paths on flows where a customer exists (upgrades, re-checkouts).
+ */
+export interface CreatePaymentRequest {
   jwt: string;
   refId: string;
-  plan: SupportedPlan;
+  /** Provide either `priceId` OR `plan` (+ optional `period`). */
+  priceId?: string;
+  plan?: SupportedPlan;
   period?: "monthly" | "yearly";
+  /** Quantity multiplier for one-time SKUs (e.g. prepaid credits). Defaults to 1. */
+  qty?: number;
   email?: string;
   firstName?: string;
   lastName?: string;
   couponCode?: string;
-  walletAddress: string;
+  walletAddress?: string;
   paymentHost?: string;
+  /** Override the display label used for `paymentLink.planName`. */
+  planNameOverride?: string;
 }
 
-/**
- * Resolves priceId, runs `getCheckoutPreview` to detect zero-amount
- * checkouts (rejected in Phase 1), then creates a `payment_required`
- * `PaymentLink` via `/checkout/initialize` in self-funded mode.
- *
- * Best-effort zero-amount rejection: the preview endpoint requires an
- * existing Stripe customer for one-time invoices (Agent Plan), which a
- * fresh signup does not have — backend throws "Customer ID is required
- * for one time preview". That case is swallowed and we fall through to
- * `/checkout/initialize`, which will create the customer + intent and
- * surface its own error if the final amount really is zero. The check
- * still catches 100%-coupon paths on flows where a customer exists
- * (upgrades, re-checkouts).
- *
- * Phase 1 caveat: not exported from the package's public entry — used
- * only by `signup` internally. Phase 2 promotes it as the shared
- * primitive for upgrade / credits / renewal flows.
- */
 export const createPayment = async (
   req: CreatePaymentRequest
 ): Promise<PaymentLink> => {
-  const period = req.period ?? "monthly";
-  const priceId = await resolvePriceId(req.jwt, req.plan, period);
-  try {
-    const preview = await getCheckoutPreview(
-      req.jwt,
-      req.plan,
-      period,
-      req.refId,
-      req.couponCode
-    );
-    if (preview.dueToday === 0) {
-      throw new Error(
-        "Zero-amount signups are not supported in this version. " +
-          "Remove the coupon or use a different plan."
-      );
-    }
-  } catch (error) {
-    if (
-      error instanceof Error &&
-      error.message.startsWith("Zero-amount signups")
-    ) {
-      throw error;
-    }
-    // Preview unreachable for this caller (typically fresh signup with
-    // no customer yet). Fall through to initialize.
+  if (!req.priceId && !req.plan) {
+    throw new Error("createPayment: must provide either `priceId` or `plan`.");
   }
+
+  const period = req.period ?? "monthly";
+  const priceId =
+    req.priceId ?? (await resolvePriceId(req.jwt, req.plan!, period));
+
+  // Best-effort zero-amount rejection. Skip when caller provided a raw priceId
+  // without a plan — getCheckoutPreview is plan-keyed and won't accept a bare
+  // priceId here.
+  if (req.plan) {
+    try {
+      const preview = await getCheckoutPreview(
+        req.jwt,
+        req.plan,
+        period,
+        req.refId,
+        req.couponCode
+      );
+      if (preview.dueToday === 0) {
+        throw new Error(
+          "Zero-amount signups are not supported in this version. " +
+            "Remove the coupon or use a different plan."
+        );
+      }
+    } catch (error) {
+      if (
+        error instanceof Error &&
+        error.message.startsWith("Zero-amount signups")
+      ) {
+        throw error;
+      }
+      // Preview unreachable for this caller (typically fresh signup with
+      // no customer yet). Fall through to initialize.
+    }
+  }
+
   const intent = await initializeCheckout(req.jwt, {
     priceId,
     refId: req.refId,
@@ -83,6 +103,7 @@ export const createPayment = async (
     lastName: req.lastName,
     walletAddress: req.walletAddress,
     couponCode: req.couponCode,
+    qty: req.qty,
     paymentMode: "self_funded",
   });
   return {
@@ -94,6 +115,6 @@ export const createPayment = async (
     expiresAt: intent.expiresAt,
     paymentUrl: buildPaymentUrl(intent.id, req.paymentHost),
     solanaPayUrl: intent.solanaPayUrl,
-    planName: planNameFor(req.plan, period),
+    planName: planNameFor(req.plan, period, req.planNameOverride),
   };
 };
