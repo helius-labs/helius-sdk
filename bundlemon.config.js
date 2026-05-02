@@ -33,6 +33,16 @@ export default {
       maxSize: '2.52kb',
     },
     {
+      // Aggregator for every checkout primitive: resolvePriceId,
+      // initializeCheckout, getCheckoutPreview, getCheckoutPreviewByPriceId,
+      // getPaymentIntent, getPaymentStatus, pollCheckoutCompletion, plus the
+      // legacy executeCheckout/executeUpgrade/executeRenewal helpers and
+      // toCheckoutResult. Phase 4 cleanup will delete the legacy execute*
+      // helpers and this can drop back closer to 2KB.
+      path: 'dist/esm/auth/checkout.js',
+      maxSize: '2.7kb',
+    },
+    {
       path: 'dist/esm/websockets/wsAsync.js',
       maxSize: '1.5kb',
     },

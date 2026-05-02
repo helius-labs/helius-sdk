@@ -93,14 +93,35 @@ export async function getCheckoutPreview(
   userAgent?: string
 ): Promise<CheckoutPreviewResponse> {
   const priceId = await resolvePriceId(jwt, plan, period, userAgent);
+  return getCheckoutPreviewByPriceId(
+    jwt,
+    priceId,
+    refId,
+    couponCode,
+    undefined,
+    userAgent
+  );
+}
+
+/**
+ * Like {@link getCheckoutPreview} but takes a raw Stripe priceId directly.
+ * Used by `createPayment` when callers pass a priceId rather than plan/period
+ * (e.g. prepaid-credits SKUs, where the priceId lives on the project itself).
+ */
+export async function getCheckoutPreviewByPriceId(
+  jwt: string,
+  priceId: string,
+  refId: string,
+  couponCode?: string,
+  qty?: number,
+  userAgent?: string
+): Promise<CheckoutPreviewResponse> {
   const params = new URLSearchParams({ priceId, refId });
   if (couponCode) params.set("couponCode", couponCode);
+  if (qty !== undefined) params.set("qty", String(qty));
   return authRequest<CheckoutPreviewResponse>(
     `/checkout/preview?${params.toString()}`,
-    {
-      method: "GET",
-      headers: { Authorization: `Bearer ${jwt}` },
-    },
+    { method: "GET", headers: { Authorization: `Bearer ${jwt}` } },
     userAgent
   );
 }

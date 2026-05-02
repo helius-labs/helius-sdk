@@ -2,6 +2,7 @@ import {
   resolvePriceId,
   initializeCheckout,
   getCheckoutPreview,
+  getCheckoutPreviewByPriceId,
 } from "./checkout";
 import { buildPaymentUrl } from "./paymentUrl";
 import type { PaymentLink, SupportedPlan } from "./types";
@@ -65,34 +66,34 @@ export const createPayment = async (
   const priceId =
     req.priceId ?? (await resolvePriceId(req.jwt, req.plan!, period));
 
-  // Best-effort zero-amount rejection. Skip when caller provided a raw priceId
-  // without a plan — getCheckoutPreview is plan-keyed and won't accept a bare
-  // priceId here.
-  if (req.plan) {
-    try {
-      const preview = await getCheckoutPreview(
-        req.jwt,
-        req.plan,
-        period,
-        req.refId,
-        req.couponCode
-      );
-      if (preview.dueToday === 0) {
-        throw new Error(
-          "Zero-amount signups are not supported in this version. " +
-            "Remove the coupon or use a different plan."
+  // Best-effort zero-amount rejection — preview is plan-keyed in the
+  // `plan`/`period` case and priceId-keyed in the raw-priceId case.
+  try {
+    const preview = req.plan
+      ? await getCheckoutPreview(req.jwt, req.plan, period, req.refId, req.couponCode)
+      : await getCheckoutPreviewByPriceId(
+          req.jwt,
+          priceId,
+          req.refId,
+          req.couponCode,
+          req.qty
         );
-      }
-    } catch (error) {
-      if (
-        error instanceof Error &&
-        error.message.startsWith("Zero-amount signups")
-      ) {
-        throw error;
-      }
-      // Preview unreachable for this caller (typically fresh signup with
-      // no customer yet). Fall through to initialize.
+    if (preview.dueToday === 0) {
+      throw new Error(
+        "Zero-amount signups are not supported in this version. " +
+          "Remove the coupon or use a different plan."
+      );
     }
+  } catch (error) {
+    if (
+      error instanceof Error &&
+      error.message.startsWith("Zero-amount signups")
+    ) {
+      throw error;
+    }
+    // Preview unreachable for this caller (typically fresh signup with
+    // no Stripe customer yet — backend throws "Customer ID is required for
+    // one time preview"). Fall through to initialize.
   }
 
   const intent = await initializeCheckout(req.jwt, {
