@@ -107,7 +107,7 @@ describe("purchaseCredits — link mode", () => {
     mockListProjects.mockResolvedValue([project("developer_v4")]);
     await expect(
       purchaseCredits({ jwt: "jwt-1", projectId: "proj-1" })
-    ).rejects.toThrow(/agent-plan/);
+    ).rejects.toThrow(/Agent-plan only/);
   });
 
   it("errors clearly when prepaidCreditsPriceId is missing", async () => {
