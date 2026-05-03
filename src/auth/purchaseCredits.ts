@@ -36,10 +36,16 @@ const resolvePrepaidCreditsPriceId = async (
   }
   const currentPlan = project.subscription?.plan;
   if (currentPlan !== AGENT_PLAN_ID) {
+    // Prepaid credits are an Agent-plan-only product: $10 USDC per 1M credits,
+    // one-time top-up. Subscription plans (developer/business/professional) get
+    // monthly credit allotments and overage is auto-billed at $5 per 1M on the
+    // next Stripe invoice — there's no manual top-up flow. The dashboard does
+    // not expose a "buy credits" button for those plans either.
     throw new Error(
-      `purchaseCredits is only supported for agent-plan projects in this ` +
-        `SDK version; project ${projectId} is on "${currentPlan ?? "unknown"}". ` +
-        `Other plans must top up via the dashboard.`
+      `purchaseCredits is Agent-plan only ($10 USDC per 1M credits, one-time top-up). ` +
+        `Project ${projectId} is on "${currentPlan ?? "unknown"}", where credit overage ` +
+        `is auto-billed at $5 per 1M on the next invoice (no manual top-up). ` +
+        `Use \`getAccountStatus\` (MCP) or the dashboard to inspect usage.`
     );
   }
   const details = await getProject(jwt, projectId);
