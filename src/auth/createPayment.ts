@@ -70,7 +70,13 @@ export const createPayment = async (
   // `plan`/`period` case and priceId-keyed in the raw-priceId case.
   try {
     const preview = req.plan
-      ? await getCheckoutPreview(req.jwt, req.plan, period, req.refId, req.couponCode)
+      ? await getCheckoutPreview(
+          req.jwt,
+          req.plan,
+          period,
+          req.refId,
+          req.couponCode
+        )
       : await getCheckoutPreviewByPriceId(
           req.jwt,
           priceId,
