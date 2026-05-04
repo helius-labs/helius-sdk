@@ -1,13 +1,8 @@
-import {
-  CHECKOUT_POLL_INTERVAL_MS,
-  CHECKOUT_POLL_TIMEOUT_MS,
-} from "./constants";
 import { createPayment } from "./createPayment";
-import { getPaymentStatus } from "./checkout";
 import { payPaymentLink } from "./payPaymentLink";
 import { listProjects } from "./listProjects";
 import { getProject } from "./getProject";
-import { sleep } from "./utils";
+import { pollUntilTerminal } from "./pollPayment";
 import type {
   PurchaseCreditsAndPayOptions,
   PurchaseCreditsAndPayResult,
@@ -105,43 +100,17 @@ export const purchaseCreditsAndPay = async (
   const result = await purchaseCredits(options);
   const { paymentLink } = result;
   const { txSignature } = await payPaymentLink(options.secretKey, paymentLink);
+  const paymentIntentId = paymentLink.paymentIntentId;
 
-  const deadline = Date.now() + CHECKOUT_POLL_TIMEOUT_MS;
-  while (Date.now() < deadline) {
-    let status;
-    try {
-      status = await getPaymentStatus(options.jwt, paymentLink.paymentIntentId);
-    } catch (error) {
-      if (error instanceof Error && error.message.includes("410")) {
-        return {
-          kind: "expired",
-          paymentIntentId: paymentLink.paymentIntentId,
-        };
-      }
-      throw error;
-    }
-    if (status.readyToRedirect) {
-      return {
-        kind: "completed",
-        txSignature,
-        paymentIntentId: paymentLink.paymentIntentId,
-      };
-    }
-    if (status.phase === "expired") {
-      return {
-        kind: "expired",
-        paymentIntentId: paymentLink.paymentIntentId,
-      };
-    }
-    if (status.phase === "failed") {
-      return {
-        kind: "failed",
-        paymentIntentId: paymentLink.paymentIntentId,
-        reason: status.message,
-      };
-    }
-    await sleep(CHECKOUT_POLL_INTERVAL_MS);
+  const outcome = await pollUntilTerminal(options.jwt, paymentIntentId);
+  if (outcome.kind === "completed") {
+    return { kind: "completed", txSignature, paymentIntentId };
   }
-
+  if (outcome.kind === "expired") {
+    return { kind: "expired", paymentIntentId };
+  }
+  if (outcome.kind === "failed") {
+    return { kind: "failed", paymentIntentId, reason: outcome.status.message };
+  }
   return { kind: "pending", paymentLink, txSignature };
 };

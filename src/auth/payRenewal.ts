@@ -1,11 +1,7 @@
-import {
-  CHECKOUT_POLL_INTERVAL_MS,
-  CHECKOUT_POLL_TIMEOUT_MS,
-} from "./constants";
-import { getPaymentIntent, getPaymentStatus } from "./checkout";
+import { getPaymentIntent } from "./checkout";
 import { payPaymentLink } from "./payPaymentLink";
 import { buildPaymentUrl } from "./paymentUrl";
-import { sleep } from "./utils";
+import { pollUntilTerminal } from "./pollPayment";
 import type { PayRenewalAndPayResult, PayRenewalResult } from "./types";
 
 /**
@@ -58,32 +54,15 @@ export const payRenewalAndPay = async (
   const { paymentLink } = result;
   const { txSignature } = await payPaymentLink(secretKey, paymentLink);
 
-  const deadline = Date.now() + CHECKOUT_POLL_TIMEOUT_MS;
-  while (Date.now() < deadline) {
-    let status;
-    try {
-      status = await getPaymentStatus(jwt, paymentIntentId);
-    } catch (error) {
-      if (error instanceof Error && error.message.includes("410")) {
-        return { kind: "expired", paymentIntentId };
-      }
-      throw error;
-    }
-    if (status.readyToRedirect) {
-      return { kind: "completed", txSignature, paymentIntentId };
-    }
-    if (status.phase === "expired") {
-      return { kind: "expired", paymentIntentId };
-    }
-    if (status.phase === "failed") {
-      return {
-        kind: "failed",
-        paymentIntentId,
-        reason: status.message,
-      };
-    }
-    await sleep(CHECKOUT_POLL_INTERVAL_MS);
+  const outcome = await pollUntilTerminal(jwt, paymentIntentId);
+  if (outcome.kind === "completed") {
+    return { kind: "completed", txSignature, paymentIntentId };
   }
-
+  if (outcome.kind === "expired") {
+    return { kind: "expired", paymentIntentId };
+  }
+  if (outcome.kind === "failed") {
+    return { kind: "failed", paymentIntentId, reason: outcome.status.message };
+  }
   return { kind: "pending", paymentLink, txSignature };
 };

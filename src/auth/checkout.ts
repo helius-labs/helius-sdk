@@ -10,14 +10,13 @@ import { authRequest, sleep } from "./utils";
 import { listProjects } from "./listProjects";
 import { getProject } from "./getProject";
 import {
-  CHECKOUT_POLL_INTERVAL_MS,
-  CHECKOUT_POLL_TIMEOUT_MS,
   PROJECT_POLL_INTERVAL_MS,
   PROJECT_POLL_TIMEOUT_MS,
   PLAN_TO_USAGE_PLAN,
 } from "./constants";
 import { fetchStripePriceIds } from "./devPortalConfigs";
 import { payPaymentIntent } from "./payPaymentIntent";
+import { pollUntilTerminal } from "./pollPayment";
 
 export async function resolvePriceId(
   jwt: string,
@@ -162,46 +161,24 @@ export async function pollCheckoutCompletion(
   userAgent?: string,
   options?: { timeoutMs?: number; intervalMs?: number }
 ): Promise<CheckoutStatusResponse> {
-  const timeoutMs = options?.timeoutMs ?? CHECKOUT_POLL_TIMEOUT_MS;
-  const intervalMs = options?.intervalMs ?? CHECKOUT_POLL_INTERVAL_MS;
-  const deadline = Date.now() + timeoutMs;
-
-  while (Date.now() < deadline) {
-    let status: CheckoutStatusResponse;
-    try {
-      status = await authRequest<CheckoutStatusResponse>(
-        `/checkout/${paymentIntentId}/status`,
-        {
-          method: "GET",
-          headers: { Authorization: `Bearer ${jwt}` },
-        },
-        userAgent
-      );
-    } catch (error) {
-      // HTTP 410 Gone — intent expired
-      if (error instanceof Error && error.message.includes("410")) {
-        return {
-          status: "expired",
-          phase: "expired",
-          subscriptionActive: false,
-          readyToRedirect: false,
-          message: "Payment intent expired",
-        };
+  const outcome = await pollUntilTerminal(jwt, paymentIntentId, {
+    timeoutMs: options?.timeoutMs,
+    intervalMs: options?.intervalMs,
+    userAgent,
+  });
+  if (outcome.kind === "completed") return outcome.status;
+  if (outcome.kind === "failed") return outcome.status;
+  if (outcome.kind === "expired") {
+    return (
+      outcome.status ?? {
+        status: "expired",
+        phase: "expired",
+        subscriptionActive: false,
+        readyToRedirect: false,
+        message: "Payment intent expired",
       }
-      throw error;
-    }
-
-    if (status.readyToRedirect) {
-      return status;
-    }
-
-    if (status.phase === "failed" || status.phase === "expired") {
-      return status;
-    }
-
-    await sleep(intervalMs);
+    );
   }
-
   return {
     status: "pending",
     phase: "confirming",

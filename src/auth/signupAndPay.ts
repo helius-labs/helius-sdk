@@ -1,15 +1,10 @@
-import {
-  CHECKOUT_POLL_INTERVAL_MS,
-  CHECKOUT_POLL_TIMEOUT_MS,
-  PROJECT_POLL_INTERVAL_MS,
-  PROJECT_POLL_TIMEOUT_MS,
-} from "./constants";
+import { PROJECT_POLL_INTERVAL_MS, PROJECT_POLL_TIMEOUT_MS } from "./constants";
 import { listProjects } from "./listProjects";
 import { getProject } from "./getProject";
 import { createApiKey } from "./createApiKey";
-import { getPaymentStatus } from "./checkout";
 import { buildEndpoints } from "./signupHelpers";
 import { payPaymentLink } from "./payPaymentLink";
+import { pollUntilTerminal } from "./pollPayment";
 import { signup } from "./signup";
 import { sleep } from "./utils";
 import type {
@@ -76,61 +71,38 @@ export const signupAndPay = async (
   const secretKey = (options as SecretKeySignupOptions).secretKey;
   const { txSignature } = await payPaymentLink(secretKey, paymentLink);
 
-  const deadline = Date.now() + CHECKOUT_POLL_TIMEOUT_MS;
-  while (Date.now() < deadline) {
-    let status;
-    try {
-      status = await getPaymentStatus(jwt, paymentLink.paymentIntentId);
-    } catch (error) {
-      if (error instanceof Error && error.message.includes("410")) {
-        return {
-          kind: "expired",
-          jwt,
-          refId,
-          walletAddress,
-          paymentIntentId: paymentLink.paymentIntentId,
-        };
-      }
-      throw error;
-    }
+  const outcome = await pollUntilTerminal(jwt, paymentLink.paymentIntentId);
+  const paymentIntentId = paymentLink.paymentIntentId;
 
-    if (status.readyToRedirect) {
-      const { projectId, apiKey, endpoints } = await provisionApiKey(
-        jwt,
-        walletAddress
-      );
-      return {
-        kind: "completed",
-        jwt,
-        refId,
-        walletAddress,
-        projectId,
-        apiKey,
-        endpoints,
-        txSignature,
-        paymentIntentId: paymentLink.paymentIntentId,
-      };
-    }
-    if (status.phase === "expired") {
-      return {
-        kind: "expired",
-        jwt,
-        refId,
-        walletAddress,
-        paymentIntentId: paymentLink.paymentIntentId,
-      };
-    }
-    if (status.phase === "failed") {
-      return {
-        kind: "failed",
-        jwt,
-        refId,
-        walletAddress,
-        paymentIntentId: paymentLink.paymentIntentId,
-        reason: status.message,
-      };
-    }
-    await sleep(CHECKOUT_POLL_INTERVAL_MS);
+  if (outcome.kind === "completed") {
+    const { projectId, apiKey, endpoints } = await provisionApiKey(
+      jwt,
+      walletAddress
+    );
+    return {
+      kind: "completed",
+      jwt,
+      refId,
+      walletAddress,
+      projectId,
+      apiKey,
+      endpoints,
+      txSignature,
+      paymentIntentId,
+    };
+  }
+  if (outcome.kind === "expired") {
+    return { kind: "expired", jwt, refId, walletAddress, paymentIntentId };
+  }
+  if (outcome.kind === "failed") {
+    return {
+      kind: "failed",
+      jwt,
+      refId,
+      walletAddress,
+      paymentIntentId,
+      reason: outcome.status.message,
+    };
   }
 
   return {
