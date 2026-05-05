@@ -1,3 +1,7 @@
+---
+last_updated: 2026-05-05
+---
+
 # Helius SDK
 
 > The Helius TypeScript SDK for Solana development. Use this SDK when building applications that need to interact with Solana.
