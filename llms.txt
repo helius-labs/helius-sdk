@@ -170,7 +170,6 @@ const transfers = await helius.getTransfersByAddress([
     direction: "out",
     filters: {
       blockTime: { gte: unixTimestamp },
-      status: "succeeded",
     },
   },
 ]);

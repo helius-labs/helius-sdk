@@ -65,7 +65,6 @@ describe("getTransfersByAddress Tests", () => {
           amount: { gte: 1_000_000 },
           blockTime: { gte: 1736159000 },
           slot: { lte: 315073428 },
-          status: "succeeded",
         },
       },
     ]);

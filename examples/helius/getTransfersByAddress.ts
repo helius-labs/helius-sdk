@@ -37,9 +37,6 @@ import { createHelius } from "helius-sdk";
         mint: usdcMint,
         direction: "in",
         limit: 10,
-        filters: {
-          status: "succeeded",
-        },
       },
     ]);
 

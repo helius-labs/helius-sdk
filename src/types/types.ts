@@ -389,7 +389,7 @@ export type GetTransfersByAddressConfig = {
   mint?: string;
   /** SOL/WSOL display mode. */
   solMode?: "merged" | "separate";
-  /** Additional filters for amount, block time, slot, and status. */
+  /** Additional filters for amount, block time, and slot. */
   filters?: {
     /** Filter by raw transfer amount, not UI amount. */
     amount?: TransferComparisonFilter;
@@ -397,8 +397,6 @@ export type GetTransfersByAddressConfig = {
     blockTime?: TransferComparisonFilter;
     /** Filter by slot number. */
     slot?: TransferComparisonFilter;
-    /** Transaction status. */
-    status?: "succeeded" | "failed" | "any";
   };
   /** Max transfers per page. */
   limit?: number;
@@ -427,12 +425,11 @@ export type TokenTransfer = {
   /** Parsed transfer type. */
   type:
     | "transfer"
-    | "transferFee"
     | "mint"
     | "burn"
     | "wrap"
     | "unwrap"
-    | "changeAccountOwner"
+    | "changeOwner"
     | "withdrawWithheldFee";
   /** Wallet address that sent the tokens, or `null` when no sender exists. */
   fromUserAccount: string | null;
