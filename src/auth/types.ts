@@ -198,25 +198,6 @@ export interface CheckoutPreviewResponse {
  */
 export type PrepaidCreditsTier = "10_USDC" | (string & {});
 
-export interface PurchaseCreditsOptions {
-  /** Tier key from `stripe.prepaidCreditsPlans` — default `"10_USDC"`. */
-  tier?: PrepaidCreditsTier;
-  /** Quantity multiplier. Each unit grants 1,000,000 credits. Default 1. */
-  qty?: number;
-  /** Project receiving the credits. */
-  projectId: string;
-  /** Optional coupon code applied to the checkout. */
-  couponCode?: string;
-}
-
-export interface PurchaseCreditsResult {
-  paymentIntentId: string;
-  txSignature: string | null;
-  status: "completed" | "expired" | "failed" | "timeout";
-  amountCents: number;
-  error?: string;
-}
-
 export interface AuthClient {
   generateKeypair(): Promise<{ publicKey: Uint8Array; secretKey: Uint8Array }>;
   loadKeypair(bytes: Uint8Array): WalletKeypair;

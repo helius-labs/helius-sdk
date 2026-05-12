@@ -2,7 +2,6 @@ import {
   fetchDevPortalConfigs,
   fetchStripePriceIds,
   fetchPrepaidCreditsPriceIds,
-  fetchOpenPayPriceIds,
 } from "../devPortalConfigs";
 import { authRequest } from "../utils";
 
@@ -144,27 +143,6 @@ describe("fetchPrepaidCreditsPriceIds", () => {
 
     await fetchPrepaidCreditsPriceIds("jwt");
 
-    expect(mockAuthRequest).toHaveBeenCalledWith(
-      "/dev-portal/configs",
-      expect.any(Object),
-      undefined
-    );
-  });
-});
-
-describe("fetchOpenPayPriceIds (deprecated wrapper)", () => {
-  beforeEach(() => jest.resetAllMocks());
-
-  it("returns {Monthly, Yearly} sourced from stripe.priceIds", async () => {
-    mockAuthRequest.mockResolvedValue(MOCK_CONFIGS);
-
-    const result = await fetchOpenPayPriceIds("jwt");
-
-    expect(result).toEqual({
-      Monthly: MOCK_CONFIGS.stripe.priceIds.Monthly,
-      Yearly: MOCK_CONFIGS.stripe.priceIds.Yearly,
-    });
-    // Wrapper does not send ?agent=cli
     expect(mockAuthRequest).toHaveBeenCalledWith(
       "/dev-portal/configs",
       expect.any(Object),

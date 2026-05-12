@@ -51,20 +51,6 @@ export const MIN_SOL_FOR_TX = 1_000_000n;
 export const MEMO_PROGRAM_ID =
   "MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr" as Address;
 
-// ── OpenPay Plan Names (single source of truth) ──
-
-export const OPENPAY_PLANS = ["developer", "business", "professional"] as const;
-export type OpenPayPlan = (typeof OPENPAY_PLANS)[number];
-
-/**
- * The Agent Plan is a one-time 10 USDC purchase that ships with 1,000,000
- * starting credits. Different billing semantics from the OpenPay-family
- * plans (no Monthly/Yearly period, one-time Stripe invoice, Stripe-only
- * provider), so it lives in its own set.
- */
-export const AGENT_PLANS = ["agent"] as const;
-export type AgentPlan = (typeof AGENT_PLANS)[number];
-
 export const CHECKOUT_POLL_INTERVAL_MS = 1_000;
 export const CHECKOUT_POLL_TIMEOUT_MS = 60_000;
 export const PROJECT_POLL_INTERVAL_MS = 2_000;

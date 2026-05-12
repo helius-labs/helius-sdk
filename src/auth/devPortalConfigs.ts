@@ -88,22 +88,3 @@ export async function fetchPrepaidCreditsPriceIds(
   const configs = await fetchDevPortalConfigs(jwt, undefined, userAgent);
   return configs.stripe.prepaidCreditsPlans ?? {};
 }
-
-/**
- * @deprecated Prefer `fetchStripePriceIds` or `fetchDevPortalConfigs`.
- * Kept for backwards compatibility with existing SDK consumers. The
- * backend's `openPay` response key is vestigial after the Stripe cutover;
- * this helper now reads from `stripe.priceIds` under the hood so it keeps
- * working, but the name is misleading and will be removed in a future
- * major.
- */
-export async function fetchOpenPayPriceIds(
-  jwt: string,
-  userAgent?: string
-): Promise<{
-  Monthly: Record<string, string>;
-  Yearly: Record<string, string>;
-}> {
-  const priceIds = await fetchStripePriceIds(jwt, undefined, userAgent);
-  return { Monthly: priceIds.Monthly, Yearly: priceIds.Yearly };
-}
