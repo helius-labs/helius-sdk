@@ -1,4 +1,4 @@
-import { payPaymentIntent } from "../checkout";
+import { payPaymentIntent } from "../payPaymentIntent";
 import { checkSolBalance, checkUsdcBalance } from "../checkBalances";
 import { payWithMemo } from "../payWithMemo";
 import { loadKeypair } from "../loadKeypair";

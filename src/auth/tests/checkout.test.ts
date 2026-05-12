@@ -1,7 +1,6 @@
 import {
   initializeCheckout,
   pollCheckoutCompletion,
-  executeCheckout,
   getCheckoutPreview,
   getPaymentIntent,
   getPaymentStatus,
@@ -9,24 +8,10 @@ import {
 } from "../checkout";
 import { getSignupQuote, initializeSignupFunding } from "../signupFunding";
 import { authRequest } from "../utils";
-import { checkSolBalance, checkUsdcBalance } from "../checkBalances";
-import { payWithMemo } from "../payWithMemo";
-import { listProjects } from "../listProjects";
-import { getProject } from "../getProject";
-import { loadKeypair } from "../loadKeypair";
-import { getAddress } from "../getAddress";
 import { fetchStripePriceIds } from "../devPortalConfigs";
-import { paySponsoredIntent } from "../sponsoredPayment";
 
 jest.mock("../utils");
-jest.mock("../checkBalances");
-jest.mock("../payWithMemo");
-jest.mock("../listProjects");
-jest.mock("../getProject");
-jest.mock("../loadKeypair");
-jest.mock("../getAddress");
 jest.mock("../devPortalConfigs");
-jest.mock("../sponsoredPayment");
 
 // Mock polling constants to make tests fast
 jest.mock("../constants", () => ({
@@ -38,24 +23,8 @@ jest.mock("../constants", () => ({
 }));
 
 const mockAuthRequest = authRequest as jest.MockedFunction<typeof authRequest>;
-const mockCheckSolBalance = checkSolBalance as jest.MockedFunction<
-  typeof checkSolBalance
->;
-const mockCheckUsdcBalance = checkUsdcBalance as jest.MockedFunction<
-  typeof checkUsdcBalance
->;
-const mockPayWithMemo = payWithMemo as jest.MockedFunction<typeof payWithMemo>;
-const mockListProjects = listProjects as jest.MockedFunction<
-  typeof listProjects
->;
-const mockGetProject = getProject as jest.MockedFunction<typeof getProject>;
-const mockLoadKeypair = loadKeypair as jest.MockedFunction<typeof loadKeypair>;
-const mockGetAddress = getAddress as jest.MockedFunction<typeof getAddress>;
 const mockFetchStripePriceIds = fetchStripePriceIds as jest.MockedFunction<
   typeof fetchStripePriceIds
->;
-const mockPaySponsoredIntent = paySponsoredIntent as jest.MockedFunction<
-  typeof paySponsoredIntent
 >;
 
 const MOCK_PRICE_IDS = {
@@ -327,188 +296,6 @@ describe("pollCheckoutCompletion", () => {
     expect(result.phase).toBe("expired");
     expect(result.status).toBe("expired");
     expect(result.readyToRedirect).toBe(false);
-  });
-});
-
-describe("executeCheckout", () => {
-  const mockSecretKey = new Uint8Array(64).fill(1);
-
-  function setupDefaultMocks() {
-    mockFetchStripePriceIds.mockResolvedValue(MOCK_PRICE_IDS);
-    mockLoadKeypair.mockReturnValue({
-      publicKey: new Uint8Array(32),
-      secretKey: mockSecretKey,
-    });
-    mockGetAddress.mockResolvedValue("WalletAddress111111111111111111");
-    mockCheckSolBalance.mockResolvedValue(10_000_000n);
-    mockCheckUsdcBalance.mockResolvedValue(50_000_000n); // 50 USDC
-    mockPayWithMemo.mockResolvedValue("tx-sig-abc");
-    // Sponsored payment rejects by default — triggers self-funded fallback
-    mockPaySponsoredIntent.mockRejectedValue(
-      new Error("Not a sponsored intent")
-    );
-    mockListProjects.mockResolvedValue([
-      { id: "proj-1", name: "Test" },
-    ] as never);
-    mockGetProject.mockResolvedValue({
-      apiKeys: [{ keyId: "key-123" }],
-    } as never);
-  }
-
-  beforeEach(() => {
-    jest.resetAllMocks();
-    setupDefaultMocks();
-
-    // Default authRequest: init → poll completed
-    mockAuthRequest
-      .mockResolvedValueOnce(INIT_RESPONSE)
-      .mockResolvedValueOnce(POLL_COMPLETED_RESPONSE);
-  });
-
-  it("completes the full checkout flow", async () => {
-    const result = await executeCheckout(mockSecretKey, "jwt-token", {
-      plan: "developer",
-      period: "monthly",
-      refId: "ref-1",
-    });
-
-    expect(result.status).toBe("completed");
-    expect(result.txSignature).toBe("tx-sig-abc");
-    expect(result.projectId).toBe("proj-1");
-    expect(result.apiKey).toBe("key-123");
-    expect(result.paymentIntentId).toBe("pi_test");
-
-    // Verify memo is intent.id and amount uses * 10_000n
-    expect(mockPayWithMemo).toHaveBeenCalledWith(
-      mockSecretKey,
-      "Treasury111",
-      49_000_000n, // 4900 cents * 10_000
-      "pi_test" // intent.id as memo
-    );
-  });
-
-  it("passes paymentMode: sponsored through to initialize when set in request", async () => {
-    const initResponse = {
-      ...INIT_RESPONSE,
-      amount: 0,
-    };
-    mockAuthRequest.mockReset();
-    mockAuthRequest
-      .mockResolvedValueOnce(initResponse)
-      .mockResolvedValueOnce(POLL_COMPLETED_RESPONSE);
-
-    await executeCheckout(mockSecretKey, "jwt-token", {
-      plan: "developer",
-      period: "monthly",
-      refId: "ref-1",
-      paymentMode: "sponsored",
-      walletAddress: "WalletAddress111111111111111111",
-    });
-
-    // Verify paymentMode and signupWalletAddress were included in the initialize request body
-    const initCall = mockAuthRequest.mock.calls[0];
-    const body = JSON.parse((initCall[1] as RequestInit).body as string);
-    expect(body.paymentMode).toBe("sponsored");
-    expect(body.signupWalletAddress).toBe("WalletAddress111111111111111111");
-  });
-
-  it("returns failed on insufficient SOL", async () => {
-    mockCheckSolBalance.mockResolvedValue(100n);
-
-    const result = await executeCheckout(mockSecretKey, "jwt-token", {
-      plan: "developer",
-      period: "monthly",
-      refId: "ref-1",
-    });
-
-    expect(result.status).toBe("failed");
-    expect(result.error).toContain("Insufficient SOL");
-    expect(result.txSignature).toBeNull();
-  });
-
-  it("returns failed on insufficient USDC", async () => {
-    mockCheckUsdcBalance.mockResolvedValue(500_000n); // 0.5 USDC
-
-    const result = await executeCheckout(mockSecretKey, "jwt-token", {
-      plan: "developer",
-      period: "monthly",
-      refId: "ref-1",
-    });
-
-    expect(result.status).toBe("failed");
-    expect(result.error).toContain("Insufficient USDC");
-    expect(result.txSignature).toBeNull();
-  });
-
-  it("returns failed with txSignature null on payment error", async () => {
-    mockPayWithMemo.mockRejectedValue(new Error("Transaction failed"));
-
-    const result = await executeCheckout(mockSecretKey, "jwt-token", {
-      plan: "developer",
-      period: "monthly",
-      refId: "ref-1",
-    });
-
-    expect(result.status).toBe("failed");
-    expect(result.txSignature).toBeNull();
-    expect(result.error).toBe("Transaction failed");
-  });
-
-  it("returns timeout when payment polling times out", async () => {
-    mockAuthRequest.mockReset();
-    mockAuthRequest
-      .mockResolvedValueOnce(INIT_RESPONSE)
-      // All subsequent calls return non-ready status
-      .mockResolvedValue({
-        status: "pending",
-        phase: "confirming",
-        subscriptionActive: false,
-        readyToRedirect: false,
-        message: "Waiting",
-      });
-
-    const result = await executeCheckout(mockSecretKey, "jwt-token", {
-      plan: "developer",
-      period: "monthly",
-      refId: "ref-1",
-    });
-
-    expect(result.status).toBe("timeout");
-    expect(result.txSignature).toBe("tx-sig-abc");
-  });
-
-  it("handles $0 checkout - no USDC transfer", async () => {
-    const zeroIntent = { ...INIT_RESPONSE, amount: 0 };
-    mockAuthRequest.mockReset();
-    mockAuthRequest
-      .mockResolvedValueOnce(zeroIntent)
-      .mockResolvedValueOnce(POLL_COMPLETED_RESPONSE);
-
-    const result = await executeCheckout(mockSecretKey, "jwt-token", {
-      plan: "developer",
-      period: "monthly",
-      refId: "ref-1",
-    });
-
-    expect(result.status).toBe("completed");
-    expect(mockPayWithMemo).not.toHaveBeenCalled();
-    expect(mockCheckSolBalance).not.toHaveBeenCalled();
-    expect(mockCheckUsdcBalance).not.toHaveBeenCalled();
-  });
-
-  it("skips project polling when skipProjectPolling is true", async () => {
-    const result = await executeCheckout(
-      mockSecretKey,
-      "jwt-token",
-      { plan: "developer", period: "monthly", refId: "ref-1" },
-      undefined,
-      { skipProjectPolling: true }
-    );
-
-    expect(result.status).toBe("completed");
-    expect(result.projectId).toBeUndefined();
-    expect(result.apiKey).toBeUndefined();
-    expect(mockListProjects).not.toHaveBeenCalled();
   });
 });
 
