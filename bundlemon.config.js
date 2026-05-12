@@ -22,11 +22,10 @@ export default {
     {
       // Opt out of the default 15% growth ratchet: this module exposes a
       // small family of configs-fetch helpers (fetchDevPortalConfigs,
-      // fetchStripePriceIds, fetchPrepaidCreditsPriceIds, and the
-      // deprecated fetchOpenPayPriceIds wrapper). The absolute cap still
-      // gates unbounded growth.
+      // fetchStripePriceIds, fetchPrepaidCreditsPriceIds). The absolute
+      // cap still gates unbounded growth.
       path: 'dist/esm/auth/devPortalConfigs.js',
-      maxSize: '2.5kb',
+      maxSize: '1kb',
     },
     {
       path: 'dist/esm/rpc/index.js',
@@ -35,12 +34,9 @@ export default {
     {
       // Aggregator for every checkout primitive: resolvePriceId,
       // initializeCheckout, getCheckoutPreview, getCheckoutPreviewByPriceId,
-      // getPaymentIntent, getPaymentStatus, pollCheckoutCompletion, plus the
-      // legacy executeCheckout/executeUpgrade/executeRenewal helpers and
-      // toCheckoutResult. Phase 4 cleanup will delete the legacy execute*
-      // helpers and this can drop back closer to 2KB.
+      // getPaymentIntent, getPaymentStatus, pollCheckoutCompletion.
       path: 'dist/esm/auth/checkout.js',
-      maxSize: '2.7kb',
+      maxSize: '1.7kb',
     },
     {
       path: 'dist/esm/websockets/wsAsync.js',
