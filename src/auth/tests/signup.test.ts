@@ -202,7 +202,7 @@ describe("signup", () => {
 
     expect(mockInitializeCheckout).toHaveBeenCalledTimes(1);
     const sentBody = mockInitializeCheckout.mock.calls[0][1];
-    expect(sentBody.paymentMode).toBe("self_funded");
+    expect(sentBody).not.toHaveProperty("paymentMode");
     expect(sentBody).not.toHaveProperty("signupWalletAddress");
   });
 

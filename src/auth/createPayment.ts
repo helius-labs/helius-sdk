@@ -111,7 +111,6 @@ export const createPayment = async (
     walletAddress: req.walletAddress,
     couponCode: req.couponCode,
     qty: req.qty,
-    paymentMode: "self_funded",
   });
   return {
     kind: "payment_required",

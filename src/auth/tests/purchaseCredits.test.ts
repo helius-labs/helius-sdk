@@ -92,7 +92,6 @@ describe("purchaseCredits — link mode", () => {
         priceId: "price_credits_10_usdc",
         refId: "proj-1",
         qty: 2,
-        paymentMode: "self_funded",
       })
     );
   });

@@ -74,7 +74,6 @@ describe("upgradePlan — link mode", () => {
       expect.objectContaining({
         priceId: "price_business_monthly",
         refId: "proj-1",
-        paymentMode: "self_funded",
       })
     );
   });

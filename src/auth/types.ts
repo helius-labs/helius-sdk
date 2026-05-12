@@ -113,15 +113,6 @@ export type CheckoutPhase =
   | "failed"
   | "expired";
 
-/**
- * Internal — Phase 1 SDK signup always sets `"self_funded"`. The
- * `"sponsored"` variant is legacy: it's still understood by `executeCheckout`
- * / `payPaymentIntent` (used by the deprecated `agenticSignup` path) and by
- * the backend's `/checkout/build-sponsored-tx` route, both scheduled for
- * removal in Phase 4.
- */
-export type PaymentMode = "self_funded" | "sponsored";
-
 export interface CheckoutInitializeRequest {
   priceId: string; // Stripe price ID — resolved internally from plan+period
   refId: string; // User ID (base58 from walletSignup) or project UUID
@@ -130,8 +121,6 @@ export interface CheckoutInitializeRequest {
   lastName?: string;
   walletAddress?: string;
   couponCode?: string;
-  paymentMode?: PaymentMode;
-  signupWalletAddress?: string;
   /**
    * Quantity multiplier for one-time purchases (prepaid credits). Each
    * unit grants 1,000,000 credits at the backend. Ignored for
@@ -197,37 +186,6 @@ export interface CheckoutPreviewResponse {
   note: string;
   coupon?: CheckoutPreviewCoupon | null;
   customerInfo?: CheckoutPreviewCustomerInfo;
-}
-
-export interface SignupQuote {
-  plan: string;
-  /**
-   * Echoes the `period` value the caller passed to `getSignupQuote`. Not
-   * meaningful for `plan: 'agent'` (one-time invoice, no period) — the
-   * value is whatever the caller supplied.
-   */
-  period: "monthly" | "yearly";
-  baseAmountCents: number;
-  discountCents: number;
-  creditsCents: number;
-  dueTodayCents: number;
-  destinationWallet: string;
-  note: string;
-  coupon?: CheckoutPreviewCoupon | null;
-}
-
-export interface SignupFundingIntent {
-  paymentIntentId: string;
-  amountCents: number;
-  destinationWallet: string;
-  solanaPayUrl: string;
-  expiresAt: string;
-}
-
-export interface BuildSponsoredTxResponse {
-  transaction: string;
-  paymentIntentId: string;
-  lastValidBlockHeight: number;
 }
 
 /**
@@ -304,33 +262,6 @@ export interface AuthClient {
     jwt: string,
     paymentIntentId: string
   ): Promise<CheckoutStatusResponse>;
-  payPaymentIntent(
-    secretKey: Uint8Array,
-    intent: CheckoutInitializeResponse,
-    jwt?: string
-  ): Promise<string>;
-  getSignupQuote(
-    jwt: string,
-    options: {
-      plan: string;
-      period: "monthly" | "yearly";
-      refId: string;
-      couponCode?: string;
-    }
-  ): Promise<SignupQuote>;
-  initializeSignupFunding(
-    jwt: string,
-    options: {
-      plan: string;
-      period: "monthly" | "yearly";
-      refId: string;
-      walletAddress?: string;
-      email?: string;
-      firstName?: string;
-      lastName?: string;
-      couponCode?: string;
-    }
-  ): Promise<SignupFundingIntent>;
   /**
    * Phase 2 — buy additional prepaid credits for an agent-plan project.
    * Agent-only in this release: pre-flight rejects non-agent projects.
