@@ -131,21 +131,6 @@ export async function getPaymentIntent(
   );
 }
 
-export async function getPaymentStatus(
-  jwt: string,
-  paymentIntentId: string,
-  userAgent?: string
-): Promise<CheckoutStatusResponse> {
-  return authRequest<CheckoutStatusResponse>(
-    `/checkout/${paymentIntentId}/status`,
-    {
-      method: "GET",
-      headers: { Authorization: `Bearer ${jwt}` },
-    },
-    userAgent
-  );
-}
-
 export async function pollCheckoutCompletion(
   jwt: string,
   paymentIntentId: string,

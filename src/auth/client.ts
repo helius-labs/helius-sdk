@@ -15,8 +15,8 @@ import {
   initializeCheckout,
   getCheckoutPreview,
   getPaymentIntent,
-  getPaymentStatus,
 } from "./checkout";
+import { getPaymentStatus } from "./getPaymentStatus";
 import { purchaseCredits, purchaseCreditsAndPay } from "./purchaseCredits";
 import { upgradePlan, upgradePlanAndPay } from "./upgradePlan";
 import { payRenewal, payRenewalAndPay } from "./payRenewal";

@@ -1,3 +1,4 @@
+import type { Address } from "@solana/kit";
 import {
   buildAndSendTokenTransfer,
   type TokenTransferParams,
@@ -67,7 +68,7 @@ describe("buildAndSendTokenTransfer", () => {
     const params: TokenTransferParams = {
       secretKey: mockSecretKey,
       recipientAddress: "RecipientAddress111111111111111111",
-      mintAddress: "MintAddress1111111111111111111111" as `${string}`,
+      mintAddress: "MintAddress1111111111111111111111" as Address,
       amount: 1_000_000n,
     };
 
@@ -88,7 +89,7 @@ describe("buildAndSendTokenTransfer", () => {
     const params: TokenTransferParams = {
       secretKey: mockSecretKey,
       recipientAddress: "RecipientAddress111111111111111111",
-      mintAddress: "MintAddress1111111111111111111111" as `${string}`,
+      mintAddress: "MintAddress1111111111111111111111" as Address,
       amount: 500_000n,
       additionalInstructions: [memoIx as never],
     };
@@ -105,7 +106,7 @@ describe("buildAndSendTokenTransfer", () => {
     const params: TokenTransferParams = {
       secretKey: mockSecretKey,
       recipientAddress: "RecipientAddress111111111111111111",
-      mintAddress: "MintAddress1111111111111111111111" as `${string}`,
+      mintAddress: "MintAddress1111111111111111111111" as Address,
       amount: 1_000_000n,
       additionalInstructions: [],
     };

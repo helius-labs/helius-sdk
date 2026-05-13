@@ -3,9 +3,9 @@ import {
   pollCheckoutCompletion,
   getCheckoutPreview,
   getPaymentIntent,
-  getPaymentStatus,
   resolvePriceId,
 } from "../checkout";
+import { getPaymentStatus } from "../getPaymentStatus";
 import { authRequest } from "../utils";
 import { fetchStripePriceIds } from "../devPortalConfigs";
 

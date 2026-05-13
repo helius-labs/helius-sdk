@@ -1,7 +1,7 @@
 import { pollUntilTerminal } from "../pollPayment";
-import { getPaymentStatus } from "../checkout";
+import { getPaymentStatus } from "../getPaymentStatus";
 
-jest.mock("../checkout");
+jest.mock("../getPaymentStatus");
 
 jest.mock("../constants", () => ({
   ...jest.requireActual("../constants"),

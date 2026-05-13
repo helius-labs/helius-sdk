@@ -37,6 +37,9 @@ jest.mock("../checkout", () => ({
   resolvePriceId: jest.fn().mockResolvedValue("price_agent_1_usdc"),
   getCheckoutPreview: jest.fn(),
   initializeCheckout: jest.fn(),
+}));
+
+jest.mock("../getPaymentStatus", () => ({
   getPaymentStatus: jest.fn(),
 }));
 
@@ -49,11 +52,8 @@ import { signupAndPay } from "../signupAndPay";
 import { listProjects } from "../listProjects";
 import { getProject } from "../getProject";
 import { createApiKey } from "../createApiKey";
-import {
-  getCheckoutPreview,
-  initializeCheckout,
-  getPaymentStatus,
-} from "../checkout";
+import { getCheckoutPreview, initializeCheckout } from "../checkout";
+import { getPaymentStatus } from "../getPaymentStatus";
 import { payPaymentLink } from "../payPaymentLink";
 
 const mockListProjects = listProjects as jest.MockedFunction<

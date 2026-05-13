@@ -4,6 +4,8 @@ jest.mock("../checkout", () => ({
   resolvePriceId: jest.fn(),
   initializeCheckout: jest.fn(),
   getCheckoutPreview: jest.fn(),
+}));
+jest.mock("../getPaymentStatus", () => ({
   getPaymentStatus: jest.fn(),
 }));
 jest.mock("../payPaymentLink", () => ({
@@ -15,7 +17,8 @@ jest.mock("../payPaymentLink", () => ({
 import { purchaseCredits, purchaseCreditsAndPay } from "../purchaseCredits";
 import { listProjects } from "../listProjects";
 import { getProject } from "../getProject";
-import { initializeCheckout, getPaymentStatus } from "../checkout";
+import { initializeCheckout } from "../checkout";
+import { getPaymentStatus } from "../getPaymentStatus";
 import { payPaymentLink } from "../payPaymentLink";
 
 const mockListProjects = listProjects as jest.MockedFunction<

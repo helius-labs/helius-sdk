@@ -2,7 +2,7 @@ import {
   CHECKOUT_POLL_INTERVAL_MS,
   CHECKOUT_POLL_TIMEOUT_MS,
 } from "./constants";
-import { getPaymentStatus } from "./checkout";
+import { getPaymentStatus } from "./getPaymentStatus";
 import { getHttpStatus } from "./getHttpStatus";
 import { sleep } from "./utils";
 import type { CheckoutStatusResponse } from "./types";

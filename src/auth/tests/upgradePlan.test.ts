@@ -2,6 +2,8 @@ jest.mock("../checkout", () => ({
   resolvePriceId: jest.fn().mockResolvedValue("price_business_monthly"),
   initializeCheckout: jest.fn(),
   getCheckoutPreview: jest.fn(),
+}));
+jest.mock("../getPaymentStatus", () => ({
   getPaymentStatus: jest.fn(),
 }));
 jest.mock("../payPaymentLink", () => ({
@@ -9,11 +11,8 @@ jest.mock("../payPaymentLink", () => ({
 }));
 
 import { upgradePlan, upgradePlanAndPay } from "../upgradePlan";
-import {
-  initializeCheckout,
-  getCheckoutPreview,
-  getPaymentStatus,
-} from "../checkout";
+import { initializeCheckout, getCheckoutPreview } from "../checkout";
+import { getPaymentStatus } from "../getPaymentStatus";
 import { payPaymentLink } from "../payPaymentLink";
 
 const mockInitializeCheckout = initializeCheckout as jest.MockedFunction<

@@ -10,7 +10,7 @@ jest.mock("@solana/kit", () => {
   const actual = jest.requireActual("@solana/kit");
   return {
     ...actual,
-    createSolanaRpc: (...args: any[]) => mockCreateSolanaRpc(...args),
+    createSolanaRpc: mockCreateSolanaRpc,
   };
 });
 
