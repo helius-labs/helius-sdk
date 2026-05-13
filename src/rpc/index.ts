@@ -308,9 +308,8 @@ export const createHelius = ({
     client,
     "getAssetProofBatch",
     async () => {
-      const { makeGetAssetProofBatch } = await import(
-        "./methods/getAssetProofBatch.js"
-      );
+      const { makeGetAssetProofBatch } =
+        await import("./methods/getAssetProofBatch.js");
       return makeGetAssetProofBatch(call);
     }
   );
@@ -319,9 +318,8 @@ export const createHelius = ({
     client,
     "getAssetsByAuthority",
     async () => {
-      const { makeGetAssetsByAuthority } = await import(
-        "./methods/getAssetsByAuthority.js"
-      );
+      const { makeGetAssetsByAuthority } =
+        await import("./methods/getAssetsByAuthority.js");
       return makeGetAssetsByAuthority(call);
     }
   );
@@ -330,9 +328,8 @@ export const createHelius = ({
     client,
     "getAssetsByCreator",
     async () => {
-      const { makeGetAssetsByCreator } = await import(
-        "./methods/getAssetsByCreator.js"
-      );
+      const { makeGetAssetsByCreator } =
+        await import("./methods/getAssetsByCreator.js");
       return makeGetAssetsByCreator(call);
     }
   );
@@ -341,9 +338,8 @@ export const createHelius = ({
     client,
     "getAssetsByGroup",
     async () => {
-      const { makeGetAssetsByGroup } = await import(
-        "./methods/getAssetsByGroup.js"
-      );
+      const { makeGetAssetsByGroup } =
+        await import("./methods/getAssetsByGroup.js");
       return makeGetAssetsByGroup(call);
     }
   );
@@ -352,9 +348,8 @@ export const createHelius = ({
     client,
     "getAssetsByOwner",
     async () => {
-      const { makeGetAssetsByOwner } = await import(
-        "./methods/getAssetsByOwner.js"
-      );
+      const { makeGetAssetsByOwner } =
+        await import("./methods/getAssetsByOwner.js");
       return makeGetAssetsByOwner(call);
     }
   );
@@ -363,9 +358,8 @@ export const createHelius = ({
     client,
     "getNftEditions",
     async () => {
-      const { makeGetNftEditions } = await import(
-        "./methods/getNftEditions.js"
-      );
+      const { makeGetNftEditions } =
+        await import("./methods/getNftEditions.js");
       return makeGetNftEditions(call);
     }
   );
@@ -374,9 +368,8 @@ export const createHelius = ({
     client,
     "getSignaturesForAsset",
     async () => {
-      const { makeGetSignaturesForAsset } = await import(
-        "./methods/getSignaturesForAsset.js"
-      );
+      const { makeGetSignaturesForAsset } =
+        await import("./methods/getSignaturesForAsset.js");
       return makeGetSignaturesForAsset(call);
     }
   );
@@ -385,9 +378,8 @@ export const createHelius = ({
     client,
     "getTokenAccounts",
     async () => {
-      const { makeGetTokenAccounts } = await import(
-        "./methods/getTokenAccounts.js"
-      );
+      const { makeGetTokenAccounts } =
+        await import("./methods/getTokenAccounts.js");
       return makeGetTokenAccounts(call);
     }
   );
@@ -405,9 +397,8 @@ export const createHelius = ({
     client,
     "getPriorityFeeEstimate",
     async () => {
-      const { makeGetPriorityFeeEstimate } = await import(
-        "./methods/getPriorityFeeEstimate.js"
-      );
+      const { makeGetPriorityFeeEstimate } =
+        await import("./methods/getPriorityFeeEstimate.js");
       return makeGetPriorityFeeEstimate(call);
     }
   );
@@ -416,9 +407,8 @@ export const createHelius = ({
     client,
     "getProgramAccountsV2",
     async () => {
-      const { makeGetProgramAccountsV2 } = await import(
-        "./methods/getProgramAccountsV2.js"
-      );
+      const { makeGetProgramAccountsV2 } =
+        await import("./methods/getProgramAccountsV2.js");
       return makeGetProgramAccountsV2(call);
     }
   );
@@ -427,9 +417,8 @@ export const createHelius = ({
     client,
     "getAllProgramAccounts",
     async () => {
-      const { makeGetAllProgramAccounts } = await import(
-        "./methods/getAllProgramAccounts.js"
-      );
+      const { makeGetAllProgramAccounts } =
+        await import("./methods/getAllProgramAccounts.js");
       return makeGetAllProgramAccounts(call);
     }
   );
@@ -438,9 +427,8 @@ export const createHelius = ({
     client,
     "getTokenAccountsByOwnerV2",
     async () => {
-      const { makeGetTokenAccountsByOwnerV2 } = await import(
-        "./methods/getTokenAccountsByOwnerV2.js"
-      );
+      const { makeGetTokenAccountsByOwnerV2 } =
+        await import("./methods/getTokenAccountsByOwnerV2.js");
       return makeGetTokenAccountsByOwnerV2(call);
     }
   );
@@ -449,9 +437,8 @@ export const createHelius = ({
     client,
     "getAllTokenAccountsByOwner",
     async () => {
-      const { makeGetAllTokenAccountsByOwner } = await import(
-        "./methods/getAllTokenAccountsByOwner.js"
-      );
+      const { makeGetAllTokenAccountsByOwner } =
+        await import("./methods/getAllTokenAccountsByOwner.js");
       return makeGetAllTokenAccountsByOwner(call);
     }
   );
@@ -460,9 +447,8 @@ export const createHelius = ({
     client,
     "getTransactionsForAddress",
     async () => {
-      const { makeGetTransactionsForAddress } = await import(
-        "./methods/getTransactionsForAddress.js"
-      );
+      const { makeGetTransactionsForAddress } =
+        await import("./methods/getTransactionsForAddress.js");
       return makeGetTransactionsForAddress(call);
     }
   );
@@ -471,9 +457,8 @@ export const createHelius = ({
     client,
     "getTransfersByAddress",
     async () => {
-      const { makeGetTransfersByAddress } = await import(
-        "./methods/getTransfersByAddress.js"
-      );
+      const { makeGetTransfersByAddress } =
+        await import("./methods/getTransfersByAddress.js");
       return makeGetTransfersByAddress(call);
     }
   );
@@ -510,9 +495,8 @@ export const createHelius = ({
 
   defineLazyNamespace<HeliusClient, TxHelpersLazy>(client, "tx", async () => {
     const { makeTxHelpersLazy } = await import("../transactions");
-    const { makeGetPriorityFeeEstimate } = await import(
-      "./methods/getPriorityFeeEstimate.js"
-    );
+    const { makeGetPriorityFeeEstimate } =
+      await import("./methods/getPriorityFeeEstimate.js");
     const getPriorityFeeEstimate = makeGetPriorityFeeEstimate(call);
 
     return makeTxHelpersLazy(

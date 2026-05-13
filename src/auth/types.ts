@@ -512,8 +512,7 @@ export interface PurchaseCreditsLinkOptions {
   paymentHost?: string;
 }
 
-export interface PurchaseCreditsAndPayOptions
-  extends PurchaseCreditsLinkOptions {
+export interface PurchaseCreditsAndPayOptions extends PurchaseCreditsLinkOptions {
   secretKey: Uint8Array;
 }
 
