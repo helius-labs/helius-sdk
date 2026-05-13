@@ -28,8 +28,11 @@ export default {
       maxSize: '1kb',
     },
     {
+      // Lazy-loaded HeliusClient entry point: every new defineLazyMethod
+      // adds ~50B gzipped. Bumped after getTransfersByAddress (#313) put
+      // the file at 2.55KB.
       path: 'dist/esm/rpc/index.js',
-      maxSize: '2.52kb',
+      maxSize: '2.6kb',
     },
     {
       // Aggregator for every checkout primitive: resolvePriceId,
