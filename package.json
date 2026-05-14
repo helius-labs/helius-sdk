@@ -137,7 +137,7 @@
     "zk-compression"
   ],
   "author": "Helius",
-  "license": "ISC",
+  "license": "MIT",
   "dependencies": {
     "bs58": "^6.0.0",
     "tslib": "^2.8.1"
