@@ -8,7 +8,7 @@ import {
 } from "@solana/kit";
 import { wrapAutoSend } from "./wrapAutoSend";
 import { makeRpcCaller } from "./caller";
-import { getSDKHeaders } from "../http";
+import { getSDKHeaders, type AllowedRpcHeaders } from "../http";
 
 import { GetAssetFn, makeGetAsset } from "./methods/getAsset";
 import { GetAssetBatchFn, makeGetAssetBatch } from "./methods/getAssetBatch";
@@ -153,7 +153,7 @@ export const createHeliusEager = ({
   const solanaApi = createSolanaRpcApi(DEFAULT_RPC_CONFIG);
   const transport = createDefaultRpcTransport({
     url,
-    headers: getSDKHeaders(userAgent),
+    headers: getSDKHeaders(userAgent) as AllowedRpcHeaders,
   });
 
   let baseRpc = createRpc({ api: solanaApi, transport });

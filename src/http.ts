@@ -1,9 +1,24 @@
+import type { createDefaultRpcTransport } from "@solana/kit";
 import { version } from "./version";
 
 const getEnvironment = (): "web" | "server" =>
   typeof window !== "undefined" ? "web" : "server";
 
 export const SDK_USER_AGENT = `helius-node-sdk/${version} (${getEnvironment()})`;
+
+/**
+ * Header shape accepted by `@solana/kit`'s `createDefaultRpcTransport` —
+ * a structural subset of `Record<string, string>` that forbids browser-
+ * reserved headers (Proxy-*, Sec-*, etc.). Derived from kit's exported
+ * function signature so we don't need a direct dep on
+ * `@solana/rpc-transport-http`. The `?: never` markers in kit's type
+ * don't survive object spread, so RPC transport call sites pass the
+ * result of `getSDKHeaders` cast to this type; `fetch()`-based call
+ * sites use the plain `Record<string, string>` return shape directly.
+ */
+export type AllowedRpcHeaders = NonNullable<
+  Parameters<typeof createDefaultRpcTransport>[0]["headers"]
+>;
 
 /**
  * Sanitize a client identifier string, stripping non-printable ASCII.
