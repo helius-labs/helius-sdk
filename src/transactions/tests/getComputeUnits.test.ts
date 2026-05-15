@@ -1,6 +1,6 @@
 import { makeGetComputeUnits } from "../getComputeUnits";
 import type {
-  BaseTransactionMessage,
+  TransactionMessage,
   TransactionMessageWithFeePayer,
 } from "@solana/kit";
 
@@ -18,7 +18,7 @@ jest.mock("@solana-program/compute-budget", () => ({
 const dummyRpc: any = {};
 
 // A minimal, compilable tx‑message object (i.e., instructions + version)
-const dummyMessage: BaseTransactionMessage & TransactionMessageWithFeePayer = {
+const dummyMessage: TransactionMessage & TransactionMessageWithFeePayer = {
   instructions: [],
   version: 0,
 } as any;
