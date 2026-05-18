@@ -124,7 +124,11 @@ src/
     tests/
   auth/
     client.ts                     # makeAuthClient — standalone import only
-    agenticSignup.ts
+    signup.ts                     # JWT-based step-by-step signup
+    signupAndPay.ts               # All-in-one signup + USDC payment
+    checkout.ts                   # Hosted checkout flow
+    payUSDC.ts                    # USDC transfer with memo
+    pollPayment.ts                # Poll payment activation
     types.ts
     tests/
   types/
