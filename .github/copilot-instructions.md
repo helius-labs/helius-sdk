@@ -124,7 +124,6 @@ src/
     tests/
   auth/
     client.ts                     # makeAuthClient — standalone import only
-    agenticSignup.ts
     types.ts
     tests/
   types/
