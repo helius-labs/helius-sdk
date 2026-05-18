@@ -433,9 +433,21 @@ const projects = await helius.auth.listProjects(token);                         
 const project = await helius.auth.createProject(token);                          // Create project (needs JWT)
 const apiKey = await helius.auth.createApiKey(token, project.id, address);       // Create API key (needs JWT)
 
-// Or use the all-in-one shortcut:
-const result = await helius.auth.agenticSignup({ secretKey: keypair.secretKey }); // Full automated flow
-// result: { jwt, walletAddress, projectId, apiKey, endpoints, credits }
+// Or use the all-in-one shortcut (signs the auth message, creates a hosted
+// checkout, auto-pays USDC + memo from the local keypair, polls activation):
+const result = await helius.auth.signupAndPay({
+  secretKey: keypair.secretKey,
+  plan: "agent",
+  email: "you@example.com",
+  firstName: "Jane",
+  lastName: "Doe",
+});
+// Discriminated by `result.kind`:
+//   "completed"          — { jwt, walletAddress, projectId, apiKey, endpoints, txSignature, paymentIntentId }
+//   "already_subscribed" — { jwt, walletAddress, projectId, apiKey, endpoints }
+//   "upgrade_required"   — { jwt, walletAddress, currentPlan, ... }
+//   "pending"            — poll timed out after payment; resume with the returned txSignature + paymentLink
+//   "expired" / "failed" — payment never completed; inspect `paymentIntentId` (and `reason` for failed)
 ```
 
 ## Documentation
