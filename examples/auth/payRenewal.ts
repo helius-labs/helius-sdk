@@ -1,18 +1,21 @@
 import { makeAuthClient } from "helius-sdk/auth/client";
 
 /**
- * Buy additional prepaid credits for an agent-plan project, paying via USDC
- * from the local keypair and polling activation.
+ * Phase 2 — pay a renewal invoice for an existing subscription, using USDC
+ * from the local keypair.
  *
- * Agent-only in this release. Each unit of `qty` grants 1,000,000 credits at
- * the backend: 10 USDC × qty=1 → 1M credits; 10 × 3 → 3M credits.
+ * Unlike `upgradePlan`, this does NOT create a new payment intent — it
+ * fetches an existing pending intent (typically surfaced via the renewal
+ * notification email or the dashboard) and pays it. Renewals don't go
+ * through a webhook-driven activation gate, so `kind: "completed"` flips
+ * on payment confirmation alone.
  *
  * For link-only flows (e.g. you want to hand a hosted-checkout URL to a UI
- * instead of auto-paying from a keypair), call `auth.purchaseCredits(...)`
+ * instead of auto-paying from a keypair), call `auth.payRenewal(...)`
  * instead — it returns the same `paymentLink` without sending USDC.
  */
 (async () => {
-  const auth = makeAuthClient("helius-sdk-example/credits");
+  const auth = makeAuthClient("helius-sdk-example/renewal");
 
   // Load the same keypair used for signup. Paste its 64 saved bytes here.
   const secretKey = Uint8Array.from([
@@ -29,21 +32,14 @@ import { makeAuthClient } from "helius-sdk/auth/client";
     walletAddress
   );
 
-  // Use the existing agent-plan project (first project on the account).
-  const projects = await auth.listProjects(jwt);
-  const projectId = projects[0]?.id;
-  if (!projectId) throw new Error("No project found — sign up first.");
+  // Paste the paymentIntentId from the renewal-due email or dashboard.
+  const paymentIntentId = "pi_REPLACE_ME";
 
-  const result = await auth.purchaseCreditsAndPay({
-    secretKey,
-    jwt,
-    projectId,
-    qty: 1,
-  });
+  const result = await auth.payRenewalAndPay(secretKey, jwt, paymentIntentId);
 
   switch (result.kind) {
     case "completed":
-      console.log("Credits purchased!");
+      console.log("Renewal paid!");
       console.log("Tx signature:", result.txSignature);
       console.log("Payment intent:", result.paymentIntentId);
       break;
@@ -51,14 +47,14 @@ import { makeAuthClient } from "helius-sdk/auth/client";
       console.log(
         "USDC sent (tx:",
         result.txSignature,
-        "), but activation polling timed out. Re-poll later via:"
+        "), but confirmation polling timed out. Re-poll later via:"
       );
       console.log(" ", result.paymentLink.paymentUrl);
       break;
     case "expired":
     case "failed":
       console.error(
-        `Purchase ${result.kind}.`,
+        `Renewal ${result.kind}.`,
         "reason" in result ? result.reason : ""
       );
       break;
