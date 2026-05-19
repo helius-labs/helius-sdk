@@ -108,6 +108,7 @@
     "build": "rimraf dist && rollup -c",
     "prepare": "simple-git-hooks && pnpm run build",
     "lint": "eslint src",
+    "typecheck": "tsc --noEmit",
     "format": "prettier --write 'src/**/*.{js,ts,json,md}'",
     "format:check": "prettier --cache --check 'src/**/*.{js,ts,json,md}'",
     "bundle:size": "bundlemon",

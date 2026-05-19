@@ -17,9 +17,9 @@ pnpm run docs:build       # Generate TypeDoc API docs to docs/ (gitignored)
 pnpm run docs:open        # Generate docs and open in browser via local HTTP server
 ```
 
-Before submitting a PR, run: `pnpm format && pnpm lint && pnpm test && pnpm check-bundle`
+Before submitting a PR, run: `pnpm format && pnpm lint && pnpm typecheck && pnpm test && pnpm check-bundle`
 
-CI runs formatting, linting, tests, build, tree-shake checks, and bundle size checks on every push and PR to `main`.
+CI runs formatting, linting, type checking, tests, build, tree-shake checks, and bundle size checks on every push and PR to `main`.
 
 ## Project Structure
 
