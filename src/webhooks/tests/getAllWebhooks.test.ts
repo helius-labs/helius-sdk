@@ -44,7 +44,7 @@ describe("getAllWebhooks Tests", () => {
 
     expect(result).toEqual(mockWebhooks);
     expect(mockFetch).toHaveBeenCalledWith(
-      `https://api.helius.xyz/v0/webhooks?api-key=test-key`,
+      `https://api-mainnet.helius-rpc.com/v0/webhooks?api-key=test-key`,
       expect.objectContaining({
         method: "GET",
         headers: expect.objectContaining({
@@ -64,7 +64,7 @@ describe("getAllWebhooks Tests", () => {
 
     expect(result).toEqual([]);
     expect(mockFetch).toHaveBeenCalledWith(
-      `https://api.helius.xyz/v0/webhooks?api-key=test-key`,
+      `https://api-mainnet.helius-rpc.com/v0/webhooks?api-key=test-key`,
       expect.objectContaining({
         method: "GET",
       })

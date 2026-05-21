@@ -22,7 +22,7 @@ describe("deleteWebhook Tests", () => {
     const result = await rpc.webhooks.delete("yavin-base-1138");
     expect(result).toBe(true); // Updated to expect true
     expect(mockFetch).toHaveBeenCalledWith(
-      `https://api.helius.xyz/v0/webhooks/yavin-base-1138?api-key=test-key`,
+      `https://api-mainnet.helius-rpc.com/v0/webhooks/yavin-base-1138?api-key=test-key`,
       expect.objectContaining({
         method: "DELETE",
       })

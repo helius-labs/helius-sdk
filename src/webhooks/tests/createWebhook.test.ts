@@ -43,7 +43,7 @@ describe("createWebhook Tests", () => {
 
     expect(result).toEqual(mockResponse);
     expect(mockFetch).toHaveBeenCalledWith(
-      `https://api.helius.xyz/v0/webhooks?api-key=test-key`,
+      `https://api-mainnet.helius-rpc.com/v0/webhooks?api-key=test-key`,
       expect.objectContaining({
         method: "POST",
         headers: expect.objectContaining({

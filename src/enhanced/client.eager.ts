@@ -51,7 +51,7 @@ export const makeEnhancedTxClientEager = (
   const base =
     network === "devnet"
       ? "https://api-devnet.helius.xyz/v0"
-      : "https://api.helius.xyz/v0";
+      : "https://api-mainnet.helius-rpc.com/v0";
 
   const getTransactions: EnhancedTxClient["getTransactions"] = async ({
     transactions,

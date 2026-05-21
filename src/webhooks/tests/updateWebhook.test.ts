@@ -39,7 +39,7 @@ describe("updateWebhook Tests", () => {
 
     expect(result).toEqual(mockResponse);
     expect(mockFetch).toHaveBeenCalledWith(
-      `https://api.helius.xyz/v0/webhooks/yavin-base-1138?api-key=test-key`,
+      `https://api-mainnet.helius-rpc.com/v0/webhooks/yavin-base-1138?api-key=test-key`,
       expect.objectContaining({
         method: "PUT",
         headers: expect.objectContaining({
@@ -74,7 +74,7 @@ describe("updateWebhook Tests", () => {
 
     expect(result).toEqual(mockResponse);
     expect(mockFetch).toHaveBeenCalledWith(
-      `https://api.helius.xyz/v0/webhooks/death-star-plans-66?api-key=test-key`,
+      `https://api-mainnet.helius-rpc.com/v0/webhooks/death-star-plans-66?api-key=test-key`,
       expect.objectContaining({
         method: "PUT",
         body: JSON.stringify(mockParams),

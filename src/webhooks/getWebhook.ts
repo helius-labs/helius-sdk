@@ -6,7 +6,7 @@ export const getWebhook = async (
   webhookID: string,
   userAgent?: string
 ): Promise<Webhook> => {
-  const url = `https://api.helius.xyz/v0/webhooks/${webhookID}?api-key=${apiKey}`;
+  const url = `https://api-mainnet.helius-rpc.com/v0/webhooks/${webhookID}?api-key=${apiKey}`;
 
   const response = await fetch(url, {
     method: "GET",

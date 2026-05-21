@@ -35,7 +35,7 @@ describe("toggleWebhook Tests", () => {
     expect(result).toEqual(mockResponse);
     expect(result.active).toBe(true);
     expect(mockFetch).toHaveBeenCalledWith(
-      `https://api.helius.xyz/v0/webhooks/yavin-base-1138?api-key=test-key`,
+      `https://api-mainnet.helius-rpc.com/v0/webhooks/yavin-base-1138?api-key=test-key`,
       expect.objectContaining({
         method: "PATCH",
         headers: expect.objectContaining({
@@ -68,7 +68,7 @@ describe("toggleWebhook Tests", () => {
     expect(result).toEqual(mockResponse);
     expect(result.active).toBe(false);
     expect(mockFetch).toHaveBeenCalledWith(
-      `https://api.helius.xyz/v0/webhooks/death-star-plans-66?api-key=test-key`,
+      `https://api-mainnet.helius-rpc.com/v0/webhooks/death-star-plans-66?api-key=test-key`,
       expect.objectContaining({
         method: "PATCH",
         body: JSON.stringify({ active: false }),
