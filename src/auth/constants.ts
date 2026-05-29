@@ -1,6 +1,18 @@
 import type { Address } from "@solana/kit";
 
-export const API_URL = "https://dev-api.helius.xyz/v0";
+/**
+ * Helius API root. MUST include the `/v0` path prefix — SDK endpoints are appended
+ * as literal paths (e.g. `${API_URL}/oauth/token`). Trailing slashes are stripped
+ * so `HELIUS_API_URL=http://localhost:3001/v0/` and `…/v0` behave identically.
+ *
+ * Override resolution order:
+ *   1. `process.env.HELIUS_API_URL` (browser/Deno-safe)
+ *   2. this default
+ */
+export const API_URL = (
+  (typeof process !== "undefined" && process.env?.HELIUS_API_URL) ||
+  "https://dev-api.helius.xyz/v0"
+).replace(/\/$/, "");
 
 /**
  * Host that serves the public hosted-checkout page used by `signup` /
