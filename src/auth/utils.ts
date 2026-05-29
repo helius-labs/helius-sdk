@@ -4,12 +4,25 @@ import { API_URL } from "./constants";
 export const sleep = (ms: number) =>
   new Promise((resolve) => setTimeout(resolve, ms));
 
+/**
+ * Resolves the API root at call time. Honors `process.env.HELIUS_API_URL` when
+ * available (Node), falls back to the literal `API_URL` constant otherwise.
+ * Trailing slashes are stripped so `…/v0/` and `…/v0` behave identically.
+ */
+function resolveApiUrl(): string {
+  const override =
+    typeof process !== "undefined" && process.env?.HELIUS_API_URL
+      ? process.env.HELIUS_API_URL
+      : API_URL;
+  return override.replace(/\/$/, "");
+}
+
 export async function authRequest<T>(
   endpoint: string,
   options: RequestInit = {},
   userAgent?: string
 ): Promise<T> {
-  const url = `${API_URL}${endpoint}`;
+  const url = `${resolveApiUrl()}${endpoint}`;
   const response = await fetch(url, {
     ...options,
     headers: {
@@ -21,7 +34,8 @@ export async function authRequest<T>(
 
   if (!response.ok) {
     const errorText = await response.text();
-    const contentType = response.headers.get("content-type") ?? "";
+    // Guard the headers access — some fetch mocks in tests omit Headers entirely.
+    const contentType = response.headers?.get?.("content-type") ?? "";
     if (contentType.startsWith("application/json")) {
       try {
         const body = JSON.parse(errorText);

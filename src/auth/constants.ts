@@ -2,17 +2,13 @@ import type { Address } from "@solana/kit";
 
 /**
  * Helius API root. MUST include the `/v0` path prefix — SDK endpoints are appended
- * as literal paths (e.g. `${API_URL}/oauth/token`). Trailing slashes are stripped
- * so `HELIUS_API_URL=http://localhost:3001/v0/` and `…/v0` behave identically.
+ * as literal paths (e.g. `${API_URL}/oauth/token`).
  *
- * Override resolution order:
- *   1. `process.env.HELIUS_API_URL` (browser/Deno-safe)
- *   2. this default
+ * Kept as a plain string literal so the bundler can tree-shake. The env override
+ * (`HELIUS_API_URL`) is honored at call time inside `authRequest`, mirroring the
+ * call-time pattern documented on `PAYMENT_HOST` below.
  */
-export const API_URL = (
-  (typeof process !== "undefined" && process.env?.HELIUS_API_URL) ||
-  "https://dev-api.helius.xyz/v0"
-).replace(/\/$/, "");
+export const API_URL = "https://dev-api.helius.xyz/v0";
 
 /**
  * Host that serves the public hosted-checkout page used by `signup` /
