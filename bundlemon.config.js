@@ -42,6 +42,19 @@ export default {
       maxSize: '1.7kb',
     },
     {
+      // Opt out of the default 15% growth ratchet: this PR adds the
+      // HELIUS_API_URL env override (resolveApiUrl + /v0 auto-append) and
+      // structured JSON-error parsing. The absolute cap still gates growth.
+      path: 'dist/esm/auth/utils.js',
+      maxSize: '1.5kb',
+    },
+    {
+      // Opt out of the default 15% growth ratchet: getHttpStatus now prefers
+      // a structured `status` property before falling back to message parsing.
+      path: 'dist/esm/auth/getHttpStatus.js',
+      maxSize: '1kb',
+    },
+    {
       path: 'dist/esm/websockets/wsAsync.js',
       maxSize: '1.5kb',
     },
