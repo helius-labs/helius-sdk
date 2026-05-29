@@ -7,14 +7,17 @@ export const sleep = (ms: number) =>
 /**
  * Resolves the API root at call time. Honors `process.env.HELIUS_API_URL` when
  * available (Node), falls back to the literal `API_URL` constant otherwise.
- * Trailing slashes are stripped so `…/v0/` and `…/v0` behave identically.
+ * Trailing slashes are stripped so `…/v0/` and `…/v0` behave identically, and
+ * the `/v0` version prefix is auto-appended when missing — so a `HELIUS_API_URL`
+ * override set without it still resolves to versioned endpoints.
  */
 function resolveApiUrl(): string {
   const override =
     typeof process !== "undefined" && process.env?.HELIUS_API_URL
       ? process.env.HELIUS_API_URL
       : API_URL;
-  return override.replace(/\/$/, "");
+  const url = override.replace(/\/$/, "");
+  return url.endsWith("/v0") ? url : `${url}/v0`;
 }
 
 export async function authRequest<T>(
