@@ -1,8 +1,0 @@
-/node_modules
-/docs
-/out
-/src
-/tests
-.DS_Store
-/coverage
-examples/
