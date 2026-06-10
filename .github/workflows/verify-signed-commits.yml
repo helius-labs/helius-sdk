@@ -1,0 +1,57 @@
+name: Verify Signed Commits
+
+# Enforces the signed-commits policy (see CONTRIBUTING.md).
+# Every commit in a PR must be signed AND verified by GitHub against the
+# author's registered signing key. We query GitHub's verification API rather
+# than `git verify-commit` because CI does not have contributors' public keys.
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  verify-signatures:
+    name: Verify commit signatures
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check that all PR commits are signed and verified
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+          echo "Checking commit signatures for PR #$PR_NUMBER in $REPO"
+          echo
+
+          # One compact JSON object per commit: sha, verified flag, and reason.
+          commits=$(gh api --paginate "repos/$REPO/pulls/$PR_NUMBER/commits" \
+            --jq '.[] | {sha: .sha, verified: .commit.verification.verified, reason: .commit.verification.reason}')
+
+          unverified=0
+          while IFS= read -r commit; do
+            [ -z "$commit" ] && continue
+            sha=$(printf '%s' "$commit" | jq -r '.sha' | cut -c1-8)
+            verified=$(printf '%s' "$commit" | jq -r '.verified')
+            reason=$(printf '%s' "$commit" | jq -r '.reason')
+            if [ "$verified" = "true" ]; then
+              echo "  verified    $sha"
+            else
+              echo "  UNVERIFIED  $sha  (reason: $reason)"
+              unverified=$((unverified + 1))
+            fi
+          done <<< "$commits"
+
+          echo
+          if [ "$unverified" -gt 0 ]; then
+            echo "::error::$unverified commit(s) are not signed/verified."
+            echo "All commits must be signed. See CONTRIBUTING.md and:"
+            echo "https://docs.github.com/en/authentication/managing-commit-signature-verification/signing-commits"
+            exit 1
+          fi
+
+          echo "All commits are signed and verified."
