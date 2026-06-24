@@ -29,9 +29,13 @@ import { createHelius } from "helius-sdk";
     // `asOf` is the transaction the balance was read from.
     // It is null when the wallet held none of the token by that point.
     if (atSlot.asOf) {
-      console.log(`  As of tx: ${atSlot.asOf.signature} (slot ${atSlot.asOf.slot})`);
+      console.log(
+        `  As of tx: ${atSlot.asOf.signature} (slot ${atSlot.asOf.slot})`
+      );
     } else {
-      console.log("  No matching activity at or before this point — balance is 0");
+      console.log(
+        "  No matching activity at or before this point — balance is 0"
+      );
     }
 
     // Query by Unix timestamp (seconds) instead of slot
@@ -49,8 +53,9 @@ import { createHelius } from "helius-sdk";
       mint,
       datetime: "2025-01-10 19:20:00",
     });
+    const { datetime, time } = atDatetime.requested;
     console.log(
-      `\nBy datetime (${atDatetime.requested.datetime} -> ${atDatetime.requested.time}): ${atDatetime.balance}`
+      `\nBy datetime (${datetime} -> ${time}): ${atDatetime.balance}`
     );
   } catch (error: any) {
     console.error("\nError fetching historical balance:", error.message);

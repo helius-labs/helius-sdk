@@ -119,7 +119,8 @@ describe("getBalanceAt Tests", () => {
     mockFetch.mockResolvedValue({
       ok: true,
       json: async () => ({
-        error: { code: 400, message: "Invalid mint" },
+        error: "Invalid mint",
+        code: 400,
       }),
     });
 
