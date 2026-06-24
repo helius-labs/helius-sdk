@@ -34,7 +34,7 @@ describe("createSmartTransactionWithTip", () => {
     jest.clearAllMocks();
   });
 
-  it("Appends a Jito tip instruction and forwards everything to the base builder", async () => {
+  it("Appends a Sender tip instruction and forwards everything to the base builder", async () => {
     const userIx = makeNoopIx(address("11111111111111111111111111111111"));
 
     const result = await create({

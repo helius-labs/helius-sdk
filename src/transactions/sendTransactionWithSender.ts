@@ -1,7 +1,7 @@
 import { getBase64EncodedWireTransaction } from "@solana/kit";
 import { makePollTransactionConfirmation } from "./pollTransactionConfirmation";
 import {
-  MIN_TIP_LAMPORTS_DUAL,
+  MIN_TIP_LAMPORTS_MAX,
   MIN_TIP_LAMPORTS_SWQOS,
   type SendTransactionWithSenderFn,
   type SendSmartTxSenderDeps,
@@ -29,7 +29,7 @@ export const makeSendTransactionWithSender = (deps: SendSmartTxSenderDeps) => {
     let tipLamports =
       tipAmount != null ? BigInt(tipAmount) : await determineTipSol(swqosOnly);
 
-    const floor = swqosOnly ? MIN_TIP_LAMPORTS_SWQOS : MIN_TIP_LAMPORTS_DUAL;
+    const floor = swqosOnly ? MIN_TIP_LAMPORTS_SWQOS : MIN_TIP_LAMPORTS_MAX;
     if (tipLamports < floor) tipLamports = floor;
 
     const { signed, lifetime } = await createSmartTransactionWithTip({

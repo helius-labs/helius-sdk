@@ -149,8 +149,10 @@ export interface BroadcastOptions {
   /** Confirmation commitment level to wait for. */
   commitment?: "processed" | "confirmed" | "finalized";
   /**
-   * When `true`, routes exclusively through SWQOS infrastructure.
-   * Has a lower minimum tip requirement than the default dual-routing mode.
+   * When `true`, routes exclusively through SWQOS-only mode (lower 0.000005 SOL
+   * minimum tip). When `false` (default), uses **Sender Max**: routes across
+   * multiple high-speed pathways and enters a priority auction (0.001 SOL
+   * minimum tip).
    */
   swqosOnly?: boolean;
 }
@@ -180,7 +182,7 @@ export type BroadcastTransactionFn = (
 ) => Promise<string>;
 
 /**
- * Regional Helius sender endpoints for SWQOS transaction submission.
+ * Regional Helius Sender endpoints for low-latency transaction submission.
  *
  * `Default` uses HTTPS and is suitable for frontend/browser applications.
  * All other regions use HTTP and are intended for server-side use.
@@ -215,9 +217,9 @@ export const senderFastUrl = (region: SenderRegion) =>
 export const senderPingUrl = (region: SenderRegion) =>
   `${SENDER_ENDPOINTS[region]}/ping`;
 
-/** Input for `createSmartTransactionWithTip` — adds a Jito/sender tip instruction. */
+/** Input for `createSmartTransactionWithTip` — adds a Sender tip instruction. */
 export interface CreateSmartTxWithTipInput extends CreateSmartTxInput {
-  /** Tip amount in lamports. Defaults to 500,000. */
+  /** Tip amount in lamports. Defaults to the Sender Max minimum (1,000,000 = 0.001 SOL). */
   tipAmount?: number;
 }
 
@@ -267,10 +269,21 @@ export const SENDER_TIP_ACCOUNTS: Address[] = [
   "4TQLFNWK8AovT1gFvda5jfw2oJeRMKEmw7aH6MGBJ3or" as Address,
 ] as const;
 
-/** Minimum tip for dual (SWQOS + Jito) submission — 0.001 SOL. */
-export const MIN_TIP_LAMPORTS_DUAL = 1_000_000n;
-/** Minimum tip for SWQOS-only submission — 0.0005 SOL. */
-export const MIN_TIP_LAMPORTS_SWQOS = 500_000n;
+/**
+ * Minimum tip for **Sender Max** submission — 0.001 SOL.
+ *
+ * Sender Max (`swqosOnly: false`) routes across multiple high-speed pathways
+ * and enters a priority auction; tip more to land first. The same tier handles
+ * both single transactions and bundles.
+ */
+export const MIN_TIP_LAMPORTS_MAX = 1_000_000n;
+/**
+ * @deprecated Renamed to {@link MIN_TIP_LAMPORTS_MAX} (Sender Max). The previous
+ * 0.0002 SOL tier has been removed; this alias now resolves to 0.001 SOL.
+ */
+export const MIN_TIP_LAMPORTS_DUAL = MIN_TIP_LAMPORTS_MAX;
+/** Minimum tip for SWQOS-only submission — 0.000005 SOL. */
+export const MIN_TIP_LAMPORTS_SWQOS = 5_000n;
 
 /** Options for the low-level `sendTransaction` helper. */
 export interface HeliusSendOptions {
