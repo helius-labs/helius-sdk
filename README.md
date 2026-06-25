@@ -189,6 +189,7 @@ Simply create, send, and land transactions as fast as possible. Available on the
 - `sendSmartTransaction()`: Builds and sends an optimized transaction
 - `sendTransaction()`: Wrapper for [`sendTransaction` RPC call](https://www.helius.dev/docs/api-reference/rpc/http/sendtransaction) that includes support for a `validatorAcls` parameter (i.e., JSON-based allow and deny lists).
 - `sendTransactionWithSender()`: Ultra-low latency Solana transaction submission via [Helius Sender](https://www.helius.dev/docs/sending-transactions/sender). Routes across multiple high-speed pathways and enters a priority auction; tip more to land first. Two tiers: **Sender Max** (`swqosOnly: false`, 0.001 SOL minimum tip) and **SWQOS-only** (`swqosOnly: true`, 0.000005 SOL minimum tip).
+- `sendBundleWithSender()`: Submits an ordered bundle of pre-signed transactions (max 5) atomically over Sender Max via the `sendBundle` method, then tracks landing per-signature with `getSignatureStatuses`. At least one transaction in the bundle must carry the 0.001 SOL Sender Max minimum tip.
 
 [**Priority Fee API**](https://github.com/helius-labs/helius-sdk/blob/main/examples/EXAMPLES_OVERVIEW.md#helper-methods)
 
@@ -246,27 +247,25 @@ await sub.unsubscribe();
 
 [**Pre Confirmations**](https://www.helius.dev/docs/sending-transactions/sender) (`preconfSubscribe`)
 
-Helius's lowest-latency transaction stream: scheduled transactions are delivered over WebSocket **before** they are shredded. A pre-confirmation is an **early signal, not a guarantee** — a streamed transaction may still fail to land. Pricing is credit-based (billed per notification message), the same as other Helius WebSocket subscriptions. Use the standalone `makePreconfWsClient` from `helius-sdk/websockets/preconfWs`.
+Helius's lowest-latency transaction stream: scheduled transactions are delivered over WebSocket **before** they are shredded. A pre-confirmation is an **early signal, not a guarantee** — a streamed transaction may still fail to land. Pricing is credit-based (billed per notification message), the same as other Helius WebSocket subscriptions. Use the standalone `makePreconfWsClient` (or `makePreconfWsClientForApiKey`) from `helius-sdk/websockets/preconfWs`.
 
-- `preconfSubscribe()`: Subscribe to Pre Confirmations. Takes **no filter parameters** — streams *all* scheduled transactions. Returns an `AsyncIterable` of `{ version, slot, transactionIndex, transaction, transactionBytes }` with an `unsubscribe()` method.
+- `preconfSubscribe()`: Subscribe to Pre Confirmations. Takes **no filter parameters** — streams *all* scheduled transactions. Returns an `AsyncIterable` of `{ slot, transactionIndex, transaction, transactionBytes }` with an `unsubscribe()` method.
 - `preconfUnsubscribe(subscriptionId)`: Unsubscribe.
 
 ```typescript
-import { makePreconfWsClient } from "helius-sdk/websockets/preconfWs";
+import { makePreconfWsClientForApiKey } from "helius-sdk/websockets/preconfWs";
 
-const client = makePreconfWsClient(
-  `wss://preconf-mainnet.helius-rpc.com/?api-key=${apiKey}`
-);
+const client = makePreconfWsClientForApiKey(apiKey);
 const sub = await client.preconfSubscribe();
 for await (const event of sub) {
   // event.transaction is the decoded @solana/kit Transaction; event.transactionBytes is the raw bincode payload
-  console.log(event.version, event.slot, event.transactionIndex);
+  console.log(event.slot, event.transactionIndex);
 }
 await sub.unsubscribe();
 client.close();
 ```
 
-> **Note:** The public Pre Confirmations hostname is a best-effort default and may change — confirm the canonical endpoint before relying on a specific host.
+> **Note:** The Pre Confirmations stream is served from the Gatekeeper endpoint (`wss://beta.helius-rpc.com/?api-key=<KEY>`). Despite the `beta` host name this is the production path.
 
 [**ZK Compression**](https://github.com/helius-labs/helius-sdk/blob/main/examples/EXAMPLES_OVERVIEW.md#helper-methods)
 

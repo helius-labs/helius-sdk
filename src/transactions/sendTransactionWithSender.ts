@@ -19,6 +19,7 @@ export const makeSendTransactionWithSender = (deps: SendSmartTxSenderDeps) => {
   const send: SendTransactionWithSenderFn = async ({
     region,
     swqosOnly = false,
+    skipPreflight = true,
     pollTimeoutMs = DEFAULT_TIMEOUT_MS,
     pollIntervalMs = DEFAULT_POLL_MS,
     tipAmount,
@@ -40,7 +41,8 @@ export const makeSendTransactionWithSender = (deps: SendSmartTxSenderDeps) => {
     const sig = await sendViaSender(
       getBase64EncodedWireTransaction(signed),
       region,
-      swqosOnly
+      swqosOnly,
+      skipPreflight
     );
 
     await poll(sig, {

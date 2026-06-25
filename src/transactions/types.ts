@@ -113,7 +113,7 @@ export type SendSmartTransactionInput = CreateSmartTxInput & {
   confirmCommitment?: Commitment; // "processed" | "confirmed" | "finalized"
   /** Maximum number of automatic retry attempts. Should be `0n` for Sender. */
   maxRetries?: bigint;
-  /** Bypasses preflight transaction validation for faster submission. Must be `true` for Sender. Defaults to `true`. */
+  /** Bypasses preflight transaction validation for faster submission. Caller-controlled passthrough for Sender (no longer required to be `true`). Defaults to `true`. */
   skipPreflight?: boolean;
 };
 
@@ -141,7 +141,8 @@ export interface BroadcastOptions {
   pollIntervalMs?: number;
   /**
    * Bypasses Solana's preflight transaction validation for faster submission.
-   * **Must be `true` when submitting via Helius Sender.** Defaults to `true`.
+   * Caller-controlled passthrough when submitting via Helius Sender (no longer
+   * required to be `true`). Defaults to `true`.
    */
   skipPreflight?: boolean;
   /** Maximum number of automatic retry attempts. Should be set to `0` for Sender. */
@@ -232,8 +233,13 @@ export type CreateSmartTransactionWithTipFn = (
 export interface SendViaSenderOptions {
   /** Sender region to route through. */
   region: SenderRegion;
-  /** Route only through SWQOS infrastructure. */
+  /** Route only through SWQOS-only mode (lower 0.000005 SOL minimum tip). */
   swqosOnly?: boolean;
+  /**
+   * Skip Solana's preflight checks. Caller-controlled passthrough — Sender no
+   * longer requires this to be `true`. Defaults to `true`.
+   */
+  skipPreflight?: boolean;
   /** Overall polling timeout in milliseconds. */
   pollTimeoutMs?: number;
   /** Polling cadence in milliseconds. */
@@ -278,8 +284,8 @@ export const SENDER_TIP_ACCOUNTS: Address[] = [
  */
 export const MIN_TIP_LAMPORTS_MAX = 1_000_000n;
 /**
- * @deprecated Renamed to {@link MIN_TIP_LAMPORTS_MAX} (Sender Max). The previous
- * 0.0002 SOL tier has been removed; this alias now resolves to 0.001 SOL.
+ * @deprecated Renamed to {@link MIN_TIP_LAMPORTS_MAX} (Sender Max). The former
+ * non-SWQOS tier has been removed; this alias now resolves to 0.001 SOL.
  */
 export const MIN_TIP_LAMPORTS_DUAL = MIN_TIP_LAMPORTS_MAX;
 /** Minimum tip for SWQOS-only submission — 0.000005 SOL. */

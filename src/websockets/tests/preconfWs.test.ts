@@ -1,7 +1,8 @@
 import {
   decodePreconfFrame,
   makePreconfWsClient,
-  PRECONF_PROTOCOL_VERSION,
+  makePreconfWsClientForApiKey,
+  PRECONF_WEBSOCKET_URL,
 } from "../preconfWs";
 import { getTransactionEncoder } from "@solana/kit";
 
@@ -41,13 +42,12 @@ const buildFrame = (
 // ── decodePreconfFrame unit tests ────────────────────────────────────
 
 describe("decodePreconfFrame", () => {
-  it("decodes slot, transactionIndex, version, and transaction", () => {
+  it("decodes slot, transactionIndex, and transaction", () => {
     const txBytes = buildTxBytes();
     const frame = buildFrame(123n, 7n, txBytes);
 
     const notif = decodePreconfFrame(frame);
 
-    expect(notif.version).toBe(PRECONF_PROTOCOL_VERSION);
     expect(notif.slot).toBe(123n);
     expect(notif.transactionIndex).toBe(7n);
     expect(notif.transactionBytes).toEqual(txBytes);
@@ -132,7 +132,7 @@ class MockWebSocket {
 
 (globalThis as any).WebSocket = MockWebSocket;
 
-const TEST_URL = "wss://preconf-mainnet.helius-rpc.com/?api-key=test-key";
+const TEST_URL = "wss://beta.helius-rpc.com/?api-key=test-key";
 const lastWs = (): MockWebSocket => mockInstances[mockInstances.length - 1];
 const respondToLatest = (ws: MockWebSocket, result: unknown) => {
   const lastSent = JSON.parse(ws.sent[ws.sent.length - 1]);
@@ -182,7 +182,6 @@ describe("makePreconfWsClient", () => {
     const n2 = await iter.next();
     expect(n1.value.slot).toBe(100n);
     expect(n1.value.transactionIndex).toBe(0n);
-    expect(n1.value.version).toBe(PRECONF_PROTOCOL_VERSION);
     expect(n2.value.slot).toBe(101n);
     expect(n2.value.transactionIndex).toBe(3n);
 
@@ -242,5 +241,18 @@ describe("makePreconfWsClient", () => {
     const ws = lastWs();
     client.close();
     expect(ws.closeCallCount).toBeGreaterThan(0);
+  });
+
+  it("makePreconfWsClientForApiKey connects to the Gatekeeper endpoint", async () => {
+    const client = makePreconfWsClientForApiKey("abc123");
+    const subPromise = client.preconfSubscribe();
+    await jest.advanceTimersByTimeAsync(0);
+    respondToLatest(lastWs(), 1);
+    await subPromise;
+
+    expect(lastWs().url).toBe(`${PRECONF_WEBSOCKET_URL}abc123`);
+    expect(lastWs().url).toBe("wss://beta.helius-rpc.com/?api-key=abc123");
+
+    client.close();
   });
 });

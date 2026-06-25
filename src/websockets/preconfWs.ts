@@ -23,14 +23,18 @@ import { getTransactionDecoder, type Transaction } from "@solana/kit";
  *   slot:u64_le (8) | transaction_index:u64_le (8) | bincode(VersionedTransaction)
  *   ```
  *
- *   The server strips the internal `magic | version:u8` prefix before
- *   forwarding, so the version byte is not present on the wire; it is
- *   synthesized as {@link PRECONF_PROTOCOL_VERSION} (`1`). The server only
- *   forwards datagrams matching that version.
+ *   There is **no version field** on the wire.
  */
 
-/** The current Pre Confirmations wire protocol version (synthesized, not on the wire). */
-export const PRECONF_PROTOCOL_VERSION = 1;
+/**
+ * Base WebSocket URL for the Helius Pre Confirmations endpoint.
+ *
+ * Pre Confirmations are served from the Gatekeeper endpoint
+ * (`wss://beta.helius-rpc.com`). Despite the `beta` host name this is **not** a
+ * beta product — it is where Pre Confirmations launch during the Gatekeeper
+ * migration. The API key is appended as a query parameter.
+ */
+export const PRECONF_WEBSOCKET_URL = "wss://beta.helius-rpc.com/?api-key=";
 
 /** Minimum binary-frame length: `slot(8) + transaction_index(8)`. */
 const HEADER_LEN = 16;
@@ -47,11 +51,6 @@ const BUFFER_LIMIT = 10_000;
  * A pre-confirmation is an **early signal, not a guarantee**.
  */
 export interface PreconfNotification {
-  /**
-   * Protocol version. Synthesized as {@link PRECONF_PROTOCOL_VERSION} (`1`)
-   * because the server strips the version byte before forwarding the frame.
-   */
-  version: number;
   /** The slot the scheduled transaction targets. */
   slot: bigint;
   /** The transaction's index within the scheduled batch for that slot. */
@@ -114,7 +113,6 @@ export const decodePreconfFrame = (bytes: Uint8Array): PreconfNotification => {
   const transaction = txDecoder.decode(transactionBytes);
 
   return {
-    version: PRECONF_PROTOCOL_VERSION,
     slot,
     transactionIndex,
     transaction,
@@ -145,12 +143,10 @@ const toUint8Array = (data: unknown): Uint8Array | undefined => {
 /**
  * Create a Pre Confirmations WebSocket client connected to the given URL.
  *
- * The URL should be the Pre Confirmations endpoint with an API key, e.g.
- * `wss://preconf-mainnet.helius-rpc.com/?api-key=<KEY>`.
- *
- * > **Note:** the public Pre Confirmations hostname was not yet wired into the
- * > public router when this helper was written — confirm the canonical endpoint
- * > before relying on a specific host.
+ * The URL should be the Pre Confirmations endpoint with an API key. Pre
+ * Confirmations are served from the Gatekeeper endpoint
+ * (`wss://beta.helius-rpc.com/?api-key=<KEY>`); see {@link PRECONF_WEBSOCKET_URL}.
+ * For the common case, prefer {@link makePreconfWsClientForApiKey}.
  */
 export const makePreconfWsClient = (preconfWsUrl: string): PreconfWsClient => {
   let ws: WebSocket | undefined;
@@ -412,3 +408,10 @@ export const makePreconfWsClient = (preconfWsUrl: string): PreconfWsClient => {
     },
   };
 };
+
+/**
+ * Convenience constructor: create a Pre Confirmations client for an API key
+ * using the Gatekeeper endpoint ({@link PRECONF_WEBSOCKET_URL}).
+ */
+export const makePreconfWsClientForApiKey = (apiKey: string): PreconfWsClient =>
+  makePreconfWsClient(`${PRECONF_WEBSOCKET_URL}${apiKey}`);

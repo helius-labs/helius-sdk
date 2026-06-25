@@ -54,7 +54,12 @@ describe("makeSendTransactionWithSender Tests", () => {
     expect(mockCreateSmartTxWithTip).toHaveBeenCalledWith(
       expect.objectContaining({ tipAmount: Number(MIN_TIP_LAMPORTS_MAX) })
     );
-    expect(mockSendViaSender).toHaveBeenCalledWith("TX64", "Default", false);
+    expect(mockSendViaSender).toHaveBeenCalledWith(
+      "TX64",
+      "Default",
+      false,
+      true
+    );
     expect(mockPoll).toHaveBeenCalled();
   });
 
@@ -75,6 +80,34 @@ describe("makeSendTransactionWithSender Tests", () => {
     expect(mockCreateSmartTxWithTip).toHaveBeenCalledWith(
       expect.objectContaining({ tipAmount: Number(MIN_TIP_LAMPORTS_SWQOS) })
     );
-    expect(mockSendViaSender).toHaveBeenCalledWith("TX64", "US_EAST", true);
+    expect(mockSendViaSender).toHaveBeenCalledWith(
+      "TX64",
+      "US_EAST",
+      true,
+      true
+    );
+  });
+
+  it("Passes through skipPreflight = false", async () => {
+    const { send } = makeSendTransactionWithSender({
+      raw: dummyRpc,
+      createSmartTransactionWithTip: mockCreateSmartTxWithTip,
+    });
+
+    await send({
+      region: "Default",
+      swqosOnly: false,
+      skipPreflight: false,
+      signers: [],
+      instructions: [],
+      version: 0,
+    } as any);
+
+    expect(mockSendViaSender).toHaveBeenCalledWith(
+      "TX64",
+      "Default",
+      false,
+      false
+    );
   });
 });
