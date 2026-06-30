@@ -29,9 +29,9 @@ import { makePreconfWsClientForApiKey } from "helius-sdk/websockets/preconfWs";
   try {
     let count = 0;
     for await (const event of sub) {
-      // event: { slot, transactionIndex, transaction, transactionBytes }
+      // event: { version, slot, transactionIndex, status, transaction, transactionBytes }
       console.log(
-        `preconf slot=${event.slot} index=${event.transactionIndex}`,
+        `preconf v${event.version} slot=${event.slot} index=${event.transactionIndex} status=${event.status}`,
         `sig=${Object.keys(event.transaction.signatures)[0]}`,
         `(${event.transactionBytes.length} raw bytes)`
       );

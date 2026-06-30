@@ -247,10 +247,12 @@ await sub.unsubscribe();
 
 [**Pre Confirmations**](https://www.helius.dev/docs/sending-transactions/sender) (`preconfSubscribe`)
 
-Helius's lowest-latency transaction stream: scheduled transactions are delivered over WebSocket **before** they are shredded. A pre-confirmation is an **early signal, not a guarantee** — a streamed transaction may still fail to land. Pricing is credit-based (billed per notification message), the same as other Helius WebSocket subscriptions. Use the standalone `makePreconfWsClient` (or `makePreconfWsClientForApiKey`) from `helius-sdk/websockets/preconfWs`.
+Helius's lowest-latency transaction stream: scheduled transactions are delivered over WebSocket **before** they are shredded. A pre-confirmation is an **early signal, not a guarantee** — a streamed transaction may still fail to land. Coverage is **not continuous**: it scales with the share of stake forwarding scheduled transactions to Helius, so expect gaps. Pricing is credit-based (10 credits per notification message), the same model as other Helius WebSocket subscriptions. Use the standalone `makePreconfWsClient` (or `makePreconfWsClientForApiKey`) from `helius-sdk/websockets/preconfWs`.
 
-- `preconfSubscribe()`: Subscribe to Pre Confirmations. Takes **no filter parameters** — streams *all* scheduled transactions. Returns an `AsyncIterable` of `{ slot, transactionIndex, transaction, transactionBytes }` with an `unsubscribe()` method.
+- `preconfSubscribe()`: Subscribe to Pre Confirmations. Takes **no filter parameters** — streams *all* scheduled transactions. Returns an `AsyncIterable` of `{ version, slot, transactionIndex, status, transaction, transactionBytes }` with an `unsubscribe()` method.
 - `preconfUnsubscribe(subscriptionId)`: Unsubscribe.
+
+Notifications are **binary** frames (the subscribe ack is a JSON text frame); the little-endian layout is `version:u8 | slot:u64_le | transaction_index:u64_le | status:u8 | bincode(VersionedTransaction)`. The `version` byte is checked first (currently `1`; unknown versions throw and are dropped) and `status` is the `PreconfStatus` enum (`Failed = 0`, `Success = 1`, `Unknown = 2`).
 
 ```typescript
 import { makePreconfWsClientForApiKey } from "helius-sdk/websockets/preconfWs";
@@ -259,7 +261,7 @@ const client = makePreconfWsClientForApiKey(apiKey);
 const sub = await client.preconfSubscribe();
 for await (const event of sub) {
   // event.transaction is the decoded @solana/kit Transaction; event.transactionBytes is the raw bincode payload
-  console.log(event.slot, event.transactionIndex);
+  console.log(event.version, event.slot, event.transactionIndex, event.status);
 }
 await sub.unsubscribe();
 client.close();

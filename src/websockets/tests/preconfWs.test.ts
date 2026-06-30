@@ -3,6 +3,7 @@ import {
   makePreconfWsClient,
   makePreconfWsClientForApiKey,
   PRECONF_WEBSOCKET_URL,
+  PreconfStatus,
 } from "../preconfWs";
 import { getTransactionEncoder } from "@solana/kit";
 
@@ -29,31 +30,60 @@ const buildTxBytes = (): Uint8Array => {
 const buildFrame = (
   slot: bigint,
   idx: bigint,
-  txBytes: Uint8Array
+  txBytes: Uint8Array,
+  status = 1,
+  version = 1
 ): Uint8Array => {
-  const buf = new Uint8Array(16 + txBytes.length);
+  const buf = new Uint8Array(18 + txBytes.length);
   const view = new DataView(buf.buffer);
-  view.setBigUint64(0, slot, true);
-  view.setBigUint64(8, idx, true);
-  buf.set(txBytes, 16);
+  view.setUint8(0, version);
+  view.setBigUint64(1, slot, true);
+  view.setBigUint64(9, idx, true);
+  view.setUint8(17, status);
+  buf.set(txBytes, 18);
   return buf;
 };
 
 // ── decodePreconfFrame unit tests ────────────────────────────────────
 
 describe("decodePreconfFrame", () => {
-  it("decodes slot, transactionIndex, and transaction", () => {
+  it("decodes version, slot, transactionIndex, status, and transaction", () => {
     const txBytes = buildTxBytes();
-    const frame = buildFrame(123n, 7n, txBytes);
+    const frame = buildFrame(123n, 7n, txBytes, PreconfStatus.Success);
 
     const notif = decodePreconfFrame(frame);
 
+    expect(notif.version).toBe(1);
     expect(notif.slot).toBe(123n);
     expect(notif.transactionIndex).toBe(7n);
+    expect(notif.status).toBe(PreconfStatus.Success);
     expect(notif.transactionBytes).toEqual(txBytes);
     // Decoded into the kit Transaction shape.
     expect(Object.keys(notif.transaction)).toEqual(
       expect.arrayContaining(["messageBytes", "signatures"])
+    );
+  });
+
+  it("decodes each status variant (out-of-range falls back to Unknown)", () => {
+    const tx = buildTxBytes();
+    expect(decodePreconfFrame(buildFrame(1n, 0n, tx, 0)).status).toBe(
+      PreconfStatus.Failed
+    );
+    expect(decodePreconfFrame(buildFrame(1n, 0n, tx, 1)).status).toBe(
+      PreconfStatus.Success
+    );
+    expect(decodePreconfFrame(buildFrame(1n, 0n, tx, 2)).status).toBe(
+      PreconfStatus.Unknown
+    );
+    expect(decodePreconfFrame(buildFrame(1n, 0n, tx, 9)).status).toBe(
+      PreconfStatus.Unknown
+    );
+  });
+
+  it("throws on an unknown wire version", () => {
+    const frame = buildFrame(1n, 0n, buildTxBytes(), 1, 2);
+    expect(() => decodePreconfFrame(frame)).toThrow(
+      /unsupported preconf wire version/i
     );
   });
 
@@ -69,7 +99,7 @@ describe("decodePreconfFrame", () => {
   });
 
   it("throws on a frame shorter than the header", () => {
-    expect(() => decodePreconfFrame(new Uint8Array(16))).toThrow(/too short/i);
+    expect(() => decodePreconfFrame(new Uint8Array(18))).toThrow(/too short/i);
     expect(() => decodePreconfFrame(new Uint8Array(0))).toThrow(/too short/i);
   });
 

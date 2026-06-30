@@ -9,21 +9,27 @@ import { getTransactionDecoder, type Transaction } from "@solana/kit";
  * > A pre-confirmation is an **early signal, not a guarantee** — a streamed
  * > transaction may still fail to land.
  *
- * Pricing is **credit-based** (billed per notification message), the same model
- * as other Helius WebSocket subscriptions. It is **not** tip-based.
+ * Coverage is **not continuous**: the stream scales with the share of stake
+ * forwarding scheduled transactions to Helius, so expect gaps — not every slot
+ * or transaction will appear.
+ *
+ * Pricing is **credit-based** (10 credits per notification message), the same
+ * model as other Helius WebSocket subscriptions. It is **not** tip-based.
  *
  * ## Wire format
  *
  * - `preconfSubscribe` takes **no parameters** and streams *all* scheduled
  *   transactions. The subscribe/unsubscribe responses are JSON-RPC 2.0 text
  *   frames (`result` = numeric subscription id / boolean).
- * - Notifications arrive as **binary** frames laid out as:
+ * - Notifications arrive as **binary** frames (little-endian) laid out as:
  *
  *   ```text
- *   slot:u64_le (8) | transaction_index:u64_le (8) | bincode(VersionedTransaction)
+ *   version:u8 (1) | slot:u64_le (8) | transaction_index:u64_le (8) | status:u8 (1) | bincode(VersionedTransaction)
  *   ```
  *
- *   There is **no version field** on the wire.
+ *   The leading `version` byte is read and checked **first** (currently `1`); a
+ *   frame carrying an unknown version is dropped rather than misparsed. `status`
+ *   is `0 = failed`, `1 = success`, `2 = unknown`.
  */
 
 /**
@@ -36,8 +42,36 @@ import { getTransactionDecoder, type Transaction } from "@solana/kit";
  */
 export const PRECONF_WEBSOCKET_URL = "wss://beta.helius-rpc.com/?api-key=";
 
-/** Minimum binary-frame length: `slot(8) + transaction_index(8)`. */
-const HEADER_LEN = 16;
+/** The wire schema version this client understands. Frames carrying any other
+ * version in byte 0 are dropped rather than misparsed. */
+export const PRECONF_WIRE_VERSION = 1;
+
+/** Header length before the bincode payload: `version(1) + slot(8) + transaction_index(8) + status(1)`. */
+const HEADER_LEN = 18;
+
+/**
+ * Landed status of a pre-confirmed transaction.
+ *
+ * A pre-confirmation is an early signal; `status` reflects the scheduler's
+ * current view and may still change before the transaction is finalized.
+ */
+export enum PreconfStatus {
+  Failed = 0,
+  Success = 1,
+  Unknown = 2,
+}
+
+/** Decode the on-the-wire `status` byte; any out-of-range value maps to `Unknown`. */
+const decodeStatus = (byte: number): PreconfStatus => {
+  switch (byte) {
+    case 0:
+      return PreconfStatus.Failed;
+    case 1:
+      return PreconfStatus.Success;
+    default:
+      return PreconfStatus.Unknown;
+  }
+};
 
 /** Keepalive ping interval in milliseconds. */
 const KEEPALIVE_INTERVAL_MS = 30_000;
@@ -51,10 +85,14 @@ const BUFFER_LIMIT = 10_000;
  * A pre-confirmation is an **early signal, not a guarantee**.
  */
 export interface PreconfNotification {
+  /** The wire schema version (byte 0). Currently always {@link PRECONF_WIRE_VERSION}. */
+  version: number;
   /** The slot the scheduled transaction targets. */
   slot: bigint;
   /** The transaction's index within the scheduled batch for that slot. */
   transactionIndex: bigint;
+  /** The reported landed status of the transaction. */
+  status: PreconfStatus;
   /**
    * The decoded transaction (the `@solana/kit` {@link Transaction}, i.e.
    * `{ messageBytes, signatures }`), deserialized from the bincode
@@ -94,10 +132,14 @@ const txDecoder = getTransactionDecoder();
 /**
  * Decode a raw Pre Confirmations binary frame into a {@link PreconfNotification}.
  *
- * Layout: `slot:u64_le | transaction_index:u64_le | bincode(VersionedTransaction)`.
+ * Layout: `version:u8 | slot:u64_le | transaction_index:u64_le | status:u8 | bincode(VersionedTransaction)`.
  *
- * @throws if the frame is shorter than the 16-byte header (+ at least 1 payload
- *   byte) or the transaction payload fails to decode.
+ * The leading `version` byte is checked first; a frame with an unrecognized
+ * version throws so future format changes fail loudly instead of being silently
+ * misparsed.
+ *
+ * @throws if the frame is shorter than the 18-byte header (+ at least 1 payload
+ *   byte), the version is unknown, or the transaction payload fails to decode.
  */
 export const decodePreconfFrame = (bytes: Uint8Array): PreconfNotification => {
   if (bytes.length < HEADER_LEN + 1) {
@@ -107,14 +149,23 @@ export const decodePreconfFrame = (bytes: Uint8Array): PreconfNotification => {
   }
 
   const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
-  const slot = view.getBigUint64(0, true);
-  const transactionIndex = view.getBigUint64(8, true);
+  const version = view.getUint8(0);
+  if (version !== PRECONF_WIRE_VERSION) {
+    throw new Error(
+      `unsupported preconf wire version ${version} (this client understands ${PRECONF_WIRE_VERSION})`
+    );
+  }
+  const slot = view.getBigUint64(1, true);
+  const transactionIndex = view.getBigUint64(9, true);
+  const status = decodeStatus(view.getUint8(17));
   const transactionBytes = bytes.slice(HEADER_LEN);
   const transaction = txDecoder.decode(transactionBytes);
 
   return {
+    version,
     slot,
     transactionIndex,
+    status,
     transaction,
     transactionBytes,
   };
@@ -207,7 +258,7 @@ export const makePreconfWsClient = (preconfWsUrl: string): PreconfWsClient => {
     try {
       notif = decodePreconfFrame(bytes);
     } catch {
-      // Malformed frame — skip rather than tear down the stream.
+      // Malformed or unknown-version frame — skip rather than tear down the stream.
       return;
     }
     for (const sink of sinks) sink.push(notif);
