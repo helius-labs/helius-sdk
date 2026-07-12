@@ -68,6 +68,19 @@ export default {
       maxSize: '4kb',
     },
     {
+      // Opt out of the default 15% growth ratchet: Sender Max pricing adds
+      // MIN_TIP_LAMPORTS_MAX + deprecated MIN_TIP_LAMPORTS_DUAL alias and the
+      // corrected SWQOS floor. Absolute cap still gates unbounded growth.
+      path: 'dist/esm/transactions/types.js',
+      maxSize: '2.5kb',
+    },
+    {
+      // Opt out of the default 15% growth ratchet: determineTipSol now branches
+      // on the Sender Max vs SWQOS-only floor. Absolute cap still gates growth.
+      path: 'dist/esm/transactions/determineTip.js',
+      maxSize: '2.5kb',
+    },
+    {
       path: 'dist/**/*.js',
       maxSize: '2.5kb',  // No file should be larger than 2.5kb
       maxPercentIncrease: 15
