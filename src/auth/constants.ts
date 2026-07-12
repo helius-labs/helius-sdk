@@ -1,5 +1,13 @@
 import type { Address } from "@solana/kit";
 
+/**
+ * Helius API root. MUST include the `/v0` path prefix — SDK endpoints are appended
+ * as literal paths (e.g. `${API_URL}/oauth/token`).
+ *
+ * Kept as a plain string literal so the bundler can tree-shake. The env override
+ * (`HELIUS_API_URL`) is honored at call time inside `authRequest`, mirroring the
+ * call-time pattern documented on `PAYMENT_HOST` below.
+ */
 export const API_URL = "https://dev-api.helius.xyz/v0";
 
 /**

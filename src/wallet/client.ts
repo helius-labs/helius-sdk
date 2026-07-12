@@ -5,6 +5,8 @@ import type {
   GetBatchIdentityResponse,
   GetBalancesRequest,
   GetBalancesResponse,
+  GetBalanceAtRequest,
+  GetBalanceAtResponse,
   GetHistoryRequest,
   GetHistoryResponse,
   GetTransfersRequest,
@@ -68,6 +70,16 @@ export interface WalletClient {
   getBalances(params: GetBalancesRequest): Promise<GetBalancesResponse>;
 
   /**
+   * Get a wallet's balance of a specific token or native SOL at a past
+   * timestamp, datetime, or slot
+   *
+   * @param params - Request parameters including wallet, mint, and exactly one of time/datetime/slot
+   * @returns Historical balance, with amounts returned as strings to avoid precision loss
+   * @throws Error if HTTP error or invalid request
+   */
+  getBalanceAt(params: GetBalanceAtRequest): Promise<GetBalanceAtResponse>;
+
+  /**
    * Get transaction history with balance changes
    *
    * @param params - Request parameters including wallet address and pagination options
@@ -126,6 +138,8 @@ export const makeWalletClient = (
     ),
   getBalances: async (p) =>
     (await import("./getBalances.js")).getBalances(apiKey, p, userAgent),
+  getBalanceAt: async (p) =>
+    (await import("./getBalanceAt.js")).getBalanceAt(apiKey, p, userAgent),
   getHistory: async (p) =>
     (await import("./getHistory.js")).getHistory(apiKey, p, userAgent),
   getTransfers: async (p) =>

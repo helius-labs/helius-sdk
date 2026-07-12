@@ -401,6 +401,7 @@ helius.stake.getHeliusStakeAccounts(wallet)                  // List stake accou
 
 ```typescript
 helius.wallet.getBalances({ wallet })                       // Token balances
+helius.wallet.getBalanceAt({ wallet, mint, slot })          // Historical balance (time/datetime/slot)
 helius.wallet.getHistory({ wallet })                        // Transaction history
 helius.wallet.getTransfers({ wallet })                      // Transfer history
 helius.wallet.getIdentity({ wallet })                       // Known identity lookup

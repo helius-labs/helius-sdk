@@ -293,6 +293,95 @@ export interface GetTransfersResponse {
 }
 
 /**
+ * Request parameters for getting a wallet's historical token balance.
+ *
+ * Provide **exactly one** of `time`, `datetime`, or `slot` to specify the
+ * point in the past. For exact, deterministic results prefer `slot`, since
+ * block times reported by validators can drift by a few seconds.
+ */
+export interface GetBalanceAtRequest {
+  /** Solana wallet address (base58 encoded) */
+  wallet: string;
+  /**
+   * Token mint address. For native SOL, use the pseudo-mint
+   * `So11111111111111111111111111111111111111111`.
+   */
+  mint: string;
+  /**
+   * Unix timestamp in **seconds**. Returns the balance as of this time.
+   * Provide exactly one of `time`, `datetime`, or `slot`.
+   */
+  time?: number;
+  /**
+   * Datetime string. Accepted formats: `2025-01-10` (UTC midnight),
+   * `2025-01-10 19:20:00`, `2025-01-10T19:20:00` (seconds optional), or with an
+   * explicit timezone (`2025-01-10T19:20:00Z`, `...+02:00`). Interpreted as UTC
+   * unless an explicit timezone is included.
+   * Provide exactly one of `time`, `datetime`, or `slot`.
+   */
+  datetime?: string;
+  /**
+   * Slot number. Returns the balance as of this slot. Exact and deterministic.
+   * Provide exactly one of `time`, `datetime`, or `slot`.
+   */
+  slot?: number;
+}
+
+/**
+ * The transaction a historical balance was read from.
+ */
+export interface BalanceAtSource {
+  /** Slot of the transaction */
+  slot: number;
+  /** Block time of the transaction in Unix seconds (may be null) */
+  blockTime?: number | null;
+  /** Transaction signature */
+  signature: string;
+}
+
+/**
+ * Response from getBalanceAt endpoint.
+ *
+ * `balance` and `balanceRaw` are returned as **strings** to avoid precision
+ * loss on large values.
+ */
+export interface GetBalanceAtResponse {
+  /** Echo of the queried wallet address */
+  wallet: string;
+  /** Echo of the queried mint (the SOL pseudo-mint when native) */
+  mint: string;
+  /** Whether the result is native SOL */
+  isNative: boolean;
+  /**
+   * Human-readable amount as a decimal string (not a number, so large balances
+   * don't lose precision). Trailing zeros are trimmed.
+   */
+  balance: string;
+  /** Exact amount in the smallest unit (lamports for SOL), as a string */
+  balanceRaw: string;
+  /** Token decimals (9 for SOL) */
+  decimals: number;
+  /**
+   * Echo of the query. When `datetime` is used, `time` is also populated with
+   * the resolved epoch seconds so the UTC interpretation is visible.
+   */
+  requested: {
+    /** Requested time as epoch seconds (also set when `datetime` was used) */
+    time: number | null;
+    /** Requested slot, when `slot` was used */
+    slot: number | null;
+    /** The original datetime string, when `datetime` was used */
+    datetime: string | null;
+  };
+  /**
+   * The transaction the balance was read from. `null` when the wallet had no
+   * matching transaction at or before the requested point — meaning the balance
+   * is genuinely `0` (the wallet had not held the token by then), not an error.
+   */
+  asOf: BalanceAtSource | null;
+}
+
+/**
  * Wallet funding source information
  */
 export interface FundingSource {

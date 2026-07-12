@@ -6,6 +6,8 @@ import type {
   GetBatchIdentityResponse,
   GetBalancesRequest,
   GetBalancesResponse,
+  GetBalanceAtRequest,
+  GetBalanceAtResponse,
   GetHistoryRequest,
   GetHistoryResponse,
   GetTransfersRequest,
@@ -16,6 +18,7 @@ import type {
 import { getIdentity } from "./getIdentity";
 import { getBatchIdentity } from "./getBatchIdentity";
 import { getBalances } from "./getBalances";
+import { getBalanceAt } from "./getBalanceAt";
 import { getHistory } from "./getHistory";
 import { getTransfers } from "./getTransfers";
 import { getFundedBy } from "./getFundedBy";
@@ -52,6 +55,8 @@ export const makeWalletClientEager = (
     getBatchIdentity(apiKey, p, userAgent),
   getBalances: (p: GetBalancesRequest): Promise<GetBalancesResponse> =>
     getBalances(apiKey, p, userAgent),
+  getBalanceAt: (p: GetBalanceAtRequest): Promise<GetBalanceAtResponse> =>
+    getBalanceAt(apiKey, p, userAgent),
   getHistory: (p: GetHistoryRequest): Promise<GetHistoryResponse> =>
     getHistory(apiKey, p, userAgent),
   getTransfers: (p: GetTransfersRequest): Promise<GetTransfersResponse> =>
