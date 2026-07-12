@@ -59,6 +59,15 @@ export default {
       maxSize: '1.5kb',
     },
     {
+      // Standalone Pre Confirmations WS client: subscribe/unsubscribe over a
+      // demuxed text+binary socket, keepalive, bounded buffer, plus the binary
+      // frame decoder (decodePreconfFrame) and bincode VersionedTransaction
+      // decode. Self-contained (does not reuse enhancedWs), so it lands at
+      // ~3.9KB. The absolute cap still gates unbounded growth.
+      path: 'dist/esm/websockets/preconfWs.js',
+      maxSize: '4kb',
+    },
+    {
       path: 'dist/**/*.js',
       maxSize: '2.5kb',  // No file should be larger than 2.5kb
       maxPercentIncrease: 15

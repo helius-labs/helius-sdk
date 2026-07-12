@@ -54,12 +54,17 @@ const HEADER_LEN = 18;
  *
  * A pre-confirmation is an early signal; `status` reflects the scheduler's
  * current view and may still change before the transaction is finalized.
+ *
+ * Implemented as a `const` object (not a TS `enum`) so it tree-shakes cleanly.
  */
-export enum PreconfStatus {
-  Failed = 0,
-  Success = 1,
-  Unknown = 2,
-}
+export const PreconfStatus = {
+  Failed: 0,
+  Success: 1,
+  Unknown: 2,
+} as const;
+
+/** The landed status of a pre-confirmed transaction (see {@link PreconfStatus}). */
+export type PreconfStatus = (typeof PreconfStatus)[keyof typeof PreconfStatus];
 
 /** Decode the on-the-wire `status` byte; any out-of-range value maps to `Unknown`. */
 const decodeStatus = (byte: number): PreconfStatus => {
@@ -127,7 +132,19 @@ export interface PreconfWsClient {
   close(): void;
 }
 
-const txDecoder = getTransactionDecoder();
+/**
+ * Lazily-constructed `VersionedTransaction` decoder.
+ *
+ * Built on first use (not at module load) so this module stays free of
+ * top-level side effects and remains tree-shakeable.
+ */
+let txDecoder: ReturnType<typeof getTransactionDecoder> | undefined;
+const getTxDecoder = (): ReturnType<typeof getTransactionDecoder> => {
+  if (!txDecoder) {
+    txDecoder = getTransactionDecoder();
+  }
+  return txDecoder;
+};
 
 /**
  * Decode a raw Pre Confirmations binary frame into a {@link PreconfNotification}.
@@ -159,7 +176,7 @@ export const decodePreconfFrame = (bytes: Uint8Array): PreconfNotification => {
   const transactionIndex = view.getBigUint64(9, true);
   const status = decodeStatus(view.getUint8(17));
   const transactionBytes = bytes.slice(HEADER_LEN);
-  const transaction = txDecoder.decode(transactionBytes);
+  const transaction = getTxDecoder().decode(transactionBytes);
 
   return {
     version,
