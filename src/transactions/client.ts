@@ -45,7 +45,7 @@ export interface TxHelpersLazy {
   createSmartTransaction: CreateSmartTransactionFn;
   /** Build, sign, send, and confirm a smart transaction in one call. */
   sendSmartTransaction: SendSmartTransactionFn;
-  /** Build and send a transaction via the Helius sender infrastructure (SWQOS). */
+  /** Build and send a single transaction via the Helius Sender (Sender Max by default; set `swqosOnly` for the SWQOS-only tier). */
   sendTransactionWithSender: SendTransactionWithSenderFn;
   /**
    * Submit a bundle of up to 5 pre-signed transactions to Sender Max via
