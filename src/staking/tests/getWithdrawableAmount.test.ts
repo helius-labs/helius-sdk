@@ -77,4 +77,39 @@ describe("getWithdrawableAmount Tests", () => {
 
     expect(amt).toBe(5_000_000);
   });
+
+  it("Treats an initialized (undelegated) account as fully withdrawable", async () => {
+    const rpc = mockRpcBase();
+    rpc.getAccountInfo.mockReturnValue({
+      send: () => ({
+        value: {
+          lamports: 5_000_000n,
+          data: {
+            parsed: {
+              type: "initialized",
+              info: {
+                meta: {
+                  rentExemptReserve: rentExemptLamports.toString(),
+                  authorized: {
+                    staker: stakeAccount,
+                    withdrawer: stakeAccount,
+                  },
+                  lockup: {
+                    unixTimestamp: 0,
+                    epoch: 0,
+                    custodian: stakeAccount,
+                  },
+                },
+              },
+            },
+          },
+        },
+      }),
+    });
+
+    const fn = makeGetWithdrawableAmount({ rpc });
+    const amt = await fn(stakeAccount);
+
+    expect(amt).toBe(Number(5_000_000n - rentExemptLamports));
+  });
 });
