@@ -3,8 +3,12 @@ export * from "./types";
 export type { GetComputeUnitsFn } from "./getComputeUnits";
 export { makeGetComputeUnits } from "./getComputeUnits";
 
-// Version 1 helpers, exported for consumers assembling v1 transactions by hand
-// rather than through createSmartTransaction
+// Helpers for consumers assembling transactions by hand rather than through
+// createSmartTransaction. `createEmptyTxMessage` is deliberately not exported:
+// it exists only to work around kit's `createTransactionMessage` typing and is
+// meant to be deleted once that is fixed upstream.
+export { createTxMessage } from "./createTxMessage";
+
 export type {
   ResolvedPriorityFee,
   ResolvePriorityFeeInput,
