@@ -91,6 +91,30 @@ export default {
       maxSize: '2.4kb',
     },
     {
+      // Opt out of the default 15% growth ratchet: createTxMessage is now
+      // generic over the transaction version so a v1 caller gets a v1-typed
+      // message, and applies the v1 address-lookup-table guard. A one-time step
+      // up from a small file; the absolute cap still gates further growth.
+      path: 'dist/esm/transactions/createTxMessage.js',
+      maxSize: '1kb',
+    },
+    {
+      // Opt out of the default 15% growth ratchet: the estimator moved to
+      // @solana/kit's version-aware helper (the compute-budget one appends a
+      // SetComputeUnitLimit instruction, a no-op on v1) and is now built lazily
+      // on first estimate. Absolute cap still gates unbounded growth.
+      path: 'dist/esm/transactions/getComputeUnits.js',
+      maxSize: '1kb',
+    },
+    {
+      // Opt out of the default 15% growth ratchet: this barrel now re-exports
+      // the transaction-building helpers (createTxMessage, resolvePriorityFee,
+      // the v1 validators) for consumers assembling v1 transactions by hand.
+      // Re-export lines only; the absolute cap still gates growth.
+      path: 'dist/esm/transactions/index.js',
+      maxSize: '0.75kb',
+    },
+    {
       path: 'dist/**/*.js',
       maxSize: '2.5kb',  // No file should be larger than 2.5kb
       maxPercentIncrease: 15
