@@ -31,6 +31,10 @@ import {
 
 import { createEmptyTxMessage } from "./createTxMessage";
 import { resolvePriorityFee } from "./priorityFee";
+import {
+  assertNoAddressLookupsOnV1,
+  assertWithinSizeLimit,
+} from "./validateTxMessage";
 
 const COMPUTE_BUDGET_PROGRAM_ADDRESS =
   "ComputeBudget111111111111111111111111111111" as Address;
@@ -90,6 +94,9 @@ export const makeCreateSmartTransaction = ({
   }: CreateSmartTxInput): Promise<CreateSmartTxResult> => {
     const feePayerSigner = resolveFeePayerSigner(signers, feePayer);
     const userIxs = instructions.filter((ix) => !isComputeBudgetIx(ix));
+
+    // Fail before spending two RPC round-trips on a transaction that can't be built
+    assertNoAddressLookupsOnV1(version, userIxs);
 
     // Draft message for CU estimation & fee sampling
     const { value: initialLifetime } = await raw
@@ -176,6 +183,9 @@ export const makeCreateSmartTransaction = ({
       (m) => applyComputeBudget(m),
       (m) => appendTransactionMessageInstructions(userIxs, m)
     );
+
+    // Surface an oversized transaction here rather than at the wallet prompt
+    assertWithinSizeLimit(finalMsg);
 
     // Final sign & return
     const finalSigned = await signTransactionMessageWithSigners(finalMsg);

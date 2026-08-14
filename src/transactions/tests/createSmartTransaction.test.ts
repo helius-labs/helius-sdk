@@ -312,6 +312,106 @@ describe("createSmartTransaction Tests", () => {
     expect(result.priorityFeeLamports).toBe(294n);
   });
 
+  it("Rejects a lookup-table account on v1 before making any RPC calls", async () => {
+    const getLatestBlockhash = jest.fn();
+    const getComputeUnits = jest.fn();
+    const getPriorityFeeEstimate = jest.fn();
+
+    const { create } = makeCreateSmartTransaction({
+      raw: { getLatestBlockhash } as any,
+      getComputeUnits,
+      getPriorityFeeEstimate,
+    });
+
+    const lookupIx = {
+      programAddress: address("11111111111111111111111111111111"),
+      accounts: [
+        {
+          address: address("So11111111111111111111111111111111111111112"),
+          addressIndex: 3,
+          lookupTableAddress: address("11111111111111111111111111111113"),
+          role: 0,
+        },
+      ],
+      data: new Uint8Array([1]),
+    } as any;
+
+    await expect(
+      create({
+        signers: [feePayerSigner],
+        instructions: [lookupIx],
+        version: 1,
+      })
+    ).rejects.toThrow(/do not support address lookup tables/i);
+
+    // The whole point of validating up front is to skip the round-trips
+    expect(getLatestBlockhash).not.toHaveBeenCalled();
+    expect(getComputeUnits).not.toHaveBeenCalled();
+    expect(getPriorityFeeEstimate).not.toHaveBeenCalled();
+  });
+
+  it("Rejects an oversized v0 transaction before signing", async () => {
+    const sendOnce = jest.fn().mockResolvedValue({ value: lifetimeA });
+    const raw: any = {
+      getLatestBlockhash: jest.fn().mockReturnValue({ send: sendOnce }),
+    };
+
+    const { create } = makeCreateSmartTransaction({
+      raw,
+      getComputeUnits: jest.fn().mockResolvedValue(1_000),
+      getPriorityFeeEstimate: jest
+        .fn()
+        .mockResolvedValue({ priorityFeeEstimate: 500 }),
+    });
+
+    const oversized = Array.from({ length: 30 }, (_, i) => ({
+      programAddress: address("11111111111111111111111111111111"),
+      accounts: [],
+      data: new Uint8Array(60).fill(i),
+    }));
+
+    await expect(
+      create({
+        signers: [feePayerSigner],
+        instructions: oversized,
+        version: 0,
+      })
+    ).rejects.toThrow(/exceeds limit of 1232 bytes/i);
+
+    // Only the draft is signed; the caller is never asked to sign the final tx
+    expect(mockSign).toHaveBeenCalledTimes(1);
+  });
+
+  it("Builds the same oversized payload on v1, which has the larger limit", async () => {
+    const sendOnce = jest.fn().mockResolvedValue({ value: lifetimeA });
+    const raw: any = {
+      getLatestBlockhash: jest.fn().mockReturnValue({ send: sendOnce }),
+    };
+
+    const { create } = makeCreateSmartTransaction({
+      raw,
+      getComputeUnits: jest.fn().mockResolvedValue(1_000),
+      getPriorityFeeEstimate: jest
+        .fn()
+        .mockResolvedValue({ priorityFeeEstimate: 500 }),
+    });
+
+    const oversized = Array.from({ length: 30 }, (_, i) => ({
+      programAddress: address("11111111111111111111111111111111"),
+      accounts: [],
+      data: new Uint8Array(60).fill(i),
+    }));
+
+    const result = await create({
+      signers: [feePayerSigner],
+      instructions: oversized,
+      version: 1,
+    });
+
+    expect(result.units).toBe(1_000);
+    expect((result.message as any).version).toBe(1);
+  });
+
   it("Throws if feePayer override (Address) has no matching signer", async () => {
     const sendOnce = jest.fn().mockResolvedValue({ value: lifetimeA });
     const raw: any = {

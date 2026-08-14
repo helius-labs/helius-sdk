@@ -5,12 +5,17 @@ import type {
 } from "@solana/kit";
 
 /**
- * We sub out @solana-program/compute-budget so that:
+ * We sub out @solana/kit's estimator so that:
  *   estimateComputeUnitLimitFactory({ rpc }) ➜ mockEstimateFn
+ *
+ * Kit's estimator is used over the @solana-program/compute-budget one because
+ * it raises the simulation limit through a version-aware helper, which v1
+ * transactions need — see the note in getComputeUnits.ts
  */
 const mockEstimate = jest.fn();
 
-jest.mock("@solana-program/compute-budget", () => ({
+jest.mock("@solana/kit", () => ({
+  ...jest.requireActual("@solana/kit"),
   estimateComputeUnitLimitFactory: () => mockEstimate,
 }));
 
