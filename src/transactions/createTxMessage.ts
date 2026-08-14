@@ -7,8 +7,22 @@ import {
   appendTransactionMessageInstructions,
   Address,
   TransactionSigner,
+  TransactionVersion,
 } from "@solana/kit";
 import { CreateTxMessageInput } from "./types";
+
+/**
+ * Creates an empty transaction message of any version.
+ *
+ * `@solana/kit` builds, compiles, and encodes version `1` messages at runtime,
+ * but `createTransactionMessage`'s type signature still excludes `1` — it is
+ * declared as `Exclude<TransactionVersion, 1>`. The cast bridges that gap so
+ * callers get a typed v1 build path. Remove it once kit widens the signature.
+ */
+export const createEmptyTxMessage = (version: TransactionVersion) =>
+  createTransactionMessage({
+    version: version as Exclude<TransactionVersion, 1>,
+  });
 
 export const createTxMessage = ({
   version,
@@ -17,7 +31,7 @@ export const createTxMessage = ({
   instructions,
 }: CreateTxMessageInput) => {
   return pipe(
-    createTransactionMessage({ version }),
+    createEmptyTxMessage(version),
     (m) =>
       lifetime ? setTransactionMessageLifetimeUsingBlockhash(lifetime, m) : m,
     (m) =>

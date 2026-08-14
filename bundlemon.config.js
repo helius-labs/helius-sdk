@@ -59,6 +59,14 @@ export default {
       maxSize: '1.5kb',
     },
     {
+      // Opt out of the default 15% growth ratchet: this file now builds both
+      // the legacy/v0 compute-budget instruction pair and the version 1 header
+      // config (SIMD-0385). The fee math lives in priorityFee.js to keep the
+      // second format from consuming the remaining headroom.
+      path: 'dist/esm/transactions/createSmartTransaction.js',
+      maxSize: '2kb',
+    },
+    {
       path: 'dist/**/*.js',
       maxSize: '2.5kb',  // No file should be larger than 2.5kb
       maxPercentIncrease: 15

@@ -76,6 +76,21 @@ describe("createTxMessage Tests", () => {
     expect(getFeePayerAddress(msg)).toBe(signer.address);
   });
 
+  it("Builds a version 1 message", () => {
+    const feePayer = address("11111111111111111111111111111111");
+    const ix = makeNoopIx(address("11111111111111111111111111111111"));
+
+    const msg = createTxMessage({
+      version: 1,
+      feePayer,
+      instructions: [ix],
+    });
+
+    expect((msg as any).version).toBe(1);
+    expect((msg as any).instructions?.length).toBe(1);
+    expect(getFeePayerAddress(msg)).toBe(feePayer);
+  });
+
   it("Works without lifetime", () => {
     const feePayer = address("11111111111111111111111111111111");
     const ix = makeNoopIx(address("11111111111111111111111111111111"));

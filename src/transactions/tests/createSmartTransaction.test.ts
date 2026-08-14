@@ -159,6 +159,159 @@ describe("createSmartTransaction Tests", () => {
     expect(addrs.length).toBe(3); // 2 CB + 1 user
   });
 
+  it("Carries the compute budget in the header config on version 1, emitting no compute-budget ixs", async () => {
+    const sendOnce = jest.fn().mockResolvedValue({ value: lifetimeA });
+    const raw: any = {
+      getLatestBlockhash: jest.fn().mockReturnValue({ send: sendOnce }),
+    };
+    const getComputeUnits = jest.fn().mockResolvedValue(42_000);
+    const getPriorityFeeEstimate = jest
+      .fn()
+      .mockResolvedValue({ priorityFeeEstimate: 10_000 });
+
+    const { create } = makeCreateSmartTransaction({
+      raw,
+      getComputeUnits,
+      getPriorityFeeEstimate,
+    });
+
+    const userIx = makeNoopIx(address("11111111111111111111111111111111"));
+
+    const result = await create({
+      signers: [feePayerSigner],
+      // A user-supplied compute-budget ix is still stripped: on v1 it would be
+      // a no-op that costs bytes and CUs
+      instructions: [
+        userIx,
+        getSetComputeUnitPriceInstruction({ microLamports: 999 }),
+      ],
+      version: 1,
+    });
+
+    const msg = result.message as any;
+
+    expect(programAddrs(msg)).toEqual([userIx.programAddress]);
+    expect(programAddrs(msg)).not.toContain(CB_ADDR);
+
+    // 10_000 microLamports/CU * 42_000 CU = 420_000_000 microLamports = 420 lamports
+    expect(msg.config).toEqual({
+      computeUnitLimit: 42_000,
+      priorityFeeLamports: 420n,
+    });
+    expect(result.priorityFee).toBe(10_000);
+    expect(result.priorityFeeLamports).toBe(420n);
+  });
+
+  it("Reports the equivalent total lamport fee on legacy and v0", async () => {
+    const sendOnce = jest.fn().mockResolvedValue({ value: lifetimeA });
+    const raw: any = {
+      getLatestBlockhash: jest.fn().mockReturnValue({ send: sendOnce }),
+    };
+
+    const { create } = makeCreateSmartTransaction({
+      raw,
+      getComputeUnits: jest.fn().mockResolvedValue(42_000),
+      getPriorityFeeEstimate: jest
+        .fn()
+        .mockResolvedValue({ priorityFeeEstimate: 10_000 }),
+    });
+
+    const result = await create({
+      signers: [feePayerSigner],
+      instructions: [makeNoopIx(address("11111111111111111111111111111111"))],
+      version: 0,
+    });
+
+    expect(result.priorityFeeLamports).toBe(420n);
+    expect((result.message as any).config).toBeUndefined();
+    expect(programAddrs(result.message)).toContain(CB_ADDR);
+  });
+
+  it("Rounds the total lamport fee up so the transaction never underpays", async () => {
+    const sendOnce = jest.fn().mockResolvedValue({ value: lifetimeA });
+    const raw: any = {
+      getLatestBlockhash: jest.fn().mockReturnValue({ send: sendOnce }),
+    };
+
+    const { create } = makeCreateSmartTransaction({
+      raw,
+      // 1 microLamport/CU * 1_500 CU = 1_500 microLamports = 0.0015 lamports
+      getComputeUnits: jest.fn().mockResolvedValue(1_500),
+      getPriorityFeeEstimate: jest
+        .fn()
+        .mockResolvedValue({ priorityFeeEstimate: 1 }),
+    });
+
+    const result = await create({
+      signers: [feePayerSigner],
+      instructions: [makeNoopIx(address("11111111111111111111111111111111"))],
+      version: 1,
+    });
+
+    expect(result.priorityFeeLamports).toBe(1n);
+  });
+
+  it("Clamps total spend to priorityFeeLamportsCap by lowering the per-CU rate", async () => {
+    const sendOnce = jest.fn().mockResolvedValue({ value: lifetimeA });
+    const raw: any = {
+      getLatestBlockhash: jest.fn().mockReturnValue({ send: sendOnce }),
+    };
+
+    const { create } = makeCreateSmartTransaction({
+      raw,
+      getComputeUnits: jest.fn().mockResolvedValue(42_000),
+      getPriorityFeeEstimate: jest
+        .fn()
+        .mockResolvedValue({ priorityFeeEstimate: 10_000 }),
+    });
+
+    const args = {
+      signers: [feePayerSigner],
+      instructions: [makeNoopIx(address("11111111111111111111111111111111"))],
+      // Uncapped this would cost 420 lamports
+      priorityFeeLamportsCap: 100,
+    };
+
+    const v1 = await create({ ...args, version: 1 });
+    expect(v1.priorityFeeLamports).toBeLessThanOrEqual(100n);
+    expect(v1.priorityFee).toBeLessThan(10_000);
+    expect((v1.message as any).config.priorityFeeLamports).toBe(
+      v1.priorityFeeLamports
+    );
+
+    // The cap constrains legacy/v0 too, by way of the per-CU rate
+    const v0 = await create({ ...args, version: 0 });
+    expect(v0.priorityFeeLamports).toBeLessThanOrEqual(100n);
+    expect(v0.priorityFee).toBe(v1.priorityFee);
+  });
+
+  it("Applies priorityFeeCap before priorityFeeLamportsCap", async () => {
+    const sendOnce = jest.fn().mockResolvedValue({ value: lifetimeA });
+    const raw: any = {
+      getLatestBlockhash: jest.fn().mockReturnValue({ send: sendOnce }),
+    };
+
+    const { create } = makeCreateSmartTransaction({
+      raw,
+      getComputeUnits: jest.fn().mockResolvedValue(42_000),
+      getPriorityFeeEstimate: jest
+        .fn()
+        .mockResolvedValue({ priorityFeeEstimate: 10_000 }),
+    });
+
+    const result = await create({
+      signers: [feePayerSigner],
+      instructions: [makeNoopIx(address("11111111111111111111111111111111"))],
+      version: 1,
+      priorityFeeCap: 7_000,
+      // 7_000 * 42_000 / 1e6 = 294 lamports, already under this cap
+      priorityFeeLamportsCap: 1_000,
+    });
+
+    expect(result.priorityFee).toBe(7_000);
+    expect(result.priorityFeeLamports).toBe(294n);
+  });
+
   it("Throws if feePayer override (Address) has no matching signer", async () => {
     const sendOnce = jest.fn().mockResolvedValue({ value: lifetimeA });
     const raw: any = {

@@ -20,11 +20,14 @@ import { GetPriorityFeeEstimateFn } from "../rpc/methods/getPriorityFeeEstimate"
 import { GetComputeUnitsFn } from "./getComputeUnits";
 
 /**
- * Mirrors `@solana/kit`'s internal `SupportedTransactionVersion` —
- * `TransactionVersion` minus the never-shipped `1`. We can't import
- * the kit type directly because it isn't re-exported.
+ * A transaction version the SDK can build: `"legacy"`, `0`, or `1`.
+ *
+ * Version `1` (SIMD-0385) raises the size limit from 1,232 to 4,096 bytes
+ * (SIMD-0296). It carries its compute-unit limit and priority fee in a header
+ * config rather than in `ComputeBudgetProgram` instructions, and it does not
+ * support address lookup tables.
  */
-type SupportedTxVersion = Exclude<TransactionVersion, 1>;
+export type SupportedTxVersion = TransactionVersion;
 
 /** Options for the compute-unit simulation step. */
 export interface GetComputeUnitsOpts {
@@ -55,8 +58,12 @@ export type CreateTxMessageInput = Readonly<{
 
 /**
  * Input for `createSmartTransaction`. The SDK automatically simulates
- * compute units, fetches priority fees, and prepends compute-budget
- * instructions before signing.
+ * compute units and fetches priority fees before signing.
+ *
+ * On `"legacy"` and `0` the compute-unit limit and price are prepended as
+ * `ComputeBudgetProgram` instructions. On version `1` they are written to the
+ * transaction's header config instead — no compute-budget instructions are
+ * emitted, since SIMD-0385 makes them no-ops that still cost bytes and CUs.
  */
 export type CreateSmartTxInput = Readonly<{
   /** All required signers. First signer is the default fee-payer. */
@@ -65,10 +72,22 @@ export type CreateSmartTxInput = Readonly<{
   instructions: readonly Instruction<string, readonly any[]>[];
   /** Optional fee-payer override (Address or TransactionSigner). */
   feePayer?: Address | TransactionSigner<string>;
-  /** Tx version. Default: 0. */
+  /** Tx version. Default: 0. Pass `1` for the 4,096-byte limit. */
   version?: SupportedTxVersion;
-  /** Optional cap (microlamports per CU) applied to Helius' recommendation. */
+  /**
+   * Optional cap (microlamports per CU) applied to Helius' recommendation.
+   * Applies to every version — on version `1` the capped rate is what gets
+   * converted into the total lamport fee.
+   */
   priorityFeeCap?: number;
+  /**
+   * Optional cap on the *total* priority fee in lamports.
+   *
+   * Version `1` pays a total amount rather than a per-CU rate, so this is the
+   * natural unit to budget in. It is applied after `priorityFeeCap` by clamping
+   * the per-CU rate, so it constrains legacy and v0 transactions too.
+   */
+  priorityFeeLamportsCap?: number | bigint;
   /** CU floor & simulation buffer. Defaults: 1_000 / 10%. */
   minUnits?: number;
   bufferPct?: number;
@@ -84,11 +103,20 @@ export type CreateSmartTxResult = Readonly<{
   base64: string;
   /** Final compute-unit limit set by the SDK. */
   units: number;
-  /** Final microLamports-per-CU set by the SDK. */
+  /** Final microLamports-per-CU rate the SDK settled on, after any caps. */
   priorityFee: number;
+  /**
+   * Total priority fee in lamports.
+   *
+   * On version `1` this is the literal value carried in the transaction header.
+   * On `"legacy"` and `0` it is the equivalent total implied by `priorityFee`
+   * over `units`, since the runtime charges the per-CU rate against the
+   * requested limit.
+   */
+  priorityFeeLamports: bigint;
   /** Final blockhash + lastValidBlockHeight used for the message. */
   lifetime: BlockhashLifetime;
-  /** Final message (after compute-budget ixs are prepended). */
+  /** Final message, with the compute budget applied for its version. */
   message: TransactionMessage & TransactionMessageWithFeePayer;
 }>;
 

@@ -5,16 +5,22 @@ import type {
   CreateSmartTxResult,
   SignedTx,
 } from "./types";
-import type { Address, Instruction, TransactionSigner } from "@solana/kit";
+import type {
+  Address,
+  Instruction,
+  TransactionMessage,
+  TransactionSigner,
+} from "@solana/kit";
 
 import {
-  createTransactionMessage,
   getBase64EncodedWireTransaction,
   pipe,
   prependTransactionMessageInstructions,
   appendTransactionMessageInstructions,
+  setTransactionMessageComputeUnitLimit,
   setTransactionMessageFeePayerSigner,
   setTransactionMessageLifetimeUsingBlockhash,
+  setTransactionMessagePriorityFeeLamports,
   signTransactionMessageWithSigners,
 } from "@solana/kit";
 
@@ -23,8 +29,14 @@ import {
   getSetComputeUnitPriceInstruction,
 } from "@solana-program/compute-budget";
 
+import { createEmptyTxMessage } from "./createTxMessage";
+import { resolvePriorityFee } from "./priorityFee";
+
 const COMPUTE_BUDGET_PROGRAM_ADDRESS =
   "ComputeBudget111111111111111111111111111111" as Address;
+
+/** The version 1 arm of kit's `TransactionMessage` union. */
+type V1TransactionMessage = Extract<TransactionMessage, { version: 1 }>;
 
 const isComputeBudgetIx = (ix: Instruction<string, readonly any[]>) =>
   ix.programAddress === COMPUTE_BUDGET_PROGRAM_ADDRESS;
@@ -70,6 +82,7 @@ export const makeCreateSmartTransaction = ({
     instructions,
     version = 0,
     priorityFeeCap,
+    priorityFeeLamportsCap,
     minUnits = 1_000,
     bufferPct = 0.1,
     commitment = "confirmed",
@@ -84,7 +97,7 @@ export const makeCreateSmartTransaction = ({
       .send();
 
     const draftMsg = pipe(
-      createTransactionMessage({ version }),
+      createEmptyTxMessage(version),
       (m) => setTransactionMessageFeePayerSigner(feePayerSigner, m),
       (m) => setTransactionMessageLifetimeUsingBlockhash(initialLifetime, m),
       (m) => appendTransactionMessageInstructions(userIxs, m)
@@ -108,31 +121,59 @@ export const makeCreateSmartTransaction = ({
       );
     }
 
-    const priorityFee =
-      priorityFeeCap != null
-        ? Math.min(priorityFeeEstimate, priorityFeeCap)
-        : priorityFeeEstimate;
+    const { rate: priorityFee, lamports: priorityFeeLamports } =
+      resolvePriorityFee({
+        estimate: priorityFeeEstimate,
+        units: Number(units),
+        rateCap: priorityFeeCap,
+        lamportsCap: priorityFeeLamportsCap,
+      });
 
     // Refresh blockhash to avoid expiry window
     const { value: finalLifetime } = await raw
       .getLatestBlockhash({ commitment })
       .send();
 
+    /**
+     * Applies the compute budget in the form the transaction's version expects.
+     *
+     * Version 1 carries the limit and the total priority fee in its header
+     * config; emitting `ComputeBudgetProgram` instructions there would be a
+     * no-op that still consumes bytes and compute units (SIMD-0385). Legacy and
+     * v0 keep the prepended price-then-limit instruction pair.
+     */
+    const applyComputeBudget = <TMessage extends TransactionMessage>(
+      m: TMessage
+    ): TMessage => {
+      if (version === 1) {
+        return pipe(
+          m,
+          (msg) => setTransactionMessageComputeUnitLimit(Number(units), msg),
+          // `version` is only known at runtime here, so the compiler can't
+          // narrow the union down to the v1 variant this setter requires.
+          (msg) => msg as unknown as V1TransactionMessage,
+          (msg) =>
+            setTransactionMessagePriorityFeeLamports(priorityFeeLamports, msg)
+        ) as unknown as TMessage;
+      }
+
+      return prependTransactionMessageInstructions(
+        [
+          getSetComputeUnitPriceInstruction({
+            microLamports: Number(priorityFee),
+          }),
+          getSetComputeUnitLimitInstruction({ units: Number(units) }),
+        ] as const,
+        m
+      ) as TMessage;
+    };
+
     // Build the final message (fee payer → lifetime → compute budget → user ixs)
     const finalMsg = pipe(
-      createTransactionMessage({ version }),
+      createEmptyTxMessage(version),
       (m) => setTransactionMessageFeePayerSigner(feePayerSigner, m),
       (m) => setTransactionMessageLifetimeUsingBlockhash(finalLifetime, m),
-      (m) =>
-        prependTransactionMessageInstructions(
-          [
-            getSetComputeUnitPriceInstruction({
-              microLamports: Number(priorityFee),
-            }),
-            getSetComputeUnitLimitInstruction({ units: Number(units) }),
-          ] as const,
-          m
-        ),
+      (m) => applyComputeBudget(m),
       (m) => appendTransactionMessageInstructions(userIxs, m)
     );
 
@@ -145,6 +186,7 @@ export const makeCreateSmartTransaction = ({
       base64,
       units: Number(units),
       priorityFee: Number(priorityFee),
+      priorityFeeLamports,
       lifetime: finalLifetime as BlockhashLifetime,
       message: finalMsg,
     };
