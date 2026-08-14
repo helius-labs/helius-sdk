@@ -1,5 +1,5 @@
 import { Address, Rpc, SolanaRpcApi, address } from "@solana/kit";
-import { STAKE_STATE_LEN, U64_MAX } from "./types";
+import { STAKE_STATE_LEN } from "./types";
 
 export const makeGetWithdrawableAmount = ({
   rpc,
@@ -28,13 +28,16 @@ export const makeGetWithdrawableAmount = ({
 
     const info = parsed.info;
 
-    // Guard: must be stake OR just initialised; never delegated
-    if (!info.stake && info.meta?.type !== "initialized") {
+    // Allow an active/deactivating stake account or an initialized
+    // (undelegated) one. The stake state discriminator is on parsed.type,
+    // not on meta, so meta itself never carries a "type" field.
+    if (!info.stake && parsed.type !== "initialized") {
       throw new Error("Not a valid stake account");
     }
 
-    const deactivationStr =
-      info.stake?.delegation?.deactivationEpoch ?? U64_MAX.toString();
+    // An initialized (undelegated) account has no delegation and is never
+    // active, so treat it as already cooled down.
+    const deactivationStr = info.stake?.delegation?.deactivationEpoch ?? "0";
 
     const deactivationEpoch = BigInt(deactivationStr);
     const currentEpoch = BigInt((await rpc.getEpochInfo().send()).epoch);

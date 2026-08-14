@@ -26,3 +26,10 @@ export { makeTxHelpersLazy } from "./client";
 
 export { makeTxHelpersEager } from "./client.eager";
 export type { TxHelpersEager } from "./client.eager";
+
+export { makeSendBundleWithSender } from "./sendBundleWithSender";
+export type {
+  SendBundleOptions,
+  SendBundleDeps,
+  SignedBundleTransaction,
+} from "./sendBundleWithSender";

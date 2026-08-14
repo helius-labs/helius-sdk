@@ -20,6 +20,11 @@ import { makePollTransactionConfirmation } from "./pollTransactionConfirmation";
 import { broadcastTransactionFactory } from "./broadcastTransaction";
 import { makeCreateSmartTransactionWithTip } from "./createSmartTransactionWithTip";
 import { makeSendTransactionWithSender } from "./sendTransactionWithSender";
+import {
+  makeSendBundleWithSender,
+  type SendBundleOptions,
+  type SignedBundleTransaction,
+} from "./sendBundleWithSender";
 import { makeSendTransaction } from "./sendTransaction";
 
 /**
@@ -40,8 +45,17 @@ export interface TxHelpersLazy {
   createSmartTransaction: CreateSmartTransactionFn;
   /** Build, sign, send, and confirm a smart transaction in one call. */
   sendSmartTransaction: SendSmartTransactionFn;
-  /** Build and send a transaction via the Helius sender infrastructure (SWQOS). */
+  /** Build and send a single transaction via the Helius Sender (Sender Max by default; set `swqosOnly` for the SWQOS-only tier). */
   sendTransactionWithSender: SendTransactionWithSenderFn;
+  /**
+   * Submit a bundle of up to 5 pre-signed transactions to Sender Max via
+   * `sendBundle`. Include only the 0.001 SOL Sender tip in ≥1 transaction;
+   * Helius adds any pathway tips. Landing is tracked per-transaction by signature.
+   */
+  sendBundleWithSender: (
+    transactions: readonly SignedBundleTransaction[],
+    options?: SendBundleOptions
+  ) => Promise<string[]>;
   /** Send a pre-signed transaction (any supported format). */
   sendTransaction: SendTransactionFn;
 }
@@ -77,6 +91,10 @@ export const makeTxHelpersLazy = (
     createSmartTransactionWithTip,
   });
 
+  const { sendBundle: sendBundleWithSender } = makeSendBundleWithSender({
+    raw: rpc,
+  });
+
   const { send: sendTransaction } = makeSendTransaction(rpc);
 
   return {
@@ -86,6 +104,7 @@ export const makeTxHelpersLazy = (
     createSmartTransaction: create,
     sendSmartTransaction: send,
     sendTransactionWithSender: sendWithSender,
+    sendBundleWithSender,
     sendTransaction,
   };
 };

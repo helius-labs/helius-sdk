@@ -3,14 +3,18 @@ import { SenderRegion, senderFastUrl } from "./types";
 
 /**
  * POST a base‑64 transaction to the chosen Sender region.
- * Sender mandates skipPreflight = true and maxRetries = 0
+ *
+ * `skipPreflight` is a caller-controlled passthrough (Sender no longer requires
+ * it to be `true`); it defaults to `true` for backward compatibility. `maxRetries`
+ * is fixed at 0.
  *
  * Returns the transaction signature
  */
 export const sendViaSender = async (
   tx64: string,
   region: SenderRegion = "Default",
-  swqosOnly: boolean = false
+  swqosOnly: boolean = false,
+  skipPreflight: boolean = true
 ): Promise<Signature> => {
   const endpoint = swqosOnly
     ? `${senderFastUrl(region)}?swqos_only=true`
@@ -23,10 +27,7 @@ export const sendViaSender = async (
       jsonrpc: "2.0",
       id: Date.now().toString(),
       method: "sendTransaction",
-      params: [
-        tx64,
-        { encoding: "base64", skipPreflight: true, maxRetries: 0 },
-      ],
+      params: [tx64, { encoding: "base64", skipPreflight, maxRetries: 0 }],
     }),
   });
 

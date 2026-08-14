@@ -6,6 +6,7 @@ import {
   type CreateSmartTxWithTipInput,
   CreateSmartTransactionFn,
   CreateSmartTransactionWithTipFn,
+  MIN_TIP_LAMPORTS_MAX,
   SENDER_TIP_ACCOUNTS,
 } from "./types";
 
@@ -35,7 +36,7 @@ export const makeCreateSmartTransactionWithTip = (
     const tipIx = getTransferSolInstruction({
       source: feePayer,
       destination: randomTipAccount,
-      amount: lamports(BigInt(args.tipAmount ?? 500_000)),
+      amount: lamports(BigInt(args.tipAmount ?? MIN_TIP_LAMPORTS_MAX)),
     });
 
     return createSmartTransaction({

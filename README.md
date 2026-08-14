@@ -230,7 +230,8 @@ Simply create, send, and land transactions as fast as possible. Available on the
 - `createSmartTransaction()`: Creates a smart transaction with the provided configuration
 - `sendSmartTransaction()`: Builds and sends an optimized transaction
 - `sendTransaction()`: Wrapper for [`sendTransaction` RPC call](https://www.helius.dev/docs/api-reference/rpc/http/sendtransaction) that includes support for a `validatorAcls` parameter (i.e., JSON-based allow and deny lists).
-- `sendTransactionWithSender()`: Ultra-low latency Solana transaction submission with dual routing to validators and Jito infra via [Helius Sender](https://www.helius.dev/docs/sending-transactions/sender).
+- `sendTransactionWithSender()`: Ultra-low latency Solana transaction submission via [Helius Sender](https://www.helius.dev/docs/sending-transactions/sender). Routes across multiple high-speed pathways and enters a priority auction; tip more to land first. Two tiers: **Sender Max** (`swqosOnly: false`, 0.001 SOL minimum tip) and **SWQOS-only** (`swqosOnly: true`, 0.000005 SOL minimum tip).
+- `sendBundleWithSender()`: Submits an ordered bundle of pre-signed transactions (max 5) atomically over Sender Max via the `sendBundle` method, then tracks landing per-signature with `getSignatureStatuses`. At least one transaction in the bundle must carry the 0.001 SOL Sender Max minimum tip.
 
 [**Priority Fee API**](https://github.com/helius-labs/helius-sdk/blob/main/examples/EXAMPLES_OVERVIEW.md#helper-methods)
 
@@ -286,6 +287,30 @@ for await (const notif of sub) {
 await sub.unsubscribe();
 ```
 
+[**Pre Confirmations**](https://www.helius.dev/docs/sending-transactions/sender) (`preconfSubscribe`)
+
+Helius's lowest-latency transaction stream: scheduled transactions are delivered over WebSocket **before** they are shredded. A pre-confirmation is an **early signal, not a guarantee** — a streamed transaction may still fail to land. Coverage is **not continuous**: it scales with the share of stake forwarding scheduled transactions to Helius, so expect gaps. Pricing is credit-based (10 credits per notification message), the same model as other Helius WebSocket subscriptions. Use the standalone `makePreconfWsClient` (or `makePreconfWsClientForApiKey`) from `helius-sdk/websockets/preconfWs`.
+
+- `preconfSubscribe()`: Subscribe to Pre Confirmations. Takes **no filter parameters** — streams *all* scheduled transactions. Returns an `AsyncIterable` of `{ version, slot, transactionIndex, status, transaction, transactionBytes }` with an `unsubscribe()` method.
+- `preconfUnsubscribe(subscriptionId)`: Unsubscribe.
+
+Notifications are **binary** frames (the subscribe ack is a JSON text frame); the little-endian layout is `version:u8 | slot:u64_le | transaction_index:u64_le | status:u8 | bincode(VersionedTransaction)`. The `version` byte is checked first (currently `1`; unknown versions throw and are dropped) and `status` is the `PreconfStatus` enum (`Failed = 0`, `Success = 1`, `Unknown = 2`).
+
+```typescript
+import { makePreconfWsClientForApiKey } from "helius-sdk/websockets/preconfWs";
+
+const client = makePreconfWsClientForApiKey(apiKey);
+const sub = await client.preconfSubscribe();
+for await (const event of sub) {
+  // event.transaction is the decoded @solana/kit Transaction; event.transactionBytes is the raw bincode payload
+  console.log(event.version, event.slot, event.transactionIndex, event.status);
+}
+await sub.unsubscribe();
+client.close();
+```
+
+> **Note:** The Pre Confirmations stream is served from the Gatekeeper endpoint (`wss://beta.helius-rpc.com/?api-key=<KEY>`). Despite the `beta` host name this is the production path.
+
 [**ZK Compression**](https://github.com/helius-labs/helius-sdk/blob/main/examples/EXAMPLES_OVERVIEW.md#helper-methods)
 
 Estimate optimal priority fees for Solana transactions. Available on the `helius.zk` namespace.
@@ -324,6 +349,7 @@ Query wallet data including identity, balances, history, and transfers. Availabl
 - [`getIdentity()`](https://www.helius.dev/docs/api-reference/wallet-api/identity): Get wallet identity for known addresses (e.g., exchanges, protocols)
 - [`getBatchIdentity()`](https://www.helius.dev/docs/api-reference/wallet-api/identity): Batch identity lookup for up to 100 addresses
 - [`getBalances()`](https://www.helius.dev/docs/api-reference/wallet-api/balances): Get all token and NFT balances with USD values and pagination
+- [`getBalanceAt()`](https://www.helius.dev/docs/api-reference/wallet-api/balance-at): Get a wallet's balance of a specific token or native SOL at a past timestamp, datetime, or slot
 - [`getHistory()`](https://www.helius.dev/docs/api-reference/wallet-api/history): Fetch transaction history with balance changes and pagination
 - [`getTransfers()`](https://www.helius.dev/docs/api-reference/wallet-api/transfers): Get all token transfer activity with sender/recipient information
 - [`getFundedBy()`](https://www.helius.dev/docs/api-reference/wallet-api/funded-by): Discover the original funding source for a wallet

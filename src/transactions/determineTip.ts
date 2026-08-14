@@ -1,15 +1,21 @@
 import { fetchTipFloor75th } from "./fetchTipFloor";
 import { solToLamports } from "./lamports";
+import { MIN_TIP_LAMPORTS_MAX, MIN_TIP_LAMPORTS_SWQOS } from "./types";
 
 /**
- * Returns a SOL value for the tip:
- *  • current 75‑percentile landed‑tip floor, **or**
- *  • fallback 0.001 SOL (Sender minimum)
+ * Returns a lamport tip value:
+ *  • current 75-percentile landed-tip floor, **or**
+ *  • the Sender minimum for the chosen tier (whichever is higher).
+ *
+ * Tier minimums: Sender Max (`swqosOnly: false`) = 0.001 SOL; SWQOS-only
+ * (`swqosOnly: true`) = 0.000005 SOL.
  */
 export const determineTipSol = async (swqosOnly: boolean): Promise<bigint> => {
   const floorSol = await fetchTipFloor75th();
-  const minSol = swqosOnly ? 0.0005 : 0.001;
-  const chosenSol = Math.max(floorSol ?? minSol, minSol);
+  const minLamports = swqosOnly ? MIN_TIP_LAMPORTS_SWQOS : MIN_TIP_LAMPORTS_MAX;
 
-  return solToLamports(chosenSol);
+  const floorLamports =
+    floorSol != null ? solToLamports(floorSol) : minLamports;
+
+  return floorLamports > minLamports ? floorLamports : minLamports;
 };

@@ -1,6 +1,6 @@
 import { determineTipSol } from "../determineTip";
 import { makeSendTransactionWithSender } from "../sendTransactionWithSender";
-import { MIN_TIP_LAMPORTS_DUAL, MIN_TIP_LAMPORTS_SWQOS } from "../types";
+import { MIN_TIP_LAMPORTS_MAX, MIN_TIP_LAMPORTS_SWQOS } from "../types";
 
 const mockCreateSmartTxWithTip = jest.fn();
 const mockSendViaSender = jest.fn();
@@ -37,7 +37,7 @@ describe("makeSendTransactionWithSender Tests", () => {
     mockSendViaSender.mockResolvedValue("sig-123");
   });
 
-  it("Applies dual-route tip floor", async () => {
+  it("Applies the Sender Max tip floor", async () => {
     const { send } = makeSendTransactionWithSender({
       raw: dummyRpc,
       createSmartTransactionWithTip: mockCreateSmartTxWithTip,
@@ -52,9 +52,14 @@ describe("makeSendTransactionWithSender Tests", () => {
     } as any);
 
     expect(mockCreateSmartTxWithTip).toHaveBeenCalledWith(
-      expect.objectContaining({ tipAmount: Number(MIN_TIP_LAMPORTS_DUAL) })
+      expect.objectContaining({ tipAmount: Number(MIN_TIP_LAMPORTS_MAX) })
     );
-    expect(mockSendViaSender).toHaveBeenCalledWith("TX64", "Default", false);
+    expect(mockSendViaSender).toHaveBeenCalledWith(
+      "TX64",
+      "Default",
+      false,
+      true
+    );
     expect(mockPoll).toHaveBeenCalled();
   });
 
@@ -75,6 +80,34 @@ describe("makeSendTransactionWithSender Tests", () => {
     expect(mockCreateSmartTxWithTip).toHaveBeenCalledWith(
       expect.objectContaining({ tipAmount: Number(MIN_TIP_LAMPORTS_SWQOS) })
     );
-    expect(mockSendViaSender).toHaveBeenCalledWith("TX64", "US_EAST", true);
+    expect(mockSendViaSender).toHaveBeenCalledWith(
+      "TX64",
+      "US_EAST",
+      true,
+      true
+    );
+  });
+
+  it("Passes through skipPreflight = false", async () => {
+    const { send } = makeSendTransactionWithSender({
+      raw: dummyRpc,
+      createSmartTransactionWithTip: mockCreateSmartTxWithTip,
+    });
+
+    await send({
+      region: "Default",
+      swqosOnly: false,
+      skipPreflight: false,
+      signers: [],
+      instructions: [],
+      version: 0,
+    } as any);
+
+    expect(mockSendViaSender).toHaveBeenCalledWith(
+      "TX64",
+      "Default",
+      false,
+      false
+    );
   });
 });
