@@ -1,3 +1,4 @@
+import type { Address } from "@solana/kit";
 import { makeWsAsync } from "../wsAsync";
 
 // Mock @solana/kit
@@ -10,9 +11,12 @@ const mockRpcSubscriptions = {
   accountNotifications: jest.fn().mockReturnValue("account-sub"),
   dispose: mockDispose,
 };
+const mockCreateSolanaRpcSubscriptions = jest
+  .fn()
+  .mockReturnValue(mockRpcSubscriptions);
 
 jest.mock("@solana/kit", () => ({
-  createSolanaRpcSubscriptions: jest.fn().mockReturnValue(mockRpcSubscriptions),
+  createSolanaRpcSubscriptions: mockCreateSolanaRpcSubscriptions,
 }));
 
 // Mock the enhanced WS client module
@@ -91,6 +95,34 @@ describe("makeWsAsync", () => {
     ws.close();
     expect(mockEnhancedClose).toHaveBeenCalled();
     expect(mockDispose).toHaveBeenCalled();
+  });
+
+  it("rejects standard subscriptions after close() instead of reopening a connection", async () => {
+    const ws = makeWsAsync(WS_URL, ENHANCED_WS_URL);
+
+    await ws.logsNotifications("all");
+    expect(mockCreateSolanaRpcSubscriptions).toHaveBeenCalledTimes(1);
+
+    ws.close();
+
+    await expect(ws.logsNotifications("all")).rejects.toThrow(
+      "WebSocket client is closed"
+    );
+    await expect(ws.slotNotifications()).rejects.toThrow(
+      "WebSocket client is closed"
+    );
+    await expect(ws.signatureNotifications("tx-sig")).rejects.toThrow(
+      "WebSocket client is closed"
+    );
+    await expect(ws.programNotifications("progId" as Address)).rejects.toThrow(
+      "WebSocket client is closed"
+    );
+    await expect(ws.accountNotifications("acctId" as Address)).rejects.toThrow(
+      "WebSocket client is closed"
+    );
+
+    // No new underlying connection should have been opened post-close.
+    expect(mockCreateSolanaRpcSubscriptions).toHaveBeenCalledTimes(1);
   });
 
   it("enhanced methods throw with apiKey-missing message when no enhancedWsUrl", async () => {

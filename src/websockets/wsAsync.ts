@@ -146,6 +146,7 @@ export const makeWsAsync = (
   let closed = false;
 
   const raw = async (): Promise<WsRaw> => {
+    if (closed) throw new Error("WebSocket client is closed");
     if (_raw) return _raw;
 
     const ctor = await importWs();
