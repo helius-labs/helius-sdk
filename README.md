@@ -93,6 +93,48 @@ import { createHelius } from "helius-sdk";
 })();
 ```
 
+### Larger transactions with version 1
+
+Agave 4.2 raises the maximum transaction size from 1,232 to 4,096 bytes ([SIMD-0296](https://github.com/solana-foundation/solana-improvement-documents/blob/main/proposals/0296-larger-transactions.md)). That size is only available in the version 1 transaction format ([SIMD-0385](https://github.com/solana-foundation/solana-improvement-documents/blob/main/proposals/0385-transaction-v1.md)). Legacy and v0 transactions are unaffected and remain the default.
+
+Opt in by passing `version: 1`:
+
+```typescript
+const smart = await helius.tx.createSmartTransaction({
+  signers: [feePayerSigner],
+  instructions: [transferIx],
+  version: 1,
+});
+```
+
+Version 1 moves the compute-unit limit and priority fee out of `ComputeBudgetProgram` instructions and into the transaction header, so a v1 transaction is *smaller* on the wire than the v0 equivalent even before you use the extra room. The SDK handles this for you — do not pass compute-budget instructions yourself, as they are no-ops on v1 that still consume bytes and compute units.
+
+Because v1 pays a **total** priority fee in lamports rather than a per-compute-unit rate, the result reports both:
+
+```typescript
+smart.priorityFee;         // microLamports per CU, the rate the SDK settled on
+smart.priorityFeeLamports; // total lamports the transaction pays
+```
+
+You can budget against either. `priorityFeeCap` caps the per-CU rate; `priorityFeeLamportsCap` caps the absolute spend:
+
+```typescript
+const smart = await helius.tx.createSmartTransaction({
+  signers: [feePayerSigner],
+  instructions: [transferIx],
+  version: 1,
+  priorityFeeLamportsCap: 50_000, // Never spend more than 50k lamports on priority
+});
+```
+
+#### Version 1 constraints
+
+Version 1 **does not support address lookup tables**. Every account must be listed inline, and the SDK throws if an instruction sources an account from a lookup table. Use version 0 if you depend on them.
+
+The format also caps a transaction at 64 instructions, 64 unique addresses, 12 signatures, and 255 accounts per instruction. At 4,096 bytes the full address list usually fits inline anyway.
+
+The SDK checks the size limit before signing, so an oversized transaction fails locally instead of at your wallet prompt or on submission.
+
 ### Migrating to `helius-sdk` 2.0.0
 
 The Helius Node.js SDK has been rewritten from the ground up in version 2.0.0 to use [`@solana/kit` (i.e., Kit)](https://www.npmjs.com/package/@solana/kit) under the hood, replacing the dependency on `@solana/web3.js` versions higher than 1.73.2.

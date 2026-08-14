@@ -80,6 +80,46 @@ describe("resolvePriorityFee Tests", () => {
     ).toEqual({ rate: 8_000, lamports: 0n });
   });
 
+  it("Floors a fractional estimate, which the u64 encoder would reject", () => {
+    const { rate, lamports } = resolvePriorityFee({
+      estimate: 4032.3712,
+      units: 42_000,
+    });
+
+    expect(Number.isInteger(rate)).toBe(true);
+    expect(rate).toBe(4032);
+    // ceil(4032 * 42_000 / 1e6) = ceil(169.344) = 170
+    expect(lamports).toBe(170n);
+  });
+
+  it("Never rounds a capped rate back above its cap", () => {
+    // Rounding to nearest would give 7001 and breach the cap
+    expect(
+      resolvePriorityFee({ estimate: 10_000, units: 42_000, rateCap: 7000.6 })
+        .rate
+    ).toBe(7000);
+  });
+
+  it("Floors a sub-1 estimate to zero rather than throwing", () => {
+    expect(resolvePriorityFee({ estimate: 0.4, units: 42_000 })).toEqual({
+      rate: 0,
+      lamports: 0n,
+    });
+  });
+
+  it("Coerces a non-finite estimate to zero", () => {
+    expect(resolvePriorityFee({ estimate: NaN, units: 1_000 }).rate).toBe(0);
+    expect(resolvePriorityFee({ estimate: Infinity, units: 1_000 }).rate).toBe(
+      0
+    );
+  });
+
+  it("Tolerates a fractional compute-unit limit", () => {
+    expect(() =>
+      resolvePriorityFee({ estimate: 10_000, units: 1_500.7, lamportsCap: 50 })
+    ).not.toThrow();
+  });
+
   it("Handles rates large enough to overflow Number arithmetic", () => {
     // 1e9 microLamports/CU * 1.4M CU exceeds Number.MAX_SAFE_INTEGER
     const { lamports } = resolvePriorityFee({

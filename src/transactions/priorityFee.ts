@@ -20,11 +20,12 @@ export type ResolvePriorityFeeInput = Readonly<{
 }>;
 
 /**
- * Converts a microLamports-per-CU rate into a total lamport fee, rounding up so
- * the transaction never underpays relative to the requested rate.
+ * Converts an integer microLamports-per-CU rate into a total lamport fee,
+ * rounding up so the transaction never underpays relative to that rate.
  */
 const toLamports = (rate: number, units: number): bigint => {
-  const totalMicroLamports = BigInt(Math.round(rate)) * BigInt(units);
+  const totalMicroLamports =
+    BigInt(rate) * BigInt(Math.max(0, Math.floor(units)));
 
   return (
     (totalMicroLamports + MICRO_LAMPORTS_PER_LAMPORT - 1n) /
@@ -39,6 +40,11 @@ const toLamports = (rate: number, units: number): bigint => {
  *
  * Both caps are applied by clamping the rate, so the returned `rate` and
  * `lamports` always describe the same fee regardless of transaction version.
+ *
+ * The rate is floored to a whole microLamport. Helius can return a fractional
+ * estimate, and the compute-budget instruction encodes the rate as a `u64` —
+ * passing a fraction there throws. Rounding down rather than to nearest also
+ * keeps `rateCap` and `lamportsCap` true ceilings.
  */
 export const resolvePriorityFee = ({
   estimate,
@@ -51,10 +57,16 @@ export const resolvePriorityFee = ({
   if (lamportsCap != null && units > 0) {
     const cap = BigInt(lamportsCap);
     const maxRate =
-      cap < 0n ? 0 : Number((cap * MICRO_LAMPORTS_PER_LAMPORT) / BigInt(units));
+      cap < 0n
+        ? 0
+        : Number(
+            (cap * MICRO_LAMPORTS_PER_LAMPORT) / BigInt(Math.floor(units))
+          );
 
     rate = Math.min(rate, maxRate);
   }
+
+  rate = Number.isFinite(rate) ? Math.max(0, Math.floor(rate)) : 0;
 
   return { rate, lamports: toLamports(rate, units) };
 };

@@ -1,6 +1,6 @@
 {
   "name": "helius-sdk",
-  "version": "3.0.0",
+  "version": "3.1.0",
   "description": "A Helius TypeScript SDK for building the future of Solana — DAS API, Sender, Webhooks, Laserstream, ZK Compression, and Solana RPC primitives. Built on @solana/kit.",
   "type": "module",
   "repository": {

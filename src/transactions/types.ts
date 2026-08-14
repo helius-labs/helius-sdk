@@ -48,9 +48,17 @@ export type BlockhashLifetime = Readonly<{
   lastValidBlockHeight: bigint;
 }>;
 
-/** Input for building a raw transaction message. */
-export type CreateTxMessageInput = Readonly<{
-  version: SupportedTxVersion;
+/**
+ * Input for building a raw transaction message.
+ *
+ * Generic over the version so a v1 caller gets a message typed as v1, which is
+ * what kit's v1-only helpers (such as `setTransactionMessagePriorityFeeLamports`)
+ * require.
+ */
+export type CreateTxMessageInput<
+  TVersion extends SupportedTxVersion = SupportedTxVersion,
+> = Readonly<{
+  version: TVersion;
   feePayer: Address | TransactionSigner<string>;
   lifetime?: BlockhashLifetime;
   instructions: readonly Instruction<string, readonly any[]>[];
