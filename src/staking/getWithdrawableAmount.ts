@@ -36,14 +36,19 @@ export const makeGetWithdrawableAmount = ({
     }
 
     // An initialized (undelegated) account has no delegation and is never
-    // active, so treat it as already cooled down.
-    const deactivationStr = info.stake?.delegation?.deactivationEpoch ?? "0";
+    // active, so it's always treated as already cooled down.
+    if (info.stake) {
+      const deactivationEpoch = BigInt(info.stake.delegation.deactivationEpoch);
+      const currentEpoch = BigInt((await rpc.getEpochInfo().send()).epoch);
 
-    const deactivationEpoch = BigInt(deactivationStr);
-    const currentEpoch = BigInt((await rpc.getEpochInfo().send()).epoch);
+      // Per the stake program's own state machine
+      // (Delegation::stake_activating_and_deactivating), the delegation is
+      // still "deactivating" (non-zero effective stake) through the epoch
+      // equal to deactivationEpoch — only fully inactive once currentEpoch
+      // strictly exceeds it.
+      if (deactivationEpoch >= currentEpoch) return 0;
+    }
 
-    // If still active (not yet cooled down), return 0
-    if (deactivationEpoch > currentEpoch) return 0;
     if (includeRentExempt) return Number(lamports);
 
     const rentExempt = await rpc

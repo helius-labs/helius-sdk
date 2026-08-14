@@ -112,4 +112,29 @@ describe("getWithdrawableAmount Tests", () => {
 
     expect(amt).toBe(Number(5_000_000n - rentExemptLamports));
   });
+
+  it("Returns 0 when deactivationEpoch equals currentEpoch (still deactivating)", async () => {
+    const rpc = mockRpcBase();
+    rpc.getAccountInfo.mockReturnValue({
+      send: () => ({ value: makeAccInfo(5_000_000n, 100n) }), // deactivationEpoch === currentEpoch (100)
+    });
+
+    const fn = makeGetWithdrawableAmount({ rpc });
+    const amt = await fn(stakeAccount);
+
+    expect(amt).toBe(0);
+    expect(rpc.getMinimumBalanceForRentExemption).not.toHaveBeenCalled();
+  });
+
+  it("Returns lamports minus rent once currentEpoch exceeds deactivationEpoch by one", async () => {
+    const rpc = mockRpcBase();
+    rpc.getAccountInfo.mockReturnValue({
+      send: () => ({ value: makeAccInfo(5_000_000n, 99n) }), // deactivationEpoch 99 < currentEpoch 100
+    });
+
+    const fn = makeGetWithdrawableAmount({ rpc });
+    const amt = await fn(stakeAccount);
+
+    expect(amt).toBe(Number(5_000_000n - rentExemptLamports));
+  });
 });
