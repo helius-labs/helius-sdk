@@ -52,6 +52,47 @@ describe("resolvePriorityFee Tests", () => {
     ).toEqual({ rate: 7_000, lamports: 294n });
   });
 
+  it("Floors a fractional lamportsCap instead of throwing", () => {
+    // A cap is easy to compute into a fraction: 100_000 / 3
+    const { lamports } = resolvePriorityFee({
+      estimate: 10_000,
+      units: 42_000,
+      lamportsCap: 100_000 / 3,
+    });
+
+    expect(lamports).toBeLessThanOrEqual(33_333n);
+  });
+
+  it("Resolves a non-finite lamportsCap the way rateCap resolves the same input", () => {
+    const args = { estimate: 10_000, units: 42_000 };
+
+    for (const cap of [NaN, Infinity, -Infinity]) {
+      expect(() =>
+        resolvePriorityFee({ ...args, lamportsCap: cap })
+      ).not.toThrow();
+
+      // Math.min(rate, Infinity) leaves the rate alone, so Infinity is no cap
+      expect(resolvePriorityFee({ ...args, lamportsCap: cap })).toEqual(
+        resolvePriorityFee({ ...args, rateCap: cap })
+      );
+    }
+
+    expect(resolvePriorityFee({ ...args, lamportsCap: Infinity })).toEqual({
+      rate: 10_000,
+      lamports: 420n,
+    });
+    expect(resolvePriorityFee({ ...args, lamportsCap: NaN })).toEqual({
+      rate: 0,
+      lamports: 0n,
+    });
+  });
+
+  it("Treats a negative bigint lamportsCap as zero", () => {
+    expect(
+      resolvePriorityFee({ estimate: 10_000, units: 42_000, lamportsCap: -5n })
+    ).toEqual({ rate: 0, lamports: 0n });
+  });
+
   it("Accepts a bigint lamportsCap", () => {
     const { lamports } = resolvePriorityFee({
       estimate: 10_000,

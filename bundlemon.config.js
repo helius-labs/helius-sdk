@@ -61,10 +61,12 @@ export default {
     {
       // Opt out of the default 15% growth ratchet: this file now builds both
       // the legacy/v0 compute-budget instruction pair and the version 1 header
-      // config (SIMD-0385). The fee math lives in priorityFee.js to keep the
-      // second format from consuming the remaining headroom.
+      // config (SIMD-0385), and picks a fee-estimate request shape per version.
+      // The fee math lives in priorityFee.js and the version checks in
+      // validateTxMessage.js to keep the second format from consuming the
+      // remaining headroom.
       path: 'dist/esm/transactions/createSmartTransaction.js',
-      maxSize: '2kb',
+      maxSize: '2.4kb',
     },
     {
       path: 'dist/**/*.js',

@@ -133,7 +133,7 @@ Version 1 **does not support address lookup tables**. Every account must be list
 
 The format also caps a transaction at 64 instructions, 64 unique addresses, 12 signatures, and 255 accounts per instruction. At 4,096 bytes the full address list usually fits inline anyway.
 
-The SDK checks the size limit before signing, so an oversized transaction fails locally instead of at your wallet prompt or on submission.
+The SDK checks the size limit before requesting any signature, so an oversized transaction fails locally rather than on submission.
 
 ### Migrating to `helius-sdk` 2.0.0
 

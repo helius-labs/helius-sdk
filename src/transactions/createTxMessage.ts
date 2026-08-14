@@ -13,6 +13,7 @@ import {
   TransactionVersion,
 } from "@solana/kit";
 import { CreateTxMessageInput } from "./types";
+import { assertNoAddressLookupsOnV1 } from "./validateTxMessage";
 
 /**
  * Creates an empty transaction message of any version.
@@ -49,6 +50,10 @@ export const createTxMessage = <
 > &
   TransactionMessageWithFeePayer &
   Partial<TransactionMessageWithBlockhashLifetime> => {
+  // Same guard createSmartTransaction applies. Without it kit would silently
+  // compile a lookup account into a static address on v1.
+  assertNoAddressLookupsOnV1(version, instructions);
+
   return pipe(
     createEmptyTxMessage(version),
     (m) =>

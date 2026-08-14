@@ -312,6 +312,96 @@ describe("createSmartTransaction Tests", () => {
     expect(result.priorityFeeLamports).toBe(294n);
   });
 
+  it("Prices v1 by account key, without signing a draft", async () => {
+    const sendOnce = jest.fn().mockResolvedValue({ value: lifetimeA });
+    const raw: any = {
+      getLatestBlockhash: jest.fn().mockReturnValue({ send: sendOnce }),
+    };
+    const getPriorityFeeEstimate = jest
+      .fn()
+      .mockResolvedValue({ priorityFeeEstimate: 10_000 });
+
+    const { create } = makeCreateSmartTransaction({
+      raw,
+      getComputeUnits: jest.fn().mockResolvedValue(42_000),
+      getPriorityFeeEstimate,
+    });
+
+    await create({
+      signers: [feePayerSigner],
+      instructions: [makeNoopIx(address("11111111111111111111111111111111"))],
+      version: 1,
+    });
+
+    const request = getPriorityFeeEstimate.mock.calls[0][0];
+
+    // No serialized transaction, so the fee API never has to parse v1
+    expect(request.transaction).toBeUndefined();
+    expect(request.accountKeys).toEqual(
+      expect.arrayContaining([
+        feePayerSigner.address,
+        "11111111111111111111111111111111",
+      ])
+    );
+
+    // Only the final transaction is signed — one prompt, not two
+    expect(mockSign).toHaveBeenCalledTimes(1);
+  });
+
+  it("Still prices legacy and v0 by serialized transaction", async () => {
+    const sendOnce = jest.fn().mockResolvedValue({ value: lifetimeA });
+    const raw: any = {
+      getLatestBlockhash: jest.fn().mockReturnValue({ send: sendOnce }),
+    };
+    const getPriorityFeeEstimate = jest
+      .fn()
+      .mockResolvedValue({ priorityFeeEstimate: 10_000 });
+
+    mockBase64.mockReturnValue("BASE64_DRAFT_TX");
+
+    const { create } = makeCreateSmartTransaction({
+      raw,
+      getComputeUnits: jest.fn().mockResolvedValue(42_000),
+      getPriorityFeeEstimate,
+    });
+
+    await create({
+      signers: [feePayerSigner],
+      instructions: [makeNoopIx(address("11111111111111111111111111111111"))],
+      version: 0,
+    });
+
+    expect(getPriorityFeeEstimate).toHaveBeenCalledWith({
+      transaction: "BASE64_DRAFT_TX",
+      options: { transactionEncoding: "base64", recommended: true },
+    });
+  });
+
+  it("Survives a fractional priorityFeeLamportsCap", async () => {
+    const sendOnce = jest.fn().mockResolvedValue({ value: lifetimeA });
+    const raw: any = {
+      getLatestBlockhash: jest.fn().mockReturnValue({ send: sendOnce }),
+    };
+
+    const { create } = makeCreateSmartTransaction({
+      raw,
+      getComputeUnits: jest.fn().mockResolvedValue(42_000),
+      getPriorityFeeEstimate: jest
+        .fn()
+        .mockResolvedValue({ priorityFeeEstimate: 10_000 }),
+    });
+
+    const result = await create({
+      signers: [feePayerSigner],
+      instructions: [makeNoopIx(address("11111111111111111111111111111111"))],
+      version: 1,
+      // A cap is easy to compute into a fraction
+      priorityFeeLamportsCap: 100_000 / 3,
+    });
+
+    expect(result.priorityFeeLamports).toBeLessThanOrEqual(33_333n);
+  });
+
   it("Rejects a lookup-table account on v1 before making any RPC calls", async () => {
     const getLatestBlockhash = jest.fn();
     const getComputeUnits = jest.fn();
@@ -378,8 +468,9 @@ describe("createSmartTransaction Tests", () => {
       })
     ).rejects.toThrow(/exceeds limit of 1232 bytes/i);
 
-    // Only the draft is signed; the caller is never asked to sign the final tx
-    expect(mockSign).toHaveBeenCalledTimes(1);
+    // The caller is never asked for a signature — not even for the throwaway
+    // draft, which a hardware or wallet signer would surface as a prompt
+    expect(mockSign).not.toHaveBeenCalled();
   });
 
   it("Builds the same oversized payload on v1, which has the larger limit", async () => {

@@ -20,6 +20,26 @@ export type ResolvePriorityFeeInput = Readonly<{
 }>;
 
 /**
+ * Normalises a caller-supplied lamport cap into a non-negative whole number of
+ * lamports, or `null` for "no ceiling".
+ *
+ * `BigInt()` throws on a fraction, and a cap is easy to compute into one
+ * (`budget / 3`), so the value is floored first.
+ *
+ * Non-finite input resolves the way the same input resolves for `rateCap`,
+ * where `Math.min` decides it: `Infinity` is no ceiling at all, while `NaN`
+ * — which can only be a caller bug — collapses to zero rather than silently
+ * lifting the ceiling the caller asked for.
+ */
+const toWholeLamports = (cap: number | bigint): bigint | null => {
+  if (typeof cap === "bigint") return cap < 0n ? 0n : cap;
+  if (cap === Infinity) return null;
+  if (Number.isNaN(cap)) return 0n;
+
+  return BigInt(Math.max(0, Math.floor(cap)));
+};
+
+/**
  * Converts an integer microLamports-per-CU rate into a total lamport fee,
  * rounding up so the transaction never underpays relative to that rate.
  */
@@ -55,15 +75,14 @@ export const resolvePriorityFee = ({
   let rate = rateCap != null ? Math.min(estimate, rateCap) : estimate;
 
   if (lamportsCap != null && units > 0) {
-    const cap = BigInt(lamportsCap);
-    const maxRate =
-      cap < 0n
-        ? 0
-        : Number(
-            (cap * MICRO_LAMPORTS_PER_LAMPORT) / BigInt(Math.floor(units))
-          );
+    const cap = toWholeLamports(lamportsCap);
 
-    rate = Math.min(rate, maxRate);
+    if (cap !== null) {
+      rate = Math.min(
+        rate,
+        Number((cap * MICRO_LAMPORTS_PER_LAMPORT) / BigInt(Math.floor(units)))
+      );
+    }
   }
 
   rate = Number.isFinite(rate) ? Math.max(0, Math.floor(rate)) : 0;

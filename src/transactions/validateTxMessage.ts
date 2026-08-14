@@ -15,11 +15,14 @@ export const V1_TRANSACTION_SIZE_LIMIT = 4096;
 /**
  * Detects an instruction account that resolves through an address lookup table.
  * Lookup accounts carry `lookupTableAddress`; static ones only carry `address`.
+ *
+ * Tests the value rather than the key, so an account that merely spreads an
+ * explicit `lookupTableAddress: undefined` is not mistaken for a lookup.
  */
 const isLookupAccount = (account: unknown): boolean =>
   typeof account === "object" &&
   account !== null &&
-  "lookupTableAddress" in account;
+  (account as { lookupTableAddress?: unknown }).lookupTableAddress != null;
 
 /**
  * Rejects address lookup tables on version 1 transactions.
@@ -48,25 +51,15 @@ export const assertNoAddressLookupsOnV1 = (
 
 /**
  * Asserts a message fits its version's size limit before it is signed, so the
- * failure surfaces locally rather than as an opaque rejection from the network
- * (or a wallet prompt for a transaction that can never land).
+ * failure surfaces locally rather than as an opaque rejection from the network.
  *
- * Legacy and v0 messages that overflow get a pointer to v1, whose larger limit
- * is the way to send something this size.
+ * Kit's `SolanaError` propagates untouched on every version, so
+ * `isSolanaError(err, SOLANA_ERROR__TRANSACTION__EXCEEDS_SIZE_LIMIT)` is a
+ * reliable check regardless of which version produced it. The remedy for an
+ * oversized legacy or v0 transaction — version 1's larger limit — is
+ * documentation rather than something to encode in a wrapper error, since
+ * wrapping would make the thrown type depend on the version.
  */
 export const assertWithinSizeLimit = (
   message: TransactionMessage & TransactionMessageWithFeePayer
-): void => {
-  try {
-    assertIsTransactionMessageWithinSizeLimit(message);
-  } catch (cause) {
-    if (message.version === 1) throw cause;
-
-    // Error `cause` needs ES2022; the build targets ES2020, so the original
-    // message is folded into the new one instead
-    throw new Error(
-      `${cause instanceof Error ? cause.message : String(cause)} ` +
-        `Version 1 transactions allow up to ${V1_TRANSACTION_SIZE_LIMIT} bytes.`
-    );
-  }
-};
+): void => assertIsTransactionMessageWithinSizeLimit(message);

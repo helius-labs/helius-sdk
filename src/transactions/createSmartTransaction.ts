@@ -9,10 +9,12 @@ import type {
   Address,
   Instruction,
   TransactionMessage,
+  TransactionMessageWithFeePayer,
   TransactionSigner,
 } from "@solana/kit";
 
 import {
+  compileTransactionMessage,
   getBase64EncodedWireTransaction,
   pipe,
   prependTransactionMessageInstructions,
@@ -44,6 +46,15 @@ type V1TransactionMessage = Extract<TransactionMessage, { version: 1 }>;
 
 const isComputeBudgetIx = (ix: Instruction<string, readonly any[]>) =>
   ix.programAddress === COMPUTE_BUDGET_PROGRAM_ADDRESS;
+
+/**
+ * Every account address a message references, deduplicated, as the fee API's
+ * `accountKeys` expects. Compiling is what resolves the fee payer, program IDs,
+ * and instruction accounts into one ordered list.
+ */
+const getAccountKeys = (
+  message: TransactionMessage & TransactionMessageWithFeePayer
+): string[] => [...compileTransactionMessage(message).staticAccounts];
 
 const firstSigner = (
   signers: readonly TransactionSigner<string>[]
@@ -110,17 +121,35 @@ export const makeCreateSmartTransaction = ({
       (m) => appendTransactionMessageInstructions(userIxs, m)
     );
 
+    // The final message only grows from here, so an oversized draft is already
+    // doomed. Checking now fails before the caller is asked for any signature.
+    assertWithinSizeLimit(draftMsg);
+
     // Estimate compute units with floor + buffer
     const units = await getComputeUnits(draftMsg, { min: minUnits, bufferPct });
 
-    // Sign the draft and get recommended fees
-    const draftSigned = await signTransactionMessageWithSigners(draftMsg);
-    const draftBase64 = getBase64EncodedWireTransaction(draftSigned);
-
-    const { priorityFeeEstimate } = await getPriorityFeeEstimate({
-      transaction: draftBase64,
-      options: { transactionEncoding: "base64", recommended: true },
-    });
+    /**
+     * Version 1 is priced by account key rather than by serialized transaction.
+     *
+     * The fee API reads the v0 wire format, so handing it a v1 transaction
+     * risks an unusable estimate — and this call is the only reason a draft
+     * would be signed at all, since compute-unit estimation compiles the
+     * unsigned message itself. Pricing v1 by account key removes both the
+     * dependency and a signature the caller never agreed to.
+     */
+    const { priorityFeeEstimate } = await getPriorityFeeEstimate(
+      version === 1
+        ? {
+            accountKeys: getAccountKeys(draftMsg),
+            options: { recommended: true },
+          }
+        : {
+            transaction: getBase64EncodedWireTransaction(
+              await signTransactionMessageWithSigners(draftMsg)
+            ),
+            options: { transactionEncoding: "base64", recommended: true },
+          }
+    );
 
     if (priorityFeeEstimate == null) {
       throw new Error(

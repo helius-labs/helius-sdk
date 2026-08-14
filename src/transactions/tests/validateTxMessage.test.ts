@@ -6,6 +6,8 @@ import {
   pipe,
   setTransactionMessageFeePayer,
   setTransactionMessageLifetimeUsingBlockhash,
+  isSolanaError,
+  SOLANA_ERROR__TRANSACTION__EXCEEDS_SIZE_LIMIT,
   type Address,
 } from "@solana/kit";
 import {
@@ -99,10 +101,34 @@ describe("assertWithinSizeLimit Tests", () => {
     }
   });
 
-  it("Rejects an oversized v0 message and points at version 1", () => {
+  it("Rejects an oversized v0 message", () => {
     expect(() => assertWithinSizeLimit(buildMessage(0, oversized))).toThrow(
-      /exceeds limit of 1232 bytes.*Version 1 transactions allow up to 4096/is
+      /exceeds limit of 1232 bytes/i
     );
+  });
+
+  it("Throws kit's SolanaError on every version, so the code is checkable", () => {
+    const tooBigForV1 = Array.from({ length: 60 }, (_, i) => ({
+      programAddress: PROGRAM,
+      accounts: [],
+      data: new Uint8Array(80).fill(i),
+    }));
+
+    for (const [version, instructions] of [
+      [0, oversized],
+      [1, tooBigForV1],
+    ] as const) {
+      let thrown: unknown;
+      try {
+        assertWithinSizeLimit(buildMessage(version, instructions));
+      } catch (err) {
+        thrown = err;
+      }
+
+      expect(
+        isSolanaError(thrown, SOLANA_ERROR__TRANSACTION__EXCEEDS_SIZE_LIMIT)
+      ).toBe(true);
+    }
   });
 
   it("Accepts the same payload on version 1, which has the larger limit", () => {
@@ -111,7 +137,7 @@ describe("assertWithinSizeLimit Tests", () => {
     ).not.toThrow();
   });
 
-  it("Rethrows kit's error untouched when a v1 message is genuinely too big", () => {
+  it("Rejects a v1 message that is genuinely too big", () => {
     const tooBigForV1 = Array.from({ length: 60 }, (_, i) => ({
       programAddress: PROGRAM,
       accounts: [],
@@ -121,9 +147,5 @@ describe("assertWithinSizeLimit Tests", () => {
     expect(() => assertWithinSizeLimit(buildMessage(1, tooBigForV1))).toThrow(
       /exceeds limit of 4096 bytes/i
     );
-    // The v1 hint would be nonsense here, so it must not be appended
-    expect(() =>
-      assertWithinSizeLimit(buildMessage(1, tooBigForV1))
-    ).not.toThrow(/Version 1 transactions allow up to/i);
   });
 });
