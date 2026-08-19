@@ -125,6 +125,21 @@ describe("makeWsAsync", () => {
     expect(mockCreateSolanaRpcSubscriptions).toHaveBeenCalledTimes(1);
   });
 
+  it("rejects and disposes the connection when close() lands while the first connection is still opening", async () => {
+    const ws = makeWsAsync(WS_URL, ENHANCED_WS_URL);
+
+    // Don't await yet — close() races the in-flight dynamic import in raw().
+    const pending = ws.logsNotifications("all");
+    ws.close();
+
+    await expect(pending).rejects.toThrow("WebSocket client is closed");
+
+    // The client was constructed once and immediately disposed, never
+    // left dangling as a live, undisposed connection.
+    expect(mockCreateSolanaRpcSubscriptions).toHaveBeenCalledTimes(1);
+    expect(mockDispose).toHaveBeenCalledTimes(1);
+  });
+
   it("enhanced methods throw with apiKey-missing message when no enhancedWsUrl", async () => {
     const reason =
       "An API key is required for Enhanced WebSocket subscriptions. Provide apiKey in createHelius() options.";

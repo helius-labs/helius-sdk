@@ -125,12 +125,25 @@ export interface WsAsync {
    */
   accountUnsubscribe(subscriptionId: number): Promise<boolean>;
 
-  /** Manually close the underlying WebSocket connections (standard and enhanced). */
+  /**
+   * Manually close the underlying WebSocket connections (standard and enhanced).
+   * Any subscription call already in flight when this is called still rejects
+   * with "WebSocket client is closed", and no new connection is left open.
+   */
   close(): void;
 }
 
 const importWs = async () =>
   (await import("@solana/kit")).createSolanaRpcSubscriptions;
+
+const closeRaw = (client: WsRaw): void => {
+  const c = client as { dispose?: () => void; close?: () => void };
+  if (typeof c.dispose === "function") {
+    c.dispose();
+  } else if (typeof c.close === "function") {
+    c.close();
+  }
+};
 
 /** Create a promisified WebSocket RPC subscription client. */
 export const makeWsAsync = (
@@ -139,6 +152,7 @@ export const makeWsAsync = (
   enhancedDisabledReason?: string
 ): WsAsync => {
   let _raw: WsRaw | undefined;
+  let _rawLoading: Promise<WsRaw> | undefined;
   let _enhanced: import("./enhancedWs").EnhancedWsClient | undefined;
   let _enhancedLoading:
     | Promise<import("./enhancedWs").EnhancedWsClient>
@@ -148,11 +162,19 @@ export const makeWsAsync = (
   const raw = async (): Promise<WsRaw> => {
     if (closed) throw new Error("WebSocket client is closed");
     if (_raw) return _raw;
+    if (_rawLoading) return _rawLoading;
 
-    const ctor = await importWs();
-    _raw = ctor(wsUrl);
+    _rawLoading = importWs().then((ctor) => {
+      const client = ctor(wsUrl);
+      if (closed) {
+        closeRaw(client);
+        throw new Error("WebSocket client is closed");
+      }
+      _raw = client;
+      return _raw;
+    });
 
-    return _raw;
+    return _rawLoading;
   };
 
   const enhanced = async (): Promise<
@@ -219,12 +241,9 @@ export const makeWsAsync = (
       }
       _enhancedLoading = undefined;
 
-      if (_raw && typeof (_raw as any).dispose === "function") {
-        (_raw as any).dispose();
-      } else if (_raw && typeof (_raw as any).close === "function") {
-        (_raw as any).close();
-      }
+      if (_raw) closeRaw(_raw);
       _raw = undefined;
+      _rawLoading = undefined;
     },
   };
 };
