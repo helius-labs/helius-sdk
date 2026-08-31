@@ -93,6 +93,35 @@ import { createHelius } from "helius-sdk";
 })();
 ```
 
+### Custom RPC transport (retries, failover)
+
+`createHelius` accepts a `transport` hook that lets you augment or replace the default RPC transport, following [`@solana/kit`'s transport-augmentation pattern](https://github.com/anza-xyz/kit#augmenting-transports). The hook receives the SDK's fully configured transport (Helius URL with your API key, SDK headers, and request-id stamping) and returns the transport the client will use for **all** JSON-RPC calls — standard Solana RPC and DAS/Helius methods alike.
+
+```ts
+import { createHelius, type RpcTransport } from "helius-sdk";
+
+const helius = createHelius({
+  apiKey,
+  transport: (defaultTransport): RpcTransport => async (request) => {
+    // Retry up to 3 times with exponential backoff
+    let lastError: unknown;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        return await defaultTransport(request);
+      } catch (error) {
+        lastError = error;
+        await new Promise((r) => setTimeout(r, 2 ** attempt * 100));
+      }
+    }
+    throw lastError;
+  },
+});
+```
+
+To replace the transport entirely (e.g., failover to a non-Helius endpoint), ignore the provided default: `transport: () => myCustomTransport`. See [`examples/helius/customTransport.ts`](examples/helius/customTransport.ts) for a full example.
+
+> **Note:** The hook covers JSON-RPC traffic only. WebSocket subscriptions (`helius.ws`) and the REST sub-clients (`webhooks`, `enhanced`, `wallet`, `admin`, `auth`) do not go through this transport.
+
 ### Larger transactions with version 1
 
 Agave 4.2 raises the maximum transaction size from 1,232 to 4,096 bytes ([SIMD-0296](https://github.com/solana-foundation/solana-improvement-documents/blob/main/proposals/0296-larger-transactions.md)). That size is only available in the version 1 transaction format ([SIMD-0385](https://github.com/solana-foundation/solana-improvement-documents/blob/main/proposals/0385-transaction-v1.md)). Legacy and v0 transactions are unaffected and remain the default.

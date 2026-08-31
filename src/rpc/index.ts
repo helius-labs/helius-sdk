@@ -45,8 +45,10 @@ import type { WalletClient } from "../wallet/client";
 import type { AdminClient } from "../admin/client";
 import type { AuthClient } from "../auth/types";
 import type { HeliusRpcOptions } from "./types";
+import { withSdkRequestId, type TransportHook } from "./transport";
 
-export type { HeliusRpcOptions };
+export type { HeliusRpcOptions, TransportHook };
+export type { RpcTransport } from "@solana/kit";
 
 /**
  * The main Helius SDK client. Provides access to all Helius and Solana RPC
@@ -180,6 +182,7 @@ export const createHelius = ({
   rebateAddress,
   baseUrl,
   userAgent,
+  transport: transportHook,
 }: HeliusRpcOptions): HeliusClient => {
   // Use custom baseUrl if provided, otherwise construct from network
   const resolvedBaseUrl = baseUrl ?? `https://${network}.helius-rpc.com/`;
@@ -197,25 +200,15 @@ export const createHelius = ({
   const url = `${resolvedBaseUrl}${queryString}`;
 
   const solanaApi = createSolanaRpcApi(DEFAULT_RPC_CONFIG);
-  const baseTransport = createDefaultRpcTransport({
-    url,
-    headers: getSDKHeaders(userAgent) as AllowedRpcHeaders,
-  });
-  const transport = async <TResponse>(
-    request: Parameters<typeof baseTransport>[0]
-  ): Promise<TResponse> => {
-    const payload = {
-      ...(request.payload as Record<string, unknown>),
-      id: "helius-sdk",
-    };
-
-    const modifiedRequest = {
-      ...request,
-      payload,
-    };
-
-    return baseTransport(modifiedRequest) as Promise<TResponse>;
-  };
+  const defaultTransport = withSdkRequestId(
+    createDefaultRpcTransport({
+      url,
+      headers: getSDKHeaders(userAgent) as AllowedRpcHeaders,
+    })
+  );
+  const transport = transportHook
+    ? transportHook(defaultTransport)
+    : defaultTransport;
 
   const baseRpc = createRpc({ api: solanaApi, transport });
   const raw: ResolvedHeliusRpcApi = wrapAutoSend(baseRpc);

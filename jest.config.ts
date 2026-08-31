@@ -6,6 +6,11 @@ const config: Config = {
     roots: ["<rootDir>/src"],
     testMatch: ["**/__tests__/**/*.ts", "**/*.test.ts"],
     moduleFileExtensions: ["ts", "js", "json"],
+    // Resolve ESM-style ".js" specifiers (e.g. lazy `import("./x.js")`) to
+    // their TypeScript sources so lazy-loaded modules work under Jest
+    moduleNameMapper: {
+        "^(\\.{1,2}/.*)\\.js$": "$1"
+    },
     transform: {
         "^.+\\.ts$": ["ts-jest", { tsconfig: "<rootDir>/tsconfig.json" }]
     },

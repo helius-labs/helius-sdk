@@ -151,6 +151,89 @@ describe("createHelius", () => {
       expect(url).toContain(`api-key=${apiKey}`);
     });
   });
+
+  describe("transport hook", () => {
+    it("invokes the hook once with the default transport and uses its result", async () => {
+      const hook = jest.fn((defaultTransport: any) => defaultTransport);
+      const rpc = createHelius({ apiKey: "test-api-key", transport: hook });
+
+      expect(hook).toHaveBeenCalledTimes(1);
+      expect(typeof hook.mock.calls[0][0]).toBe("function");
+
+      const asset = await rpc.getAsset({ id: "test-id" });
+      expect(asset).toEqual({ id: "test-asset" });
+      expect(transportMock).toHaveBeenCalledTimes(1);
+    });
+
+    it("routes DAS calls through the wrapping transport", async () => {
+      const wrapperCalls: string[] = [];
+      const rpc = createHelius({
+        apiKey: "test-api-key",
+        transport: (defaultTransport) => async (request) => {
+          wrapperCalls.push((request.payload as any).method);
+          return defaultTransport(request);
+        },
+      });
+
+      await rpc.getAsset({ id: "test-id" });
+      expect(wrapperCalls).toEqual(["getAsset"]);
+    });
+
+    it("supports retry policies around the default transport", async () => {
+      transportMock
+        .mockRejectedValueOnce(new Error("boom"))
+        .mockResolvedValueOnce({
+          jsonrpc: "2.0",
+          id: "1",
+          result: { id: "retried-asset" },
+        });
+
+      const rpc = createHelius({
+        apiKey: "test-api-key",
+        transport: (defaultTransport) => async (request) => {
+          try {
+            return await defaultTransport(request);
+          } catch {
+            return defaultTransport(request);
+          }
+        },
+      });
+
+      const asset = await rpc.getAsset({ id: "test-id" });
+      expect(asset).toEqual({ id: "retried-asset" });
+      expect(transportMock).toHaveBeenCalledTimes(2);
+    });
+
+    it("supports full transport replacement", async () => {
+      const customTransport = jest.fn().mockResolvedValue({
+        jsonrpc: "2.0",
+        id: "1",
+        result: { id: "custom-asset" },
+      });
+      const rpc = createHelius({
+        apiKey: "test-api-key",
+        transport: () => customTransport,
+      });
+
+      const asset = await rpc.getAsset({ id: "test-id" });
+      expect(asset).toEqual({ id: "custom-asset" });
+      expect(customTransport).toHaveBeenCalledTimes(1);
+      expect(transportMock).not.toHaveBeenCalled();
+    });
+
+    it("stamps the SDK request id before the wrapped transport", async () => {
+      const rpc = createHelius({
+        apiKey: "test-api-key",
+        transport: (defaultTransport) => defaultTransport,
+      });
+
+      await rpc.getAsset({ id: "test-id" });
+
+      const request = transportMock.mock.calls[0][0] as any;
+      expect(request.payload.id).toBe("helius-sdk");
+      expect(request.payload.method).toBe("getAsset");
+    });
+  });
 });
 
 describe("createHeliusEager", () => {
@@ -295,6 +378,61 @@ describe("createHeliusEager", () => {
       // Should not throw
       expect(() => rpc.enhanced).not.toThrow();
       expect(rpc.enhanced).toBeDefined();
+    });
+  });
+
+  describe("transport hook", () => {
+    it("invokes the hook once and routes DAS calls through its transport", async () => {
+      const wrapperCalls: string[] = [];
+      const hook = jest.fn((defaultTransport: any) => async (request: any) => {
+        wrapperCalls.push(request.payload.method);
+        return defaultTransport(request);
+      });
+      const rpc = createHeliusEager({
+        apiKey: "test-api-key",
+        transport: hook,
+      });
+
+      expect(hook).toHaveBeenCalledTimes(1);
+
+      const asset = await rpc.getAsset({ id: "test-id" });
+      expect(asset).toEqual({ id: "test-asset" });
+      expect(wrapperCalls).toEqual(["getAsset"]);
+    });
+
+    it("supports retry policies around the default transport", async () => {
+      transportMock
+        .mockRejectedValueOnce(new Error("boom"))
+        .mockResolvedValueOnce({
+          jsonrpc: "2.0",
+          id: "1",
+          result: { id: "retried-asset" },
+        });
+
+      const rpc = createHeliusEager({
+        apiKey: "test-api-key",
+        transport: (defaultTransport) => async (request) => {
+          try {
+            return await defaultTransport(request);
+          } catch {
+            return defaultTransport(request);
+          }
+        },
+      });
+
+      const asset = await rpc.getAsset({ id: "test-id" });
+      expect(asset).toEqual({ id: "retried-asset" });
+      expect(transportMock).toHaveBeenCalledTimes(2);
+    });
+
+    it("stamps the SDK request id on outgoing payloads", async () => {
+      const rpc = createHeliusEager({ apiKey: "test-api-key" });
+
+      await rpc.getAsset({ id: "test-id" });
+
+      const request = transportMock.mock.calls[0][0] as any;
+      expect(request.payload.id).toBe("helius-sdk");
+      expect(request.payload.method).toBe("getAsset");
     });
   });
 });
