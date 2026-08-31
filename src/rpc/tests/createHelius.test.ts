@@ -233,6 +233,17 @@ describe("createHelius", () => {
       expect(request.payload.id).toBe("helius-sdk");
       expect(request.payload.method).toBe("getAsset");
     });
+
+    it("throws at construction when the hook does not return a transport", () => {
+      expect(() =>
+        createHelius({
+          apiKey: "test-api-key",
+          transport: (() => undefined) as any,
+        })
+      ).toThrow(
+        "The transport option must be a function that receives the default transport and returns an RpcTransport."
+      );
+    });
   });
 });
 

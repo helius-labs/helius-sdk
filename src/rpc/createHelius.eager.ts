@@ -8,7 +8,10 @@ import {
 } from "@solana/kit";
 import { wrapAutoSend } from "./wrapAutoSend";
 import { makeRpcCaller } from "./caller";
-import { withSdkRequestId } from "./transport";
+import { resolveTransport, withSdkRequestId } from "./transport";
+
+export type { TransportHook } from "./transport";
+export type { RpcTransport } from "@solana/kit";
 import { getSDKHeaders, type AllowedRpcHeaders } from "../http";
 
 import { GetAssetFn, makeGetAsset } from "./methods/getAsset";
@@ -153,15 +156,15 @@ export const createHeliusEager = ({
   const url = `${resolvedBaseUrl}${queryString}`;
 
   const solanaApi = createSolanaRpcApi(DEFAULT_RPC_CONFIG);
-  const defaultTransport = withSdkRequestId(
-    createDefaultRpcTransport({
-      url,
-      headers: getSDKHeaders(userAgent) as AllowedRpcHeaders,
-    })
+  const transport = resolveTransport(
+    withSdkRequestId(
+      createDefaultRpcTransport({
+        url,
+        headers: getSDKHeaders(userAgent) as AllowedRpcHeaders,
+      })
+    ),
+    transportHook
   );
-  const transport = transportHook
-    ? transportHook(defaultTransport)
-    : defaultTransport;
 
   let baseRpc = createRpc({ api: solanaApi, transport });
   // Cast to any because I cba to go down this type rabbit hole

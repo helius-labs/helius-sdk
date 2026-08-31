@@ -45,7 +45,11 @@ import type { WalletClient } from "../wallet/client";
 import type { AdminClient } from "../admin/client";
 import type { AuthClient } from "../auth/types";
 import type { HeliusRpcOptions } from "./types";
-import { withSdkRequestId, type TransportHook } from "./transport";
+import {
+  resolveTransport,
+  withSdkRequestId,
+  type TransportHook,
+} from "./transport";
 
 export type { HeliusRpcOptions, TransportHook };
 export type { RpcTransport } from "@solana/kit";
@@ -200,15 +204,15 @@ export const createHelius = ({
   const url = `${resolvedBaseUrl}${queryString}`;
 
   const solanaApi = createSolanaRpcApi(DEFAULT_RPC_CONFIG);
-  const defaultTransport = withSdkRequestId(
-    createDefaultRpcTransport({
-      url,
-      headers: getSDKHeaders(userAgent) as AllowedRpcHeaders,
-    })
+  const transport = resolveTransport(
+    withSdkRequestId(
+      createDefaultRpcTransport({
+        url,
+        headers: getSDKHeaders(userAgent) as AllowedRpcHeaders,
+      })
+    ),
+    transportHook
   );
-  const transport = transportHook
-    ? transportHook(defaultTransport)
-    : defaultTransport;
 
   const baseRpc = createRpc({ api: solanaApi, transport });
   const raw: ResolvedHeliusRpcApi = wrapAutoSend(baseRpc);

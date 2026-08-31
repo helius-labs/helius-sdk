@@ -95,14 +95,14 @@ import { createHelius } from "helius-sdk";
 
 ### Custom RPC transport (retries, failover)
 
-`createHelius` accepts a `transport` hook that lets you augment or replace the default RPC transport, following [`@solana/kit`'s transport-augmentation pattern](https://github.com/anza-xyz/kit#augmenting-transports). The hook receives the SDK's fully configured transport (Helius URL with your API key, SDK headers, and request-id stamping) and returns the transport the client will use for **all** JSON-RPC calls — standard Solana RPC and DAS/Helius methods alike.
+`createHelius` accepts a `transport` hook that lets you augment or replace the default RPC transport, following [`@solana/kit`'s custom-transport pattern](https://github.com/anza-xyz/kit#custom-rpc-transports). The hook receives the SDK's fully configured transport (Helius URL with your API key, SDK headers, and request-id stamping) and returns the transport the client will use for **all** JSON-RPC calls — standard Solana RPC and DAS/Helius methods alike.
 
 ```ts
 import { createHelius, type RpcTransport } from "helius-sdk";
 
 const helius = createHelius({
   apiKey,
-  transport: (defaultTransport): RpcTransport => async (request) => {
+  transport: (defaultTransport: RpcTransport): RpcTransport => async (request) => {
     // Retry up to 3 times with exponential backoff
     let lastError: unknown;
     for (let attempt = 0; attempt < 3; attempt++) {
@@ -117,6 +117,8 @@ const helius = createHelius({
   },
 });
 ```
+
+For per-method policies, read the method name off the request: `(request.payload as { method: string }).method`.
 
 To replace the transport entirely (e.g., failover to a non-Helius endpoint), ignore the provided default: `transport: () => myCustomTransport`. See [`examples/helius/customTransport.ts`](examples/helius/customTransport.ts) for a full example.
 
