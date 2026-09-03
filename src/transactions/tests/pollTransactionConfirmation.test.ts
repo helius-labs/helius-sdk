@@ -54,7 +54,9 @@ describe("pollTransactionConfirmation Tests", () => {
 
     const poll = makePollTransactionConfirmation(rpc);
     // Also pins bigint-safe serialization of the kit-upcast err payload
-    await expect(poll(SIG)).rejects.toThrow(/failed on-chain: .*"Custom":6001/);
+    await expect(poll(SIG)).rejects.toThrow(
+      /failed on-chain: .*"Custom":"6001"/
+    );
   });
 
   it("Throws when block height exceeds lastValidBlockHeight", async () => {
@@ -154,6 +156,34 @@ describe("pollTransactionConfirmation Tests", () => {
     ).resolves.toBe(SIG);
 
     expect(rpc.getSignatureStatuses).toHaveBeenCalledTimes(2);
+  });
+
+  it("Prefers the conclusive result over a timeout during the post-expiry re-check", async () => {
+    // Wall clock expires between observing expiry and the final status read;
+    // the terminal read still runs so the caller gets the real outcome
+    const rpc = buildMockRpc(
+      [100, 102],
+      [null, { confirmationStatus: "confirmed", err: null }]
+    );
+
+    const nowSpy = jest
+      .spyOn(Date, "now")
+      .mockReturnValueOnce(0) // started
+      .mockReturnValueOnce(0) // first iteration's timeout check
+      .mockReturnValue(10_000); // deadline long past for any later read
+
+    try {
+      const poll = makePollTransactionConfirmation(rpc);
+      await expect(
+        poll(SIG, {
+          interval: 1,
+          timeout: 50,
+          lastValidBlockHeight: 101,
+        })
+      ).resolves.toBe(SIG);
+    } finally {
+      nowSpy.mockRestore();
+    }
   });
 
   it("Throws when wall-clock timeout is hit", async () => {

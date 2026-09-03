@@ -1,11 +1,14 @@
 import type { Rpc, Signature, SolanaRpcApi } from "@solana/kit";
 import { PollTxOptions } from "./types";
 
-// @solana/kit upcasts integers in getSignatureStatuses responses to bigint
-// (no numeric-keypath exemption), which JSON.stringify cannot serialize
-const stringifyTxError = (err: unknown): string =>
+/**
+ * Serializes a transaction error for error messages. @solana/kit upcasts
+ * integers in getSignatureStatuses responses to bigint (no numeric-keypath
+ * exemption), which JSON.stringify cannot serialize natively.
+ */
+export const stringifyTxError = (err: unknown): string =>
   JSON.stringify(err, (_key, value) =>
-    typeof value === "bigint" ? Number(value) : value
+    typeof value === "bigint" ? String(value) : value
   );
 
 export const makePollTransactionConfirmation = (raw: Rpc<SolanaRpcApi>) => {
@@ -33,7 +36,10 @@ export const makePollTransactionConfirmation = (raw: Rpc<SolanaRpcApi>) => {
 
     // eslint-disable-next-line no-constant-condition
     while (true) {
-      if (Date.now() - started > timeout) {
+      // The post-expiry pass is terminal within one iteration, so its status
+      // decode outruns the wall-clock deadline rather than masking a
+      // conclusive result with a timeout error
+      if (expiredAtHeight === undefined && Date.now() - started > timeout) {
         throw new Error(
           `Transaction ${signature} not confirmed within ${timeout} ms`
         );

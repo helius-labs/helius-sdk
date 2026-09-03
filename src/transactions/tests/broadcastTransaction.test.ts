@@ -62,13 +62,16 @@ describe("broadcastTransaction Tests", () => {
       statuses: [
         {
           confirmationStatus: "confirmed",
-          err: { InstructionError: [0, "Custom"] },
+          err: { InstructionError: [0n, { Custom: 6001n }] },
         },
       ],
     });
 
     const broadcast = broadcastTransactionFactory(rpc);
-    await expect(broadcast(TX64)).rejects.toThrow(/failed on-chain/i);
+    // Also pins bigint-safe serialization of the kit-upcast err payload
+    await expect(broadcast(TX64)).rejects.toThrow(
+      /failed on-chain: .*"Custom":"6001"/
+    );
   });
 
   it("Throws when the block height exceeds lastValidBlockHeight", async () => {

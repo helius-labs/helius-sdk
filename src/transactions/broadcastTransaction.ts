@@ -4,6 +4,7 @@ import type {
   Base64EncodedWireTransaction,
 } from "@solana/kit";
 import { BroadcastOptions } from "./types";
+import { stringifyTxError } from "./pollTransactionConfirmation";
 
 export const broadcastTransactionFactory = (raw: Rpc<SolanaRpcApi>) => {
   return async function broadcastBase64(
@@ -55,7 +56,7 @@ export const broadcastTransactionFactory = (raw: Rpc<SolanaRpcApi>) => {
       if (status) {
         if (status.err) {
           throw new Error(
-            `Transaction failed on-chain: ${JSON.stringify(status.err)}`
+            `Transaction failed on-chain: ${stringifyTxError(status.err)}`
           );
         }
         if (
