@@ -115,6 +115,16 @@ export default {
       maxSize: '0.75kb',
     },
     {
+      // Opt out of the default 15% growth ratchet: the poll loop now decodes
+      // the signature status once per iteration, takes a final fresh status
+      // read after observing blockhash expiry, and exports the bigint-safe
+      // stringifyTxError serializer shared with broadcastTransaction. A
+      // one-time step up from a small file; the absolute cap still gates
+      // unbounded growth.
+      path: 'dist/esm/transactions/pollTransactionConfirmation.js',
+      maxSize: '1.5kb',
+    },
+    {
       path: 'dist/**/*.js',
       maxSize: '2.5kb',  // No file should be larger than 2.5kb
       maxPercentIncrease: 15
