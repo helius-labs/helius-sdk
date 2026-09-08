@@ -72,12 +72,8 @@ describe("makeEnhancedWsClient", () => {
   it("sends correct JSON-RPC for transactionSubscribe", async () => {
     const client = makeEnhancedWsClient(TEST_URL);
     const filter = { accountInclude: ["abc"] };
-    // Typed against the public config so the maxSupportedTransactionVersion
-    // union is compile-checked, and the field must reach the wire verbatim
-    const config: TransactionSubscribeConfig = {
-      commitment: "confirmed",
-      maxSupportedTransactionVersion: 1,
-    };
+    // No maxSupportedTransactionVersion: pins the omitted-field wire shape
+    const config: TransactionSubscribeConfig = { commitment: "confirmed" };
 
     const subPromise = client.transactionSubscribe(filter, config);
     await jest.advanceTimersByTimeAsync(0); // Let WS connect
@@ -92,8 +88,9 @@ describe("makeEnhancedWsClient", () => {
     client.close();
   });
 
-  it("forwards a falsy maxSupportedTransactionVersion of 0 to the wire", async () => {
+  it("forwards maxSupportedTransactionVersion to the wire, including a falsy 0", async () => {
     const client = makeEnhancedWsClient(TEST_URL);
+    // Typed against the public config so the union is compile-checked
     const config: TransactionSubscribeConfig = {
       maxSupportedTransactionVersion: 0,
     };
@@ -103,8 +100,6 @@ describe("makeEnhancedWsClient", () => {
     respondToLatest(lastWs(), 7);
     await subPromise;
 
-    // 0 must survive serialization — a truthiness-based config cleanup would
-    // silently drop the caller's explicit legacy+v0 ceiling
     const sent = JSON.parse(lastWs().sent[0]);
     expect(sent.params[1].maxSupportedTransactionVersion).toBe(0);
 

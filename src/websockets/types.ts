@@ -31,9 +31,9 @@ export interface TransactionSubscribeConfig {
   /** Whether to include rewards in the response. */
   showRewards?: boolean;
   /**
-   * See {@link MaxSupportedTransactionVersion}. Omitted = legacy-only, and a
-   * higher-version transaction errors rather than being filtered out — set it
-   * explicitly for anything beyond legacy (`1` also opts in to SIMD-0385 v1).
+   * See {@link MaxSupportedTransactionVersion}. Required when
+   * `transactionDetails` is `"accounts"` or `"full"`; `1` also opts in to
+   * version 1 (SIMD-0385) transactions.
    */
   maxSupportedTransactionVersion?: MaxSupportedTransactionVersion;
 }

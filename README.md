@@ -310,8 +310,8 @@ Real-time filtered streaming that's 1.5-2x faster than standard WebSockets. Supp
 ```typescript
 const sub = await helius.ws.transactionSubscribe(
   { accountInclude: ["EPjF..."] },
-  // Omitted maxSupportedTransactionVersion = legacy-only (versioned txs error
-  // rather than being filtered); 1 also opts in to v1 (SIMD-0385) payloads
+  // Required when transactionDetails is "accounts" or "full";
+  // 1 also opts in to v1 (SIMD-0385) transactions
   {
     commitment: "confirmed",
     encoding: "jsonParsed",

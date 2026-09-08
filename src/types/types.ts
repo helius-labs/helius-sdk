@@ -1,4 +1,4 @@
-import type { Commitment, RpcResponse, TransactionVersion } from "@solana/kit";
+import type { Commitment, RpcResponse } from "@solana/kit";
 
 import { Asset } from "./das";
 import { PriorityLevel, UiTransactionEncoding } from "./enums";
@@ -7,17 +7,18 @@ import { PriorityLevel, UiTransactionEncoding } from "./enums";
  * Maximum transaction version the caller can handle, for version-aware read
  * APIs (`transactionSubscribe`, `getTransactionsForAddress`).
  *
- * Omitting the field means legacy-only: standard Solana RPC semantics reject a
- * higher-version transaction with an unsupported-transaction-version error
- * rather than silently filtering it out. Pass `0` for v0 support, or `1`
- * (SIMD-0385, Agave 4.2) to also receive version 1 transactions — opting in
- * means your handlers must accept the v1 payload shape. Derived from kit's
- * `TransactionVersion`, so it widens automatically with future versions.
+ * Helius recommends setting `1` (Agave 4.2 migration checklist) to also
+ * receive version 1 transactions (SIMD-0385) — opting in means your handlers
+ * must accept the v1 payload shape. The field only takes effect when
+ * `transactionDetails` is `"accounts"` or `"full"`: there, an omitted field
+ * means legacy-only on HTTP methods, and a higher-version transaction in range
+ * errors rather than being filtered out, while `transactionSubscribe` requires
+ * the field outright.
+ *
+ * Owned by the SDK rather than derived from kit's `TransactionVersion`: the
+ * ceiling tracks what Helius endpoints accept, and widens by SDK release.
  */
-export type MaxSupportedTransactionVersion = Exclude<
-  TransactionVersion,
-  "legacy"
->;
+export type MaxSupportedTransactionVersion = 0 | 1;
 
 /** Request parameters for `getAsset` — fetch a single asset by mint address. */
 export type GetAssetRequest = {
@@ -275,8 +276,9 @@ export type GetTransactionsForAddressBaseConfig = {
   minContextSlot?: number;
   encoding?: "json" | "jsonParsed" | "base64" | "base58";
   /**
-   * See {@link MaxSupportedTransactionVersion}. Omitted = legacy-only, and a
-   * higher-version transaction in range errors rather than being filtered out.
+   * See {@link MaxSupportedTransactionVersion}. With `transactionDetails:
+   * "accounts" | "full"`, omitted = legacy-only and a higher-version
+   * transaction in range errors rather than being filtered; inert otherwise.
    */
   maxSupportedTransactionVersion?: MaxSupportedTransactionVersion;
   /** Max results per page. */

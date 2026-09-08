@@ -78,7 +78,7 @@ export interface WsAsync {
    *   {
    *     commitment: "confirmed",
    *     encoding: "jsonParsed",
-   *     // Omitted = legacy-only; 1 also opts in to v1 (SIMD-0385) transactions
+   *     // Required for "accounts"/"full" details; 1 opts in to v1 (SIMD-0385)
    *     maxSupportedTransactionVersion: 1,
    *   }
    * );

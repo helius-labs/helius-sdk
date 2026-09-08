@@ -11,8 +11,8 @@ import { createHelius } from "helius-sdk";
       commitment: "confirmed",
       encoding: "jsonParsed",
       transactionDetails: "full",
-      // Omitted = legacy-only (versioned txs error rather than being
-      // filtered); 1 also opts in to v1 (SIMD-0385) payload shapes
+      // Required when transactionDetails is "accounts" or "full";
+      // 1 also opts in to v1 (SIMD-0385) transactions
       maxSupportedTransactionVersion: 1,
     }
   );
