@@ -4,6 +4,7 @@ import {
   setTransactionMessageLifetimeUsingBlockhash,
   setTransactionMessageFeePayerSigner,
   setTransactionMessageFeePayer,
+  setTransactionMessageLoadedAccountsDataSizeLimit,
   appendTransactionMessageInstructions,
   Address,
   TransactionMessage,
@@ -13,7 +14,10 @@ import {
   TransactionVersion,
 } from "@solana/kit";
 import { CreateTxMessageInput } from "./types";
-import { assertNoAddressLookupsOnV1 } from "./validateTxMessage";
+import {
+  assertNoAddressLookupsOnV1,
+  MAX_LOADED_ACCOUNTS_DATA_SIZE_BYTES,
+} from "./validateTxMessage";
 
 /**
  * Creates an empty transaction message of any version.
@@ -33,6 +37,17 @@ export const createEmptyTxMessage = <TVersion extends TransactionVersion>(
   }) as unknown as Extract<TransactionMessage, { version: TVersion }>;
 
 /**
+ * SIMD-0385 treats an absent v1 header-config field as 0, so on version `1`
+ * the returned message pre-sets the loaded-accounts-data-size limit to the
+ * 64 MiB maximum (`MAX_LOADED_ACCOUNTS_DATA_SIZE_BYTES`) — a 0-byte budget
+ * fails account loading while still paying fees. Override it with kit's
+ * `setTransactionMessageLoadedAccountsDataSizeLimit`. The compute-unit limit
+ * and priority fee are NOT pre-set (they need simulation): set them with
+ * `setTransactionMessageComputeUnitLimit` and
+ * `setTransactionMessagePriorityFeeLamports` before sending, or build via
+ * `createSmartTransaction`. `ComputeBudgetProgram` ixs do not configure v1;
+ * they execute as paid no-ops.
+ *
  * The return type is stated explicitly rather than inferred. Kit does not
  * export `V1TransactionConfig`, so an inferred type that structurally includes
  * it cannot be named in the emitted declarations (TS2742).
@@ -56,6 +71,13 @@ export const createTxMessage = <
 
   return pipe(
     createEmptyTxMessage(version),
+    (m) =>
+      version === 1
+        ? setTransactionMessageLoadedAccountsDataSizeLimit(
+            MAX_LOADED_ACCOUNTS_DATA_SIZE_BYTES,
+            m
+          )
+        : m,
     (m) =>
       lifetime ? setTransactionMessageLifetimeUsingBlockhash(lifetime, m) : m,
     (m) =>

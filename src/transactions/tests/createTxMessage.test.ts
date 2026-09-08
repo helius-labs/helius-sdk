@@ -1,5 +1,6 @@
 import {
   address,
+  getTransactionMessageLoadedAccountsDataSizeLimit,
   type Address,
   type TransactionSigner,
   type Instruction,
@@ -8,6 +9,7 @@ import {
   type AccountLookupMeta,
 } from "@solana/kit";
 import { createTxMessage } from "../createTxMessage";
+import { MAX_LOADED_ACCOUNTS_DATA_SIZE_BYTES } from "../validateTxMessage";
 
 type IxAccounts = readonly (
   | AccountMeta<string>
@@ -25,6 +27,24 @@ const getFeePayerAddress = (msg: any): string =>
   typeof msg.feePayer === "string" ? msg.feePayer : msg.feePayer?.address;
 
 describe("createTxMessage Tests", () => {
+  it("Pre-sets the v1 loaded-accounts-data-size limit; leaves legacy/v0 untouched", () => {
+    const feePayer = address("11111111111111111111111111111111");
+    const ix = makeNoopIx(address("11111111111111111111111111111111"));
+
+    // SIMD-0385: an absent v1 field is a 0-byte budget, so the builder seeds
+    // the 64 MiB maximum; callers can override with kit's setter
+    const v1 = createTxMessage({ version: 1, feePayer, instructions: [ix] });
+    expect(getTransactionMessageLoadedAccountsDataSizeLimit(v1)).toBe(
+      MAX_LOADED_ACCOUNTS_DATA_SIZE_BYTES
+    );
+
+    const v0 = createTxMessage({ version: 0, feePayer, instructions: [ix] });
+    expect(
+      getTransactionMessageLoadedAccountsDataSizeLimit(v0)
+    ).toBeUndefined();
+    expect((v0 as any).instructions?.length).toBe(1); // No injected ix
+  });
+
   it("Builds a message with Address fee payer and lifetime; instructions appended in order", () => {
     const feePayer = address("11111111111111111111111111111111");
     const lifetime = {

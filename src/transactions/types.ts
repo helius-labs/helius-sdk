@@ -31,7 +31,11 @@ export type SupportedTxVersion = TransactionVersion;
 
 /** Options for the compute-unit simulation step. */
 export interface GetComputeUnitsOpts {
-  /** Minimum CU floor for very small transactions. Defaults to 1,000. */
+  /**
+   * Minimum CU floor for very small transactions. Defaults to 1,000. The
+   * result is clamped to [1, 1.4M]: a 0-CU limit is literal on version `1`
+   * (SIMD-0385) and fails on-chain, and 1.4M is the protocol's request cap.
+   */
   min?: number;
   /** Buffer percentage added on top of simulated CU. Defaults to 0.1 (10%). */
   bufferPct?: number;
@@ -76,7 +80,11 @@ export type CreateTxMessageInput<
 export type CreateSmartTxInput = Readonly<{
   /** All required signers. First signer is the default fee-payer. */
   signers: readonly TransactionSigner<string>[];
-  /** Program instructions (no compute-budget ixs needed — we'll add them). */
+  /**
+   * Program instructions. Compute-budget instructions are stripped and
+   * replaced by the SDK's own budget — including any data-size-limit ix, so
+   * use the `loadedAccountsDataSizeLimit` option rather than passing one.
+   */
   instructions: readonly Instruction<string, readonly any[]>[];
   /** Optional fee-payer override (Address or TransactionSigner). */
   feePayer?: Address | TransactionSigner<string>;
@@ -96,6 +104,17 @@ export type CreateSmartTxInput = Readonly<{
    * the per-CU rate, so it constrains legacy and v0 transactions too.
    */
   priorityFeeLamportsCap?: number | bigint;
+  /**
+   * Requested loaded-accounts-data-size limit in bytes. Validated: an integer
+   * from 1 to the 64 MiB maximum, `MAX_LOADED_ACCOUNTS_DATA_SIZE_BYTES`.
+   *
+   * Version `1` always writes this to the header config (see that constant for
+   * why an absent field cannot be allowed), defaulting to the maximum; request
+   * less to reserve less under the v1 cost model. On `"legacy"` and `0` a
+   * value emits the corresponding `ComputeBudgetProgram` instruction, while
+   * unset adds nothing and keeps the protocol's implicit 64 MiB default.
+   */
+  loadedAccountsDataSizeLimit?: number;
   /** CU floor & simulation buffer. Defaults: 1_000 / 10%. */
   minUnits?: number;
   bufferPct?: number;

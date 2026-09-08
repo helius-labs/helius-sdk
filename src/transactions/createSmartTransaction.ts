@@ -22,6 +22,7 @@ import {
   setTransactionMessageComputeUnitLimit,
   setTransactionMessageFeePayerSigner,
   setTransactionMessageLifetimeUsingBlockhash,
+  setTransactionMessageLoadedAccountsDataSizeLimit,
   setTransactionMessagePriorityFeeLamports,
   signTransactionMessageWithSigners,
 } from "@solana/kit";
@@ -35,7 +36,9 @@ import { createEmptyTxMessage } from "./createTxMessage";
 import { resolvePriorityFee } from "./priorityFee";
 import {
   assertNoAddressLookupsOnV1,
+  assertValidLoadedAccountsDataSizeLimit,
   assertWithinSizeLimit,
+  MAX_LOADED_ACCOUNTS_DATA_SIZE_BYTES,
 } from "./validateTxMessage";
 
 const COMPUTE_BUDGET_PROGRAM_ADDRESS =
@@ -98,6 +101,7 @@ export const makeCreateSmartTransaction = ({
     version = 0,
     priorityFeeCap,
     priorityFeeLamportsCap,
+    loadedAccountsDataSizeLimit,
     minUnits = 1_000,
     bufferPct = 0.1,
     commitment = "confirmed",
@@ -108,6 +112,16 @@ export const makeCreateSmartTransaction = ({
 
     // Fail before spending two RPC round-trips on a transaction that can't be built
     assertNoAddressLookupsOnV1(version, userIxs);
+    assertValidLoadedAccountsDataSizeLimit(loadedAccountsDataSizeLimit);
+
+    // Always written on v1 — an absent header field is a 0-byte budget under
+    // SIMD-0385 — and applied to the draft too, so the simulation runs against
+    // the budget the transaction will carry. Legacy/v0 opt in explicitly; kit's
+    // setter dispatches per version (v1 → header config, legacy/v0 →
+    // ComputeBudget ix) and no-ops on undefined.
+    const resolvedDataSizeLimit =
+      loadedAccountsDataSizeLimit ??
+      (version === 1 ? MAX_LOADED_ACCOUNTS_DATA_SIZE_BYTES : undefined);
 
     // Draft message for CU estimation & fee sampling
     const { value: initialLifetime } = await raw
@@ -118,6 +132,11 @@ export const makeCreateSmartTransaction = ({
       createEmptyTxMessage(version),
       (m) => setTransactionMessageFeePayerSigner(feePayerSigner, m),
       (m) => setTransactionMessageLifetimeUsingBlockhash(initialLifetime, m),
+      (m) =>
+        setTransactionMessageLoadedAccountsDataSizeLimit(
+          resolvedDataSizeLimit,
+          m
+        ),
       (m) => appendTransactionMessageInstructions(userIxs, m)
     );
 
@@ -210,6 +229,11 @@ export const makeCreateSmartTransaction = ({
       (m) => setTransactionMessageFeePayerSigner(feePayerSigner, m),
       (m) => setTransactionMessageLifetimeUsingBlockhash(finalLifetime, m),
       (m) => applyComputeBudget(m),
+      (m) =>
+        setTransactionMessageLoadedAccountsDataSizeLimit(
+          resolvedDataSizeLimit,
+          m
+        ),
       (m) => appendTransactionMessageInstructions(userIxs, m)
     );
 

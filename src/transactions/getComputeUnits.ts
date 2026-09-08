@@ -5,6 +5,7 @@ import {
   type TransactionMessageWithFeePayer,
   estimateComputeUnitLimitFactory,
 } from "@solana/kit";
+import { MAX_COMPUTE_UNIT_LIMIT } from "@solana-program/compute-budget";
 import { GetComputeUnitsOpts } from "./types";
 
 export type GetComputeUnitsFn = (
@@ -45,6 +46,12 @@ export const makeGetComputeUnits = (
     const rawUnits = await estimateFn(message);
     const units = Number(rawUnits);
 
-    return Math.max(min, Math.ceil(units * (1 + bufferPct)));
+    // The v1 header value is exact (SIMD-0385): never 0 — a literal 0-CU
+    // budget fails on-chain — and never above the 1.4M request cap, which
+    // the buffer could otherwise push a large estimate past
+    return Math.min(
+      MAX_COMPUTE_UNIT_LIMIT,
+      Math.max(1, min, Math.ceil(units * (1 + bufferPct)))
+    );
   };
 };

@@ -4,7 +4,9 @@ import {
   type Instruction,
   type TransactionSigner,
   generateKeyPairSigner,
+  getTransactionMessageLoadedAccountsDataSizeLimit,
 } from "@solana/kit";
+import { MAX_LOADED_ACCOUNTS_DATA_SIZE_BYTES } from "../validateTxMessage";
 import {
   getSetComputeUnitLimitInstruction,
   getSetComputeUnitPriceInstruction,
@@ -196,10 +198,154 @@ describe("createSmartTransaction Tests", () => {
     // 10_000 microLamports/CU * 42_000 CU = 420_000_000 microLamports = 420 lamports
     expect(msg.config).toEqual({
       computeUnitLimit: 42_000,
+      // SIMD-0385: an absent field is a 0-byte budget that fails account
+      // loading, so the SDK always writes the 64 MiB protocol maximum
+      loadedAccountsDataSizeLimit: MAX_LOADED_ACCOUNTS_DATA_SIZE_BYTES,
       priorityFeeLamports: 420n,
     });
     expect(result.priorityFee).toBe(10_000);
     expect(result.priorityFeeLamports).toBe(420n);
+  });
+
+  it("Writes a caller-supplied loaded-accounts-data-size limit into the v1 header", async () => {
+    const sendOnce = jest.fn().mockResolvedValue({ value: lifetimeA });
+    const raw: any = {
+      getLatestBlockhash: jest.fn().mockReturnValue({ send: sendOnce }),
+    };
+
+    const { create } = makeCreateSmartTransaction({
+      raw,
+      getComputeUnits: jest.fn().mockResolvedValue(42_000),
+      getPriorityFeeEstimate: jest
+        .fn()
+        .mockResolvedValue({ priorityFeeEstimate: 10_000 }),
+    });
+
+    const result = await create({
+      signers: [feePayerSigner],
+      instructions: [makeNoopIx(address("11111111111111111111111111111111"))],
+      version: 1,
+      loadedAccountsDataSizeLimit: 512 * 1024,
+    });
+
+    expect(
+      getTransactionMessageLoadedAccountsDataSizeLimit(result.message)
+    ).toBe(512 * 1024);
+  });
+
+  it("Applies the data-size limit to the simulated draft, not just the final message", async () => {
+    const sendOnce = jest.fn().mockResolvedValue({ value: lifetimeA });
+    const raw: any = {
+      getLatestBlockhash: jest.fn().mockReturnValue({ send: sendOnce }),
+    };
+    const getComputeUnits = jest.fn().mockResolvedValue(42_000);
+
+    const { create } = makeCreateSmartTransaction({
+      raw,
+      getComputeUnits,
+      getPriorityFeeEstimate: jest
+        .fn()
+        .mockResolvedValue({ priorityFeeEstimate: 10_000 }),
+    });
+
+    await create({
+      signers: [feePayerSigner],
+      instructions: [makeNoopIx(address("11111111111111111111111111111111"))],
+      version: 1,
+    });
+
+    // Simulation performs account loading, so the draft must carry the same
+    // budget the final message will — an absent v1 field is a 0-byte budget
+    const draft = getComputeUnits.mock.calls[0][0];
+    expect(getTransactionMessageLoadedAccountsDataSizeLimit(draft)).toBe(
+      MAX_LOADED_ACCOUNTS_DATA_SIZE_BYTES
+    );
+  });
+
+  it("Rejects an invalid loadedAccountsDataSizeLimit before any RPC round-trip", async () => {
+    const sendOnce = jest.fn();
+    const raw: any = {
+      getLatestBlockhash: jest.fn().mockReturnValue({ send: sendOnce }),
+    };
+
+    const { create } = makeCreateSmartTransaction({
+      raw,
+      getComputeUnits: jest.fn(),
+      getPriorityFeeEstimate: jest.fn(),
+    });
+
+    const args = {
+      signers: [feePayerSigner],
+      instructions: [makeNoopIx(address("11111111111111111111111111111111"))],
+      version: 1,
+    } as const;
+
+    // 0 is the exact footgun the default exists to prevent
+    await expect(
+      create({ ...args, loadedAccountsDataSizeLimit: 0 })
+    ).rejects.toThrow(/loadedAccountsDataSizeLimit/);
+    // Above the protocol maximum and non-integers fail kit/runtime opaquely
+    await expect(
+      create({
+        ...args,
+        loadedAccountsDataSizeLimit: MAX_LOADED_ACCOUNTS_DATA_SIZE_BYTES + 1,
+      })
+    ).rejects.toThrow(/loadedAccountsDataSizeLimit/);
+    await expect(
+      create({ ...args, loadedAccountsDataSizeLimit: 1024.5 })
+    ).rejects.toThrow(/loadedAccountsDataSizeLimit/);
+
+    expect(raw.getLatestBlockhash).not.toHaveBeenCalled();
+  });
+
+  it("Emits the data-size-limit instruction on v0 only when explicitly requested", async () => {
+    const sendOnce = jest.fn().mockResolvedValue({ value: lifetimeA });
+    const raw: any = {
+      getLatestBlockhash: jest.fn().mockReturnValue({ send: sendOnce }),
+    };
+
+    const { create } = makeCreateSmartTransaction({
+      raw,
+      getComputeUnits: jest.fn().mockResolvedValue(42_000),
+      getPriorityFeeEstimate: jest
+        .fn()
+        .mockResolvedValue({ priorityFeeEstimate: 10_000 }),
+    });
+
+    const args = {
+      signers: [feePayerSigner],
+      instructions: [makeNoopIx(address("11111111111111111111111111111111"))],
+      version: 0,
+    } as const;
+
+    const USER_PROGRAM = address("11111111111111111111111111111111");
+
+    // Unset: v0 output is untouched (protocol default applies implicitly)
+    const unset = await create({ ...args });
+    expect(
+      getTransactionMessageLoadedAccountsDataSizeLimit(unset.message)
+    ).toBeUndefined();
+    expect(programAddrs(unset.message)).toEqual([
+      CB_ADDR, // Price
+      CB_ADDR, // Limit
+      USER_PROGRAM,
+    ]);
+
+    // Explicit: the corresponding ComputeBudget instruction is emitted,
+    // and every compute-budget ix stays ahead of user instructions
+    const explicit = await create({
+      ...args,
+      loadedAccountsDataSizeLimit: 512 * 1024,
+    });
+    expect(
+      getTransactionMessageLoadedAccountsDataSizeLimit(explicit.message)
+    ).toBe(512 * 1024);
+    expect(programAddrs(explicit.message)).toEqual([
+      CB_ADDR, // Price
+      CB_ADDR, // Limit
+      CB_ADDR, // Data-size limit
+      USER_PROGRAM,
+    ]);
   });
 
   it("Reports the equivalent total lamport fee on legacy and v0", async () => {
