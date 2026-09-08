@@ -75,7 +75,12 @@ export interface WsAsync {
    * ```ts
    * const sub = await helius.ws.transactionSubscribe(
    *   { accountInclude: ["EPjF..."] },
-   *   { commitment: "confirmed", encoding: "jsonParsed" }
+   *   {
+   *     commitment: "confirmed",
+   *     encoding: "jsonParsed",
+   *     // Omitted = legacy-only; 1 also opts in to v1 (SIMD-0385) transactions
+   *     maxSupportedTransactionVersion: 1,
+   *   }
    * );
    * for await (const notif of sub) {
    *   console.log(notif.signature, notif.slot);

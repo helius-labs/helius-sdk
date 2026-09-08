@@ -256,7 +256,12 @@ helius.ws.close();
 // Enhanced WebSockets (Business+ plan) — 1.5-2x faster, up to 50k address filters
 const sub = await helius.ws.transactionSubscribe(
   { accountInclude: ["EPjF..."] },
-  { commitment: "confirmed", encoding: "jsonParsed" }
+  // Omitted maxSupportedTransactionVersion = legacy-only; 1 also opts in to v1 (SIMD-0385)
+  {
+    commitment: "confirmed",
+    encoding: "jsonParsed",
+    maxSupportedTransactionVersion: 1,
+  }
 );
 for await (const notif of sub) {
   console.log(notif.signature, notif.slot);

@@ -1,3 +1,5 @@
+import type { MaxSupportedTransactionVersion } from "../types/types";
+
 /**
  * Filter for `transactionSubscribe`. Controls which transactions are streamed.
  */
@@ -28,8 +30,12 @@ export interface TransactionSubscribeConfig {
   transactionDetails?: "full" | "signatures" | "accounts" | "none";
   /** Whether to include rewards in the response. */
   showRewards?: boolean;
-  /** Maximum supported transaction version. */
-  maxSupportedTransactionVersion?: number;
+  /**
+   * See {@link MaxSupportedTransactionVersion}. Omitted = legacy-only, and a
+   * higher-version transaction errors rather than being filtered out — set it
+   * explicitly for anything beyond legacy (`1` also opts in to SIMD-0385 v1).
+   */
+  maxSupportedTransactionVersion?: MaxSupportedTransactionVersion;
 }
 
 /**

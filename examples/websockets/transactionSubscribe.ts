@@ -7,7 +7,14 @@ import { createHelius } from "helius-sdk";
   // Subscribe to transactions involving a specific account
   const sub = await helius.ws.transactionSubscribe(
     { accountInclude: ["EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"] },
-    { commitment: "confirmed", encoding: "jsonParsed", transactionDetails: "full" }
+    {
+      commitment: "confirmed",
+      encoding: "jsonParsed",
+      transactionDetails: "full",
+      // Omitted = legacy-only (versioned txs error rather than being
+      // filtered); 1 also opts in to v1 (SIMD-0385) payload shapes
+      maxSupportedTransactionVersion: 1,
+    }
   );
 
   console.log("Subscription ID:", sub.subscriptionId);

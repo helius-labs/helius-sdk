@@ -1,7 +1,23 @@
-import type { Commitment, RpcResponse } from "@solana/kit";
+import type { Commitment, RpcResponse, TransactionVersion } from "@solana/kit";
 
 import { Asset } from "./das";
 import { PriorityLevel, UiTransactionEncoding } from "./enums";
+
+/**
+ * Maximum transaction version the caller can handle, for version-aware read
+ * APIs (`transactionSubscribe`, `getTransactionsForAddress`).
+ *
+ * Omitting the field means legacy-only: standard Solana RPC semantics reject a
+ * higher-version transaction with an unsupported-transaction-version error
+ * rather than silently filtering it out. Pass `0` for v0 support, or `1`
+ * (SIMD-0385, Agave 4.2) to also receive version 1 transactions — opting in
+ * means your handlers must accept the v1 payload shape. Derived from kit's
+ * `TransactionVersion`, so it widens automatically with future versions.
+ */
+export type MaxSupportedTransactionVersion = Exclude<
+  TransactionVersion,
+  "legacy"
+>;
 
 /** Request parameters for `getAsset` — fetch a single asset by mint address. */
 export type GetAssetRequest = {
@@ -258,7 +274,11 @@ export type GetTransactionsForAddressBaseConfig = {
   commitment?: Commitment;
   minContextSlot?: number;
   encoding?: "json" | "jsonParsed" | "base64" | "base58";
-  maxSupportedTransactionVersion?: number;
+  /**
+   * See {@link MaxSupportedTransactionVersion}. Omitted = legacy-only, and a
+   * higher-version transaction in range errors rather than being filtered out.
+   */
+  maxSupportedTransactionVersion?: MaxSupportedTransactionVersion;
   /** Max results per page. */
   limit?: number;
   /** Pagination token from a previous response. `null` when no more pages. */
