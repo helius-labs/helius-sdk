@@ -31,7 +31,11 @@ export type SupportedTxVersion = TransactionVersion;
 
 /** Options for the compute-unit simulation step. */
 export interface GetComputeUnitsOpts {
-  /** Minimum CU floor for very small transactions. Defaults to 1,000. */
+  /**
+   * Minimum CU floor for very small transactions. Defaults to 1,000, and is
+   * clamped to at least 1 — a 0-CU limit is literal on version `1`
+   * (SIMD-0385) and fails on-chain.
+   */
   min?: number;
   /** Buffer percentage added on top of simulated CU. Defaults to 0.1 (10%). */
   bufferPct?: number;
@@ -96,6 +100,17 @@ export type CreateSmartTxInput = Readonly<{
    * the per-CU rate, so it constrains legacy and v0 transactions too.
    */
   priorityFeeLamportsCap?: number | bigint;
+  /**
+   * Requested loaded-accounts-data-size limit in bytes. Validated: an integer
+   * from 1 to the 64 MiB maximum, `MAX_LOADED_ACCOUNTS_DATA_SIZE_BYTES`.
+   *
+   * Version `1` always writes this to the header config (see that constant for
+   * why an absent field cannot be allowed), defaulting to the maximum; request
+   * less to reserve less under the v1 cost model. On `"legacy"` and `0` a
+   * value emits the corresponding `ComputeBudgetProgram` instruction, while
+   * unset adds nothing and keeps the protocol's implicit 64 MiB default.
+   */
+  loadedAccountsDataSizeLimit?: number;
   /** CU floor & simulation buffer. Defaults: 1_000 / 10%. */
   minUnits?: number;
   bufferPct?: number;

@@ -7,12 +7,15 @@ import bs58 from "bs58";
  * Version 1 transactions (SIMD-0385) raise the size limit from 1,232 to 4,096
  * bytes (SIMD-0296).
  *
- * Two things differ from v0:
+ * Three things differ from v0:
  *   1. The compute-unit limit and priority fee ride in the transaction header
  *      instead of `ComputeBudgetProgram` instructions, so a v1 transaction is
  *      actually *smaller* on the wire than the v0 equivalent.
  *   2. Address lookup tables are not supported — every account the transaction
  *      touches must be listed inline (max 64).
+ *   3. The loaded-accounts-data-size limit also rides in the header, and an
+ *      absent field means a 0-byte budget that fails account loading — so the
+ *      SDK always writes it (64 MiB unless you request less below).
  *
  * Other v1 caps: 64 instructions, 12 signatures, 255 accounts per instruction.
  */
@@ -45,6 +48,9 @@ import bs58 from "bs58";
       // Optional: cap what the transaction actually spends on priority, in lamports.
       // v1 pays a total rather than a per-CU rate, so this is the natural budget knob
       // priorityFeeLamportsCap: 50_000,
+      // Optional: request less than the 64 MiB default to reserve less under
+      // the v1 cost model (bytes of account data this transaction may load)
+      // loadedAccountsDataSizeLimit: 4 * 1024 * 1024,
     });
 
     console.log("— createSmartTransaction({ version: 1 }) result —");

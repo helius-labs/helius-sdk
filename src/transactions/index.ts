@@ -17,7 +17,9 @@ export { resolvePriorityFee } from "./priorityFee";
 
 export {
   assertNoAddressLookupsOnV1,
+  assertValidLoadedAccountsDataSizeLimit,
   assertWithinSizeLimit,
+  MAX_LOADED_ACCOUNTS_DATA_SIZE_BYTES,
   V1_TRANSACTION_SIZE_LIMIT,
 } from "./validateTxMessage";
 

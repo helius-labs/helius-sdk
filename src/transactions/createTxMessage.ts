@@ -33,6 +33,17 @@ export const createEmptyTxMessage = <TVersion extends TransactionVersion>(
   }) as unknown as Extract<TransactionMessage, { version: TVersion }>;
 
 /**
+ * On version `1` the returned message has NO header config, and SIMD-0385
+ * treats absent fields as 0 — a 0-CU, 0-byte-loaded-data budget that fails
+ * on-chain while still paying fees. Before sending a hand-assembled v1
+ * message, set the compute-unit and loaded-accounts-data-size limits with
+ * kit's `setTransactionMessageComputeUnitLimit` and
+ * `setTransactionMessageLoadedAccountsDataSizeLimit` (e.g. to
+ * `MAX_LOADED_ACCOUNTS_DATA_SIZE_BYTES`, exported from
+ * `helius-sdk/transactions/index`) — or build via
+ * `createSmartTransaction`, which sets them. `ComputeBudgetProgram` ixs do not
+ * configure v1; they execute as paid no-ops.
+ *
  * The return type is stated explicitly rather than inferred. Kit does not
  * export `V1TransactionConfig`, so an inferred type that structurally includes
  * it cannot be named in the emitted declarations (TS2742).

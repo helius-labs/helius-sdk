@@ -55,6 +55,14 @@ export default {
       maxSize: '1kb',
     },
     {
+      // Opt out of the default 15% growth ratchet: now owns the v1 protocol
+      // constants (V1_TRANSACTION_SIZE_LIMIT, MAX_LOADED_ACCOUNTS_DATA_SIZE_BYTES)
+      // and the loaded-accounts-data-size-limit validator alongside the ALT and
+      // size guards. The absolute cap still gates unbounded growth.
+      path: 'dist/esm/transactions/validateTxMessage.js',
+      maxSize: '2kb',
+    },
+    {
       path: 'dist/esm/websockets/wsAsync.js',
       maxSize: '1.5kb',
     },
@@ -83,20 +91,23 @@ export default {
     {
       // Opt out of the default 15% growth ratchet: this file now builds both
       // the legacy/v0 compute-budget instruction pair and the version 1 header
-      // config (SIMD-0385), and picks a fee-estimate request shape per version.
-      // The fee math lives in priorityFee.js and the version checks in
-      // validateTxMessage.js to keep the second format from consuming the
-      // remaining headroom.
+      // config (SIMD-0385), picks a fee-estimate request shape per version,
+      // and always writes the v1 loaded-accounts-data-size limit (an absent
+      // field is a 0-byte budget that fails account loading). The fee math
+      // lives in priorityFee.js and the version checks in validateTxMessage.js
+      // to keep further growth out of this module.
       path: 'dist/esm/transactions/createSmartTransaction.js',
-      maxSize: '2.4kb',
+      maxSize: '2.6kb',
     },
     {
       // Opt out of the default 15% growth ratchet: createTxMessage is now
       // generic over the transaction version so a v1 caller gets a v1-typed
-      // message, and applies the v1 address-lookup-table guard. A one-time step
-      // up from a small file; the absolute cap still gates further growth.
+      // message, and applies the v1 address-lookup-table guard. Bumped again
+      // for the hand-assembly JSDoc warning that a config-less v1 message has
+      // a 0-CU / 0-byte budget (SIMD-0385) — a fee-burning footgun worth the
+      // shipped bytes. The absolute cap still gates further growth.
       path: 'dist/esm/transactions/createTxMessage.js',
-      maxSize: '1kb',
+      maxSize: '1.2kb',
     },
     {
       // Opt out of the default 15% growth ratchet: the estimator moved to

@@ -12,7 +12,9 @@ import {
 } from "@solana/kit";
 import {
   assertNoAddressLookupsOnV1,
+  assertValidLoadedAccountsDataSizeLimit,
   assertWithinSizeLimit,
+  MAX_LOADED_ACCOUNTS_DATA_SIZE_BYTES,
 } from "../validateTxMessage";
 
 const PROGRAM = address("11111111111111111111111111111111");
@@ -82,6 +84,40 @@ describe("assertNoAddressLookupsOnV1 Tests", () => {
     expect(() =>
       assertNoAddressLookupsOnV1("legacy", [lookupIx()])
     ).not.toThrow();
+  });
+});
+
+describe("assertValidLoadedAccountsDataSizeLimit Tests", () => {
+  it("Allows undefined and the full valid range", () => {
+    expect(() =>
+      assertValidLoadedAccountsDataSizeLimit(undefined)
+    ).not.toThrow();
+    expect(() => assertValidLoadedAccountsDataSizeLimit(1)).not.toThrow();
+    expect(() =>
+      assertValidLoadedAccountsDataSizeLimit(
+        MAX_LOADED_ACCOUNTS_DATA_SIZE_BYTES
+      )
+    ).not.toThrow();
+  });
+
+  it("Rejects 0 — a literal 0-byte budget fails account loading on v1", () => {
+    expect(() => assertValidLoadedAccountsDataSizeLimit(0)).toThrow(
+      /loadedAccountsDataSizeLimit/
+    );
+  });
+
+  it("Rejects negatives, non-integers, and values above the 64 MiB maximum", () => {
+    expect(() => assertValidLoadedAccountsDataSizeLimit(-1)).toThrow(
+      /loadedAccountsDataSizeLimit/
+    );
+    expect(() => assertValidLoadedAccountsDataSizeLimit(1024.5)).toThrow(
+      /loadedAccountsDataSizeLimit/
+    );
+    expect(() =>
+      assertValidLoadedAccountsDataSizeLimit(
+        MAX_LOADED_ACCOUNTS_DATA_SIZE_BYTES + 1
+      )
+    ).toThrow(/loadedAccountsDataSizeLimit/);
   });
 });
 

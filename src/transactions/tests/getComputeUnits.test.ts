@@ -55,6 +55,16 @@ describe("getComputeUnits Tests", () => {
     expect(result).toBe(3600);
   });
 
+  it("Never returns 0, even with min: 0 and an empty simulation", async () => {
+    mockEstimate.mockResolvedValueOnce(0);
+
+    const getComputeUnits = makeGetComputeUnits(dummyRpc);
+    const result = await getComputeUnits(dummyMessage, { min: 0 });
+
+    // A literal 0 CU limit is exact on version 1 (SIMD-0385) and fails on-chain
+    expect(result).toBe(1);
+  });
+
   it("Falls back to min when estimate is extremely low", async () => {
     mockEstimate.mockResolvedValueOnce(100);
 
