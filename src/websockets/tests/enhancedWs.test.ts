@@ -1,4 +1,5 @@
 import { makeEnhancedWsClient } from "../enhancedWs";
+import type { TransactionSubscribeConfig } from "../types";
 
 // ── Mock WebSocket ──────────────────────────────────────────────────
 
@@ -71,7 +72,8 @@ describe("makeEnhancedWsClient", () => {
   it("sends correct JSON-RPC for transactionSubscribe", async () => {
     const client = makeEnhancedWsClient(TEST_URL);
     const filter = { accountInclude: ["abc"] };
-    const config = { commitment: "confirmed" as const };
+    // No maxSupportedTransactionVersion: pins the omitted-field wire shape
+    const config: TransactionSubscribeConfig = { commitment: "confirmed" };
 
     const subPromise = client.transactionSubscribe(filter, config);
     await jest.advanceTimersByTimeAsync(0); // Let WS connect
@@ -82,6 +84,24 @@ describe("makeEnhancedWsClient", () => {
     expect(sent.method).toBe("transactionSubscribe");
     expect(sent.params).toEqual([filter, config]);
     expect(sub.subscriptionId).toBe(42);
+
+    client.close();
+  });
+
+  it("forwards maxSupportedTransactionVersion to the wire, including a falsy 0", async () => {
+    const client = makeEnhancedWsClient(TEST_URL);
+    // Typed against the public config so the union is compile-checked
+    const config: TransactionSubscribeConfig = {
+      maxSupportedTransactionVersion: 0,
+    };
+
+    const subPromise = client.transactionSubscribe({}, config);
+    await jest.advanceTimersByTimeAsync(0);
+    respondToLatest(lastWs(), 7);
+    await subPromise;
+
+    const sent = JSON.parse(lastWs().sent[0]);
+    expect(sent.params[1].maxSupportedTransactionVersion).toBe(0);
 
     client.close();
   });

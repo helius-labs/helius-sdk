@@ -54,7 +54,7 @@ const assets = await helius.getAssetsByOwner({
 // Get transaction history
 const txs = await helius.getTransactionsForAddress([
   "wallet_address",
-  { limit: 10, transactionDetails: "full" }
+  { limit: 10, transactionDetails: "full", maxSupportedTransactionVersion: 1 }
 ]);
 
 // Get parsed token and native SOL transfer history
@@ -150,6 +150,7 @@ const txs = await helius.getTransactionsForAddress([
   {
     limit: 10,
     transactionDetails: "full",       // "full" | "signatures" (default)
+    maxSupportedTransactionVersion: 1, // Include versioned (v0/v1) transactions
     sortOrder: "desc",                // "asc" | "desc"
     filters: {
       blockTime: { gte: unixTimestamp },  // Filter by time
@@ -256,7 +257,12 @@ helius.ws.close();
 // Enhanced WebSockets (Business+ plan) — 1.5-2x faster, up to 50k address filters
 const sub = await helius.ws.transactionSubscribe(
   { accountInclude: ["EPjF..."] },
-  { commitment: "confirmed", encoding: "jsonParsed" }
+  // Required when transactionDetails is "accounts" or "full"; 1 opts in to v1 (SIMD-0385)
+  {
+    commitment: "confirmed",
+    encoding: "jsonParsed",
+    maxSupportedTransactionVersion: 1,
+  }
 );
 for await (const notif of sub) {
   console.log(notif.signature, notif.slot);

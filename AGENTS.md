@@ -32,7 +32,12 @@ const assets = await helius.getAssetsByOwner({
 // Get transaction history (with token account activity)
 const txs = await helius.getTransactionsForAddress([
   "wallet_address",
-  { limit: 100, transactionDetails: "full", filters: { tokenAccounts: "balanceChanged" } },
+  {
+    limit: 100,
+    transactionDetails: "full",
+    maxSupportedTransactionVersion: 1,
+    filters: { tokenAccounts: "balanceChanged" },
+  },
 ]);
 
 // Send a transaction via Helius Sender (ultra-low latency)
@@ -97,6 +102,7 @@ const txs = await helius.getTransactionsForAddress([
   "address",
   {
     transactionDetails: "full",
+    maxSupportedTransactionVersion: 1,
     limit: 100,
     filters: {
       tokenAccounts: "balanceChanged",

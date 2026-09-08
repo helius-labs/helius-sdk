@@ -33,6 +33,9 @@ import { createHelius } from "helius-sdk";
       {
         limit: 2,
         transactionDetails: "full", // Get complete transaction data
+        // With "full" details, omitting this means legacy-only and versioned
+        // transactions in range error; 1 also includes v1 (SIMD-0385)
+        maxSupportedTransactionVersion: 1,
       },
     ]);
 

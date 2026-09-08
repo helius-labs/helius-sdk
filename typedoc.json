@@ -7,6 +7,7 @@
     "src/enhanced/index.ts",
     "src/transactions/index.ts",
     "src/websockets/wsAsync.ts",
+    "src/websockets/types.ts",
     "src/staking/client.ts",
     "src/staking/types.ts",
     "src/zk/client.ts",

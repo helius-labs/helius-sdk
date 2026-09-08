@@ -3,6 +3,23 @@ import type { Commitment, RpcResponse } from "@solana/kit";
 import { Asset } from "./das";
 import { PriorityLevel, UiTransactionEncoding } from "./enums";
 
+/**
+ * Maximum transaction version the caller can handle, for version-aware read
+ * APIs (`transactionSubscribe`, `getTransactionsForAddress`).
+ *
+ * Helius recommends setting `1` (Agave 4.2 migration checklist) to also
+ * receive version 1 transactions (SIMD-0385) — opting in means your handlers
+ * must accept the v1 payload shape. The field only takes effect when
+ * `transactionDetails` is `"accounts"` or `"full"`: there, an omitted field
+ * means legacy-only on HTTP methods, and a higher-version transaction in range
+ * errors rather than being filtered out, while `transactionSubscribe` requires
+ * the field outright.
+ *
+ * Owned by the SDK rather than derived from kit's `TransactionVersion`: the
+ * ceiling tracks what Helius endpoints accept, and widens by SDK release.
+ */
+export type MaxSupportedTransactionVersion = 0 | 1;
+
 /** Request parameters for `getAsset` — fetch a single asset by mint address. */
 export type GetAssetRequest = {
   /** The unique identifier of the asset to retrieve. This is typically the mint address of the NFT or token. */
@@ -258,7 +275,12 @@ export type GetTransactionsForAddressBaseConfig = {
   commitment?: Commitment;
   minContextSlot?: number;
   encoding?: "json" | "jsonParsed" | "base64" | "base58";
-  maxSupportedTransactionVersion?: number;
+  /**
+   * See {@link MaxSupportedTransactionVersion}. With `transactionDetails:
+   * "accounts" | "full"`, omitted = legacy-only and a higher-version
+   * transaction in range errors rather than being filtered; inert otherwise.
+   */
+  maxSupportedTransactionVersion?: MaxSupportedTransactionVersion;
   /** Max results per page. */
   limit?: number;
   /** Pagination token from a previous response. `null` when no more pages. */
