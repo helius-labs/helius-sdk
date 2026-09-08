@@ -32,9 +32,9 @@ export type SupportedTxVersion = TransactionVersion;
 /** Options for the compute-unit simulation step. */
 export interface GetComputeUnitsOpts {
   /**
-   * Minimum CU floor for very small transactions. Defaults to 1,000, and is
-   * clamped to at least 1 — a 0-CU limit is literal on version `1`
-   * (SIMD-0385) and fails on-chain.
+   * Minimum CU floor for very small transactions. Defaults to 1,000. The
+   * result is clamped to [1, 1.4M]: a 0-CU limit is literal on version `1`
+   * (SIMD-0385) and fails on-chain, and 1.4M is the protocol's request cap.
    */
   min?: number;
   /** Buffer percentage added on top of simulated CU. Defaults to 0.1 (10%). */
@@ -80,7 +80,11 @@ export type CreateTxMessageInput<
 export type CreateSmartTxInput = Readonly<{
   /** All required signers. First signer is the default fee-payer. */
   signers: readonly TransactionSigner<string>[];
-  /** Program instructions (no compute-budget ixs needed — we'll add them). */
+  /**
+   * Program instructions. Compute-budget instructions are stripped and
+   * replaced by the SDK's own budget — including any data-size-limit ix, so
+   * use the `loadedAccountsDataSizeLimit` option rather than passing one.
+   */
   instructions: readonly Instruction<string, readonly any[]>[];
   /** Optional fee-payer override (Address or TransactionSigner). */
   feePayer?: Address | TransactionSigner<string>;

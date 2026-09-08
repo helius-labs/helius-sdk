@@ -5,10 +5,8 @@ import {
   type TransactionMessageWithFeePayer,
   estimateComputeUnitLimitFactory,
 } from "@solana/kit";
+import { MAX_COMPUTE_UNIT_LIMIT } from "@solana-program/compute-budget";
 import { GetComputeUnitsOpts } from "./types";
-
-/** The protocol's maximum compute-unit request; kit does not export it. */
-const MAX_COMPUTE_UNIT_LIMIT = 1_400_000;
 
 export type GetComputeUnitsFn = (
   message: TransactionMessage & TransactionMessageWithFeePayer,
@@ -51,10 +49,9 @@ export const makeGetComputeUnits = (
     // The v1 header value is exact (SIMD-0385): never 0 — a literal 0-CU
     // budget fails on-chain — and never above the 1.4M request cap, which
     // the buffer could otherwise push a large estimate past
-    const floor = Math.max(1, min);
     return Math.min(
       MAX_COMPUTE_UNIT_LIMIT,
-      Math.max(floor, Math.ceil(units * (1 + bufferPct)))
+      Math.max(1, min, Math.ceil(units * (1 + bufferPct)))
     );
   };
 };

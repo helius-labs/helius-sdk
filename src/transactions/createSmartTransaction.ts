@@ -116,21 +116,12 @@ export const makeCreateSmartTransaction = ({
 
     // Always written on v1 — an absent header field is a 0-byte budget under
     // SIMD-0385 — and applied to the draft too, so the simulation runs against
-    // the budget the transaction will carry. Legacy/v0 opt in explicitly.
+    // the budget the transaction will carry. Legacy/v0 opt in explicitly; kit's
+    // setter dispatches per version (v1 → header config, legacy/v0 →
+    // ComputeBudget ix) and no-ops on undefined.
     const resolvedDataSizeLimit =
       loadedAccountsDataSizeLimit ??
       (version === 1 ? MAX_LOADED_ACCOUNTS_DATA_SIZE_BYTES : undefined);
-
-    // Kit dispatches: v1 → header config, legacy/v0 → ComputeBudget ix
-    const applyDataSizeLimit = <TMessage extends TransactionMessage>(
-      m: TMessage
-    ): TMessage =>
-      resolvedDataSizeLimit === undefined
-        ? m
-        : setTransactionMessageLoadedAccountsDataSizeLimit(
-            resolvedDataSizeLimit,
-            m
-          );
 
     // Draft message for CU estimation & fee sampling
     const { value: initialLifetime } = await raw
@@ -141,7 +132,11 @@ export const makeCreateSmartTransaction = ({
       createEmptyTxMessage(version),
       (m) => setTransactionMessageFeePayerSigner(feePayerSigner, m),
       (m) => setTransactionMessageLifetimeUsingBlockhash(initialLifetime, m),
-      (m) => applyDataSizeLimit(m),
+      (m) =>
+        setTransactionMessageLoadedAccountsDataSizeLimit(
+          resolvedDataSizeLimit,
+          m
+        ),
       (m) => appendTransactionMessageInstructions(userIxs, m)
     );
 
@@ -234,7 +229,11 @@ export const makeCreateSmartTransaction = ({
       (m) => setTransactionMessageFeePayerSigner(feePayerSigner, m),
       (m) => setTransactionMessageLifetimeUsingBlockhash(finalLifetime, m),
       (m) => applyComputeBudget(m),
-      (m) => applyDataSizeLimit(m),
+      (m) =>
+        setTransactionMessageLoadedAccountsDataSizeLimit(
+          resolvedDataSizeLimit,
+          m
+        ),
       (m) => appendTransactionMessageInstructions(userIxs, m)
     );
 
