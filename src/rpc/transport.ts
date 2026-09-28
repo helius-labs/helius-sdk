@@ -1,4 +1,5 @@
 import type { RpcTransport } from "@solana/kit";
+import type { HeliusRpcOptions } from "./types";
 
 /**
  * Hook for augmenting or replacing the SDK's default RPC transport.
@@ -57,3 +58,22 @@ export const withSdkRequestId =
 
     return baseTransport({ ...request, payload });
   };
+
+/**
+ * Build the RPC URL from `baseUrl` (or the network's Helius endpoint), with
+ * `api-key` and `rebate-address` set in its query.
+ */
+export const buildRpcUrl = ({
+  baseUrl,
+  network = "mainnet",
+  apiKey,
+  rebateAddress,
+}: Pick<
+  HeliusRpcOptions,
+  "baseUrl" | "network" | "apiKey" | "rebateAddress"
+>): string => {
+  const url = new URL(baseUrl ?? `https://${network}.helius-rpc.com/`);
+  if (apiKey) url.searchParams.set("api-key", apiKey);
+  if (rebateAddress) url.searchParams.set("rebate-address", rebateAddress);
+  return url.toString();
+};

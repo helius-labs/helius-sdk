@@ -1,5 +1,6 @@
 import { createHelius } from "../index";
 import { createHeliusEager } from "../createHelius.eager";
+import { makeWsAsync } from "../../websockets/wsAsync";
 
 const transportMock = jest.fn();
 const createDefaultRpcTransportMock = jest.fn((_opts?: any) => transportMock);
@@ -13,6 +14,10 @@ jest.mock("@solana/kit", () => ({
     return createDefaultRpcTransportMock((arguments as any)[0]);
   }),
   createRpc: jest.fn().mockReturnValue({}),
+}));
+
+jest.mock("../../websockets/wsAsync", () => ({
+  makeWsAsync: jest.fn(() => ({ close: jest.fn() })),
 }));
 
 const getUrlFromTransport = (): string => {
@@ -85,7 +90,7 @@ describe("createHelius", () => {
     it("appends to a custom baseUrl that already has a query", () => {
       const apiKey = "test-api-key";
       const rebateAddress = "rebate-address-123";
-      createHelius({
+      const helius = createHelius({
         baseUrl: "https://proxy.example.com/rpc?token=abc",
         apiKey,
         rebateAddress,
@@ -95,6 +100,13 @@ describe("createHelius", () => {
       expect(params.get("token")).toBe("abc");
       expect(params.get("api-key")).toBe(apiKey);
       expect(params.get("rebate-address")).toBe(rebateAddress);
+
+      void helius.ws;
+      const wsUrl = new URL(jest.mocked(makeWsAsync).mock.calls[0][0]);
+      expect(wsUrl.protocol).toBe("wss:");
+      expect(wsUrl.searchParams.get("token")).toBe("abc");
+      expect(wsUrl.searchParams.get("api-key")).toBe(apiKey);
+      expect(wsUrl.searchParams.get("rebate-address")).toBe(rebateAddress);
     });
   });
 
@@ -311,9 +323,11 @@ describe("createHeliusEager", () => {
 
     it("appends to a custom baseUrl that already has a query", async () => {
       const apiKey = "test-api-key";
+      const rebateAddress = "rebate-address-123";
       const rpc = createHeliusEager({
         baseUrl: "https://proxy.example.com/rpc?token=abc",
         apiKey,
+        rebateAddress,
       });
 
       await rpc.getAsset({ id: "test-id" });
@@ -321,6 +335,7 @@ describe("createHeliusEager", () => {
       const params = new URL(getUrlFromTransport()).searchParams;
       expect(params.get("token")).toBe("abc");
       expect(params.get("api-key")).toBe(apiKey);
+      expect(params.get("rebate-address")).toBe(rebateAddress);
     });
   });
 

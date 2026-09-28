@@ -8,7 +8,7 @@ import {
 } from "@solana/kit";
 import { wrapAutoSend } from "./wrapAutoSend";
 import { makeRpcCaller } from "./caller";
-import { resolveTransport, withSdkRequestId } from "./transport";
+import { buildRpcUrl, resolveTransport, withSdkRequestId } from "./transport";
 
 export type { TransportHook } from "./transport";
 export type { RpcTransport } from "@solana/kit";
@@ -140,24 +140,7 @@ export const createHeliusEager = ({
   userAgent,
   transport: transportHook,
 }: HeliusRpcOptions): HeliusClientEager => {
-  // Use custom baseUrl if provided, otherwise construct from network
-  const resolvedBaseUrl = baseUrl ?? `https://${network}.helius-rpc.com/`;
-
-  // Build query parameters
-  const queryParams: string[] = [];
-  if (apiKey) {
-    queryParams.push(`api-key=${apiKey}`);
-  }
-  if (rebateAddress) {
-    queryParams.push(`rebate-address=${rebateAddress}`);
-  }
-
-  // A custom baseUrl may already carry a query (proxy tokens, for example), so
-  // the first appended param joins with "&" rather than starting a second "?"
-  const separator = resolvedBaseUrl.includes("?") ? "&" : "?";
-  const queryString =
-    queryParams.length > 0 ? `${separator}${queryParams.join("&")}` : "";
-  const url = `${resolvedBaseUrl}${queryString}`;
+  const url = buildRpcUrl({ baseUrl, network, apiKey, rebateAddress });
 
   const solanaApi = createSolanaRpcApi(DEFAULT_RPC_CONFIG);
   const transport = resolveTransport(
