@@ -84,7 +84,7 @@ export interface ProjectDetails {
   prepaidCreditsLink: string;
   /**
    * Stripe price ID for the project's prepaid-credits top-up SKU.
-   * Resolved server-side from the plan's per-credit overage cost
+   * Resolved server-side from the plan's per-credit price (`overageCost`)
    * (e.g. agent_v4 → 10 USDC → 1M credits price). Only present when the
    * plan exposes prepaid-credits top-ups; absent for FREE / enterprise.
    */
