@@ -46,6 +46,7 @@ import type { AdminClient } from "../admin/client";
 import type { AuthClient } from "../auth/types";
 import type { HeliusRpcOptions } from "./types";
 import {
+  buildRpcUrl,
   resolveTransport,
   withSdkRequestId,
   type TransportHook,
@@ -188,20 +189,7 @@ export const createHelius = ({
   userAgent,
   transport: transportHook,
 }: HeliusRpcOptions): HeliusClient => {
-  // Use custom baseUrl if provided, otherwise construct from network
-  const resolvedBaseUrl = baseUrl ?? `https://${network}.helius-rpc.com/`;
-
-  // Build query parameters
-  const queryParams: string[] = [];
-  if (apiKey) {
-    queryParams.push(`api-key=${apiKey}`);
-  }
-  if (rebateAddress) {
-    queryParams.push(`rebate-address=${rebateAddress}`);
-  }
-
-  const queryString = queryParams.length > 0 ? `?${queryParams.join("&")}` : "";
-  const url = `${resolvedBaseUrl}${queryString}`;
+  const url = buildRpcUrl({ baseUrl, network, apiKey, rebateAddress });
 
   const solanaApi = createSolanaRpcApi(DEFAULT_RPC_CONFIG);
   const transport = resolveTransport(

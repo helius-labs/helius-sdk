@@ -35,6 +35,12 @@ export default {
       maxSize: '2.6kb',
     },
     {
+      // Opt out of the default 15% growth ratchet: buildRpcUrl moved here from
+      // index.js and createHelius.eager.js (#352), a net reduction across the three.
+      path: 'dist/esm/rpc/transport.js',
+      maxSize: '1kb',
+    },
+    {
       // Aggregator for every checkout primitive: resolvePriceId,
       // initializeCheckout, getCheckoutPreview, getCheckoutPreviewByPriceId,
       // getPaymentIntent, getPaymentStatus, pollCheckoutCompletion.
