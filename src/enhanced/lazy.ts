@@ -5,19 +5,34 @@ import type {
   GetEnhancedTransactionsByAddressResponse,
 } from "./types";
 
-/** Client for the Helius Enhanced Transactions API. Parses raw transactions into human-readable format. */
+/**
+ * Client for the Helius Enhanced Transactions API. Parses raw transactions into human-readable format.
+ *
+ * @deprecated The Enhanced Transactions API is in maintenance mode. Use
+ * `helius.parsedEvents` instead (mainnet-only; devnet code can keep using
+ * this client). See https://www.helius.dev/docs/parsed-events/guides/migrate-from-enhanced-transactions
+ */
 export interface EnhancedTxClientLazy {
-  /** Parse one or more transactions by their signatures. */
+  /**
+   * Parse one or more transactions by their signatures.
+   *
+   * @deprecated On mainnet, use `helius.parsedEvents.parseTransactions` instead.
+   */
   getTransactions(
     params: GetEnhancedTransactionsRequest
   ): Promise<GetEnhancedTransactionsResponse>;
 
-  /** Get parsed transactions for a wallet or program address. */
+  /**
+   * Get parsed transactions for a wallet or program address.
+   *
+   * @deprecated On mainnet, use `helius.parsedEvents.getTransactionHistory` instead.
+   */
   getTransactionsByAddress(
     params: GetEnhancedTransactionsByAddressRequest
   ): Promise<GetEnhancedTransactionsByAddressResponse>;
 }
 
+/** @deprecated Use `makeParsedEventsClient` on mainnet. */
 export const makeEnhancedTxClientLazy = (
   apiKey: string,
   network: "mainnet" | "devnet" = "mainnet",

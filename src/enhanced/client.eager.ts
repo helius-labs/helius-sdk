@@ -6,11 +6,18 @@ import {
 } from "./types";
 import { getSDKHeaders } from "../http";
 
+/**
+ * @deprecated The Enhanced Transactions API is in maintenance mode. Use the
+ * Parsed Events client instead (mainnet-only; devnet code can keep using
+ * this client). See https://www.helius.dev/docs/parsed-events/guides/migrate-from-enhanced-transactions
+ */
 export interface EnhancedTxClient {
+  /** @deprecated On mainnet, use `parsedEvents.parseTransactions` instead. */
   getTransactions: (
     params: GetEnhancedTransactionsRequest
   ) => Promise<GetEnhancedTransactionsResponse>;
 
+  /** @deprecated On mainnet, use `parsedEvents.getTransactionHistory` instead. */
   getTransactionsByAddress: (
     params: GetEnhancedTransactionsByAddressRequest
   ) => Promise<GetEnhancedTransactionsByAddressResponse>;
@@ -43,6 +50,7 @@ const handle = async <T>(res: Response): Promise<T> => {
   return json as T;
 };
 
+/** @deprecated Use `makeParsedEventsClientEager` on mainnet. */
 export const makeEnhancedTxClientEager = (
   apiKey: string,
   network: "mainnet" | "devnet" = "mainnet",

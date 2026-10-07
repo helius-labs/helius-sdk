@@ -14,6 +14,8 @@
     "src/zk/types.ts",
     "src/wallet/client.ts",
     "src/wallet/types.ts",
+    "src/parsedEvents/client.ts",
+    "src/parsedEvents/types.ts",
     "src/webhooks/client.ts",
     "src/auth/client.ts",
     "src/auth/types.ts"

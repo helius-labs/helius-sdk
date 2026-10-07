@@ -82,6 +82,11 @@
       "import": "./dist/esm/wallet/*.js",
       "require": "./dist/cjs/wallet/*.cjs"
     },
+    "./parsedEvents/*": {
+      "types": "./dist/esm/parsedEvents/*.d.ts",
+      "import": "./dist/esm/parsedEvents/*.js",
+      "require": "./dist/cjs/parsedEvents/*.cjs"
+    },
     "./types/*": {
       "types": "./dist/esm/types/*.d.ts",
       "import": "./dist/esm/types/*.js",

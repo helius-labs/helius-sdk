@@ -1,3 +1,4 @@
+// Deprecated: the Enhanced Transactions API is in maintenance mode. See examples/parsedEvents/.
 // Replace imports in a production setting
 import { createHelius } from "../../src/rpc/index";
 

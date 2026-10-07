@@ -122,7 +122,7 @@ For per-method policies, read the method name off the request: `(request.payload
 
 To replace the transport entirely (e.g., failover to a non-Helius endpoint), ignore the provided default: `transport: () => myCustomTransport`. See [`examples/helius/customTransport.ts`](examples/helius/customTransport.ts) for a full example.
 
-> **Note:** The hook covers JSON-RPC traffic only. WebSocket subscriptions (`helius.ws`) and the REST sub-clients (`webhooks`, `enhanced`, `wallet`, `admin`, `auth`) do not go through this transport.
+> **Note:** The hook covers JSON-RPC traffic only. WebSocket subscriptions (`helius.ws`) and the REST sub-clients (`webhooks`, `parsedEvents`, `enhanced`, `wallet`, `admin`, `auth`) do not go through this transport.
 
 ### Larger transactions with version 1
 
@@ -272,7 +272,23 @@ Estimate optimal priority fees for Solana transactions. Available on the `helius
 
 - [`getPriorityFeeEstimate()`](https://github.com/helius-labs/helius-sdk/blob/main/examples/EXAMPLES_OVERVIEW.md#getpriorityfeeestimate): Returns an estimated priority fee based on a set of predefined priority levels (percentiles).
 
-[**Enhanced Transactions API**](https://www.helius.dev/docs/enhanced-transactions)
+[**Parsed Events API**](https://www.helius.dev/docs/parsed-events)
+
+Parse transactions into decoded instructions, transfers, and summaries using Helius's IDL catalog (3,600+ programs). Mainnet only; 10 credits per request. Available on the `helius.parsedEvents` namespace.
+
+- [`parseTransactions()`](https://www.helius.dev/docs/api-reference/parsed-events/transactions): Parses up to 100 transaction signatures. Each result carries a `parserStatus`, so a missing transaction comes back as an item-level error instead of failing the request.
+- [`getTransactionHistory()`](https://www.helius.dev/docs/api-reference/parsed-events/transaction-history): Returns parsed transaction history for an address with slot and block-time bounds, paginated with `paginationToken`.
+
+[**Enhanced Transactions API**](https://www.helius.dev/docs/enhanced-transactions) **(Deprecated)**
+
+> **Deprecated:** the Enhanced Transactions API is in maintenance mode. Use `helius.parsedEvents` for new mainnet code — see the [migration guide](https://www.helius.dev/docs/parsed-events/guides/migrate-from-enhanced-transactions). `getTransactions` maps to `parseTransactions` and `getTransactionsByAddress` to `getTransactionHistory`, with these differences:
+>
+> - `commitment` defaults to `confirmed` (was `finalized`); pass `commitment: "finalized"` to keep the old behavior.
+> - `limit` defaults to 100 (was 10).
+> - History requires a wallet address; program-wide scans and the `type` / `source` filters are not supported (filter client-side on `parsed.summary.type`).
+> - Results are wrapped: `{ signature, parserStatus, parsed }`, and history pages are `{ data, paginationToken }`.
+>
+> Parsed Events is mainnet-only, so devnet code should stay on `helius.enhanced` for now.
 
 Transform complex Solana transactions into human-readable data. Available on the `helius.enhanced` namespace.
 

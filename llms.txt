@@ -73,7 +73,8 @@ examples/
 ├── helius/das/       # DAS API: getAsset, getAssetsByOwner, searchAssets, etc.
 ├── helius/           # RPC V2: getProgramAccountsV2, getTransactionsForAddress, getTransfersByAddress, etc.
 ├── transactions/     # Helius Sender, smart transactions, sendTransaction
-├── enhanced/         # Enhanced transaction parsing
+├── parsedEvents/     # Parsed Events transaction parsing
+├── enhanced/         # Enhanced transaction parsing (deprecated)
 ├── webhooks/         # Webhook CRUD operations
 ├── websockets/       # WebSocket subscriptions
 ├── staking/          # Staking operations
@@ -186,14 +187,24 @@ const accounts = await helius.getProgramAccountsV2([
 ]);
 ```
 
-### Enhanced Transactions
-Parse raw transactions into human-readable format.
+### Parsed Events
+Parse transactions into decoded instructions, transfers, and summaries (mainnet only). Successor to Enhanced Transactions (`helius.enhanced`, deprecated).
 
 ```typescript
-const parsed = await helius.enhanced.getTransactions({
-  signatures: ["tx_signature_1", "tx_signature_2"]
+const results = await helius.parsedEvents.parseTransactions({
+  transactions: ["tx_signature_1", "tx_signature_2"]
 });
-// Returns decoded instruction data, token transfers, NFT metadata, etc.
+// One result per signature, in order. Check parserStatus before reading parsed.
+for (const r of results) {
+  if (r.parserStatus === "OK") console.log(r.parsed.summary?.description);
+}
+
+// Address history, paginated with paginationToken
+const page = await helius.parsedEvents.getTransactionHistory({
+  address: "wallet_address",
+  limit: 100,
+  time: { gte: 1767225600 }
+});
 ```
 
 ### Staking
