@@ -32,7 +32,7 @@ export interface EnhancedTxClientLazy {
   ): Promise<GetEnhancedTransactionsByAddressResponse>;
 }
 
-/** @deprecated On mainnet, use `makeParsedEventsClient` from `helius-sdk/parsedEvents/client` instead. */
+/** @deprecated Use `makeParsedEventsClient` on mainnet. */
 export const makeEnhancedTxClientLazy = (
   apiKey: string,
   network: "mainnet" | "devnet" = "mainnet",

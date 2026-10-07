@@ -50,7 +50,7 @@ const handle = async <T>(res: Response): Promise<T> => {
   return json as T;
 };
 
-/** @deprecated On mainnet, use `makeParsedEventsClientEager` from `helius-sdk/parsedEvents/client.eager` instead. */
+/** @deprecated Use `makeParsedEventsClientEager` on mainnet. */
 export const makeEnhancedTxClientEager = (
   apiKey: string,
   network: "mainnet" | "devnet" = "mainnet",
