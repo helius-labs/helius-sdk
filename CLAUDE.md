@@ -33,7 +33,8 @@ src/
     wrapAutoSend.ts       # Auto-send transaction wrapper
   transactions/           # Smart transactions & Helius Sender
   webhooks/               # Webhook CRUD (create, get, update, delete)
-  enhanced/               # Enhanced transaction parsing
+  parsedEvents/           # Parsed Events transaction parsing
+  enhanced/               # Enhanced transaction parsing (deprecated)
   staking/                # Helius validator staking helpers
   websockets/             # WebSocket subscriptions (logs, slots, accounts)
   zk/                     # ZK Compression methods
@@ -75,7 +76,8 @@ export const makeGetAsset = (call: RpcCaller): GetAssetFn => async (params) => {
 ### Sub-Clients
 
 Namespaced functionality lives in sub-clients accessed via the main `HeliusClient`:
-- `helius.enhanced.*` — Enhanced transaction parsing
+- `helius.parsedEvents.*` — Parsed Events transaction parsing (mainnet only)
+- `helius.enhanced.*` — Enhanced transaction parsing (deprecated; use `parsedEvents`)
 - `helius.tx.*` — Smart transactions & Sender
 - `helius.webhooks.*` — Webhook management
 - `helius.ws.*` — WebSocket subscriptions

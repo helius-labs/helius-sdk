@@ -46,6 +46,10 @@ import {
   makeWalletClientEager,
   type WalletClient,
 } from "../wallet/client.eager";
+import {
+  makeParsedEventsClientEager,
+  type ParsedEventsClient,
+} from "../parsedEvents/client.eager";
 import { makeAdminClientEager, type AdminClient } from "../admin/client.eager";
 import {
   GetAssetsByOwnerFn,
@@ -123,7 +127,10 @@ export interface HeliusClientEager {
 
   webhooks: WebhookClient;
 
+  /** @deprecated Use `parsedEvents` instead (mainnet-only; devnet can keep using this). The Enhanced Transactions API is in maintenance mode. */
   enhanced: EnhancedTxClient;
+
+  parsedEvents: ParsedEventsClient;
 
   tx: TxHelpersEager;
 
@@ -205,6 +212,20 @@ export const createHeliusEager = ({
         );
       }
       return makeEnhancedTxClientEager(apiKey, network, userAgent);
+    },
+
+    // Parsed Events
+    get parsedEvents() {
+      if (!apiKey) {
+        throw new Error(
+          "An API key is required to use Parsed Events. Provide apiKey in createHelius() options."
+        );
+      }
+      return makeParsedEventsClientEager(
+        apiKey,
+        { network, baseUrl },
+        userAgent
+      );
     },
 
     // Transaction helpers

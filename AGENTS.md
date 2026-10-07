@@ -52,7 +52,7 @@ const sig = await helius.tx.sendTransactionWithSender({
 
 ```typescript
 const helius = createHelius({
-  apiKey: "your-api-key",       // Required for webhooks, enhanced txs, wallet API
+  apiKey: "your-api-key",       // Required for webhooks, parsed events, wallet API
   network: "mainnet",           // "mainnet" (default) or "devnet"
   baseUrl: "https://custom..",  // Override RPC URL (optional)
   rebateAddress: "wallet",      // Wallet for RPC rebates (optional)
@@ -67,7 +67,8 @@ const helius = createHelius({
 | DAS API | `helius.getAsset()`, `helius.getAssetsByOwner()`, etc. | Query NFTs, tokens, compressed assets |
 | RPC V2 | `helius.getTransactionsForAddress()`, `helius.getProgramAccountsV2()` | Enhanced RPC with pagination & filters |
 | Transactions | `helius.tx.*` | Smart transactions & Helius Sender |
-| Enhanced | `helius.enhanced.*` | Parse transactions into human-readable format |
+| Parsed Events | `helius.parsedEvents.*` | Parse transactions and address history into decoded instructions, transfers, summaries (mainnet only) |
+| Enhanced (deprecated) | `helius.enhanced.*` | Legacy transaction parsing; use `parsedEvents` |
 | Webhooks | `helius.webhooks.*` | Create/manage webhook subscriptions |
 | WebSockets | `helius.ws.*` | Real-time blockchain data streams |
 | Staking | `helius.stake.*` | Stake SOL to Helius validator |
@@ -360,11 +361,13 @@ helius.tx.createSmartTransaction({ instructions, signers }) // Build without sen
 helius.tx.sendTransactionWithSender({ ..., region })        // Helius Sender (low latency)
 ```
 
-### Enhanced Transactions
+### Parsed Events (replaces Enhanced Transactions)
 
 ```typescript
-helius.enhanced.getTransactions({ transactions })           // Parse by signatures
-helius.enhanced.getTransactionsByAddress({ address })       // Parse by address
+helius.parsedEvents.parseTransactions({ transactions })     // Parse by signatures (mainnet only)
+helius.parsedEvents.getTransactionHistory({ address })      // Parse address history (mainnet only)
+helius.enhanced.getTransactions({ transactions })           // Deprecated: use parsedEvents.parseTransactions
+helius.enhanced.getTransactionsByAddress({ address })       // Deprecated: use parsedEvents.getTransactionHistory
 ```
 
 ### Webhooks

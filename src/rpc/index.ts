@@ -42,6 +42,7 @@ import { makeWsAsync, WsAsync } from "../websockets/wsAsync";
 import { StakeClientLazy } from "../staking/client";
 import { ZkClientLazy } from "../zk/client";
 import type { WalletClient } from "../wallet/client";
+import type { ParsedEventsClient } from "../parsedEvents/client";
 import type { AdminClient } from "../admin/client";
 import type { AuthClient } from "../auth/types";
 import type { HeliusRpcOptions } from "./types";
@@ -58,14 +59,14 @@ export type { RpcTransport } from "@solana/kit";
 /**
  * The main Helius SDK client. Provides access to all Helius and Solana RPC
  * methods, DAS (Digital Asset Standard) queries, priority fee estimation,
- * webhooks, enhanced transaction parsing, smart transaction helpers,
+ * webhooks, Parsed Events transaction parsing, smart transaction helpers,
  * WebSocket subscriptions, staking, and ZK compression.
  *
  * All standard Solana RPC methods (e.g. `getBalance`, `getSlot`) are available
  * directly on this object via a Proxy that delegates to the underlying
  * `@solana/kit` RPC client.
  *
- * Sub-clients (`webhooks`, `enhanced`, `tx`, `ws`, `stake`, `zk`, `wallet`, `admin`)
+ * Sub-clients (`webhooks`, `parsedEvents`, `enhanced`, `tx`, `ws`, `stake`, `zk`, `wallet`, `admin`)
  * are lazily loaded on first access to keep the initial bundle minimal.
  */
 export type HeliusClient = ResolvedHeliusRpcApi & {
@@ -137,8 +138,20 @@ export type HeliusClient = ResolvedHeliusRpcApi & {
     toggle(webhookID: string, active: boolean): Promise<Webhook>;
   } & WebhookClient;
 
-  /** Enhanced transaction parsing client. Requires an API key. */
+  /**
+   * Enhanced transaction parsing client. Requires an API key.
+   *
+   * @deprecated The Enhanced Transactions API is in maintenance mode. Use
+   * `parsedEvents` instead: `getTransactions` → `parsedEvents.parseTransactions`,
+   * `getTransactionsByAddress` → `parsedEvents.getTransactionHistory` (defaults
+   * differ: `confirmed` commitment, 100-item pages). Parsed Events is
+   * mainnet-only; devnet code can keep using this client. See
+   * https://www.helius.dev/docs/parsed-events/guides/migrate-from-enhanced-transactions
+   */
   enhanced: EnhancedTxClientLazy;
+
+  /** Parsed Events client: decoded instructions, transfers, and summaries for transactions and address history. Requires an API key. Mainnet only. */
+  parsedEvents: ParsedEventsClient;
 
   /** Smart transaction helpers for building, signing, and sending transactions with automatic compute budget and priority fees. */
   tx: TxHelpersLazy;
@@ -475,6 +488,25 @@ export const createHelius = ({
       }
       const { makeEnhancedTxClientLazy } = await import("../enhanced");
       return makeEnhancedTxClientLazy(apiKey, network, userAgent);
+    }
+  );
+
+  defineLazyNamespace<HeliusClient, ParsedEventsClient>(
+    client,
+    "parsedEvents",
+    async () => {
+      if (!apiKey) {
+        throw new Error(
+          "An API key is required to use Parsed Events. Provide apiKey in createHelius() options."
+        );
+      }
+      const { makeParsedEventsClientEager } =
+        await import("../parsedEvents/client.eager.js");
+      return makeParsedEventsClientEager(
+        apiKey,
+        { network, baseUrl },
+        userAgent
+      );
     }
   );
 
