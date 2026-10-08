@@ -61,19 +61,21 @@ export const withSdkRequestId =
 
 /**
  * Build the RPC URL from `baseUrl` (or the network's Helius endpoint), with
- * `api-key` and `rebate-address` set in its query.
+ * `api-key`, `rebate-address`, and `mev-protect` set in its query.
  */
 export const buildRpcUrl = ({
   baseUrl,
   network = "mainnet",
   apiKey,
   rebateAddress,
+  mevProtect,
 }: Pick<
   HeliusRpcOptions,
-  "baseUrl" | "network" | "apiKey" | "rebateAddress"
+  "baseUrl" | "network" | "apiKey" | "rebateAddress" | "mevProtect"
 >): string => {
   const url = new URL(baseUrl ?? `https://${network}.helius-rpc.com/`);
   if (apiKey) url.searchParams.set("api-key", apiKey);
   if (rebateAddress) url.searchParams.set("rebate-address", rebateAddress);
+  if (mevProtect) url.searchParams.set("mev-protect", "true");
   return url.toString();
 };

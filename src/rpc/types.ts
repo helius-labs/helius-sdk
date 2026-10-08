@@ -8,6 +8,16 @@ export interface HeliusRpcOptions {
   network?: "mainnet" | "devnet";
   /** Wallet address that receives rebates for RPC usage. Appended as a query parameter. */
   rebateAddress?: string;
+  /**
+   * Opt in to [MEV Protect](https://www.helius.dev/docs/sending-transactions/mev-protect):
+   * route transactions away from validators statistically linked to sandwich
+   * attacks. Appends `mev-protect=true` to the RPC URL, so it covers every send
+   * through this client (`sendTransaction`, `tx.sendSmartTransaction`,
+   * `tx.broadcastTransaction`, `tx.sendTransaction`), and it is the default for
+   * the Sender helpers (`tx.sendTransactionWithSender`, `tx.sendBundleWithSender`),
+   * which can override it per call. Defaults to `false`.
+   */
+  mevProtect?: boolean;
   /** Custom RPC base URL. When provided, `network` is ignored. */
   baseUrl?: string;
   /** Custom User-Agent string appended to outgoing HTTP requests. */

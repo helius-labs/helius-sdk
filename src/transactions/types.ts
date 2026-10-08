@@ -265,9 +265,25 @@ export const SENDER_ENDPOINTS = {
 /** A region key for the Helius sender infrastructure. */
 export type SenderRegion = keyof typeof SENDER_ENDPOINTS;
 
+/** Query options for a Sender `/fast` URL. */
+export interface SenderUrlOptions {
+  /** Route only through SWQOS-only mode (`swqos_only=true`). */
+  swqosOnly?: boolean;
+  /** Opt in to MEV Protect (`mev-protect=true`). */
+  mevProtect?: boolean;
+}
+
 /** Build the `/fast` endpoint URL for a sender region. */
-export const senderFastUrl = (region: SenderRegion) =>
-  `${SENDER_ENDPOINTS[region]}/fast`;
+export const senderFastUrl = (
+  region: SenderRegion,
+  { swqosOnly, mevProtect }: SenderUrlOptions = {}
+) => {
+  const query = [
+    swqosOnly && "swqos_only=true",
+    mevProtect && "mev-protect=true",
+  ].filter(Boolean);
+  return `${SENDER_ENDPOINTS[region]}/fast${query.length ? `?${query.join("&")}` : ""}`;
+};
 
 /** Build the `/ping` endpoint URL for a sender region. GET this URL to keep the connection warm. */
 export const senderPingUrl = (region: SenderRegion) =>
@@ -291,6 +307,12 @@ export interface SendViaSenderOptions {
   /** Route only through SWQOS-only mode (lower 0.000005 SOL minimum tip). */
   swqosOnly?: boolean;
   /**
+   * Route away from validators statistically linked to sandwich attacks
+   * ([MEV Protect](https://www.helius.dev/docs/sending-transactions/mev-protect)).
+   * Defaults to the client's `mevProtect` option (`false` unless set).
+   */
+  mevProtect?: boolean;
+  /**
    * Skip Solana's preflight checks. Caller-controlled passthrough — Sender no
    * longer requires this to be `true`. Defaults to `true`.
    */
@@ -311,6 +333,8 @@ export type SendTransactionWithSenderFn = (
 /** Internal dependencies for `sendTransactionWithSender`. */
 export interface SendSmartTxSenderDeps {
   raw: Rpc<SolanaRpcApi>;
+  /** Client-level MEV Protect default. */
+  mevProtect?: boolean;
   createSmartTransactionWithTip: (
     i: CreateSmartTxWithTipInput
   ) => Promise<CreateSmartTxResult>;

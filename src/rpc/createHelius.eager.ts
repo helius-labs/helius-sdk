@@ -143,11 +143,18 @@ export const createHeliusEager = ({
   apiKey,
   network = "mainnet",
   rebateAddress,
+  mevProtect,
   baseUrl,
   userAgent,
   transport: transportHook,
 }: HeliusRpcOptions): HeliusClientEager => {
-  const url = buildRpcUrl({ baseUrl, network, apiKey, rebateAddress });
+  const url = buildRpcUrl({
+    baseUrl,
+    network,
+    apiKey,
+    rebateAddress,
+    mevProtect,
+  });
 
   const solanaApi = createSolanaRpcApi(DEFAULT_RPC_CONFIG);
   const transport = resolveTransport(
