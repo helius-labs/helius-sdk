@@ -44,4 +44,26 @@ describe("sendViaSender Tests", () => {
 
     await expect(sendViaSender(tx64)).rejects.toThrow(/Internal error/);
   });
+
+  it.each([
+    [false, false, "https://sender.helius-rpc.com/fast"],
+    [true, false, "https://sender.helius-rpc.com/fast?swqos_only=true"],
+    [false, true, "https://sender.helius-rpc.com/fast?mev-protect=true"],
+    [
+      true,
+      true,
+      "https://sender.helius-rpc.com/fast?swqos_only=true&mev-protect=true",
+    ],
+  ])(
+    "Builds the Sender URL (swqosOnly=%s, mevProtect=%s)",
+    async (swqosOnly, mevProtect, expected) => {
+      g.fetch = jest.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve({ result: "sig" }),
+      });
+
+      await sendViaSender(tx64, "Default", swqosOnly, true, mevProtect);
+      expect(g.fetch.mock.calls[0][0]).toBe(expected);
+    }
+  );
 });

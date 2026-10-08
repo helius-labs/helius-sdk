@@ -28,6 +28,15 @@ describe("buildRpcUrl", () => {
     ).toBe("https://proxy.example.com/rpc?token=abc&api-key=KEY");
   });
 
+  it("adds mev-protect=true only when mevProtect is set", () => {
+    expect(buildRpcUrl({ apiKey: "KEY", mevProtect: true })).toBe(
+      "https://mainnet.helius-rpc.com/?api-key=KEY&mev-protect=true"
+    );
+    expect(buildRpcUrl({ apiKey: "KEY", mevProtect: false })).toBe(
+      "https://mainnet.helius-rpc.com/?api-key=KEY"
+    );
+  });
+
   it("replaces an api-key already in baseUrl instead of adding a second", () => {
     const url = buildRpcUrl({
       baseUrl: "https://proxy.example.com/rpc?api-key=OLD",

@@ -32,6 +32,7 @@ import bs58 from "bs58";
       // Sender-specific options
       region: "US_EAST",
       swqosOnly: true, // Route only through SWQOS infra
+      mevProtect: true, // Route away from sandwich-linked validators (or set on createHelius)
       // tipAmount: 500_000,               // Optional lamport tip override
       pollTimeoutMs: 60_000,
       pollIntervalMs: 2_000,

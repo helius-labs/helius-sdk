@@ -6,7 +6,8 @@ import { SenderRegion, senderFastUrl } from "./types";
  *
  * `skipPreflight` is a caller-controlled passthrough (Sender no longer requires
  * it to be `true`); it defaults to `true` for backward compatibility. `maxRetries`
- * is fixed at 0.
+ * is fixed at 0. `mevProtect` adds `mev-protect=true` to route away from
+ * validators linked to sandwich attacks.
  *
  * Returns the transaction signature
  */
@@ -14,13 +15,10 @@ export const sendViaSender = async (
   tx64: string,
   region: SenderRegion = "Default",
   swqosOnly: boolean = false,
-  skipPreflight: boolean = true
+  skipPreflight: boolean = true,
+  mevProtect?: boolean
 ): Promise<Signature> => {
-  const endpoint = swqosOnly
-    ? `${senderFastUrl(region)}?swqos_only=true`
-    : senderFastUrl(region);
-
-  const res = await fetch(endpoint, {
+  const res = await fetch(senderFastUrl(region, { swqosOnly, mevProtect }), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({

@@ -1,4 +1,5 @@
 import { makeSendBundleWithSender } from "../sendBundleWithSender";
+import { makeTxHelpersLazy } from "../client";
 
 const mockPoll = jest.fn();
 
@@ -74,6 +75,47 @@ describe("makeSendBundleWithSender", () => {
       2,
       "SIG:b",
       expect.objectContaining({ lastValidBlockHeight: 90n })
+    );
+  });
+
+  it.each([
+    [undefined, undefined, false],
+    [true, undefined, true],
+    [true, false, false],
+    [undefined, true, true],
+  ])(
+    "adds mev-protect per the client default (%s) and per-call option (%s)",
+    async (clientDefault, perCall, expected) => {
+      g.fetch = jest.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve({ result: "bundleId" }),
+      });
+
+      const { sendBundle } = makeSendBundleWithSender({
+        raw: dummyRpc,
+        mevProtect: clientDefault,
+      });
+      await sendBundle([fakeTx("a", 100n)], { mevProtect: perCall });
+
+      expect((g.fetch as jest.Mock).mock.calls[0][0]).toBe(
+        expected
+          ? "https://sender.helius-rpc.com/fast?mev-protect=true"
+          : "https://sender.helius-rpc.com/fast"
+      );
+    }
+  );
+
+  it("threads the client-level mevProtect through makeTxHelpersLazy", async () => {
+    g.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ result: "bundleId" }),
+    });
+
+    const tx = makeTxHelpersLazy(dummyRpc, jest.fn(), undefined, true);
+    await tx.sendBundleWithSender([fakeTx("a", 100n)]);
+
+    expect((g.fetch as jest.Mock).mock.calls[0][0]).toBe(
+      "https://sender.helius-rpc.com/fast?mev-protect=true"
     );
   });
 

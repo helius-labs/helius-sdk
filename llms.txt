@@ -123,6 +123,7 @@ const signature = await helius.tx.sendTransactionWithSender({
   // Sender-specific options
   region: "US_EAST",              // US_EAST, US_WEST, EU, ASIA
   swqosOnly: true,                // Route only through SWQOS infra
+  mevProtect: true,               // Avoid sandwich-linked validators (or set on createHelius)
   pollTimeoutMs: 60_000,
   pollIntervalMs: 2_000,
 });

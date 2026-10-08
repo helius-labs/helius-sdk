@@ -56,6 +56,7 @@ const helius = createHelius({
   network: "mainnet",           // "mainnet" (default) or "devnet"
   baseUrl: "https://custom..",  // Override RPC URL (optional)
   rebateAddress: "wallet",      // Wallet for RPC rebates (optional)
+  mevProtect: true,             // Route sends away from sandwich-linked validators (optional, default false)
   userAgent: "my-agent/1.0",   // Sent as X-Helius-Client header (does not override SDK User-Agent)
 });
 ```
@@ -141,10 +142,13 @@ const sig = await helius.tx.sendTransactionWithSender({
   signers: [walletSigner],
   region: "US_EAST",          // Default, US_SLC, US_EAST, EU_WEST, EU_CENTRAL, EU_NORTH, AP_SINGAPORE, AP_TOKYO
   swqosOnly: true,            // Route through SWQOS only
+  mevProtect: true,           // Avoid sandwich-linked validators (defaults to the client's mevProtect)
   pollTimeoutMs: 60_000,
   pollIntervalMs: 2_000,
 });
 ```
+
+For swaps and other trades that can be sandwiched, enable MEV Protect: `createHelius({ apiKey, mevProtect: true })` covers every send through the client, or pass `mevProtect` per call to `sendTransactionWithSender` / `sendBundleWithSender`.
 
 ### Use Webhooks or WebSockets Instead of Polling
 

@@ -19,6 +19,12 @@ export type SignedBundleTransaction = SignedTx;
 export interface SendBundleOptions {
   /** Sender region to route through. Defaults to `"Default"`. */
   region?: SenderRegion;
+  /**
+   * Route away from validators statistically linked to sandwich attacks
+   * ([MEV Protect](https://www.helius.dev/docs/sending-transactions/mev-protect)).
+   * Defaults to the client's `mevProtect` option (`false` unless set).
+   */
+  mevProtect?: boolean;
   /** Overall polling timeout in milliseconds. */
   pollTimeoutMs?: number;
   /** Polling cadence in milliseconds. */
@@ -28,6 +34,8 @@ export interface SendBundleOptions {
 /** Internal dependencies for `sendBundleWithSender`. */
 export interface SendBundleDeps {
   raw: Rpc<SolanaRpcApi>;
+  /** Client-level MEV Protect default. */
+  mevProtect?: boolean;
 }
 
 /**
@@ -49,7 +57,7 @@ export interface SendBundleDeps {
  * @returns the signatures of every transaction in the bundle, in submission order.
  */
 export const makeSendBundleWithSender = (deps: SendBundleDeps) => {
-  const { raw } = deps;
+  const { raw, mevProtect: mevDefault } = deps;
   const poll = makePollTransactionConfirmation(raw);
 
   const sendBundle = async (
@@ -58,6 +66,7 @@ export const makeSendBundleWithSender = (deps: SendBundleDeps) => {
   ): Promise<string[]> => {
     const {
       region = "Default",
+      mevProtect = mevDefault,
       pollTimeoutMs = DEFAULT_TIMEOUT_MS,
       pollIntervalMs = DEFAULT_POLL_MS,
     } = options;
@@ -79,7 +88,7 @@ export const makeSendBundleWithSender = (deps: SendBundleDeps) => {
     );
 
     // Bundles always go through Sender Max — no `?swqos_only=true`.
-    const res = await fetch(senderFastUrl(region), {
+    const res = await fetch(senderFastUrl(region, { mevProtect }), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

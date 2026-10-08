@@ -87,6 +87,37 @@ describe("createHelius", () => {
       expect(url).toContain(`rebate-address=${rebateAddress}`);
     });
 
+    it("adds mev-protect to the RPC URL but not the WebSocket URL", () => {
+      const helius = createHelius({ apiKey: "test-api-key", mevProtect: true });
+
+      expect(
+        new URL(getUrlFromTransport()).searchParams.get("mev-protect")
+      ).toBe("true");
+
+      void helius.ws;
+      const wsUrl = new URL(jest.mocked(makeWsAsync).mock.calls[0][0]);
+      expect(wsUrl.searchParams.has("mev-protect")).toBe(false);
+      expect(wsUrl.searchParams.get("api-key")).toBe("test-api-key");
+    });
+
+    it("leaves a custom baseUrl query untouched on the WebSocket URL", () => {
+      const helius = createHelius({
+        baseUrl: "https://proxy.example.com/rpc?sig=a%20b&flag",
+      });
+
+      void helius.ws;
+      expect(jest.mocked(makeWsAsync).mock.calls[0][0]).toBe(
+        "wss://proxy.example.com/rpc?sig=a%20b&flag"
+      );
+    });
+
+    it("adds mev-protect to the eager client's RPC URL", () => {
+      createHeliusEager({ apiKey: "test-api-key", mevProtect: true });
+      expect(
+        new URL(getUrlFromTransport()).searchParams.get("mev-protect")
+      ).toBe("true");
+    });
+
     it("appends to a custom baseUrl that already has a query", () => {
       const apiKey = "test-api-key";
       const rebateAddress = "rebate-address-123";

@@ -58,7 +58,8 @@ describe("makeSendTransactionWithSender Tests", () => {
       "TX64",
       "Default",
       false,
-      true
+      true,
+      undefined
     );
     expect(mockPoll).toHaveBeenCalled();
   });
@@ -84,7 +85,8 @@ describe("makeSendTransactionWithSender Tests", () => {
       "TX64",
       "US_EAST",
       true,
-      true
+      true,
+      undefined
     );
   });
 
@@ -107,7 +109,40 @@ describe("makeSendTransactionWithSender Tests", () => {
       "TX64",
       "Default",
       false,
-      false
+      false,
+      undefined
     );
   });
+
+  it.each([
+    ["client default off, no override", undefined, undefined, undefined],
+    ["client default on", true, undefined, true],
+    ["per-call override off", true, false, false],
+    ["per-call override on", false, true, true],
+  ])(
+    "Passes mevProtect to Sender (%s)",
+    async (_label, clientDefault, perCall, expected) => {
+      const { send } = makeSendTransactionWithSender({
+        raw: dummyRpc,
+        createSmartTransactionWithTip: mockCreateSmartTxWithTip,
+        mevProtect: clientDefault,
+      });
+
+      await send({
+        region: "Default",
+        mevProtect: perCall,
+        signers: [],
+        instructions: [],
+        version: 0,
+      });
+
+      expect(mockSendViaSender).toHaveBeenCalledWith(
+        "TX64",
+        "Default",
+        false,
+        true,
+        expected
+      );
+    }
+  );
 });

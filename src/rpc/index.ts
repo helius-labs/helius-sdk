@@ -198,11 +198,13 @@ export const createHelius = ({
   apiKey,
   network = "mainnet",
   rebateAddress,
+  mevProtect,
   baseUrl,
   userAgent,
   transport: transportHook,
 }: HeliusRpcOptions): HeliusClient => {
-  const url = buildRpcUrl({ baseUrl, network, apiKey, rebateAddress });
+  const urlOptions = { baseUrl, network, apiKey, rebateAddress };
+  const url = buildRpcUrl({ ...urlOptions, mevProtect });
 
   const solanaApi = createSolanaRpcApi(DEFAULT_RPC_CONFIG);
   const transport = resolveTransport(
@@ -218,7 +220,8 @@ export const createHelius = ({
   const baseRpc = createRpc({ api: solanaApi, transport });
   const raw: ResolvedHeliusRpcApi = wrapAutoSend(baseRpc);
 
-  const wsUrl = new URL(url);
+  // Subscriptions don't send transactions, so their URL leaves out mev-protect
+  const wsUrl = new URL(buildRpcUrl(urlOptions));
   wsUrl.protocol = "wss:";
 
   // Build Enhanced WebSocket URL for Helius Enhanced WS subscriptions
@@ -519,7 +522,8 @@ export const createHelius = ({
     return makeTxHelpersLazy(
       baseRpc,
       getPriorityFeeEstimate,
-      await getRpcSubscriptions()
+      await getRpcSubscriptions(),
+      mevProtect
     );
   });
 

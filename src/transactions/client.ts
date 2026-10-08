@@ -63,7 +63,9 @@ export interface TxHelpersLazy {
 export const makeTxHelpersLazy = (
   rpc: Rpc<SolanaRpcApi>,
   getPriorityFeeEstimate: GetPriorityFeeEstimateFn,
-  rpcSubscriptions?: RpcSubscriptions<SolanaRpcSubscriptionsApi>
+  rpcSubscriptions?: RpcSubscriptions<SolanaRpcSubscriptionsApi>,
+  /** Client-level MEV Protect default for the Sender helpers. */
+  mevProtect?: boolean
 ): TxHelpersLazy => {
   const getComputeUnits = makeGetComputeUnits(rpc);
 
@@ -89,10 +91,12 @@ export const makeTxHelpersLazy = (
   const { send: sendWithSender } = makeSendTransactionWithSender({
     raw: rpc,
     createSmartTransactionWithTip,
+    mevProtect,
   });
 
   const { sendBundle: sendBundleWithSender } = makeSendBundleWithSender({
     raw: rpc,
+    mevProtect,
   });
 
   const { send: sendTransaction } = makeSendTransaction(rpc);

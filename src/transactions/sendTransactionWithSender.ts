@@ -13,12 +13,13 @@ const DEFAULT_TIMEOUT_MS = 60_000;
 const DEFAULT_POLL_MS = 2_000;
 
 export const makeSendTransactionWithSender = (deps: SendSmartTxSenderDeps) => {
-  const { raw, createSmartTransactionWithTip } = deps;
+  const { raw, createSmartTransactionWithTip, mevProtect: mevDefault } = deps;
   const poll = makePollTransactionConfirmation(raw);
 
   const send: SendTransactionWithSenderFn = async ({
     region,
     swqosOnly = false,
+    mevProtect = mevDefault,
     skipPreflight = true,
     pollTimeoutMs = DEFAULT_TIMEOUT_MS,
     pollIntervalMs = DEFAULT_POLL_MS,
@@ -42,7 +43,8 @@ export const makeSendTransactionWithSender = (deps: SendSmartTxSenderDeps) => {
       getBase64EncodedWireTransaction(signed),
       region,
       swqosOnly,
-      skipPreflight
+      skipPreflight,
+      mevProtect
     );
 
     await poll(sig, {

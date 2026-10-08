@@ -266,6 +266,15 @@ Simply create, send, and land transactions as fast as possible. Available on the
 - `sendTransactionWithSender()`: Ultra-low latency Solana transaction submission via [Helius Sender](https://www.helius.dev/docs/sending-transactions/sender). Routes across multiple high-speed pathways and enters a priority auction; tip more to land first. Two tiers: **Sender Max** (`swqosOnly: false`, 0.001 SOL minimum tip) and **SWQOS-only** (`swqosOnly: true`, 0.000005 SOL minimum tip).
 - `sendBundleWithSender()`: Submits an ordered bundle of pre-signed transactions (max 5) atomically over Sender Max via the `sendBundle` method, then tracks landing per-signature with `getSignatureStatuses`. At least one transaction in the bundle must carry the 0.001 SOL Sender Max minimum tip.
 
+**[MEV Protect](https://www.helius.dev/docs/sending-transactions/mev-protect)** routes transactions away from validators statistically linked to sandwich attacks. It's off by default. Turn it on for a whole client with `createHelius({ apiKey, mevProtect: true })`: every send through that client is protected, including `sendTransaction`, `sendSmartTransaction`, `broadcastTransaction`, and both Sender helpers. Or set it per call on the Sender helpers, which overrides the client setting:
+
+```ts
+await helius.tx.sendTransactionWithSender({ ...args, region: "Default", mevProtect: true });
+await helius.tx.sendBundleWithSender(signedTxs, { mevProtect: true });
+```
+
+Only a small fraction of stake is excluded, so the effect on landing rate is small; for the most latency-sensitive flows, measure with and without it first.
+
 [**Priority Fee API**](https://github.com/helius-labs/helius-sdk/blob/main/examples/EXAMPLES_OVERVIEW.md#helper-methods)
 
 Estimate optimal priority fees for Solana transactions. Available on the `helius` namespace.
