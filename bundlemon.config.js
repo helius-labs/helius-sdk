@@ -29,9 +29,15 @@ export default {
     },
     {
       // Opt out of the default 15% growth ratchet: adds normalizeContactField,
-      // shared by signup and upgradePlan.
+      // requireContactInfo and EMAIL_PATTERN, shared by signup and upgradePlan.
       path: 'dist/esm/auth/signupHelpers.js',
       maxSize: '1kb',
+    },
+    {
+      // Opt out of the default 15% growth ratchet: upgradePlan now validates
+      // contact info (shared requireContactInfo) when any field is passed.
+      path: 'dist/esm/auth/upgradePlan.js',
+      maxSize: '1.5kb',
     },
     {
       path: 'dist/esm/auth/constants.js',

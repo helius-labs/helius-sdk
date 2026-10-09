@@ -6,7 +6,7 @@ import { walletSignup } from "./walletSignup";
 import { listProjects } from "./listProjects";
 import { getProject } from "./getProject";
 import { createApiKey } from "./createApiKey";
-import { buildEndpoints, normalizeContactField } from "./signupHelpers";
+import { buildEndpoints, requireContactInfo } from "./signupHelpers";
 import { createPayment } from "./createPayment";
 import type {
   Endpoints,
@@ -34,8 +34,6 @@ const validatePlan = (plan: string): SupportedPlan => {
   }
   return normalized;
 };
-
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 /**
  * Conservative same-plan match. For `agent`, period is ignored. Subscription
@@ -125,22 +123,7 @@ export const signup = async (options: SignupOptions): Promise<SignupResult> => {
   // the backend at /checkout/initialize for any new subscription, so we
   // validate up front (here, not at the top of signup) to give callers a
   // crisp error before the network round trip.
-  const email = normalizeContactField(options.email);
-  const firstName = normalizeContactField(options.firstName);
-  const lastName = normalizeContactField(options.lastName);
-  if (!email || !firstName || !lastName) {
-    const missing = [
-      !email && "email",
-      !firstName && "firstName",
-      !lastName && "lastName",
-    ]
-      .filter(Boolean)
-      .join(", ");
-    throw new Error(`Signup requires contact info. Missing: ${missing}.`);
-  }
-  if (!EMAIL_PATTERN.test(email)) {
-    throw new Error("Invalid email address.");
-  }
+  const { email, firstName, lastName } = requireContactInfo(options, "Signup");
 
   const paymentLink = await createPayment({
     jwt,
