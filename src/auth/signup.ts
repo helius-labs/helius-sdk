@@ -6,7 +6,7 @@ import { walletSignup } from "./walletSignup";
 import { listProjects } from "./listProjects";
 import { getProject } from "./getProject";
 import { createApiKey } from "./createApiKey";
-import { buildEndpoints } from "./signupHelpers";
+import { buildEndpoints, normalizeContactField } from "./signupHelpers";
 import { createPayment } from "./createPayment";
 import type {
   Endpoints,
@@ -125,9 +125,9 @@ export const signup = async (options: SignupOptions): Promise<SignupResult> => {
   // the backend at /checkout/initialize for any new subscription, so we
   // validate up front (here, not at the top of signup) to give callers a
   // crisp error before the network round trip.
-  const email = options.email?.trim() ?? "";
-  const firstName = options.firstName?.trim() ?? "";
-  const lastName = options.lastName?.trim() ?? "";
+  const email = normalizeContactField(options.email);
+  const firstName = normalizeContactField(options.firstName);
+  const lastName = normalizeContactField(options.lastName);
   if (!email || !firstName || !lastName) {
     const missing = [
       !email && "email",

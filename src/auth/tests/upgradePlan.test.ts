@@ -77,6 +77,23 @@ describe("upgradePlan — link mode", () => {
     );
   });
 
+  it("trims contact info and drops whitespace-only names", async () => {
+    mockInitializeCheckout.mockResolvedValue(intent);
+
+    await upgradePlan({
+      ...baseOpts,
+      email: " a@b.com ",
+      firstName: "   ",
+      lastName: " Lovelace ",
+    });
+
+    const sent = mockInitializeCheckout.mock.calls[0][1];
+    expect(sent).toEqual(
+      expect.objectContaining({ email: "a@b.com", lastName: "Lovelace" })
+    );
+    expect(sent.firstName).toBeUndefined();
+  });
+
   it("does not require contact info (backend auto-fetches from existing customer)", async () => {
     mockGetCheckoutPreview.mockRejectedValue(
       new Error("API error (400): Customer ID is required for one time preview")

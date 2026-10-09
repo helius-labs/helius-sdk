@@ -1,3 +1,4 @@
+import { normalizeContactField } from "./signupHelpers";
 import { createPayment } from "./createPayment";
 import { payPaymentLink } from "./payPaymentLink";
 import { pollUntilTerminal } from "./pollPayment";
@@ -22,9 +23,9 @@ export const upgradePlan = async (
     refId: options.projectId,
     plan: options.plan,
     period: options.period,
-    email: options.email,
-    firstName: options.firstName,
-    lastName: options.lastName,
+    email: normalizeContactField(options.email),
+    firstName: normalizeContactField(options.firstName),
+    lastName: normalizeContactField(options.lastName),
     couponCode: options.couponCode,
     paymentHost: options.paymentHost,
   });
