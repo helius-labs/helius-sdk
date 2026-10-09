@@ -145,6 +145,14 @@ describe("signup", () => {
     expect(mockInitializeCheckout).not.toHaveBeenCalled();
   });
 
+  it("treats whitespace-only names as missing and trims contact info", async () => {
+    mockListProjects.mockResolvedValue([]);
+    await expect(
+      signup({ ...baseOpts, firstName: "   ", lastName: " " })
+    ).rejects.toThrow(/Missing: firstName, lastName/);
+    expect(mockInitializeCheckout).not.toHaveBeenCalled();
+  });
+
   it("does NOT require contact info when wallet already has a matching project", async () => {
     // already_subscribed short-circuit must not demand email/firstName/lastName.
     mockListProjects.mockResolvedValue([

@@ -125,17 +125,19 @@ export const signup = async (options: SignupOptions): Promise<SignupResult> => {
   // the backend at /checkout/initialize for any new subscription, so we
   // validate up front (here, not at the top of signup) to give callers a
   // crisp error before the network round trip.
-  if (!options.email || !options.firstName || !options.lastName) {
+  const email = options.email?.trim() ?? "";
+  const firstName = options.firstName?.trim() ?? "";
+  const lastName = options.lastName?.trim() ?? "";
+  if (!email || !firstName || !lastName) {
     const missing = [
-      !options.email && "email",
-      !options.firstName && "firstName",
-      !options.lastName && "lastName",
+      !email && "email",
+      !firstName && "firstName",
+      !lastName && "lastName",
     ]
       .filter(Boolean)
       .join(", ");
     throw new Error(`Signup requires contact info. Missing: ${missing}.`);
   }
-  const email = options.email.trim();
   if (!EMAIL_PATTERN.test(email)) {
     throw new Error("Invalid email address.");
   }
@@ -146,8 +148,8 @@ export const signup = async (options: SignupOptions): Promise<SignupResult> => {
     plan,
     period: options.period,
     email,
-    firstName: options.firstName,
-    lastName: options.lastName,
+    firstName,
+    lastName,
     couponCode: options.couponCode,
     walletAddress,
     paymentHost: options.paymentHost,
