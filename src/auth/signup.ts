@@ -135,8 +135,9 @@ export const signup = async (options: SignupOptions): Promise<SignupResult> => {
       .join(", ");
     throw new Error(`Signup requires contact info. Missing: ${missing}.`);
   }
-  if (!EMAIL_PATTERN.test(options.email)) {
-    throw new Error(`Invalid email address: ${options.email}`);
+  const email = options.email.trim();
+  if (!EMAIL_PATTERN.test(email)) {
+    throw new Error("Invalid email address.");
   }
 
   const paymentLink = await createPayment({
@@ -144,7 +145,7 @@ export const signup = async (options: SignupOptions): Promise<SignupResult> => {
     refId,
     plan,
     period: options.period,
-    email: options.email,
+    email,
     firstName: options.firstName,
     lastName: options.lastName,
     couponCode: options.couponCode,

@@ -440,15 +440,18 @@ The auth namespace is available on the main `HeliusClient` as `helius.auth.*`. I
 ```typescript
 const keypair = await helius.auth.generateKeypair();                             // Generate Ed25519 keypair
 
-// Hosted checkout: returns a payment link the user opens in a browser to pay
-// with any wallet. Contact info is required.
-const link = await helius.auth.signup({
+// Hosted checkout. Contact info is required when the wallet has no account yet.
+const signupResult = await helius.auth.signup({
   secretKey: keypair.secretKey,
   plan: "agent",
   email: "you@example.com",
   firstName: "Jane",
   lastName: "Doe",
 });
+if (signupResult.kind === "payment_required") {
+  // Open in a browser and pay with any wallet.
+  console.log(signupResult.paymentLink.paymentUrl);
+}
 
 // Or the all-in-one shortcut (signs the auth message, creates a hosted
 // checkout, auto-pays USDC + memo from the local keypair, polls activation):
@@ -465,6 +468,19 @@ const result = await helius.auth.signupAndPay({
 //   "upgrade_required"   — { jwt, walletAddress, currentPlan, ... }
 //   "pending"            — poll timed out after payment; resume with the returned txSignature + paymentLink
 //   "expired" / "failed" — payment never completed; inspect `paymentIntentId` (and `reason` for failed)
+```
+
+Recovering the API key for a wallet that already has an account (no contact info needed):
+
+```typescript
+const address = await helius.auth.getAddress(keypair);                           // Wallet address
+const { message, signature } = await helius.auth.signAuthMessage(keypair.secretKey); // Sign auth message
+const { token } = await helius.auth.walletSignup(message, signature, address);   // Get JWT
+const [project] = await helius.auth.listProjects(token);                         // Existing project
+const details = await helius.auth.getProject(token, project.id);                 // Includes apiKeys
+const apiKey =
+  details.apiKeys?.[0]?.keyId ??
+  (await helius.auth.createApiKey(token, project.id, address)).keyId;            // Create one if none
 ```
 
 ## Documentation
