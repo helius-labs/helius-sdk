@@ -32,7 +32,11 @@ export const USDC_MINT_DEVNET =
 
 export const USDC_MINT = USDC_MINT_MAINNET;
 
-/** Legacy: 1 USDC (6 decimals). Only used by payUSDC. */
+/**
+ * Legacy: 1 USDC (6 decimals). Only used by payUSDC.
+ *
+ * @deprecated Wallet-created projects are no longer supported by the backend. Use `signup` / `signupAndPay` (requires `email`, `firstName`, `lastName`).
+ */
 export const PAYMENT_AMOUNT = 1_000_000n;
 
 /**

@@ -35,6 +35,8 @@ const validatePlan = (plan: string): SupportedPlan => {
   return normalized;
 };
 
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 /**
  * Conservative same-plan match. For `agent`, period is ignored. Subscription
  * plans require both family AND period to match confidently — otherwise treat
@@ -132,6 +134,9 @@ export const signup = async (options: SignupOptions): Promise<SignupResult> => {
       .filter(Boolean)
       .join(", ");
     throw new Error(`Signup requires contact info. Missing: ${missing}.`);
+  }
+  if (!EMAIL_PATTERN.test(options.email)) {
+    throw new Error(`Invalid email address: ${options.email}`);
   }
 
   const paymentLink = await createPayment({

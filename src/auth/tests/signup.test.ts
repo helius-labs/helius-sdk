@@ -137,6 +137,14 @@ describe("signup", () => {
     ).rejects.toThrow(/contact info/);
   });
 
+  it("rejects a malformed email when creating a fresh intent", async () => {
+    mockListProjects.mockResolvedValue([]);
+    await expect(
+      signup({ ...baseOpts, email: "not-an-email" })
+    ).rejects.toThrow(/Invalid email address/);
+    expect(mockInitializeCheckout).not.toHaveBeenCalled();
+  });
+
   it("does NOT require contact info when wallet already has a matching project", async () => {
     // already_subscribed short-circuit must not demand email/firstName/lastName.
     mockListProjects.mockResolvedValue([

@@ -212,11 +212,13 @@ export interface AuthClient {
     address: string
   ): Promise<SignupResponse>;
   listProjects(jwt: string): Promise<ProjectListItem[]>;
+  /** @deprecated Wallet-created projects are no longer supported by the backend. Use `signup` / `signupAndPay` (requires `email`, `firstName`, `lastName`). */
   createProject(jwt: string): Promise<Project>;
   getProject(jwt: string, id: string): Promise<ProjectDetails>;
   createApiKey(jwt: string, projectId: string, wallet: string): Promise<ApiKey>;
   checkSolBalance(address: string): Promise<bigint>;
   checkUsdcBalance(address: string): Promise<bigint>;
+  /** @deprecated Wallet-created projects are no longer supported by the backend. Use `signup` / `signupAndPay` (requires `email`, `firstName`, `lastName`). */
   payUSDC(secretKey: Uint8Array): Promise<string>;
   initializeCheckout(
     jwt: string,
@@ -350,8 +352,11 @@ export interface SecretKeySignupOptions {
   plan: SupportedPlan;
   /** Ignored for `plan: "agent"`. Defaults to `"monthly"` for paid subscription plans. */
   period?: "monthly" | "yearly";
+  /** Required when creating a new account; not needed if the wallet already has a project. */
   email?: string;
+  /** Required when creating a new account. */
   firstName?: string;
+  /** Required when creating a new account. */
   lastName?: string;
   couponCode?: string;
   /** Override the hosted-page host. See {@link resolvePaymentHost}. */
@@ -369,8 +374,11 @@ export interface PreauthenticatedSignupOptions {
   walletAddress: string;
   plan: SupportedPlan;
   period?: "monthly" | "yearly";
+  /** Required when creating a new account; not needed if the wallet already has a project. */
   email?: string;
+  /** Required when creating a new account. */
   firstName?: string;
+  /** Required when creating a new account. */
   lastName?: string;
   couponCode?: string;
   paymentHost?: string;
