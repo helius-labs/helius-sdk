@@ -1,11 +1,13 @@
-import { TREASURY, USDC_MINT, PAYMENT_AMOUNT } from "./constants";
-import { buildAndSendTokenTransfer } from "./buildTokenTransfer";
-
-export async function payUSDC(secretKey: Uint8Array): Promise<string> {
-  return buildAndSendTokenTransfer({
-    secretKey,
-    recipientAddress: TREASURY,
-    mintAddress: USDC_MINT,
-    amount: PAYMENT_AMOUNT,
-  });
+/**
+ * Legacy 1 USDC unlock-fee transfer for wallet-created projects.
+ *
+ * Always throws without sending funds: the backend no longer creates projects
+ * for wallet-only sign-ins, so the fee would buy nothing.
+ *
+ * @deprecated Use `signup` / `signupAndPay` (requires `email`, `firstName`, `lastName`).
+ */
+export async function payUSDC(_secretKey: Uint8Array): Promise<string> {
+  throw new Error(
+    "payUSDC is no longer supported: wallet-created projects were removed. Use signup or signupAndPay with email, firstName and lastName."
+  );
 }

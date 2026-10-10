@@ -6,7 +6,7 @@ import { walletSignup } from "./walletSignup";
 import { listProjects } from "./listProjects";
 import { getProject } from "./getProject";
 import { createApiKey } from "./createApiKey";
-import { buildEndpoints } from "./signupHelpers";
+import { buildEndpoints, requireContactInfo } from "./signupHelpers";
 import { createPayment } from "./createPayment";
 import type {
   Endpoints,
@@ -123,25 +123,16 @@ export const signup = async (options: SignupOptions): Promise<SignupResult> => {
   // the backend at /checkout/initialize for any new subscription, so we
   // validate up front (here, not at the top of signup) to give callers a
   // crisp error before the network round trip.
-  if (!options.email || !options.firstName || !options.lastName) {
-    const missing = [
-      !options.email && "email",
-      !options.firstName && "firstName",
-      !options.lastName && "lastName",
-    ]
-      .filter(Boolean)
-      .join(", ");
-    throw new Error(`Signup requires contact info. Missing: ${missing}.`);
-  }
+  const { email, firstName, lastName } = requireContactInfo(options, "Signup");
 
   const paymentLink = await createPayment({
     jwt,
     refId,
     plan,
     period: options.period,
-    email: options.email,
-    firstName: options.firstName,
-    lastName: options.lastName,
+    email,
+    firstName,
+    lastName,
     couponCode: options.couponCode,
     walletAddress,
     paymentHost: options.paymentHost,

@@ -16,6 +16,30 @@ export default {
       maxSize: '2.5kb',
     },
     {
+      // Opt out of the default 15% growth ratchet: the deprecation JSDoc on
+      // createProject / payUSDC (wallet-created projects were removed) is kept
+      // in the output, and payUSDC now throws instead of sending USDC. These
+      // modules are tiny, so a few comment lines exceed 15%.
+      path: 'dist/esm/auth/createProject.js',
+      maxSize: '1kb',
+    },
+    {
+      path: 'dist/esm/auth/payUSDC.js',
+      maxSize: '1kb',
+    },
+    {
+      // Opt out of the default 15% growth ratchet: adds normalizeContactField,
+      // requireContactInfo and EMAIL_PATTERN, shared by signup and upgradePlan.
+      path: 'dist/esm/auth/signupHelpers.js',
+      maxSize: '1kb',
+    },
+    {
+      // Opt out of the default 15% growth ratchet: upgradePlan now validates
+      // contact info (shared requireContactInfo) when any field is passed.
+      path: 'dist/esm/auth/upgradePlan.js',
+      maxSize: '1.5kb',
+    },
+    {
       path: 'dist/esm/auth/constants.js',
       maxSize: '1.5kb',
     },

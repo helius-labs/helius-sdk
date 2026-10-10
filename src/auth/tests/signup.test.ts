@@ -137,6 +137,50 @@ describe("signup", () => {
     ).rejects.toThrow(/contact info/);
   });
 
+  it("rejects a malformed email when creating a fresh intent", async () => {
+    mockListProjects.mockResolvedValue([]);
+    await expect(
+      signup({ ...baseOpts, email: "not-an-email" })
+    ).rejects.toThrow(/Invalid email address/);
+    expect(mockInitializeCheckout).not.toHaveBeenCalled();
+  });
+
+  it("treats whitespace-only names as missing and trims contact info", async () => {
+    mockListProjects.mockResolvedValue([]);
+    await expect(
+      signup({ ...baseOpts, firstName: "   ", lastName: " " })
+    ).rejects.toThrow(/Missing: firstName, lastName/);
+    expect(mockInitializeCheckout).not.toHaveBeenCalled();
+  });
+
+  it("sends trimmed contact info to checkout", async () => {
+    mockListProjects.mockResolvedValue([]);
+    mockGetCheckoutPreview.mockResolvedValue(preview);
+    mockInitializeCheckout.mockResolvedValue(intent);
+
+    await signup({
+      ...baseOpts,
+      email: "  a@b.com ",
+      firstName: " Ada ",
+      lastName: " Lovelace ",
+    });
+
+    expect(mockInitializeCheckout.mock.calls[0][1]).toEqual(
+      expect.objectContaining({
+        email: "a@b.com",
+        firstName: "Ada",
+        lastName: "Lovelace",
+      })
+    );
+  });
+
+  it("treats non-string contact fields as missing", async () => {
+    mockListProjects.mockResolvedValue([]);
+    await expect(
+      signup({ ...baseOpts, firstName: 123 as never })
+    ).rejects.toThrow(/Missing: firstName/);
+  });
+
   it("does NOT require contact info when wallet already has a matching project", async () => {
     // already_subscribed short-circuit must not demand email/firstName/lastName.
     mockListProjects.mockResolvedValue([

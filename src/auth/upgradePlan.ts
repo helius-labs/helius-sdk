@@ -1,3 +1,4 @@
+import { requireContactInfo } from "./signupHelpers";
 import { createPayment } from "./createPayment";
 import { payPaymentLink } from "./payPaymentLink";
 import { pollUntilTerminal } from "./pollPayment";
@@ -12,19 +13,27 @@ import type {
  * Phase 2 — create a payment intent for upgrading an existing project to a
  * new plan, and return a hosted-checkout link the user can open in a
  * browser. Contact info is optional; the backend auto-fetches it from the
- * project's existing Stripe customer.
+ * project's existing Stripe customer. If any of `email` / `firstName` /
+ * `lastName` is passed, all three are required and validated like `signup`.
  */
 export const upgradePlan = async (
   options: UpgradePlanOptions
 ): Promise<UpgradePlanResult> => {
+  const contactProvided =
+    options.email !== undefined ||
+    options.firstName !== undefined ||
+    options.lastName !== undefined;
+  const contact = contactProvided
+    ? requireContactInfo(options, "Upgrade")
+    : undefined;
   const paymentLink = await createPayment({
     jwt: options.jwt,
     refId: options.projectId,
     plan: options.plan,
     period: options.period,
-    email: options.email,
-    firstName: options.firstName,
-    lastName: options.lastName,
+    email: contact?.email,
+    firstName: contact?.firstName,
+    lastName: contact?.lastName,
     couponCode: options.couponCode,
     paymentHost: options.paymentHost,
   });

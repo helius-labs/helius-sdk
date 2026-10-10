@@ -77,6 +77,49 @@ describe("upgradePlan — link mode", () => {
     );
   });
 
+  it("trims contact info before sending it", async () => {
+    mockInitializeCheckout.mockResolvedValue(intent);
+
+    await upgradePlan({
+      ...baseOpts,
+      email: " a@b.com ",
+      firstName: " Ada ",
+      lastName: " Lovelace ",
+    });
+
+    expect(mockInitializeCheckout.mock.calls[0][1]).toEqual(
+      expect.objectContaining({
+        email: "a@b.com",
+        firstName: "Ada",
+        lastName: "Lovelace",
+      })
+    );
+  });
+
+  it("rejects partial contact info like signup does", async () => {
+    await expect(
+      upgradePlan({
+        ...baseOpts,
+        email: "a@b.com",
+        firstName: "   ",
+        lastName: "Lovelace",
+      })
+    ).rejects.toThrow(/Missing: firstName/);
+    expect(mockInitializeCheckout).not.toHaveBeenCalled();
+  });
+
+  it("rejects a malformed email", async () => {
+    await expect(
+      upgradePlan({
+        ...baseOpts,
+        email: "not-an-email",
+        firstName: "Ada",
+        lastName: "Lovelace",
+      })
+    ).rejects.toThrow(/Invalid email address/);
+    expect(mockInitializeCheckout).not.toHaveBeenCalled();
+  });
+
   it("does not require contact info (backend auto-fetches from existing customer)", async () => {
     mockGetCheckoutPreview.mockRejectedValue(
       new Error("API error (400): Customer ID is required for one time preview")

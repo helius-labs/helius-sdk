@@ -435,19 +435,25 @@ helius.zk.getValidityProof({ hashes })                      // Validity proof
 
 ### Auth
 
-The auth namespace is available on the main `HeliusClient` as `helius.auth.*`. It is used for programmatic agent signup flows. The step-by-step flow requires signing an auth message first to obtain a JWT, then using that JWT for all subsequent API calls.
+The auth namespace is available on the main `HeliusClient` as `helius.auth.*`. It is used for programmatic agent signup flows. New accounts are created only through `signup` / `signupAndPay`, which require `email`, `firstName`, and `lastName`; the wallet is used to authenticate and pay. `createProject` and `payUSDC` are deprecated — the backend no longer creates projects for wallet-only sign-ins.
 
 ```typescript
-// Step-by-step flow (JWT-based):
 const keypair = await helius.auth.generateKeypair();                             // Generate Ed25519 keypair
-const address = await helius.auth.getAddress(keypair);                           // Get wallet address (async)
-const { message, signature } = await helius.auth.signAuthMessage(keypair.secretKey); // Sign auth message
-const { token } = await helius.auth.walletSignup(message, signature, address);   // Get JWT via signup
-const projects = await helius.auth.listProjects(token);                          // List projects (needs JWT)
-const project = await helius.auth.createProject(token);                          // Create project (needs JWT)
-const apiKey = await helius.auth.createApiKey(token, project.id, address);       // Create API key (needs JWT)
 
-// Or use the all-in-one shortcut (signs the auth message, creates a hosted
+// Hosted checkout. Contact info is required when the wallet has no account yet.
+const signupResult = await helius.auth.signup({
+  secretKey: keypair.secretKey,
+  plan: "agent",
+  email: "you@example.com",
+  firstName: "Jane",
+  lastName: "Doe",
+});
+if (signupResult.kind === "payment_required") {
+  // Open in a browser and pay with any wallet.
+  console.log(signupResult.paymentLink.paymentUrl);
+}
+
+// Or the all-in-one shortcut (signs the auth message, creates a hosted
 // checkout, auto-pays USDC + memo from the local keypair, polls activation):
 const result = await helius.auth.signupAndPay({
   secretKey: keypair.secretKey,
@@ -462,6 +468,19 @@ const result = await helius.auth.signupAndPay({
 //   "upgrade_required"   — { jwt, walletAddress, currentPlan, ... }
 //   "pending"            — poll timed out after payment; resume with the returned txSignature + paymentLink
 //   "expired" / "failed" — payment never completed; inspect `paymentIntentId` (and `reason` for failed)
+```
+
+Recovering the API key for a wallet that already has an account (no contact info needed):
+
+```typescript
+const address = await helius.auth.getAddress(keypair);                           // Wallet address
+const { message, signature } = await helius.auth.signAuthMessage(keypair.secretKey); // Sign auth message
+const { token } = await helius.auth.walletSignup(message, signature, address);   // Get JWT
+const [project] = await helius.auth.listProjects(token);                         // Existing project
+const details = await helius.auth.getProject(token, project.id);                 // Includes apiKeys
+const apiKey =
+  details.apiKeys?.[0]?.keyId ??
+  (await helius.auth.createApiKey(token, project.id, address)).keyId;            // Create one if none
 ```
 
 ## Documentation
