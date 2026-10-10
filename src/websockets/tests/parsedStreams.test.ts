@@ -18,6 +18,7 @@ const globalWs = globalThis as { WebSocket?: unknown };
 
 let sockets: MockWebSocket[] = [];
 let failNextOpen = 0;
+let hangNextOpen = 0;
 
 class MockWebSocket {
   readyState = 0;
@@ -31,6 +32,10 @@ class MockWebSocket {
     sockets.push(this);
     const fail = failNextOpen > 0;
     if (fail) failNextOpen--;
+    if (hangNextOpen > 0) {
+      hangNextOpen--; // Upgrade never answers: no open, error, or close
+      return;
+    }
     Promise.resolve().then(() => {
       if (fail) {
         this.readyState = 3;
@@ -120,6 +125,7 @@ beforeEach(() => {
   jest.useFakeTimers();
   sockets = [];
   failNextOpen = 0;
+  hangNextOpen = 0;
 });
 
 afterEach(() => {
@@ -623,6 +629,189 @@ describe("lifecycle edge cases", () => {
       expect(sockets).toHaveLength(1);
       client.close();
     });
+  });
+});
+
+// ── PR #358 review regressions ────────────────────────────────────────
+
+describe("reconnect budget", () => {
+  /** Answer the pending resubscribe on the newest socket. */
+  const ackResubscribe = async (id: number) => {
+    await until(() => last().readyState === 1 && last().sent.length === 1);
+    last().reply(id);
+  };
+
+  it("starts a fresh budget for subscriptions made after a give-up", async () => {
+    const onReconnect = jest.fn();
+    const client = makeParsedStreamsClient("KEY", {
+      WebSocket: WS,
+      maxReconnectAttempts: 2,
+      onReconnect,
+    });
+    const first = await subscribeWith(client, 1);
+    last().notify(1, 100);
+    await first[Symbol.asyncIterator]().next();
+
+    failNextOpen = 2;
+    last().serverClose(1006);
+    const gaveUp = expect(first[Symbol.asyncIterator]().next()).rejects.toThrow(
+      /gave up after 2 reconnect attempts/
+    );
+    await jest.advanceTimersByTimeAsync(10_000);
+    await gaveUp;
+
+    // Same client, new subscription, routine idle close: it must reconnect
+    const second = await subscribeWith(client, 5);
+    last().notify(5, 200);
+    await second[Symbol.asyncIterator]().next();
+    const before = sockets.length;
+    last().serverClose(1000);
+
+    await until(() => sockets.length === before + 1);
+    await ackResubscribe(6);
+    await until(() => onReconnect.mock.calls.length === 1);
+    // No stale outage from the first subscription
+    expect(onReconnect).toHaveBeenCalledWith({
+      closeCode: 1000,
+      lastSlot: 200,
+    });
+    expect(second.subscriptionId).toBe(6);
+    client.close();
+  });
+
+  it("gives up on a server that accepts the resubscribe and immediately closes", async () => {
+    const client = makeParsedStreamsClient("KEY", {
+      WebSocket: WS,
+      maxReconnectAttempts: 3,
+    });
+    const sub = await subscribeWith(client, 1);
+    const gaveUp = expect(sub[Symbol.asyncIterator]().next()).rejects.toThrow(
+      /gave up after 3 reconnect attempts/
+    );
+
+    last().serverClose(1006);
+    for (let i = 0; i < 3; i++) {
+      await until(() => sockets.length === i + 2);
+      await ackResubscribe(10 + i);
+      await until(() => sub.subscriptionId === 10 + i);
+      last().serverClose(1006); // Flap before the connection proves stable
+    }
+    await gaveUp;
+    expect(sockets).toHaveLength(4); // original + 3 attempts, then no more
+  });
+
+  it.each([
+    [
+      "staying up for 30s",
+      async (_id: number) => {
+        await jest.advanceTimersByTimeAsync(30_000);
+      },
+    ],
+    ["delivering a notification", async (id: number) => last().notify(id, 1)],
+  ])("resets the budget after %s", async (_label, prove) => {
+    const client = makeParsedStreamsClient("KEY", {
+      WebSocket: WS,
+      maxReconnectAttempts: 1,
+    });
+    const sub = await subscribeWith(client, 1);
+
+    // Each reconnect uses the single allowed attempt, then proves stable
+    for (let i = 0; i < 3; i++) {
+      last().serverClose(1006);
+      await until(() => sockets.length === i + 2);
+      await ackResubscribe(100 + i);
+      await until(() => sub.subscriptionId === 100 + i);
+      await prove(100 + i);
+    }
+    expect(sub.subscriptionId).toBe(102);
+    client.close();
+  });
+});
+
+describe("ack applied after its connection closed", () => {
+  it("rejects a first subscribe whose connection closed right after the ack", async () => {
+    const client = makeParsedStreamsClient("KEY", { WebSocket: WS });
+    const promise = client.parsedTransactionSubscribe({ programs: ["A"] });
+    await until(() => last()?.sent.length === 1);
+    last().reply(1);
+    last().serverClose(1006); // Same tick: before the ack is applied
+
+    await expect(promise).rejects.toThrow("Parsed Streams connection closed");
+    client.close();
+  });
+
+  it("retries a resubscribe whose connection closed right after the ack", async () => {
+    const onReconnect = jest.fn();
+    const client = makeParsedStreamsClient("KEY", {
+      WebSocket: WS,
+      onReconnect,
+    });
+    const sub = await subscribeWith(client, 1);
+    last().serverClose(1001);
+
+    await until(() => sockets.length === 2 && last().sent.length === 1);
+    last().reply(2);
+    last().serverClose(1006); // Same tick: the id 2 is already dead
+    expect(onReconnect).not.toHaveBeenCalled();
+
+    await until(() => sockets.length === 3 && last().sent.length === 1);
+    last().reply(3);
+    await until(() => sub.subscriptionId === 3);
+    expect(onReconnect).toHaveBeenCalledTimes(1);
+    client.close();
+  });
+});
+
+describe("handshake timeout", () => {
+  it("rejects a subscribe whose upgrade never answers, without blocking later ones", async () => {
+    const client = makeParsedStreamsClient("KEY", { WebSocket: WS });
+    hangNextOpen = 1;
+    const hung = client.parsedTransactionSubscribe({ programs: ["A"] });
+    const failed = expect(hung).rejects.toThrow(
+      "Parsed Streams connection failed"
+    );
+    await jest.advanceTimersByTimeAsync(15_000);
+    await failed;
+    expect(sockets[0].readyState).toBe(3); // The hung socket was killed
+
+    await subscribeWith(client, 1);
+    expect(sockets).toHaveLength(2);
+    client.close();
+  });
+
+  it("counts a hung reconnect as a failed attempt and retries", async () => {
+    const client = makeParsedStreamsClient("KEY", { WebSocket: WS });
+    const sub = await subscribeWith(client, 1);
+    hangNextOpen = 1;
+    last().serverClose(1001);
+
+    await until(() => sockets.length === 2); // Hangs
+    await jest.advanceTimersByTimeAsync(15_000);
+    await until(() => sockets.length === 3 && last().readyState === 1);
+    await until(() => last().sent.length === 1);
+    last().reply(2);
+    await until(() => sub.subscriptionId === 2);
+    client.close();
+  });
+
+  it("ignores an open event that arrives after the timeout", async () => {
+    const client = makeParsedStreamsClient("KEY", { WebSocket: WS });
+    hangNextOpen = 1;
+    const hung = client.parsedTransactionSubscribe({ programs: ["A"] });
+    const failed = expect(hung).rejects.toThrow(
+      "Parsed Streams connection failed"
+    );
+    await jest.advanceTimersByTimeAsync(15_000);
+    await failed;
+
+    const late = sockets[0];
+    late.readyState = 1;
+    late.onopen?.(); // A slow implementation opens after we gave up
+    expect(late.sent).toHaveLength(0);
+
+    await subscribeWith(client, 1); // Uses a fresh socket, not the late one
+    expect(last()).not.toBe(late);
+    client.close();
   });
 });
 

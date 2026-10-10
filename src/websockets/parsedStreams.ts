@@ -271,6 +271,7 @@ const SLOW_CONSUMER_CODE = 1008; // Client fell >2048 notifications behind
 const BUFFER_LIMIT = 10_000;
 const REQUEST_TIMEOUT_MS = 15_000;
 const LIVENESS_TIMEOUT_MS = 60_000; // Server pings every 15s
+const STABLE_CONNECTION_MS = 30_000; // Uptime that resets the reconnect budget
 const TRANSIENT_CODES = [-32001, -32002]; // Not ready, rate limited
 
 // Always sets a `code` key, which tells RPC errors from connection errors
@@ -422,6 +423,7 @@ export const makeParsedStreamsClient = (
   let lastSlot: number | undefined;
   let attempts = 0;
   let reconnectTimer: ReturnType<typeof setTimeout> | undefined;
+  let stableTimer: ReturnType<typeof setTimeout> | undefined;
   let outage: { closeCode: number; lastSlot: number | undefined } | undefined;
   let sendGate: Promise<void> = Promise.resolve();
   let lastSendAt = 0;
@@ -431,6 +433,9 @@ export const makeParsedStreamsClient = (
   const byServerId = new Map<number, SubState>();
 
   const failAll = (err?: Error) => {
+    // The next subscription starts with a full budget
+    attempts = 0;
+    outage = undefined;
     for (const sub of subs) {
       sub.active = false;
       sub.queue.end(err);
@@ -440,6 +445,7 @@ export const makeParsedStreamsClient = (
   };
 
   const handleClose = (code: number) => {
+    clearTimeout(stableTimer);
     ws = undefined;
     connecting = undefined;
     const err = new Error(`Parsed Streams connection closed (code ${code})`);
@@ -496,6 +502,7 @@ export const makeParsedStreamsClient = (
       ) {
         lastSlot = slot;
       }
+      attempts = 0; // Delivering: the connection works
       sub.queue.push(result);
       return;
     }
@@ -534,16 +541,24 @@ export const makeParsedStreamsClient = (
       let done = false;
       let lastSeen = Date.now();
       let watchdog: ReturnType<typeof setInterval> | undefined;
+      // An upgrade that never answers would stall everything behind it
+      const handshake = setTimeout(() => {
+        finish(1006);
+        kill(socket);
+      }, REQUEST_TIMEOUT_MS);
 
       const finish = (code: number) => {
         if (done) return;
         done = true;
+        clearTimeout(handshake);
         if (watchdog) clearInterval(watchdog);
         if (!opened) reject(new Error("Parsed Streams connection failed"));
         handleClose(code);
       };
 
       socket.onopen = () => {
+        if (done) return; // Timed out already
+        clearTimeout(handshake);
         opened = true;
         if (closed) {
           reject(new Error("Parsed Streams client closed"));
@@ -623,6 +638,8 @@ export const makeParsedStreamsClient = (
       "parsedTransactionSubscribe",
       sub.params
     )) as number;
+    // Closed before this ack was applied: the id is dead
+    if (!ws) throw new Error("Parsed Streams connection closed");
     if (!sub.active) {
       // Unsubscribed while the ack was in flight: cancel it
       request("parsedTransactionUnsubscribe", [id]).catch(() => undefined);
@@ -658,7 +675,8 @@ export const makeParsedStreamsClient = (
     } catch {
       return; // handleClose has already scheduled the next attempt
     }
-    attempts = 0;
+    // Reset only once stable, so accept-then-close still exhausts attempts
+    stableTimer = setTimeout(() => (attempts = 0), STABLE_CONNECTION_MS);
     const info = outage;
     outage = undefined;
     if (info && onReconnect) {
@@ -777,6 +795,7 @@ export const makeParsedStreamsClient = (
 
     close() {
       closed = true;
+      clearTimeout(stableTimer);
       if (reconnectTimer) clearTimeout(reconnectTimer);
       reconnectTimer = undefined;
       const socket = ws;

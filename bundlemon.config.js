@@ -83,16 +83,17 @@ export default {
     },
     {
       // Standalone Parsed Streams WS client: JSON-RPC request routing with
-      // timeouts, a paced send queue (server allows 10 msgs/s), reconnect with
-      // backoff that resubscribes every filter (the server closes idle
-      // connections after 10 min, plus deploys and edge recycling), a
+      // timeouts, a handshake timeout, a paced send queue (server allows 10
+      // msgs/s), reconnect with backoff that resubscribes every filter (the
+      // server closes idle connections after 10 min, plus deploys and edge
+      // recycling) and resets only once a connection proves stable, a
       // ping-based liveness watchdog for `ws` sockets, per-subscription async
       // queues, and one-shot describeProgram discovery. Self-contained like
       // preconfWs; the overview and usage example live on the erased
       // ParsedStreamsClient interface so they ship only in the .d.ts. Lands at
-      // ~4.2KB; the absolute cap still gates unbounded growth.
+      // ~4.4KB; the absolute cap still gates unbounded growth.
       path: 'dist/esm/websockets/parsedStreams.js',
-      maxSize: '4.5kb',
+      maxSize: '4.75kb',
     },
     {
       // Opt out of the default 15% growth ratchet: Sender Max pricing adds
