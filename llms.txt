@@ -266,6 +266,24 @@ await helius.ws.programNotifications(programId);        // Program account chang
 // Clean up
 helius.ws.close();
 
+// Parsed Streams (all plans) — decoded transactions filtered server-side by
+// program / instruction / account / role. Reconnects and resubscribes on its own.
+import { makeParsedStreamsClient } from "helius-sdk/websockets/parsedStreams";
+const streams = makeParsedStreamsClient(apiKey, {
+  onReconnect: ({ lastSlot }) => console.warn("backfill after slot", lastSlot),
+});
+const { instructions } = await streams.describeProgram(JUPITER_PROGRAM_ID); // exact names
+const parsed = await streams.parsedTransactionSubscribe(
+  { programs: [JUPITER_PROGRAM_ID], instructionNames: ["route"] },
+  { details: "full" } // or "matched" / "raw"
+);
+for await (const { context, value } of parsed) {
+  for (const i of value.matchedIndexes ?? []) {
+    console.log(context.slot, value.instructions[i].decoded?.args);
+  }
+}
+streams.close();
+
 // Enhanced WebSockets (Business+ plan) — 1.5-2x faster, up to 50k address filters
 const sub = await helius.ws.transactionSubscribe(
   { accountInclude: ["EPjF..."] },
