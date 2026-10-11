@@ -97,4 +97,32 @@ describe("Enhanced getTransactions Tests", () => {
       client.getTransactions({ transactions: ["bad-tx"] })
     ).rejects.toThrow("Helius HTTP 400: You did a bad thing");
   });
+
+  it("Throws an HTTP error when the error body is an HTML page", async () => {
+    fetchMock.mockResolvedValue({
+      ok: false,
+      status: 502,
+      statusText: "Bad Gateway",
+      text: async () => "<html><body><h1>502 Bad Gateway</h1></body></html>",
+    } as Response);
+
+    await expect(
+      client.getTransactions({ transactions: ["some-tx"] })
+    ).rejects.toThrow(
+      "Helius HTTP 502: <html><body><h1>502 Bad Gateway</h1></body></html>"
+    );
+  });
+
+  it("Throws an HTTP error when the error body is plain text", async () => {
+    fetchMock.mockResolvedValue({
+      ok: false,
+      status: 429,
+      statusText: "Too Many Requests",
+      text: async () => "rate limit exceeded",
+    } as Response);
+
+    await expect(
+      client.getTransactions({ transactions: ["some-tx"] })
+    ).rejects.toThrow("Helius HTTP 429: rate limit exceeded");
+  });
 });
