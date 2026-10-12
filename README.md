@@ -351,6 +351,37 @@ for await (const notif of sub) {
 await sub.unsubscribe();
 ```
 
+[**Parsed Streams**](https://www.helius.dev/docs/parsed-streams)
+
+Decoded transactions pushed in real time, filtered on the server by program, instruction name, account, or account role. The streaming counterpart to Parsed Events and the successor to enhanced transaction webhooks; notifications use the same transfer and summary shapes as Parsed Events. Available on all plans at 1 credit per delivered event. Use the standalone `makeParsedStreamsClient` from `helius-sdk/websockets/parsedStreams`.
+
+- `parsedTransactionSubscribe(filter, options?)`: Subscribe with a filter (`programs`, `instructionNames`, `accounts.include`, `accounts.roles`, `includeFailed`, `includeCpi`). `options.details` is `"full"` (default: whole transaction plus `matchedIndexes`), `"matched"` (only matching instructions), or `"raw"` (matching instructions as base58 data). Returns an `AsyncIterable` of `{ context: { slot }, value }` with an `unsubscribe()` method; leaving a `for await` loop also unsubscribes.
+- `parsedTransactionUnsubscribe(subscriptionId)`: Unsubscribe by id.
+- `describeProgram(program)`: List a program's exact instruction names, events, and account roles, so filters match what you expect. Pass the program address rather than a name.
+- `close()`: Close the connection and end every subscription.
+
+Delivery is **at most once**: the server doesn't replay what confirmed while a connection was down, and it closes connections routinely (10 minutes without a match, deploys, network edge recycling). The client reconnects with backoff and resubscribes every filter on its own, and `onReconnect` reports the last slot it delivered so you can backfill the gap from RPC. A slow consumer (more than 2048 notifications behind, close code 1008) ends the stream with an error instead. Client messages are paced to the server's 10-per-second limit, and each connection holds up to 25 subscriptions.
+
+```typescript
+import { makeParsedStreamsClient } from "helius-sdk/websockets/parsedStreams";
+
+const streams = makeParsedStreamsClient(apiKey, {
+  onReconnect: ({ lastSlot }) => console.warn("backfill after slot", lastSlot),
+});
+
+const sub = await streams.parsedTransactionSubscribe({
+  programs: ["JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4"],
+});
+for await (const { value } of sub) {
+  for (const i of value.matchedIndexes ?? []) {
+    const ix = value.instructions[i];
+    console.log(value.transaction.signature, ix.instructionName, ix.decoded?.args);
+  }
+}
+```
+
+> **Note:** On Node 20, which has no global `WebSocket`, pass one from the `ws` package: `makeParsedStreamsClient(apiKey, { WebSocket })`.
+
 [**Pre Confirmations**](https://www.helius.dev/docs/sending-transactions/sender) (`preconfSubscribe`)
 
 Helius's lowest-latency transaction stream: scheduled transactions are delivered over WebSocket **before** they are shredded. A pre-confirmation is an **early signal, not a guarantee** — a streamed transaction may still fail to land. Coverage is **not continuous**: it scales with the share of stake forwarding scheduled transactions to Helius, so expect gaps. Pricing is credit-based (10 credits per notification message), the same model as other Helius WebSocket subscriptions. Use the standalone `makePreconfWsClient` (or `makePreconfWsClientForApiKey`) from `helius-sdk/websockets/preconfWs`.

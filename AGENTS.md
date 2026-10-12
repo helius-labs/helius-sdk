@@ -152,7 +152,7 @@ For swaps and other trades that can be sandwiched, enable MEV Protect: `createHe
 
 ### Use Webhooks or WebSockets Instead of Polling
 
-Don't poll `getTransactionsForAddress` or `getSignaturesForAddress` in a loop. Use webhooks for server-to-server notifications or WebSockets for real-time client-side streaming. 
+Don't poll `getTransactionsForAddress` or `getSignaturesForAddress` in a loop. For decoded, real-time transactions, use Parsed Streams (the successor to enhanced transaction webhooks). Use webhooks for server-to-server HTTP delivery, or WebSockets for raw real-time streaming.
 
 ```typescript
 // Webhook: server receives POST on matching transactions
@@ -163,6 +163,14 @@ const webhook = await helius.webhooks.create({
   accountAddresses: ["address_to_monitor"],
   authHeader: "Bearer your-secret",
 });
+
+// Parsed Streams: decoded transactions, filtered server-side; reconnects on its own
+import { makeParsedStreamsClient } from "helius-sdk/websockets/parsedStreams";
+const streams = makeParsedStreamsClient(apiKey);
+const sub = await streams.parsedTransactionSubscribe({ accounts: { include: ["address"] } });
+for await (const { value } of sub) {
+  console.log(value.transaction.signature, value.transaction.summary?.description);
+}
 
 // WebSocket: stream logs in real-time
 const req = await helius.ws.logsNotifications({ mentions: ["address"] });
@@ -399,6 +407,12 @@ helius.ws.transactionSubscribe(filter, config)               // Real-time transa
 helius.ws.transactionUnsubscribe(subscriptionId)             // Unsubscribe from transactions
 helius.ws.accountSubscribe(account, config)                  // Real-time account changes
 helius.ws.accountUnsubscribe(subscriptionId)                 // Unsubscribe from account changes
+
+// Parsed Streams (all plans): makeParsedStreamsClient(apiKey) from "helius-sdk/websockets/parsedStreams"
+streams.parsedTransactionSubscribe(filter, { details })      // Decoded txs by program/instruction/account/role
+streams.parsedTransactionUnsubscribe(subscriptionId)         // Unsubscribe (leaving for-await also does)
+streams.describeProgram(programAddress)                      // Exact instruction and role names for filters
+streams.close()                                              // Close and end every subscription
 ```
 
 ### Staking
