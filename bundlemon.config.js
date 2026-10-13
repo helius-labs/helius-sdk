@@ -97,11 +97,16 @@ export default {
       maxSize: '1.5kb',
     },
     {
-      // Standalone Pre Confirmations WS client: subscribe/unsubscribe over a
-      // demuxed text+binary socket, keepalive, bounded buffer, plus the binary
-      // frame decoder (decodePreconfFrame) and bincode VersionedTransaction
-      // decode. Self-contained (does not reuse enhancedWs), so it lands at
-      // ~3.9KB. The absolute cap still gates unbounded growth.
+      // Standalone Pre Confirmations WS client: one text+binary socket per
+      // subscription (frames carry no subscription id, so filtered
+      // subscriptions can't share one), server-side filters, a subscribe
+      // deadline covering the handshake, unsubscribe-and-close, keepalive with
+      // a JSON-RPC ping fallback, a bounded multi-consumer queue,
+      // getPreConfCoverage over HTTPS, plus the binary frame decoder
+      // (decodePreconfFrame). The module overview lives on the erased
+      // PreconfWsClient interface so it ships only in the .d.ts. Self-contained
+      // (does not reuse enhancedWs); lands at ~3.7KB. The absolute cap still
+      // gates unbounded growth.
       path: 'dist/esm/websockets/preconfWs.js',
       maxSize: '4kb',
     },
