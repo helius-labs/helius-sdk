@@ -273,6 +273,32 @@ describe("makePreconfWsClient", () => {
     expect(ws.closeCallCount).toBeGreaterThan(0);
   });
 
+  it("unexpected close rejects a for-await loop waiting for the next notification", async () => {
+    const client = makePreconfWsClient(TEST_URL);
+    const subPromise = client.preconfSubscribe();
+    await jest.advanceTimersByTimeAsync(0);
+    respondToLatest(lastWs(), 1);
+    const sub = await subPromise;
+
+    const ws = lastWs();
+    const slots: bigint[] = [];
+    const consume = (async () => {
+      for await (const notif of sub) slots.push(notif.slot);
+    })();
+
+    ws._receiveBinary(buildFrame(100n, 0n, buildTxBytes()));
+    // Let the loop take slot 100 and wait in next() again
+    await jest.advanceTimersByTimeAsync(0);
+
+    // Server drops the connection; the client never called close()
+    ws.onclose!();
+
+    await expect(consume).rejects.toThrow(
+      "Pre Confirmations WebSocket connection closed unexpectedly"
+    );
+    expect(slots).toEqual([100n]);
+  });
+
   it("makePreconfWsClientForApiKey connects to the Gatekeeper endpoint", async () => {
     const client = makePreconfWsClientForApiKey("abc123");
     const subPromise = client.preconfSubscribe();

@@ -369,6 +369,7 @@ export const makePreconfWsClient = (preconfWsUrl: string): PreconfWsClient => {
     let waiting:
       | ((value: IteratorResult<PreconfNotification>) => void)
       | undefined;
+    let rejectWaiting: ((err: Error) => void) | undefined;
     let finished = false;
     let iteratorError: Error | undefined;
 
@@ -377,7 +378,7 @@ export const makePreconfWsClient = (preconfWsUrl: string): PreconfWsClient => {
         if (finished) return;
         if (waiting) {
           const resolve = waiting;
-          waiting = undefined;
+          waiting = rejectWaiting = undefined;
           resolve({ value, done: false });
         } else {
           if (buffer.length >= BUFFER_LIMIT) buffer.shift();
@@ -388,17 +389,17 @@ export const makePreconfWsClient = (preconfWsUrl: string): PreconfWsClient => {
         finished = true;
         if (waiting) {
           const resolve = waiting;
-          waiting = undefined;
+          waiting = rejectWaiting = undefined;
           resolve({ value: undefined as any, done: true });
         }
       },
       error(err) {
         iteratorError = err;
         finished = true;
-        if (waiting) {
-          const resolve = waiting;
-          waiting = undefined;
-          resolve({ value: undefined as any, done: true });
+        if (rejectWaiting) {
+          const reject = rejectWaiting;
+          waiting = rejectWaiting = undefined;
+          reject(err);
         }
       },
     };
@@ -414,8 +415,9 @@ export const makePreconfWsClient = (preconfWsUrl: string): PreconfWsClient => {
               if (iteratorError) return Promise.reject(iteratorError);
               return Promise.resolve({ value: undefined as any, done: true });
             }
-            return new Promise((resolve) => {
+            return new Promise((resolve, reject) => {
               waiting = resolve;
+              rejectWaiting = reject;
             });
           },
           return(): Promise<IteratorResult<PreconfNotification>> {

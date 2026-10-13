@@ -238,6 +238,35 @@ describe("makeEnhancedWsClient", () => {
     expect(next.done).toBe(true);
   });
 
+  it("unexpected close rejects a for-await loop waiting for the next notification", async () => {
+    const client = makeEnhancedWsClient(TEST_URL);
+    const subPromise = client.transactionSubscribe({});
+    await jest.advanceTimersByTimeAsync(0);
+    respondToLatest(lastWs(), 1);
+    const sub = await subPromise;
+
+    const ws = lastWs();
+    const received: string[] = [];
+    const consume = (async () => {
+      for await (const notif of sub) received.push(notif.signature);
+    })();
+
+    ws._receive({
+      method: "transactionNotification",
+      params: { subscription: 1, result: { signature: "s1", slot: 100 } },
+    });
+    // Let the loop take s1 and wait in next() again
+    await jest.advanceTimersByTimeAsync(0);
+
+    // Server drops the connection; the client never called close()
+    ws.onclose!();
+
+    await expect(consume).rejects.toThrow(
+      "Enhanced WebSocket connection closed unexpectedly"
+    );
+    expect(received).toEqual(["s1"]);
+  });
+
   it("lazy WebSocket creation — no connection until first subscribe", () => {
     makeEnhancedWsClient(TEST_URL);
     expect(mockInstances.length).toBe(0);
