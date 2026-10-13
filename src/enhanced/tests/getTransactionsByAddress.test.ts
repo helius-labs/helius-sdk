@@ -80,4 +80,20 @@ describe("Enhanced getTransactionsByAddress Tests", () => {
       })
     ).rejects.toThrow("Helius HTTP 500: boom");
   });
+
+  it("Throws an HTTP error when the error body is not JSON", async () => {
+    fetchMock.mockResolvedValue({
+      ok: false,
+      status: 503,
+      statusText: "Service Unavailable",
+      text: async () => "upstream connect error",
+    } as Response);
+
+    await expect(
+      client.getTransactionsByAddress({
+        address: "some-address",
+        limit: 1,
+      })
+    ).rejects.toThrow("Helius HTTP 503: upstream connect error");
+  });
 });

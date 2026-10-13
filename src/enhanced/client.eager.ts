@@ -36,18 +36,20 @@ const qs = (obj: Record<string, unknown | undefined>): string => {
 
 const handle = async <T>(res: Response): Promise<T> => {
   const text = await res.text();
-  const json = text ? JSON.parse(text) : undefined;
 
   if (!res.ok) {
-    const message =
-      json?.error?.message ??
-      json?.message ??
-      res.statusText ??
-      "Unknown Helius error";
+    let message = text || res.statusText || "Unknown Helius error";
+    try {
+      const json = text ? JSON.parse(text) : undefined;
+      message =
+        json?.error?.message ?? json?.message ?? res.statusText ?? message;
+    } catch {
+      // Non-JSON error body (e.g. a gateway error page); keep the raw text
+    }
     throw new Error(`Helius HTTP ${res.status}: ${message}`);
   }
 
-  return json as T;
+  return (text ? JSON.parse(text) : undefined) as T;
 };
 
 /** @deprecated Use `makeParsedEventsClientEager` on mainnet. */
