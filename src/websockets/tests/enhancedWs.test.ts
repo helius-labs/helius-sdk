@@ -267,6 +267,36 @@ describe("makeEnhancedWsClient", () => {
     expect(received).toEqual(["s1"]);
   });
 
+  it("unsubscribes when a for-await loop exits early", async () => {
+    const client = makeEnhancedWsClient(TEST_URL);
+    const subPromise = client.transactionSubscribe({});
+    await jest.advanceTimersByTimeAsync(0);
+    respondToLatest(lastWs(), 3);
+    const sub = await subPromise;
+
+    const ws = lastWs();
+    ws._receive({
+      method: "transactionNotification",
+      params: { subscription: 3, result: { signature: "s1", slot: 100 } },
+    });
+
+    for await (const notif of sub) {
+      expect(notif.signature).toBe("s1");
+      break;
+    }
+    await jest.advanceTimersByTimeAsync(0);
+
+    const unsubMsg = JSON.parse(ws.sent[ws.sent.length - 1]);
+    expect(unsubMsg.method).toBe("transactionUnsubscribe");
+    expect(unsubMsg.params).toEqual([3]);
+    respondToLatest(ws, true);
+
+    // Already unsubscribed: a later unsubscribe() doesn't send it again
+    expect(await sub.unsubscribe()).toBe(false);
+    expect(ws.sent).toHaveLength(2);
+    client.close();
+  });
+
   it("lazy WebSocket creation — no connection until first subscribe", () => {
     makeEnhancedWsClient(TEST_URL);
     expect(mockInstances.length).toBe(0);
