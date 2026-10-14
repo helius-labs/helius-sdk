@@ -386,26 +386,42 @@ for await (const { value } of sub) {
 
 Helius's lowest-latency transaction stream: scheduled transactions are delivered over WebSocket **before** they are shredded, from two sources — Helius preconfirmations (emitted when the leader executes the transaction, with its status) and [BAM](https://www.helius.dev/docs/pre-confirmations/overview#bam-preconfirmations) preconfirmations (emitted when the validator commits to executing it). A pre-confirmation is an **early signal, not a guarantee** — a streamed transaction may still fail to land. Coverage is **not continuous**: it scales with the share of stake covered by the two sources, so expect gaps. Professional plan or higher; 10 credits per message, with a **minimum of 300 credits per covered slot for each open subscription** — filter server-side and unsubscribe streams you don't need ([pricing](https://www.helius.dev/docs/pre-confirmations/overview#pricing)). Use the standalone `makePreconfWsClient` (or `makePreconfWsClientForApiKey`) from `helius-sdk/websockets/preconfWs`.
 
-- `preconfSubscribe(filter?)`: Subscribe to Pre Confirmations, optionally filtered server-side, so you only receive what matches. Each open subscription is still billed at least 300 credits per covered slot, even with no matches. Omit the filter to stream every transaction from both sources. Filter fields, combined with AND: `includeBam` (`false` for Helius only), `failed`, `regionInclude` (region codes such as `"ewr"`, `"fra"`), `accountInclude` / `accountExclude` / `accountRequired` (lookup tables resolved server-side), `signerInclude` / `signerExclude`, `signatures`, and `instructions` (top-level, by `programId` plus `memcmp` / `dataSize`). Returns an `AsyncIterable` of `{ version, slot, transactionIndex, status, transaction, transactionBytes }` with an `unsubscribe()` method; leaving a `for await` loop early also unsubscribes. Each subscription uses its own connection, because notification frames don't identify their subscription.
+- `preconfSubscribe(filter?, options?)`: Subscribe to Pre Confirmations, optionally filtered server-side, so you only receive what matches. Each open subscription is still billed at least 300 credits per covered slot, even with no matches. Omit the filter to stream every transaction from both sources. Filter fields, combined with AND: `includeSource` (`["helius"]` for Helius only; omitted or `[]` means both; replaces the deprecated `includeBam`, and the two can't be combined), `failed`, `regionInclude` (region codes such as `"ewr"`, `"fra"`), `accountInclude` / `accountExclude` / `accountRequired` (lookup tables resolved server-side), `signerInclude` / `signerExclude`, `signatures`, and `instructions` (top-level, by `programId` plus `memcmp` / `dataSize`). Returns an `AsyncIterable` of transaction notifications `{ type: "transaction", version, slot, transactionIndex, status, transaction, transactionBytes }` with an `unsubscribe()` method; leaving a `for await` loop early also unsubscribes. Pass `{ slots: true }` as `options` to also receive leader-bank slot events `{ type: "slot", version, slot, status }`, and narrow each notification on `type`. Slot events are subject to `includeSource` and `regionInclude` only, and carry no ordering guarantee relative to their slot's transactions. Each subscription uses its own connection, because notification frames don't identify their subscription.
 - `preconfUnsubscribe(subscriptionId)`: Unsubscribe by id. Each subscription owns its connection, so this closes it, which removes the subscription server-side; resolves `true` if it was live. Prefer `sub.unsubscribe()`, which always targets its own connection; as a safety net this throws if several live subscriptions report the same id.
 - `getPreConfCoverage()`: Current coverage — `networkSharePercent` of stake and `coverageByRegion`. Coverage is by stake, for both sources, regardless of filters.
 
-Notifications are **binary** frames (the subscribe ack is a JSON text frame); the little-endian layout is `version:u8 | slot:u64_le | transaction_index:u64_le | status:u8 | transaction`. The `version` byte is checked first (currently `1`; unknown versions throw and are dropped) and `status` is the `PreconfStatus` enum (`Failed = 0`, `Success = 1`, `Unknown = 2`). Transactions are in Solana wire format (legacy, v0, or v1) and decode with `@solana/kit`. BAM preconfirmations always carry `transactionIndex = 0` and status `Unknown`, and the frame has no source field.
+Notifications are **binary** frames (the subscribe ack is a JSON text frame), little-endian. The `version` byte is checked first; unknown versions throw and are dropped.
+
+- Version `1`, a transaction: `version:u8 | slot:u64_le | transaction_index:u64_le | status:u8 | transaction`. `status` is the `PreconfStatus` enum (`Failed = 0`, `Success = 1`, `Unknown = 2`). Transactions are in Solana wire format (legacy, v0, or v1) and decode with `@solana/kit`. BAM preconfirmations always carry `transactionIndex = 0` and status `Unknown`, and the frame has no source field.
+- Version `128`, a slot event, delivered only with `{ slots: true }`: `version:u8 | slot:u64_le | status:u8`. `status` is the `PreconfSlotStatus` enum (`BankCreated = 0`, the slot started; `BankFrozen = 1`, the slot ended). A slot event with any other status is dropped.
+
+`decodePreconfFrame` decodes a transaction frame and throws on a slot frame; `decodePreconfEvent` decodes either.
 
 ```typescript
-import { makePreconfWsClientForApiKey } from "helius-sdk/websockets/preconfWs";
+import {
+  makePreconfWsClientForApiKey,
+  PreconfSlotStatus,
+} from "helius-sdk/websockets/preconfWs";
 
 const client = makePreconfWsClientForApiKey(apiKey);
 const [coverage, sub] = await Promise.all([
   client.getPreConfCoverage(), // Concurrent, so it doesn't delay the stream
-  client.preconfSubscribe({
-    includeBam: false, // Helius preconfirmations only
-    failed: false, // Successful transactions only
-    accountInclude: ["9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM"],
-  }),
+  client.preconfSubscribe(
+    {
+      includeSource: ["helius"], // Helius preconfirmations only
+      failed: false, // Successful transactions only
+      accountInclude: ["9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM"],
+    },
+    { slots: true } // Also deliver slot events; omit for transactions only
+  ),
 ]);
 console.log(`Covering ${coverage.networkSharePercent}% of stake`);
 for await (const event of sub) {
+  if (event.type === "slot") {
+    const started = event.status === PreconfSlotStatus.BankCreated;
+    console.log(`slot ${event.slot} ${started ? "bank created" : "bank frozen"}`);
+    continue;
+  }
   // event.transaction is the decoded @solana/kit Transaction; event.transactionBytes is the raw wire-format transaction
   console.log(event.version, event.slot, event.transactionIndex, event.status);
 }

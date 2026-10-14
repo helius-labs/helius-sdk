@@ -102,13 +102,14 @@ export default {
       // subscriptions can't share one), server-side filters, a subscribe
       // deadline covering the handshake, unsubscribe-and-close, keepalive with
       // a JSON-RPC ping fallback, a bounded multi-consumer queue,
-      // getPreConfCoverage over HTTPS, plus the binary frame decoder
-      // (decodePreconfFrame). The module overview lives on the erased
+      // getPreConfCoverage over HTTPS, plus the binary frame decoders
+      // (decodePreconfFrame for transactions, decodePreconfEvent adding
+      // opt-in slot events). The module overview lives on the erased
       // PreconfWsClient interface so it ships only in the .d.ts. Self-contained
-      // (does not reuse enhancedWs); lands at ~3.7KB. The absolute cap still
+      // (does not reuse enhancedWs); lands at ~4.3KB. The absolute cap still
       // gates unbounded growth.
       path: 'dist/esm/websockets/preconfWs.js',
-      maxSize: '4kb',
+      maxSize: '4.5kb',
     },
     {
       // Standalone Parsed Streams WS client: JSON-RPC request routing with
