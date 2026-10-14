@@ -1,4 +1,8 @@
-import { makePreconfWsClientForApiKey } from "helius-sdk/websockets/preconfWs";
+import { getSignatureFromTransaction } from "@solana/kit";
+import {
+  makePreconfWsClientForApiKey,
+  PreconfSlotStatus,
+} from "helius-sdk/websockets/preconfWs";
 
 /**
  * Subscribe to Helius **Pre Confirmations** (`preconfSubscribe`).
@@ -26,7 +30,7 @@ import { makePreconfWsClientForApiKey } from "helius-sdk/websockets/preconfWs";
   const [coverage, sub] = await Promise.all([
     client.getPreConfCoverage(),
     client.preconfSubscribe({
-      includeBam: false, // Helius preconfirmations only (they carry a status)
+      includeSource: ["helius"], // Helius preconfirmations only (they carry a status)
       failed: false, // Successful transactions only
       accountInclude: ["JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4"],
     }),
@@ -45,10 +49,21 @@ import { makePreconfWsClientForApiKey } from "helius-sdk/websockets/preconfWs";
   try {
     let count = 0;
     for await (const event of sub) {
-      // event: { version, slot, transactionIndex, status, transaction, transactionBytes }
+      if (event.type === "slot") {
+        // Leader-bank lifecycle: BankCreated when the slot starts, BankFrozen
+        // when it ends. No ordering guarantee relative to the transactions of
+        // its slot: some may still follow BankFrozen.
+        const phase =
+          event.status === PreconfSlotStatus.BankCreated
+            ? "bank created"
+            : "bank frozen";
+        console.log(`slot ${event.slot} ${phase}`);
+        continue;
+      }
+      // event: { type, version, slot, transactionIndex, status, transaction, transactionBytes }
       console.log(
         `preconf v${event.version} slot=${event.slot} index=${event.transactionIndex} status=${event.status}`,
-        `sig=${Object.keys(event.transaction.signatures)[0]}`,
+        `sig=${getSignatureFromTransaction(event.transaction)}`,
         `(${event.transactionBytes.length} raw bytes)`
       );
       if (++count >= 10) break;

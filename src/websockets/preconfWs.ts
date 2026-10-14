@@ -4,11 +4,16 @@ import { getSDKHeaders } from "../http";
 /** Pre Confirmations endpoint (Gatekeeper; `beta` names the host, not the product's status). Append the API key. */
 export const PRECONF_WEBSOCKET_URL = "wss://beta.helius-rpc.com/?api-key=";
 
-/** Frame schema version this client decodes; other versions are dropped. */
+/** Frame schema version of transaction notifications; unknown versions are dropped. */
 export const PRECONF_WIRE_VERSION = 1;
+
+/** Frame schema version of slot notifications. */
+export const PRECONF_SLOT_WIRE_VERSION = 128;
 
 // version(1) + slot(8) + transaction_index(8) + status(1)
 const HEADER_LEN = 18;
+// version(1) + slot(8) + status(1)
+const SLOT_FRAME_LEN = 10;
 
 /** Landed status of a pre-confirmed transaction: an early signal that may still change. */
 export const PreconfStatus = {
@@ -32,18 +37,29 @@ const decodeStatus = (byte: number): PreconfStatus => {
   }
 };
 
+/** Slot leader's bank lifecycle: created when the slot starts, frozen when it ends. */
+export const PreconfSlotStatus = {
+  BankCreated: 0,
+  BankFrozen: 1,
+} as const;
+
+/** The bank lifecycle status of a slot notification (see {@link PreconfSlotStatus}). */
+export type PreconfSlotStatus =
+  (typeof PreconfSlotStatus)[keyof typeof PreconfSlotStatus];
+
 const KEEPALIVE_INTERVAL_MS = 30_000;
 
 // Buffered notifications before the oldest are dropped
 const BUFFER_LIMIT = 10_000;
 
 /**
- * A single decoded Pre Confirmations notification.
+ * A pre-confirmed transaction.
  *
  * A pre-confirmation is an **early signal, not a guarantee**.
  */
-export interface PreconfNotification {
-  /** The wire schema version (byte 0). Currently always {@link PRECONF_WIRE_VERSION}. */
+export interface PreconfTransactionNotification {
+  type: "transaction";
+  /** The wire schema version (byte 0): {@link PRECONF_WIRE_VERSION}. */
   version: number;
   /** The slot the scheduled transaction targets. */
   slot: bigint;
@@ -65,6 +81,28 @@ export interface PreconfNotification {
 }
 
 /**
+ * A leader-bank lifecycle event for a slot.
+ *
+ * No ordering guarantee relative to the slot's transactions: some may still
+ * arrive after its `BankFrozen`.
+ */
+export interface PreconfSlotNotification {
+  type: "slot";
+  /** The wire schema version (byte 0): {@link PRECONF_SLOT_WIRE_VERSION}. */
+  version: number;
+  slot: bigint;
+  status: PreconfSlotStatus;
+}
+
+/**
+ * A single decoded Pre Confirmations notification. Narrow on `type` before
+ * reading transaction fields.
+ */
+export type PreconfNotification =
+  | PreconfTransactionNotification
+  | PreconfSlotNotification;
+
+/**
  * An active Pre Confirmations subscription. Implements `AsyncIterable` for
  * consuming notifications and provides `unsubscribe()` to clean up.
  */
@@ -74,6 +112,9 @@ export interface PreconfSubscription extends AsyncIterable<PreconfNotification> 
   /** Send a `preconfUnsubscribe` and stop receiving notifications. */
   unsubscribe(): Promise<boolean>;
 }
+
+/** Preconfirmation source: Helius, or BAM validators. */
+export type PreconfSource = "helius" | "bam";
 
 /**
  * Region where a preconfirmation originated: where Helius ingested it, or the
@@ -120,9 +161,18 @@ export interface PreconfInstructionFilter {
  * Server-side filter for {@link PreconfWsClient.preconfSubscribe}. Every field
  * is optional; set fields combine with AND. Account filters also match
  * accounts loaded through address lookup tables.
+ *
+ * Slot notifications are subject to `includeSource` and `regionInclude` only,
+ * and come from the `helius` source.
  */
 export interface PreconfFilter {
-  /** `false` drops BAM preconfirmations (Helius only). Defaults to `true`. */
+  /** Sources to deliver; omit for both. Can't be combined with `includeBam`. */
+  includeSource?: readonly PreconfSource[];
+  /**
+   * `false` is the same as `includeSource: ["helius"]`. Can't be combined
+   * with `includeSource`.
+   * @deprecated Use `includeSource`.
+   */
   includeBam?: boolean;
   /** `true`: only failed transactions; `false`: only successful. Either excludes unknown-status Helius transactions. */
   failed?: boolean;
@@ -189,23 +239,30 @@ export interface PreconfCoverage {
  *   server-side; omit it to stream every transaction from Helius and BAM. The
  *   subscribe/unsubscribe responses are JSON-RPC 2.0 text frames (`result` =
  *   numeric subscription id / boolean).
- * - Notifications arrive as **binary** frames (little-endian) laid out as:
+ * - Notifications arrive as **binary** frames (little-endian). The leading
+ *   `version` byte is read and checked **first**; a frame carrying an unknown
+ *   version is dropped rather than misparsed.
  *
  *   ```text
- *   version:u8 (1) | slot:u64_le (8) | transaction_index:u64_le (8) | status:u8 (1) | transaction
+ *   version:u8 (1)   | slot:u64_le (8) | transaction_index:u64_le (8) | status:u8 (1) | transaction
+ *   version:u8 (128) | slot:u64_le (8) | status:u8 (1)
  *   ```
  *
- *   The leading `version` byte is read and checked **first** (currently `1`); a
- *   frame carrying an unknown version is dropped rather than misparsed. `status`
- *   is `0 = failed`, `1 = success`, `2 = unknown`.
+ *   Version `1` is a transaction ({@link PreconfTransactionNotification}):
+ *   `status` is `0 = failed`, `1 = success`, `2 = unknown`. Version `128` is a
+ *   slot event ({@link PreconfSlotNotification}): `status` is
+ *   `0 = bank created` (slot started), `1 = bank frozen` (slot ended); a slot
+ *   event with any other status is dropped. Slot events carry no ordering
+ *   guarantee relative to their slot's transactions.
  */
 export interface PreconfWsClient {
   /**
    * Subscribe to Pre Confirmations, optionally filtered server-side. Omit the
-   * filter to stream every transaction from Helius and BAM. Each subscription
-   * gets its own connection, because notification frames don't say which
-   * subscription they belong to. Rejects with the server's error for an
-   * invalid filter (JSON-RPC -32602).
+   * filter to stream every transaction from Helius and BAM. Slot events
+   * arrive on the same stream; narrow on `type`. Each subscription gets its
+   * own connection, because notification frames don't say which subscription
+   * they belong to. Rejects with the server's error for an invalid filter
+   * (JSON-RPC -32602).
    */
   preconfSubscribe(filter?: PreconfFilter): Promise<PreconfSubscription>;
   /**
@@ -234,25 +291,33 @@ const getTxDecoder = (): ReturnType<typeof getTransactionDecoder> => {
   return txDecoder;
 };
 
-/**
- * Decode a binary frame: `version:u8 | slot:u64_le | transaction_index:u64_le |
- * status:u8 | transaction` (Solana wire format: legacy, v0, or v1).
- *
- * @throws on a short frame, an unknown version, or an undecodable transaction
- */
+/** Decode a binary frame (see {@link PreconfWsClient}); throws on a malformed or unknown one. */
 export const decodePreconfFrame = (bytes: Uint8Array): PreconfNotification => {
+  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  const version = bytes[0];
+  if (version === PRECONF_SLOT_WIRE_VERSION) {
+    if (bytes.length !== SLOT_FRAME_LEN) {
+      throw new Error(`preconf slot frame has ${bytes.length} bytes`);
+    }
+    const status = view.getUint8(9);
+    if (status > PreconfSlotStatus.BankFrozen) {
+      throw new Error(`unknown preconf slot status ${status}`);
+    }
+    return {
+      type: "slot",
+      version,
+      slot: view.getBigUint64(1, true),
+      status: status as PreconfSlotStatus,
+    };
+  }
+
   if (bytes.length < HEADER_LEN + 1) {
     throw new Error(
       `preconf frame too short: ${bytes.length} bytes (need > ${HEADER_LEN})`
     );
   }
-
-  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
-  const version = view.getUint8(0);
   if (version !== PRECONF_WIRE_VERSION) {
-    throw new Error(
-      `unsupported preconf wire version ${version} (this client understands ${PRECONF_WIRE_VERSION})`
-    );
+    throw new Error(`unsupported preconf wire version ${version}`);
   }
   const slot = view.getBigUint64(1, true);
   const transactionIndex = view.getBigUint64(9, true);
@@ -261,6 +326,7 @@ export const decodePreconfFrame = (bytes: Uint8Array): PreconfNotification => {
   const transaction = getTxDecoder().decode(transactionBytes);
 
   return {
+    type: "transaction",
     version,
     slot,
     transactionIndex,
