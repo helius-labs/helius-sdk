@@ -29,11 +29,14 @@ import {
   // Helius and BAM.
   const [coverage, sub] = await Promise.all([
     client.getPreConfCoverage(),
-    client.preconfSubscribe({
-      includeSource: ["helius"], // Helius preconfirmations only (they carry a status)
-      failed: false, // Successful transactions only
-      accountInclude: ["JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4"],
-    }),
+    client.preconfSubscribe(
+      {
+        includeSource: ["helius"], // Helius preconfirmations only (they carry a status)
+        failed: false, // Successful transactions only
+        accountInclude: ["JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4"],
+      },
+      { slots: true } // Also deliver slot events; omit for transactions only
+    ),
   ]);
   console.log(
     `Coverage: ${coverage.networkSharePercent}% of stake`,

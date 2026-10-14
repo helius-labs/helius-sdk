@@ -1,4 +1,5 @@
 import {
+  decodePreconfEvent,
   decodePreconfFrame,
   makePreconfWsClient,
   makePreconfWsClientForApiKey,
@@ -6,8 +7,7 @@ import {
   PRECONF_WEBSOCKET_URL,
   PreconfSlotStatus,
   PreconfStatus,
-  type PreconfNotification,
-  type PreconfTransactionNotification,
+  type PreconfFilter,
 } from "../preconfWs";
 import { createTxMessage } from "../../transactions/createTxMessage";
 import {
@@ -63,15 +63,6 @@ const buildSlotFrame = (slot: bigint, status: number): Uint8Array => {
   return buf;
 };
 
-const asTx = (notif: PreconfNotification): PreconfTransactionNotification => {
-  if (notif.type !== "transaction") {
-    throw new Error(`expected a transaction notification, got ${notif.type}`);
-  }
-  return notif;
-};
-
-const decodeTx = (frame: Uint8Array) => asTx(decodePreconfFrame(frame));
-
 // ── decodePreconfFrame unit tests ────────────────────────────────────
 
 describe("decodePreconfFrame", () => {
@@ -79,7 +70,7 @@ describe("decodePreconfFrame", () => {
     const txBytes = buildTxBytes();
     const frame = buildFrame(123n, 7n, txBytes, PreconfStatus.Success);
 
-    const notif = decodeTx(frame);
+    const notif = decodePreconfFrame(frame);
 
     expect(notif.version).toBe(1);
     expect(notif.slot).toBe(123n);
@@ -121,7 +112,7 @@ describe("decodePreconfFrame", () => {
       18446744073709551614n,
       buildTxBytes()
     );
-    const notif = decodeTx(frame);
+    const notif = decodePreconfFrame(frame);
     expect(notif.slot).toBe(18446744073709551615n);
     expect(notif.transactionIndex).toBe(18446744073709551614n);
   });
@@ -152,7 +143,7 @@ describe("decodePreconfFrame", () => {
     const signed = await signTransactionMessageWithSigners(message);
     const txBytes = new Uint8Array(getTransactionEncoder().encode(signed));
 
-    const notif = decodeTx(buildFrame(5n, 0n, txBytes));
+    const notif = decodePreconfFrame(buildFrame(5n, 0n, txBytes));
     expect(Object.keys(notif.transaction.signatures)).toEqual([
       feePayer.address,
     ]);
@@ -162,14 +153,28 @@ describe("decodePreconfFrame", () => {
   // Sanity: kit encoder/decoder round-trips our hand-built bytes.
   it("round-trips through the kit transaction codec", () => {
     const txBytes = buildTxBytes();
-    const notif = decodeTx(buildFrame(9n, 1n, txBytes));
+    const notif = decodePreconfFrame(buildFrame(9n, 1n, txBytes));
     const reEncoded = getTransactionEncoder().encode(notif.transaction);
     expect(new Uint8Array(reEncoded)).toEqual(txBytes);
   });
 
+  it("tags transaction notifications", () => {
+    expect(decodePreconfFrame(buildFrame(1n, 0n, buildTxBytes())).type).toBe(
+      "transaction"
+    );
+  });
+
+  it("throws on a slot frame, as before slot events existed", () => {
+    expect(() =>
+      decodePreconfFrame(buildSlotFrame(1n, PreconfSlotStatus.BankCreated))
+    ).toThrow(/too short/i);
+  });
+});
+
+describe("decodePreconfEvent", () => {
   it("decodes slot events", () => {
     expect(
-      decodePreconfFrame(
+      decodePreconfEvent(
         buildSlotFrame(18446744073709551615n, PreconfSlotStatus.BankCreated)
       )
     ).toEqual({
@@ -179,30 +184,39 @@ describe("decodePreconfFrame", () => {
       status: PreconfSlotStatus.BankCreated,
     });
     expect(
-      decodePreconfFrame(buildSlotFrame(5n, PreconfSlotStatus.BankFrozen))
+      decodePreconfEvent(buildSlotFrame(5n, PreconfSlotStatus.BankFrozen))
     ).toMatchObject({ type: "slot", slot: 5n, status: 1 });
   });
 
+  it("decodes transaction frames like decodePreconfFrame", () => {
+    const frame = buildFrame(3n, 2n, buildTxBytes());
+    expect(decodePreconfEvent(frame)).toEqual(decodePreconfFrame(frame));
+  });
+
   it("throws on a slot event with an unknown status", () => {
-    expect(() => decodePreconfFrame(buildSlotFrame(1n, 2))).toThrow(
+    expect(() => decodePreconfEvent(buildSlotFrame(1n, 2))).toThrow(
       /unknown preconf slot status 2/
     );
   });
 
   it("throws on a slot event of the wrong length", () => {
     const frame = buildSlotFrame(1n, 0);
-    expect(() => decodePreconfFrame(frame.subarray(0, 9))).toThrow(
+    expect(() => decodePreconfEvent(frame.subarray(0, 9))).toThrow(
       /slot frame has 9 bytes/
     );
     const long = new Uint8Array(11);
     long.set(frame);
-    expect(() => decodePreconfFrame(long)).toThrow(/slot frame has 11 bytes/);
+    expect(() => decodePreconfEvent(long)).toThrow(/slot frame has 11 bytes/);
   });
+});
 
-  it("tags transaction notifications", () => {
-    expect(decodePreconfFrame(buildFrame(1n, 0n, buildTxBytes())).type).toBe(
-      "transaction"
-    );
+describe("PreconfFilter", () => {
+  it("rejects includeSource combined with includeBam at compile time", () => {
+    // @ts-expect-error includeBam and includeSource can't be combined
+    const both: PreconfFilter = { includeSource: ["helius"], includeBam: true };
+    const source: PreconfFilter = { includeSource: [], failed: false };
+    const bam: PreconfFilter = { includeBam: false, failed: false };
+    expect([both, source, bam]).toHaveLength(3);
   });
 });
 
@@ -307,9 +321,9 @@ describe("makePreconfWsClient", () => {
     client.close();
   });
 
-  it("delivers slot events interleaved with transactions and drops bad slot frames", async () => {
+  it("with slots: true, delivers slot events interleaved with transactions and drops bad slot frames", async () => {
     const client = makePreconfWsClient(TEST_URL);
-    const subPromise = client.preconfSubscribe();
+    const subPromise = client.preconfSubscribe(undefined, { slots: true });
     await jest.advanceTimersByTimeAsync(0);
     respondToLatest(lastWs(), 1);
     const sub = await subPromise;
@@ -328,8 +342,46 @@ describe("makePreconfWsClient", () => {
     ];
     expect(events.map((e) => e.type)).toEqual(["slot", "transaction", "slot"]);
     expect(events[0]).toMatchObject({ slot: 300n, status: 0 });
-    expect(asTx(events[1]).transactionIndex).toBe(0n);
+    expect(events[1]).toMatchObject({ slot: 300n, transactionIndex: 0n });
     expect(events[2]).toMatchObject({ slot: 300n, status: 1 });
+
+    client.close();
+  });
+
+  it("never yields slot events without slots: true", async () => {
+    const client = makePreconfWsClient(TEST_URL);
+    const subPromise = client.preconfSubscribe({ failed: false });
+    await jest.advanceTimersByTimeAsync(0);
+    respondToLatest(lastWs(), 1);
+    const sub = await subPromise;
+
+    const ws = lastWs();
+    ws._receiveBinary(buildSlotFrame(400n, PreconfSlotStatus.BankCreated));
+    ws._receiveBinary(buildFrame(400n, 5n, buildTxBytes()));
+    ws._receiveBinary(buildSlotFrame(400n, PreconfSlotStatus.BankFrozen));
+    ws._receiveBinary(buildFrame(401n, 0n, buildTxBytes()));
+
+    const iter = sub[Symbol.asyncIterator]();
+    const first = (await iter.next()).value;
+    const second = (await iter.next()).value;
+    // Typed as transactions without narrowing
+    expect([first.transactionIndex, second.transactionIndex]).toEqual([5n, 0n]);
+    expect([first.type, second.type]).toEqual(["transaction", "transaction"]);
+
+    client.close();
+  });
+
+  it("delivers slot events when slots is a runtime boolean", async () => {
+    const client = makePreconfWsClient(TEST_URL);
+    const slots: boolean = [true][0];
+    const subPromise = client.preconfSubscribe({}, { slots });
+    await jest.advanceTimersByTimeAsync(0);
+    respondToLatest(lastWs(), 1);
+    const sub = await subPromise;
+
+    lastWs()._receiveBinary(buildSlotFrame(500n, PreconfSlotStatus.BankFrozen));
+    const event = (await sub[Symbol.asyncIterator]().next()).value;
+    expect(event.type === "slot" && event.slot).toBe(500n);
 
     client.close();
   });

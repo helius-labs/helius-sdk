@@ -12,8 +12,11 @@ export const PRECONF_SLOT_WIRE_VERSION = 128;
 
 // version(1) + slot(8) + transaction_index(8) + status(1)
 const HEADER_LEN = 18;
-// version(1) + slot(8) + status(1)
-const SLOT_FRAME_LEN = 10;
+// Both frame kinds start with version:u8 | slot:u64_le
+const SLOT_OFFSET = 1;
+// Slot frame: version(1) + slot(8) + status(1)
+const SLOT_STATUS_OFFSET = SLOT_OFFSET + 8;
+const SLOT_FRAME_LEN = SLOT_STATUS_OFFSET + 1;
 
 /** Landed status of a pre-confirmed transaction: an early signal that may still change. */
 export const PreconfStatus = {
@@ -57,10 +60,10 @@ const BUFFER_LIMIT = 10_000;
  *
  * A pre-confirmation is an **early signal, not a guarantee**.
  */
-export interface PreconfTransactionNotification {
+export interface PreconfNotification {
   type: "transaction";
   /** The wire schema version (byte 0): {@link PRECONF_WIRE_VERSION}. */
-  version: number;
+  version: typeof PRECONF_WIRE_VERSION;
   /** The slot the scheduled transaction targets. */
   slot: bigint;
   /**
@@ -81,7 +84,8 @@ export interface PreconfTransactionNotification {
 }
 
 /**
- * A leader-bank lifecycle event for a slot.
+ * A leader-bank lifecycle event for a slot, delivered only to subscriptions
+ * opened with `{ slots: true }`.
  *
  * No ordering guarantee relative to the slot's transactions: some may still
  * arrive after its `BankFrozen`.
@@ -89,24 +93,29 @@ export interface PreconfTransactionNotification {
 export interface PreconfSlotNotification {
   type: "slot";
   /** The wire schema version (byte 0): {@link PRECONF_SLOT_WIRE_VERSION}. */
-  version: number;
+  version: typeof PRECONF_SLOT_WIRE_VERSION;
+  /** The slot whose leader bank was created or frozen. */
   slot: bigint;
+  /** `BankCreated` when the slot starts, `BankFrozen` when it ends. */
   status: PreconfSlotStatus;
 }
 
-/**
- * A single decoded Pre Confirmations notification. Narrow on `type` before
- * reading transaction fields.
- */
-export type PreconfNotification =
-  | PreconfTransactionNotification
-  | PreconfSlotNotification;
+/** Any Pre Confirmations notification. Narrow on `type` before reading transaction fields. */
+export type PreconfEvent = PreconfNotification | PreconfSlotNotification;
+
+/** Options for {@link PreconfWsClient.preconfSubscribe}, applied client-side. */
+export interface PreconfSubscribeOptions {
+  /** Also deliver slot (bank created/frozen) events. Defaults to `false`. */
+  slots?: boolean;
+}
 
 /**
  * An active Pre Confirmations subscription. Implements `AsyncIterable` for
  * consuming notifications and provides `unsubscribe()` to clean up.
  */
-export interface PreconfSubscription extends AsyncIterable<PreconfNotification> {
+export interface PreconfSubscription<
+  T = PreconfNotification,
+> extends AsyncIterable<T> {
   /** The server-assigned subscription ID. */
   subscriptionId: number;
   /** Send a `preconfUnsubscribe` and stop receiving notifications. */
@@ -160,20 +169,31 @@ export interface PreconfInstructionFilter {
 /**
  * Server-side filter for {@link PreconfWsClient.preconfSubscribe}. Every field
  * is optional; set fields combine with AND. Account filters also match
- * accounts loaded through address lookup tables.
+ * accounts loaded through address lookup tables. `includeSource` and the
+ * deprecated `includeBam` can't be combined.
  *
  * Slot notifications are subject to `includeSource` and `regionInclude` only,
  * and come from the `helius` source.
  */
-export interface PreconfFilter {
-  /** Sources to deliver; omit for both. Can't be combined with `includeBam`. */
-  includeSource?: readonly PreconfSource[];
-  /**
-   * `false` is the same as `includeSource: ["helius"]`. Can't be combined
-   * with `includeSource`.
-   * @deprecated Use `includeSource`.
-   */
-  includeBam?: boolean;
+export type PreconfFilter = PreconfFilterFields &
+  (
+    | {
+        /** Sources to deliver; omit (or pass `[]`) for both. */
+        includeSource?: readonly PreconfSource[];
+        includeBam?: never;
+      }
+    | {
+        /**
+         * `false` is the same as `includeSource: ["helius"]`.
+         * @deprecated Use `includeSource`.
+         */
+        includeBam?: boolean;
+        includeSource?: never;
+      }
+  );
+
+/** The {@link PreconfFilter} fields other than the source selection. */
+interface PreconfFilterFields {
   /** `true`: only failed transactions; `false`: only successful. Either excludes unknown-status Helius transactions. */
   failed?: boolean;
   /** Only transactions from one of these regions; ones without a region are dropped. */
@@ -248,23 +268,36 @@ export interface PreconfCoverage {
  *   version:u8 (128) | slot:u64_le (8) | status:u8 (1)
  *   ```
  *
- *   Version `1` is a transaction ({@link PreconfTransactionNotification}):
- *   `status` is `0 = failed`, `1 = success`, `2 = unknown`. Version `128` is a
- *   slot event ({@link PreconfSlotNotification}): `status` is
- *   `0 = bank created` (slot started), `1 = bank frozen` (slot ended); a slot
- *   event with any other status is dropped. Slot events carry no ordering
- *   guarantee relative to their slot's transactions.
+ *   Version `1` is a transaction ({@link PreconfNotification}): `status` is
+ *   `0 = failed`, `1 = success`, `2 = unknown`. Version `128` is a slot event
+ *   ({@link PreconfSlotNotification}), delivered only with `{ slots: true }`:
+ *   `status` is `0 = bank created` (slot started), `1 = bank frozen` (slot
+ *   ended); a slot event with any other status is dropped. Slot events carry
+ *   no ordering guarantee relative to their slot's transactions.
  */
 export interface PreconfWsClient {
   /**
    * Subscribe to Pre Confirmations, optionally filtered server-side. Omit the
-   * filter to stream every transaction from Helius and BAM. Slot events
-   * arrive on the same stream; narrow on `type`. Each subscription gets its
-   * own connection, because notification frames don't say which subscription
-   * they belong to. Rejects with the server's error for an invalid filter
-   * (JSON-RPC -32602).
+   * filter to stream every transaction from Helius and BAM. Pass
+   * `{ slots: true }` to also receive slot events; narrow on `type`. Each
+   * subscription gets its own connection, because notification frames don't
+   * say which subscription they belong to. Rejects with the server's error for
+   * an invalid filter (JSON-RPC -32602).
    */
-  preconfSubscribe(filter?: PreconfFilter): Promise<PreconfSubscription>;
+  preconfSubscribe(
+    filter?: PreconfFilter,
+    options?: PreconfSubscribeOptions & { slots?: false }
+  ): Promise<PreconfSubscription>;
+  /** Subscribe to transactions and slot events; narrow on `type`. */
+  preconfSubscribe(
+    filter: PreconfFilter | undefined,
+    options: PreconfSubscribeOptions & { slots: true }
+  ): Promise<PreconfSubscription<PreconfEvent>>;
+  /** Subscribe, with slot events when `options.slots` is `true`; narrow on `type`. */
+  preconfSubscribe(
+    filter?: PreconfFilter,
+    options?: PreconfSubscribeOptions
+  ): Promise<PreconfSubscription<PreconfEvent>>;
   /**
    * Unsubscribe the live subscription with this server-assigned ID by closing
    * its connection, which removes it server-side. Resolves `true` if it was
@@ -291,35 +324,28 @@ const getTxDecoder = (): ReturnType<typeof getTransactionDecoder> => {
   return txDecoder;
 };
 
-/** Decode a binary frame (see {@link PreconfWsClient}); throws on a malformed or unknown one. */
+/**
+ * Decode a binary frame: `version:u8 | slot:u64_le | transaction_index:u64_le |
+ * status:u8 | transaction` (Solana wire format: legacy, v0, or v1).
+ *
+ * @throws on a short frame, an unknown version (slot frames included; see
+ * {@link decodePreconfEvent}), or an undecodable transaction
+ */
 export const decodePreconfFrame = (bytes: Uint8Array): PreconfNotification => {
-  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
-  const version = bytes[0];
-  if (version === PRECONF_SLOT_WIRE_VERSION) {
-    if (bytes.length !== SLOT_FRAME_LEN) {
-      throw new Error(`preconf slot frame has ${bytes.length} bytes`);
-    }
-    const status = view.getUint8(9);
-    if (status > PreconfSlotStatus.BankFrozen) {
-      throw new Error(`unknown preconf slot status ${status}`);
-    }
-    return {
-      type: "slot",
-      version,
-      slot: view.getBigUint64(1, true),
-      status: status as PreconfSlotStatus,
-    };
-  }
-
   if (bytes.length < HEADER_LEN + 1) {
     throw new Error(
       `preconf frame too short: ${bytes.length} bytes (need > ${HEADER_LEN})`
     );
   }
+
+  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  const version = view.getUint8(0);
   if (version !== PRECONF_WIRE_VERSION) {
-    throw new Error(`unsupported preconf wire version ${version}`);
+    throw new Error(
+      `unsupported preconf wire version ${version} (this client understands ${PRECONF_WIRE_VERSION})`
+    );
   }
-  const slot = view.getBigUint64(1, true);
+  const slot = view.getBigUint64(SLOT_OFFSET, true);
   const transactionIndex = view.getBigUint64(9, true);
   const status = decodeStatus(view.getUint8(17));
   const transactionBytes = bytes.slice(HEADER_LEN);
@@ -336,8 +362,33 @@ export const decodePreconfFrame = (bytes: Uint8Array): PreconfNotification => {
   };
 };
 
+/**
+ * Decode a transaction frame (as {@link decodePreconfFrame}) or a slot frame:
+ * `version:u8 (128) | slot:u64_le | status:u8`.
+ *
+ * @throws on a slot frame of the wrong length or with an unknown status, or on
+ * anything {@link decodePreconfFrame} throws on
+ */
+export const decodePreconfEvent = (bytes: Uint8Array): PreconfEvent => {
+  if (bytes[0] !== PRECONF_SLOT_WIRE_VERSION) return decodePreconfFrame(bytes);
+  if (bytes.length !== SLOT_FRAME_LEN) {
+    throw new Error(`preconf slot frame has ${bytes.length} bytes`);
+  }
+  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  const status = view.getUint8(SLOT_STATUS_OFFSET);
+  if (status > PreconfSlotStatus.BankFrozen) {
+    throw new Error(`unknown preconf slot status ${status}`);
+  }
+  return {
+    type: "slot",
+    version: PRECONF_SLOT_WIRE_VERSION,
+    slot: view.getBigUint64(SLOT_OFFSET, true),
+    status: status as PreconfSlotStatus,
+  };
+};
+
 interface NotificationSink {
-  push: (value: PreconfNotification) => void;
+  push: (value: PreconfEvent) => void;
   /** End cleanly; `drop` discards buffered notifications (unsubscribe/close). */
   done: (drop?: boolean) => void;
   error: (err: Error) => void;
@@ -356,12 +407,12 @@ const makePushQueue = (
   onReturn: () => void
 ): {
   sink: NotificationSink;
-  iterable: AsyncIterable<PreconfNotification>;
+  iterable: AsyncIterable<PreconfEvent>;
 } => {
-  const buffer: PreconfNotification[] = [];
+  const buffer: PreconfEvent[] = [];
   // One per pending next(), so concurrent consumers all settle
   const waiters: {
-    resolve: (value: IteratorResult<PreconfNotification>) => void;
+    resolve: (value: IteratorResult<PreconfEvent>) => void;
     reject: (err: Error) => void;
   }[] = [];
   let finished = false;
@@ -397,10 +448,10 @@ const makePushQueue = (
     },
   };
 
-  const iterable: AsyncIterable<PreconfNotification> = {
+  const iterable: AsyncIterable<PreconfEvent> = {
     [Symbol.asyncIterator]() {
       return {
-        next(): Promise<IteratorResult<PreconfNotification>> {
+        next(): Promise<IteratorResult<PreconfEvent>> {
           if (buffer.length > 0) {
             return Promise.resolve({ value: buffer.shift()!, done: false });
           }
@@ -413,7 +464,7 @@ const makePushQueue = (
           });
         },
         // Leaving `for await` early unsubscribes (open subscriptions bill)
-        return(): Promise<IteratorResult<PreconfNotification>> {
+        return(): Promise<IteratorResult<PreconfEvent>> {
           buffer.length = 0;
           end();
           onReturn();
@@ -456,7 +507,10 @@ export const makePreconfWsClient = (
   // Every open socket, including subscribes awaiting their ack
   const live = new Set<Stream>();
 
-  const open = (filter?: PreconfFilter): Promise<PreconfSubscription> =>
+  const open = (
+    filter: PreconfFilter | undefined,
+    slots: boolean
+  ): Promise<PreconfSubscription<PreconfEvent>> =>
     new Promise((resolve, reject) => {
       // Serialized now: later edits to the filter can't change it, and a bad
       // value (e.g. a bigint) rejects here
@@ -538,7 +592,10 @@ export const makePreconfWsClient = (
           const bytes = toUint8Array(data);
           if (!bytes || ended || stream.id === undefined) return;
           try {
-            sink.push(decodePreconfFrame(bytes));
+            // Without slots, slot frames fail decodePreconfFrame and are skipped
+            sink.push(
+              slots ? decodePreconfEvent(bytes) : decodePreconfFrame(bytes)
+            );
           } catch {
             // Skip a bad frame rather than end the stream
           }
@@ -590,11 +647,17 @@ export const makePreconfWsClient = (
         );
     });
 
+  // The overloads narrow the item type by `options.slots`
+  const preconfSubscribe = async (
+    filter?: PreconfFilter,
+    options?: PreconfSubscribeOptions
+  ) => {
+    if (closed) throw new Error("Pre Confirmations WebSocket client closed");
+    return open(filter, options?.slots === true);
+  };
+
   return {
-    async preconfSubscribe(filter?: PreconfFilter) {
-      if (closed) throw new Error("Pre Confirmations WebSocket client closed");
-      return open(filter);
-    },
+    preconfSubscribe: preconfSubscribe as PreconfWsClient["preconfSubscribe"],
 
     async preconfUnsubscribe(subscriptionId: number): Promise<boolean> {
       const matches = [...live].filter((s) => s.id === subscriptionId);
