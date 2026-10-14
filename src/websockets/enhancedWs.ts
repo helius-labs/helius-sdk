@@ -186,7 +186,9 @@ export const makeEnhancedWsClient = (
     });
   };
 
-  const makePushQueue = <T>(): {
+  const makePushQueue = <T>(
+    onReturn: () => void
+  ): {
     sink: SubscriptionSink<T>;
     iterable: AsyncIterable<T>;
   } => {
@@ -245,9 +247,11 @@ export const makeEnhancedWsClient = (
               rejectWaiting = reject;
             });
           },
+          // Leaving `for await` early unsubscribes
           return(): Promise<IteratorResult<T>> {
             finished = true;
             buffer.length = 0;
+            onReturn();
             return Promise.resolve({ value: undefined as any, done: true });
           },
         };
@@ -265,12 +269,14 @@ export const makeEnhancedWsClient = (
     if (closed) throw new Error("Enhanced WebSocket client closed");
 
     const subscriptionId = (await sendRequest(method, params)) as number;
-    const { sink, iterable } = makePushQueue<T>();
+    const { sink, iterable } = makePushQueue<T>(() => void sub.unsubscribe());
     subscriptions.set(subscriptionId, sink);
 
     const sub: EnhancedSubscription<T> = {
       subscriptionId,
       async unsubscribe(): Promise<boolean> {
+        // Already ended, e.g. by leaving `for await` early
+        if (subscriptions.get(subscriptionId) !== sink) return false;
         subscriptions.delete(subscriptionId);
         sink.done();
         try {

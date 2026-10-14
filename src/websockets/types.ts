@@ -80,6 +80,8 @@ export interface EnhancedAccountNotificationResult {
 /**
  * An active Enhanced WebSocket subscription. Implements `AsyncIterable` for
  * consuming notifications and provides an `unsubscribe()` method to clean up.
+ * Exiting a `for await` loop early (via `break`, `return`, or a thrown error)
+ * also unsubscribes.
  */
 export interface EnhancedSubscription<T> extends AsyncIterable<T> {
   /** The server-assigned subscription ID. */
