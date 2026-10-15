@@ -42,9 +42,10 @@ export const broadcastTransactionFactory = (raw: Rpc<SolanaRpcApi>) => {
 
     // Poll signature status
     const started = Date.now();
+    let expired = false;
 
     while (true) {
-      if (Date.now() - started > pollTimeoutMs) {
+      if (!expired && Date.now() - started > pollTimeoutMs) {
         throw new Error("Transaction confirmation timed-out");
       }
 
@@ -67,11 +68,17 @@ export const broadcastTransactionFactory = (raw: Rpc<SolanaRpcApi>) => {
         }
       }
 
-      const blockHeight = Number(await raw.getBlockHeight().send());
-      if (blockHeight > expiry) {
+      // Give up only after a status read fresher than the expiry height read
+      if (expired) {
         throw new Error(
           "Block height exceeded lastValidBlockHeight, and the transaction failed to land on-chain"
         );
+      }
+
+      const blockHeight = Number(await raw.getBlockHeight().send());
+      if (blockHeight > expiry) {
+        expired = true;
+        continue;
       }
 
       await new Promise((r) => setTimeout(r, pollIntervalMs));
