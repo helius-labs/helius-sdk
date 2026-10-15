@@ -84,6 +84,61 @@ describe("broadcastTransaction Tests", () => {
     await expect(
       broadcast(TX64, { pollIntervalMs: 1, pollTimeoutMs: 50 })
     ).rejects.toThrow(/failed to land on-chain/i);
+    expect(rpc.getSignatureStatuses).toHaveBeenCalledTimes(2);
+  });
+
+  it("Resolves when the tx confirms on the re-check after expiry is first observed", async () => {
+    // The tx lands at or before the expiry height while the tip moves past it,
+    // so only a status read after the height read can see it
+    const rpc = buildMockRpc({
+      heights: [100, 102],
+      statuses: [null, { confirmationStatus: "confirmed", err: null }],
+    });
+
+    const broadcast = broadcastTransactionFactory(rpc);
+    await expect(
+      broadcast(TX64, { pollIntervalMs: 1, pollTimeoutMs: 50 })
+    ).resolves.toBe("3U9JYc3QkWeSFX36zWYD4bMFheh1J2g1AEB7B1ohRvHC");
+  });
+
+  it("Throws failed on-chain when the re-check after expiry finds an error", async () => {
+    const rpc = buildMockRpc({
+      heights: [100, 102],
+      statuses: [
+        null,
+        {
+          confirmationStatus: "confirmed",
+          err: { InstructionError: [0n, { Custom: 6001n }] },
+        },
+      ],
+    });
+
+    const broadcast = broadcastTransactionFactory(rpc);
+    await expect(
+      broadcast(TX64, { pollIntervalMs: 1, pollTimeoutMs: 50 })
+    ).rejects.toThrow(/failed on-chain/i);
+  });
+
+  it("Prefers the conclusive result over a timeout during the post-expiry re-check", async () => {
+    const rpc = buildMockRpc({
+      heights: [100, 102],
+      statuses: [null, { confirmationStatus: "confirmed", err: null }],
+    });
+
+    const nowSpy = jest
+      .spyOn(Date, "now")
+      .mockReturnValueOnce(0) // started
+      .mockReturnValueOnce(0) // first iteration's timeout check
+      .mockReturnValue(10_000); // deadline long past for any later read
+
+    try {
+      const broadcast = broadcastTransactionFactory(rpc);
+      await expect(
+        broadcast(TX64, { pollIntervalMs: 1, pollTimeoutMs: 50 })
+      ).resolves.toBe("3U9JYc3QkWeSFX36zWYD4bMFheh1J2g1AEB7B1ohRvHC");
+    } finally {
+      nowSpy.mockRestore();
+    }
   });
 
   it("Throws on wall-clock timeout", async () => {
