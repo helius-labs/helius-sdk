@@ -43,6 +43,8 @@ For detailed SDK API docs (auto-generated from source), see the [TypeDoc Referen
 
 See the [CHANGELOG](https://github.com/helius-labs/helius-sdk/blob/main/CHANGELOG.md) for version history and release notes.
 
+LaserStream gRPC streaming is not part of this SDK. Use the standalone [`helius-laserstream`](https://www.npmjs.com/package/helius-laserstream) package instead.
+
 ## Contributions
 
 Interested in contributing? Read the following [contributions guide](https://github.com/helius-labs/helius-sdk/blob/main/CONTRIBUTING.md) before opening a PR.
