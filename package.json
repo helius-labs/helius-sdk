@@ -1,7 +1,7 @@
 {
   "name": "helius-sdk",
   "version": "3.3.0",
-  "description": "A Helius TypeScript SDK for building the future of Solana — DAS API, Sender, Webhooks, Laserstream, ZK Compression, and Solana RPC primitives. Built on @solana/kit.",
+  "description": "A Helius TypeScript SDK for building the future of Solana — DAS API, Sender, Webhooks, Enhanced WebSockets, ZK Compression, and Solana RPC primitives. Built on @solana/kit.",
   "type": "module",
   "repository": {
     "type": "git",
@@ -136,7 +136,6 @@
     "compressed-nft",
     "cnft",
     "webhooks",
-    "laserstream",
     "sender",
     "priority-fees",
     "smart-transactions",
