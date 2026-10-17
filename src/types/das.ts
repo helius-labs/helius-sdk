@@ -534,6 +534,8 @@ export type AssetsByOwnerRequest = {
   /** The cursor for paginating forwards through the assets. */
   after?: string;
   /** Display options controlling what extra data is returned. */
+  options?: DisplayOptions;
+  /** @deprecated Use `options`, the name the Helius API docs use. */
   displayOptions?: DisplayOptions;
   /** The sorting options for the response. */
   sortBy?: AssetSortingRequest;
