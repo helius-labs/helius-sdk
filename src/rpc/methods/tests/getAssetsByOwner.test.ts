@@ -111,6 +111,11 @@ describe("getAssetsByOwner Tests", () => {
         sortBy: AssetSortBy.RECENT_ACTION,
         sortDirection: AssetSortDirection.DESC,
       },
+      options: {
+        showFungible: true,
+        showNativeBalance: true,
+        showGrandTotal: true,
+      },
     };
 
     const result = await rpc.getAssetsByOwner(params);
