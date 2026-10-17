@@ -5,6 +5,7 @@ import {
   type GetEnhancedTransactionsByAddressResponse,
 } from "./types";
 import { getSDKHeaders } from "../http";
+import { isDevnetHost } from "../parsedEvents/utils";
 
 /**
  * @deprecated The Enhanced Transactions API is in maintenance mode. Use the
@@ -56,10 +57,12 @@ const handle = async <T>(res: Response): Promise<T> => {
 export const makeEnhancedTxClientEager = (
   apiKey: string,
   network: "mainnet" | "devnet" = "mainnet",
-  userAgent?: string
+  userAgent?: string,
+  baseUrl?: string
 ): EnhancedTxClient => {
+  // A devnet `baseUrl` means devnet too, same check as Parsed Events
   const base =
-    network === "devnet"
+    network === "devnet" || isDevnetHost(baseUrl)
       ? "https://api-devnet.helius.xyz/v0"
       : "https://api-mainnet.helius-rpc.com/v0";
 

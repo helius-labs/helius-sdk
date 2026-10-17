@@ -218,7 +218,7 @@ export const createHeliusEager = ({
           "An API key is required to use webhooks/enhanced transactions. Provide apiKey in createHelius() options."
         );
       }
-      return makeEnhancedTxClientEager(apiKey, network, userAgent);
+      return makeEnhancedTxClientEager(apiKey, network, userAgent, baseUrl);
     },
 
     // Parsed Events

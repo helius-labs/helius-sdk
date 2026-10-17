@@ -490,7 +490,7 @@ export const createHelius = ({
         );
       }
       const { makeEnhancedTxClientLazy } = await import("../enhanced");
-      return makeEnhancedTxClientLazy(apiKey, network, userAgent);
+      return makeEnhancedTxClientLazy(apiKey, network, userAgent, baseUrl);
     }
   );
 
