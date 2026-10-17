@@ -36,11 +36,12 @@ export interface EnhancedTxClientLazy {
 export const makeEnhancedTxClientLazy = (
   apiKey: string,
   network: "mainnet" | "devnet" = "mainnet",
-  userAgent?: string
+  userAgent?: string,
+  baseUrl?: string
 ): EnhancedTxClientLazy => {
   const load = async () => {
     const { makeEnhancedTxClientEager } = await import("./client.eager");
-    return makeEnhancedTxClientEager(apiKey, network, userAgent);
+    return makeEnhancedTxClientEager(apiKey, network, userAgent, baseUrl);
   };
 
   return {
