@@ -8,6 +8,16 @@ const BASE_URL = "https://mainnet.helius-rpc.com/v1/parsed-events";
 // api.devnet.solana.com, my-devnet-proxy.example.com
 const DEVNET_HOST = /(^|[.-])devnet([.-]|$)/;
 
+/** Whether a client's `baseUrl` points at a devnet host */
+export const isDevnetHost = (baseUrl?: string): boolean => {
+  try {
+    return !!baseUrl && DEVNET_HOST.test(new URL(baseUrl).hostname);
+  } catch {
+    // Unparseable baseUrl: no host to classify
+    return false;
+  }
+};
+
 /**
  * Build a guard that throws unless the client targets mainnet, so a devnet
  * client never silently gets mainnet data. Either signal means devnet: a
@@ -18,13 +28,7 @@ export const mainnetGuard = ({
   network = "mainnet",
   baseUrl,
 }: ParsedEventsNetworkOptions): (() => void) => {
-  let devnetHost = false;
-  try {
-    devnetHost = !!baseUrl && DEVNET_HOST.test(new URL(baseUrl).hostname);
-  } catch {
-    // Unparseable baseUrl: no host to classify
-  }
-  const mainnet = network === "mainnet" && !devnetHost;
+  const mainnet = network === "mainnet" && !isDevnetHost(baseUrl);
 
   return () => {
     if (!mainnet) {
