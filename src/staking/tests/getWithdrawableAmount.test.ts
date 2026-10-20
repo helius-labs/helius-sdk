@@ -5,7 +5,7 @@ import { STAKE_STATE_LEN, U64_MAX } from "../types";
 
 const stakeAccount = address("4RiZvuXvR5dr6VtUCaQhyE355sWJ5kJy7N8PwegmnPHS");
 
-const makeAccInfo = (lamports: bigint, deactivationEpoch: bigint | string) => ({
+const makeAccInfo = (lamports: bigint, deactivationEpoch: bigint) => ({
   lamports,
   data: {
     parsed: {
@@ -41,7 +41,7 @@ describe("getWithdrawableAmount Tests", () => {
   it("Returns 0 when stake is still active", async () => {
     const rpc = mockRpcBase();
     rpc.getAccountInfo.mockReturnValue({
-      send: () => ({ value: makeAccInfo(5_000_000n, U64_MAX as bigint) }),
+      send: () => ({ value: makeAccInfo(5_000_000n, U64_MAX) }),
     });
 
     const fn = makeGetWithdrawableAmount({ rpc });

@@ -81,15 +81,15 @@ const helius = createHelius({
 
 ### `helius.raw` — Direct @solana/kit RPC Access
 
-Standard Solana RPC methods are available directly on `helius.*` via a Proxy (e.g., `helius.getBalance(addr).send()`). The `helius.raw` property exposes the same underlying `Rpc` client explicitly, which is useful when you need to pass the client to @solana/kit helpers or third-party libraries that expect a standard `Rpc` object.
+Standard Solana RPC methods are available directly on `helius.*` via a Proxy and are sent automatically (e.g., `await helius.getBalance(addr)`, no `.send()`). The `helius.raw` property exposes the same underlying `Rpc` client explicitly, which is useful when you need to pass the client to @solana/kit helpers or third-party libraries that expect a standard `Rpc` object.
 
 ```typescript
 // Via proxy (convenient)
-const balance = await helius.getBalance(address).send();
+const { value: balance } = await helius.getBalance(address);
 
 // Via raw (explicit, pass to other libraries)
 const rpc = helius.raw;
-const balance = await rpc.getBalance(address).send();
+const { value: rawBalance } = await rpc.getBalance(address);
 ```
 
 ## Recommendations
@@ -114,8 +114,8 @@ const txs = await helius.getTransactionsForAddress([
 ]);
 
 // BAD: Two calls, client-side filtering, no token account support
-const sigs = await helius.raw.getSignaturesForAddress(address).send();
-const txs = await Promise.all(sigs.map(s => helius.raw.getTransaction(s.signature).send()));
+const sigs = await helius.raw.getSignaturesForAddress(address);
+const txs = await Promise.all(sigs.map(s => helius.raw.getTransaction(s.signature)));
 ```
 
 ### Use `sendSmartTransaction` for Standard Sends

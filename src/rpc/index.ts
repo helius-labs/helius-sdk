@@ -180,12 +180,15 @@ export type HeliusClient = ResolvedHeliusRpcApi & {
  *
  * @example
  * ```ts
+ * import { address } from "@solana/kit";
  * import { createHelius } from "helius-sdk";
  *
  * const helius = createHelius({ apiKey: "YOUR_API_KEY" });
  *
  * // Standard Solana RPC
- * const balance = await helius.getBalance("So11...").send();
+ * const { value: balance } = await helius.getBalance(
+ *   address("So11111111111111111111111111111111111111112")
+ * );
  *
  * // DAS — fetch an asset
  * const asset = await helius.getAsset({ id: "MINT_ADDRESS" });
