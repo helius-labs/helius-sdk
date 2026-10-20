@@ -137,4 +137,22 @@ describe("getAsset Tests", () => {
       /Invalid params/
     );
   });
+
+  // Raw `interface` strings as the DAS API returns them
+  it.each([
+    ["LEGACY_NFT", Interface.LEGACY_NFT],
+    ["MplCoreCollection", Interface.MPL_CORE_COLLECTION],
+    ["MplCoreGroup", Interface.MPL_CORE_GROUP],
+    ["MplBubblegumV2", Interface.MPL_BUBBLEGUM_V2],
+  ])("Matches the %s interface to its enum value", async (raw, expected) => {
+    transportMock.mockResolvedValue({
+      jsonrpc: "2.0",
+      id: "1",
+      result: { id: "asset-id", interface: raw },
+    });
+
+    const result = await rpc.getAsset({ id: "asset-id" });
+
+    expect(result.interface).toBe(expected);
+  });
 });
