@@ -6,7 +6,7 @@ export const Interface = makeEnum({
   V1_NFT: "V1_NFT",
   CUSTOM: "Custom",
   V1_PRINT: "V1_PRINT",
-  LEGACY_NFT: "Legacy_NFT",
+  LEGACY_NFT: "LEGACY_NFT",
   V2_NFT: "V2_NFT",
   FUNGIBLE_ASSET: "FungibleAsset",
   IDENTITY: "Identity",
@@ -14,6 +14,9 @@ export const Interface = makeEnum({
   PROGRAMMABLE_NFT: "ProgrammableNFT",
   FUNGIBLE_TOKEN: "FungibleToken",
   MPL_CORE_ASSET: "MplCoreAsset",
+  MPL_CORE_COLLECTION: "MplCoreCollection",
+  MPL_CORE_GROUP: "MplCoreGroup",
+  MPL_BUBBLEGUM_V2: "MplBubblegumV2",
 });
 
 /** Asset interface type — identifies the on-chain program standard. */
