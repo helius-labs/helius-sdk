@@ -65,6 +65,14 @@ export default {
       maxSize: '1kb',
     },
     {
+      // Opt out of the default 15% growth ratchet: the caller now throws a
+      // HeliusRpcError carrying the JSON-RPC method, code, and data, and
+      // rejects responses with neither result nor error (299B -> ~525B). A
+      // one-time step up from a tiny file; the absolute cap still gates growth.
+      path: 'dist/esm/rpc/caller.js',
+      maxSize: '0.75kb',
+    },
+    {
       // Aggregator for every checkout primitive: resolvePriceId,
       // initializeCheckout, getCheckoutPreview, getCheckoutPreviewByPriceId,
       // getPaymentIntent, getPaymentStatus, pollCheckoutCompletion.
