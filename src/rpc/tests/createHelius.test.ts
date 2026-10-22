@@ -1,5 +1,8 @@
-import { createHelius } from "../index";
-import { createHeliusEager } from "../createHelius.eager";
+import { createHelius, HeliusRpcError } from "../index";
+import {
+  createHeliusEager,
+  HeliusRpcError as EagerHeliusRpcError,
+} from "../createHelius.eager";
 import { makeWsAsync } from "../../websockets/wsAsync";
 
 const transportMock = jest.fn();
@@ -519,6 +522,32 @@ describe("createHeliusEager", () => {
       const request = transportMock.mock.calls[0][0] as any;
       expect(request.payload.id).toBe("helius-sdk");
       expect(request.payload.method).toBe("getAsset");
+    });
+  });
+
+  describe("HeliusRpcError", () => {
+    const rpcErrorResponse = {
+      jsonrpc: "2.0",
+      id: "helius-sdk",
+      error: { code: -32602, message: "Invalid params" },
+    };
+
+    it("is exported from the main entry and thrown by client methods", async () => {
+      transportMock.mockResolvedValue(rpcErrorResponse);
+      const rpc = createHelius({ apiKey: "test-api-key" });
+
+      const err = await rpc.getAsset({ id: "bad" }).catch((e: unknown) => e);
+      expect(err).toBeInstanceOf(HeliusRpcError);
+      expect(err).toMatchObject({ method: "getAsset", code: -32602 });
+    });
+
+    it("is exported from the eager entry and thrown by client methods", async () => {
+      transportMock.mockResolvedValue(rpcErrorResponse);
+      const rpc = createHeliusEager({ apiKey: "test-api-key" });
+
+      const err = await rpc.getAsset({ id: "bad" }).catch((e: unknown) => e);
+      expect(err).toBeInstanceOf(EagerHeliusRpcError);
+      expect(EagerHeliusRpcError).toBe(HeliusRpcError);
     });
   });
 });

@@ -12,6 +12,7 @@ import { buildRpcUrl, resolveTransport, withSdkRequestId } from "./transport";
 
 export type { TransportHook } from "./transport";
 export type { RpcTransport } from "@solana/kit";
+export { HeliusRpcError } from "./caller";
 import { getSDKHeaders, type AllowedRpcHeaders } from "../http";
 
 import { GetAssetFn, makeGetAsset } from "./methods/getAsset";

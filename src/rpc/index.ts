@@ -55,6 +55,7 @@ import {
 
 export type { HeliusRpcOptions, TransportHook };
 export type { RpcTransport } from "@solana/kit";
+export { HeliusRpcError } from "./caller";
 
 /**
  * The main Helius SDK client. Provides access to all Helius and Solana RPC

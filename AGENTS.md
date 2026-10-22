@@ -299,6 +299,20 @@ try {
 }
 ```
 
+When a Helius JSON-RPC method called on the client or on `helius.zk` (DAS, ZK Compression, `getTransactionsForAddress`, `getPriorityFeeEstimate`, and similar) returns a JSON-RPC error, the SDK throws a `HeliusRpcError` with the failing `method`, the JSON-RPC `code`, and any `data` from the server:
+
+```typescript
+import { HeliusRpcError } from "helius-sdk";
+
+try {
+  await helius.getAsset({ id: "mint_address" });
+} catch (error) {
+  if (error instanceof HeliusRpcError) {
+    console.error(error.method, error.code, error.data);
+  }
+}
+```
+
 ### Retry Strategy
 
 Retry on 429 and 5xx errors with exponential backoff. The SDK throws native `Error` objects with the HTTP status code embedded in the message string (e.g., `"API error (429): ..."` or `"HTTP error! status: 500 - ..."`). There is no `.status` property on the error object, so status detection requires message parsing:
@@ -309,6 +323,8 @@ async function withRetry<T>(fn: () => Promise<T>, maxRetries = 3): Promise<T> {
     try {
       return await fn();
     } catch (error) {
+      // JSON-RPC errors carry no HTTP status; don't parse numbers out of their messages
+      if (error instanceof HeliusRpcError) throw error;
       // SDK errors embed status in message: "API error (429): ..." or "HTTP error! status: 500 - ..."
       const msg = error instanceof Error ? error.message : "";
       const status = msg.match(/\b(\d{3})\b/)?.[1];
