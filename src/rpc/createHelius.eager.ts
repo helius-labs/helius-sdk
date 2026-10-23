@@ -3,8 +3,6 @@ import {
   createRpc,
   createSolanaRpcApi,
   DEFAULT_RPC_CONFIG,
-  Rpc,
-  SolanaRpcApi,
 } from "@solana/kit";
 import { wrapAutoSend } from "./wrapAutoSend";
 import { makeRpcCaller } from "./caller";
@@ -70,7 +68,7 @@ import {
   EnhancedTxClient,
   makeEnhancedTxClientEager,
 } from "../enhanced/client.eager";
-import { ResolvedHeliusRpcApi } from "./heliusRpcApi";
+import type { HeliusRpcAccess, HeliusRpcOptions } from "./types";
 import {
   makeTxHelpersEager,
   TxHelpersEager,
@@ -99,11 +97,8 @@ import {
   GetTransfersByAddressFn,
   makeGetTransfersByAddress,
 } from "./methods/getTransfersByAddress";
-import type { HeliusRpcOptions } from "./types";
 
-export interface HeliusClientEager {
-  raw: ResolvedHeliusRpcApi;
-
+export interface HeliusClientEager extends HeliusRpcAccess {
   getAsset: GetAssetFn;
   getAssetBatch: GetAssetBatchFn;
   getAssetProof: GetAssetProofFn;
@@ -168,13 +163,13 @@ export const createHeliusEager = ({
     transportHook
   );
 
-  let baseRpc = createRpc({ api: solanaApi, transport });
-  // Cast to any because I cba to go down this type rabbit hole
-  const raw = wrapAutoSend(baseRpc) as any;
+  const baseRpc = createRpc({ api: solanaApi, transport });
+  const raw = wrapAutoSend(baseRpc);
 
   const call = makeRpcCaller(transport);
 
   return {
+    kitRpc: baseRpc,
     raw,
 
     // DAS
@@ -237,7 +232,7 @@ export const createHeliusEager = ({
     },
 
     // Transaction helpers
-    tx: makeTxHelpersEager(baseRpc as unknown as Rpc<SolanaRpcApi>),
+    tx: makeTxHelpersEager(baseRpc),
 
     // Wallet API
     get wallet() {

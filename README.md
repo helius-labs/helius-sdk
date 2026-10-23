@@ -126,6 +126,21 @@ To replace the transport entirely (e.g., failover to a non-Helius endpoint), ign
 
 > **Note:** The hook covers JSON-RPC traffic only. WebSocket subscriptions (`helius.ws`) and the REST sub-clients (`webhooks`, `parsedEvents`, `enhanced`, `wallet`, `admin`, `auth`) do not go through this transport.
 
+### Using `@solana/kit` helpers
+
+Standard Solana RPC methods on `helius` (and `helius.raw`) send automatically, so they are not a `@solana/kit` `Rpc`. To pass the client to kit helpers or other libraries that expect one, use `helius.kitRpc`, the standard kit `Rpc` on the same JSON-RPC transport:
+
+```ts
+import { fetchEncodedAccount } from "@solana/kit";
+
+const account = await fetchEncodedAccount(helius.kitRpc, address);
+const slot = await helius.kitRpc.getSlot().send();
+```
+
+Don't pass `helius` or `helius.raw` to kit helpers: the request is sent immediately, and the helper then fails when it calls `.send()`.
+
+See [`examples/helius/kitRpc.ts`](examples/helius/kitRpc.ts) for a full example.
+
 ### Larger transactions with version 1
 
 Agave 4.2 raises the maximum transaction size from 1,232 to 4,096 bytes ([SIMD-0296](https://github.com/solana-foundation/solana-improvement-documents/blob/main/proposals/0296-larger-transactions.md)). That size is only available in the version 1 transaction format ([SIMD-0385](https://github.com/solana-foundation/solana-improvement-documents/blob/main/proposals/0385-transaction-v1.md)). Legacy and v0 transactions are unaffected and remain the default.
