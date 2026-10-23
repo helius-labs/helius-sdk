@@ -414,7 +414,7 @@ helius.webhooks.delete(webhookID)
 helius.ws.logsNotifications(filter, config)                 // Transaction logs
 helius.ws.accountNotifications(address, config)             // Account changes
 helius.ws.signatureNotifications(signature, config)         // Tx confirmation
-helius.ws.slotNotifications(config)                         // Slot updates
+helius.ws.slotNotifications()                               // Slot updates
 helius.ws.programNotifications(programId, config)           // Program account changes
 helius.ws.close()                                           // Clean up connections
 
