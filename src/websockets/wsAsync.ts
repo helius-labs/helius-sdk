@@ -47,8 +47,8 @@ export type LogsConfig = Readonly<{ commitment?: Commitment }>;
 export interface WsAsync {
   /** Subscribe to transaction logs. */
   logsNotifications(filter: LogsFilter, config?: LogsConfig): Promise<LogsReq>;
-  /** Subscribe to slot updates. */
-  slotNotifications(config?: LogsConfig): Promise<SlotReq>;
+  /** Subscribe to slot updates. `slotSubscribe` takes no parameters. */
+  slotNotifications(): Promise<SlotReq>;
   /** Subscribe to signature confirmation status. */
   signatureNotifications(
     signature: Signature | string,
@@ -214,8 +214,9 @@ export const makeWsAsync = (
     logsNotifications: (filter, config) =>
       raw().then((r) => r.logsNotifications(filter as any, config)),
 
-    slotNotifications: (config) =>
-      raw().then((r) => (r.slotNotifications as any)(config)),
+    // Called with no arguments: Kit serializes a passed `undefined` as
+    // `params: [null]`, which slotSubscribe rejects.
+    slotNotifications: () => raw().then((r) => r.slotNotifications()),
 
     signatureNotifications: (sig, config) =>
       raw().then((r) => r.signatureNotifications(sig as Signature, config)),

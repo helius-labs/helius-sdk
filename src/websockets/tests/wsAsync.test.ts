@@ -167,6 +167,9 @@ describe("makeWsAsync", () => {
 
     const slots = await ws.slotNotifications();
     expect(slots).toBe("slot-sub");
+    // No argument at all: an undefined one goes out as `params: [null]`,
+    // which the server rejects.
+    expect(mockRpcSubscriptions.slotNotifications).toHaveBeenCalledWith();
 
     const sig = await ws.signatureNotifications("tx-sig");
     expect(sig).toBe("sig-sub");
