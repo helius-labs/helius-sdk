@@ -325,12 +325,21 @@ const proof = await helius.zk.getValidityProof({ hashes: ["..."] });
 ```
 
 ### Standard Solana RPC
-All standard Solana RPC methods are available via the Helius client.
+All standard Solana RPC methods are available via the Helius client and send automatically (no `.send()`).
 
 ```typescript
 const balance = await helius.getBalance(address);
 const blockhash = await helius.getLatestBlockhash();
 const slot = await helius.getSlot();
+```
+
+To pass the client to @solana/kit helpers or libraries that expect a kit `Rpc`, use `helius.kitRpc` (methods return a pending request; call `.send()`). Never pass `helius` or `helius.raw` to them: the request is sent, then the helper fails on `.send()`.
+
+```typescript
+import { fetchEncodedAccount } from "@solana/kit";
+
+const account = await fetchEncodedAccount(helius.kitRpc, address);
+const kitSlot = await helius.kitRpc.getSlot().send();
 ```
 
 ## Key Types

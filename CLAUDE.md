@@ -87,6 +87,8 @@ Namespaced functionality lives in sub-clients accessed via the main `HeliusClien
 
 Standard Solana RPC methods (getBalance, getSlot, etc.) are available directly on `helius.*` via a Proxy to the underlying @solana/kit RPC client. DAS API methods are also available directly on `helius.*`.
 
+`helius.kitRpc` is the unwrapped @solana/kit `Rpc` (methods return pending requests; call `.send()`), for passing to kit helpers and third-party libraries. `helius.raw` is the auto-send wrapper (`wrapAutoSend`) and is not a kit `Rpc`. Don't add a `helius.rpc` property: v1 exposed its whole API there, and kit's `Rpc` proxy would turn v1-style `helius.rpc.<method>` calls into silent no-ops.
+
 ### Dual ESM/CJS
 
 Rollup builds both formats from a single source. ESM for modern bundlers, CJS for legacy Node.js and Jest. `preserveModules` is enabled for tree-shaking. Both outputs live under `dist/`.
