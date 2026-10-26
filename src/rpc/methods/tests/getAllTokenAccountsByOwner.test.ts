@@ -178,6 +178,46 @@ describe("getAllTokenAccountsByOwner (auto-pagination) Tests", () => {
     expect(transportMock).toHaveBeenCalledTimes(2);
   });
 
+  it("Supports the default page shape (accounts array in `value`)", async () => {
+    const account = (pubkey: string) => ({
+      pubkey,
+      account: {
+        lamports: 1,
+        owner: TOKEN_V1,
+        data: { program: "spl-token", parsed: { info: {} } },
+        executable: false,
+        rentEpoch: 0,
+        space: 165,
+      },
+    });
+
+    // Without `withContext`, the API puts the page's accounts in `value` and
+    // the cursor next to it on `result`
+    transportMock
+      .mockResolvedValueOnce({
+        jsonrpc: "2.0",
+        id: "1",
+        result: { value: [account("V1")], paginationKey: "v-cursor" },
+      })
+      .mockResolvedValueOnce({
+        jsonrpc: "2.0",
+        id: "1",
+        result: { value: [account("V2")], paginationKey: null },
+      });
+
+    const all = await rpc.getAllTokenAccountsByOwner(
+      owner,
+      { programId: TOKEN_V1 },
+      { encoding: "jsonParsed" }
+    );
+
+    expect(all.map((a: { pubkey: any }) => a.pubkey)).toEqual(["V1", "V2"]);
+    expect(transportMock).toHaveBeenCalledTimes(2);
+    expect(transportMock.mock.calls[1][0].payload.params[2]).toEqual(
+      expect.objectContaining({ paginationKey: "v-cursor" })
+    );
+  });
+
   it("Filters by mint", async () => {
     const usdcMint = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
 
