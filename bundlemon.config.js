@@ -65,6 +65,17 @@ export default {
       maxSize: '1kb',
     },
     {
+      // Opt out of the default 15% growth ratchet: defineLazyNamespace now
+      // returns one stable object that gains a cached forwarder per method on
+      // load (so keys, `in`, and spies work, including after a spy restore),
+      // is not thenable and ignores toJSON/asymmetricMatch/symbol probes before
+      // load, and swallows the read-time prefetch rejection that crashed Node;
+      // both helpers share a loader that retries after a failure
+      // (922B -> ~1.5KB). The absolute cap still gates growth.
+      path: 'dist/esm/rpc/lazy.js',
+      maxSize: '1.75kb',
+    },
+    {
       // Opt out of the default 15% growth ratchet: the caller now throws a
       // HeliusRpcError carrying the JSON-RPC method, code, and data, and
       // rejects responses with neither result nor error (299B -> ~525B). A

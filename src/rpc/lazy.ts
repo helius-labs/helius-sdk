@@ -1,4 +1,18 @@
 /*
+    Memoizes an async loader. A failed load is cleared so the next call
+    retries instead of rejecting with the same error forever. The loader still
+    starts synchronously, and a synchronous throw becomes a rejection.
+*/
+const memoizeLoader = <T>(loader: () => Promise<T>) => {
+  let loading: Promise<T> | undefined;
+  return () =>
+    (loading ??= new Promise<T>((resolve) => resolve(loader())).catch((err) => {
+      loading = undefined;
+      throw err;
+    }));
+};
+
+/*
     A helper to define a lazily-loaded method.
     It returns a function that, on the first call, imports the real implementation
     and then caches it for all subsequent calls
@@ -14,7 +28,6 @@ export const defineLazyMethod = <
   type R = Awaited<ReturnType<F>>;
 
   let impl: F | undefined;
-  let loading: Promise<F> | undefined;
 
   const install = (fn: F) => {
     impl = fn;
@@ -30,6 +43,8 @@ export const defineLazyMethod = <
     return fn;
   };
 
+  const load = memoizeLoader(() => loader().then(install));
+
   Object.defineProperty(target, key, {
     configurable: true,
     enumerable: true,
@@ -40,8 +55,7 @@ export const defineLazyMethod = <
           // Wrap in Promise.resolve to normalize sync/async F
           return Promise.resolve(impl(...args)) as Promise<R>;
         }
-        loading ??= loader().then(install);
-        return loading.then((fn) => fn(...args)) as Promise<R>;
+        return load().then((fn) => fn(...args)) as Promise<R>;
       };
 
       // Replace the getter with the proxy immediately, so future reads don't hit this getter again
@@ -58,7 +72,9 @@ export const defineLazyMethod = <
 };
 
 /*
-    A namespace proxy whose methods are lazily executed the first time you call them.
+    A lazily-loaded namespace: one stable object that forwards calls to the
+    implementation. Once loaded it holds a forwarder per method, so keys, `in`,
+    and spies work like the real namespace.
     *I hate TypeScript*
 */
 export const defineLazyNamespace = <
@@ -70,41 +86,66 @@ export const defineLazyNamespace = <
   loader: () => Promise<TNamespace>
 ): void => {
   let ns: TNamespace | undefined;
-  let loading: Promise<TNamespace> | undefined;
+  const shell: Record<PropertyKey, unknown> = {};
 
-  const install = (impl: TNamespace) => {
-    ns = impl;
-    Object.defineProperty(target, key, {
-      configurable: true,
-      enumerable: true,
-      writable: false,
-      value: impl,
-    });
-    return impl;
+  // Cached so repeated reads return the same function
+  const forwarders = new Map<PropertyKey, (...args: unknown[]) => unknown>();
+  const forwarder = (prop: PropertyKey) => {
+    let forward = forwarders.get(prop);
+    if (!forward) {
+      forward = (...args) =>
+        ns
+          ? (ns as any)[prop](...args)
+          : load().then((impl) => (impl as any)[prop](...args));
+      forwarders.set(prop, forward);
+    }
+    return forward;
   };
 
-  // A proxy that defers to the resolved namespace methods
-  const proxy: TNamespace = new Proxy({} as TNamespace, {
-    get(_obj, prop: PropertyKey) {
-      // When you call helius.webhooks.someMethod(...),
-      // we ensure the namespace is loaded, then forward the call
-      return (...args: any[]) => {
-        if (ns) {
-          return (ns as any)[prop](...args);
-        }
+  // Give the shell a forwarder for a loaded method
+  const attach = (prop: PropertyKey) => {
+    if (typeof Reflect.get(ns!, prop) === "function") {
+      shell[prop] = forwarder(prop);
+    }
+  };
 
-        loading ??= loader().then(install);
-        return loading.then((impl) => (impl as any)[prop](...args));
-      };
+  const load = memoizeLoader(() =>
+    loader().then((impl) => {
+      ns = impl;
+      // Keep values already assigned, e.g. by jest.spyOn
+      for (const name of Object.keys(impl)) {
+        if (!Object.prototype.hasOwnProperty.call(shell, name)) attach(name);
+      }
+      return impl;
+    })
+  );
+
+  const proxy = new Proxy(shell, {
+    get(shell, prop) {
+      if (prop in shell) return Reflect.get(shell, prop);
+      // Loaded: non-methods read live; unknown names are undefined
+      if (ns) return prop in ns ? Reflect.get(ns, prop) : undefined;
+      // Not loaded: `then` (so `await` gets the namespace), probes, and
+      // symbols aren't methods
+      return typeof prop === "symbol" ||
+        ["then", "toJSON", "asymmetricMatch"].includes(prop)
+        ? undefined
+        : forwarder(prop);
     },
-  });
+    // A spy's restore deletes the method; put its forwarder back
+    deleteProperty(shell, prop) {
+      delete shell[prop];
+      if (ns) attach(prop);
+      return true;
+    },
+  }) as TNamespace;
 
   Object.defineProperty(target, key, {
     configurable: true,
     enumerable: true,
     get() {
-      // Kick off loading on first *read*, but immediately return the proxy
-      loading ??= loader().then(install);
+      // Start loading on first *read*; failures surface on method calls
+      load().catch(() => {});
 
       // Replace this getter so we don't run it again
       Object.defineProperty(target, key, {

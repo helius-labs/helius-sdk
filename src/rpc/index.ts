@@ -281,7 +281,8 @@ export const createHelius = ({
       enhancedWsUrl,
       enhancedDisabledReason
     );
-    client.close = () => ws.close();
+    // Via helius.ws, so a spy on its close() applies
+    client.close = () => client.ws.close();
     return ws;
   });
 

@@ -203,6 +203,52 @@ describe("createHelius", () => {
     });
   });
 
+  describe("lazy namespaces", () => {
+    it("does not crash on a bare read of a keyed namespace without apiKey", async () => {
+      const rpc = createHelius({ baseUrl: "https://custom-rpc.example.com/" });
+
+      void rpc.wallet;
+      void rpc.admin;
+      void rpc.webhooks;
+      // Jest fails the test if the failed loads leave an unhandled rejection
+      await new Promise((resolve) => setImmediate(resolve));
+
+      await expect(
+        rpc.wallet.getBalances({ wallet: "wallet" })
+      ).rejects.toThrow("An API key is required to use the Wallet API");
+    });
+
+    it("routes helius.close() through the ws namespace, so a spy sees it", async () => {
+      const rpc = createHelius({ apiKey: "test-api-key" });
+      await rpc.ws.close(); // loads the ws namespace, which defines helius.close
+
+      const spy = jest.spyOn(rpc.ws, "close");
+      spy.mockClear();
+      Reflect.get(rpc, "close")();
+
+      expect(spy).toHaveBeenCalledTimes(1);
+    });
+
+    it("resolves `await helius.<namespace>` to the loaded namespace", async () => {
+      const rpc = createHelius({ apiKey: "test-api-key" });
+
+      const fetchSpy = jest
+        .spyOn(globalThis, "fetch")
+        .mockResolvedValue(new Response("{}"));
+      try {
+        const admin = await rpc.admin;
+        // A call that completes guarantees the namespace has loaded
+        await admin.getProjectUsage("project").catch(() => {});
+
+        expect(admin).toBe(rpc.admin);
+        expect("getProjectUsage" in admin).toBe(true);
+        expect(Reflect.get(admin, "doesNotExist")).toBeUndefined();
+      } finally {
+        fetchSpy.mockRestore();
+      }
+    });
+  });
+
   describe("backward compatibility", () => {
     it("works normally with apiKey provided", () => {
       const apiKey = "test-api-key";
