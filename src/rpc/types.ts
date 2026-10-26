@@ -1,4 +1,32 @@
+import type { Rpc, SolanaRpcApi } from "@solana/kit";
+import type { ResolvedHeliusRpcApi } from "./heliusRpcApi";
 import type { TransportHook } from "./transport";
+
+/** Standard Solana RPC clients exposed by both `createHelius` and `createHeliusEager`. */
+export type HeliusRpcAccess = {
+  /**
+   * The standard `@solana/kit` `Rpc` client. Methods return a pending
+   * request; call `.send()`. It shares the JSON-RPC transport of the client's
+   * other RPC methods (Helius URL, API key, SDK headers, and any `transport`
+   * hook).
+   *
+   * Pass this to `@solana/kit` helpers and third-party libraries that expect
+   * an `Rpc`, such as `fetchEncodedAccount(helius.kitRpc, address)`.
+   */
+  kitRpc: Rpc<SolanaRpcApi>;
+
+  /**
+   * Standard Solana RPC methods that send automatically, the same ones
+   * available directly on the `createHelius` client
+   * (`await helius.raw.getSlot()`, no `.send()`).
+   *
+   * This is not a `@solana/kit` `Rpc`: each call sends its request
+   * immediately, so a kit helper given `raw` sends the request and then fails
+   * when it calls `.send()`. Use `kitRpc` for kit helpers and third-party
+   * libraries.
+   */
+  raw: ResolvedHeliusRpcApi;
+};
 
 /** Options for creating a Helius RPC client. */
 export interface HeliusRpcOptions {

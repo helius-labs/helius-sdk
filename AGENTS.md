@@ -76,21 +76,32 @@ const helius = createHelius({
 | ZK Compression | `helius.zk.*` | Compressed accounts & proofs |
 | Wallet API | `helius.wallet.*` | Balances, history, identity lookups |
 | Standard RPC | `helius.getBalance()`, `helius.getSlot()`, etc. | All standard Solana RPC methods via proxy |
-| Raw RPC | `helius.raw` | Direct access to the underlying @solana/kit `Rpc` client (see below) |
+| Kit RPC | `helius.kitRpc` | The standard @solana/kit `Rpc` client, for kit helpers and third-party libraries (see below) |
+| Raw RPC | `helius.raw` | Auto-sending standard RPC methods, same as the proxy; not a kit `Rpc` (see below) |
 | Auth | `helius.auth.*` | Agent signup, keypair gen, project/API key management |
 
-### `helius.raw` — Direct @solana/kit RPC Access
+### `helius.kitRpc` and `helius.raw` — @solana/kit RPC Access
 
-Standard Solana RPC methods are available directly on `helius.*` via a Proxy and are sent automatically (e.g., `await helius.getBalance(addr)`, no `.send()`). The `helius.raw` property exposes the same underlying `Rpc` client explicitly, which is useful when you need to pass the client to @solana/kit helpers or third-party libraries that expect a standard `Rpc` object.
+Standard Solana RPC methods are available directly on `helius.*` via a Proxy and are sent automatically (e.g., `await helius.getBalance(addr)`, no `.send()`). `helius.raw` exposes the same auto-sending methods as a separate object.
+
+To pass the client to @solana/kit helpers or third-party libraries that expect a standard `Rpc` object, use `helius.kitRpc`. It is the unwrapped kit `Rpc`: methods return a pending request and you call `.send()`. It shares the JSON-RPC transport of the client's other RPC methods (Helius URL, API key, SDK headers, and any `transport` hook).
 
 ```typescript
-// Via proxy (convenient)
+import { fetchEncodedAccount } from "@solana/kit";
+
+// Via proxy (convenient, auto-sent)
 const { value: balance } = await helius.getBalance(address);
 
-// Via raw (explicit, pass to other libraries)
-const rpc = helius.raw;
-const { value: rawBalance } = await rpc.getBalance(address);
+// Via kitRpc (standard kit Rpc, call .send())
+const { value: kitBalance } = await helius.kitRpc.getBalance(address).send();
+
+// Pass helius.kitRpc to kit helpers and other libraries
+const account = await fetchEncodedAccount(helius.kitRpc, address);
 ```
+
+Never pass `helius.raw` (or `helius` itself) to anything that expects a kit `Rpc`. Each call sends its request immediately and returns a Promise, so the helper's request (including a `sendTransaction`) has already gone out by the time its `.send()` call fails. Don't treat that error as "not sent".
+
+v2 has no `helius.rpc` namespace. v1 code that calls `helius.rpc.<method>` should move to `helius.<method>` (DAS), `helius.tx.<method>` (transactions), or `helius.stake.<method>` (staking); see MIGRATION.md.
 
 ## Recommendations
 

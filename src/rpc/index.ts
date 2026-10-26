@@ -45,7 +45,7 @@ import type { WalletClient } from "../wallet/client";
 import type { ParsedEventsClient } from "../parsedEvents/client";
 import type { AdminClient } from "../admin/client";
 import type { AuthClient } from "../auth/types";
-import type { HeliusRpcOptions } from "./types";
+import type { HeliusRpcAccess, HeliusRpcOptions } from "./types";
 import {
   buildRpcUrl,
   resolveTransport,
@@ -53,7 +53,7 @@ import {
   type TransportHook,
 } from "./transport";
 
-export type { HeliusRpcOptions, TransportHook };
+export type { HeliusRpcOptions, TransportHook, HeliusRpcAccess };
 export type { RpcTransport } from "@solana/kit";
 export { HeliusRpcError } from "./caller";
 
@@ -65,116 +65,115 @@ export { HeliusRpcError } from "./caller";
  *
  * All standard Solana RPC methods (e.g. `getBalance`, `getSlot`) are available
  * directly on this object via a Proxy that delegates to the underlying
- * `@solana/kit` RPC client.
+ * `@solana/kit` RPC client and sends each request automatically. The
+ * unwrapped kit client is available as `kitRpc`.
  *
  * Sub-clients (`webhooks`, `parsedEvents`, `enhanced`, `tx`, `ws`, `stake`, `zk`, `wallet`, `admin`)
  * are lazily loaded on first access to keep the initial bundle minimal.
  */
-export type HeliusClient = ResolvedHeliusRpcApi & {
-  /** The unwrapped Solana RPC client for direct access to standard RPC methods. */
-  raw: ResolvedHeliusRpcApi;
+export type HeliusClient = ResolvedHeliusRpcApi &
+  HeliusRpcAccess & {
+    // ── DAS (Digital Asset Standard) ──────────────────────────────────
 
-  // ── DAS (Digital Asset Standard) ──────────────────────────────────
+    /** Fetch a single asset by its ID (mint address). */
+    getAsset: GetAssetFn;
+    /** Fetch multiple assets by their IDs in a single batch request. */
+    getAssetBatch: GetAssetBatchFn;
+    /** Get the Merkle proof for a compressed asset. */
+    getAssetProof: GetAssetProofFn;
+    /** Get Merkle proofs for multiple compressed assets in a batch. */
+    getAssetProofBatch: GetAssetProofBatchFn;
+    /** List assets by their update authority address. */
+    getAssetsByAuthority: GetAssetsByAuthorityFn;
+    /** List assets created by a specific creator address. */
+    getAssetsByCreator: GetAssetsByCreatorFn;
+    /** List assets belonging to a specific group (e.g. a collection). */
+    getAssetsByGroup: GetAssetsByGroupFn;
+    /** List all assets owned by a wallet address. */
+    getAssetsByOwner: GetAssetsByOwnerFn;
+    /** Get transaction signatures related to an asset. */
+    getSignaturesForAsset: GetSignaturesForAssetFn;
+    /** Get print editions for an NFT master edition. */
+    getNftEditions: GetNftEditionsFn;
+    /** Get token accounts filtered by mint or owner. */
+    getTokenAccounts: GetTokenAccountsFn;
+    /** Search for assets using flexible filters (owner, creator, collection, etc.). */
+    searchAssets: SearchAssetsFn;
 
-  /** Fetch a single asset by its ID (mint address). */
-  getAsset: GetAssetFn;
-  /** Fetch multiple assets by their IDs in a single batch request. */
-  getAssetBatch: GetAssetBatchFn;
-  /** Get the Merkle proof for a compressed asset. */
-  getAssetProof: GetAssetProofFn;
-  /** Get Merkle proofs for multiple compressed assets in a batch. */
-  getAssetProofBatch: GetAssetProofBatchFn;
-  /** List assets by their update authority address. */
-  getAssetsByAuthority: GetAssetsByAuthorityFn;
-  /** List assets created by a specific creator address. */
-  getAssetsByCreator: GetAssetsByCreatorFn;
-  /** List assets belonging to a specific group (e.g. a collection). */
-  getAssetsByGroup: GetAssetsByGroupFn;
-  /** List all assets owned by a wallet address. */
-  getAssetsByOwner: GetAssetsByOwnerFn;
-  /** Get transaction signatures related to an asset. */
-  getSignaturesForAsset: GetSignaturesForAssetFn;
-  /** Get print editions for an NFT master edition. */
-  getNftEditions: GetNftEditionsFn;
-  /** Get token accounts filtered by mint or owner. */
-  getTokenAccounts: GetTokenAccountsFn;
-  /** Search for assets using flexible filters (owner, creator, collection, etc.). */
-  searchAssets: SearchAssetsFn;
+    // ── Priority Fee API ──────────────────────────────────────────────
 
-  // ── Priority Fee API ──────────────────────────────────────────────
+    /** Estimate priority fees for a transaction or set of account keys. */
+    getPriorityFeeEstimate: GetPriorityFeeEstimateFn;
 
-  /** Estimate priority fees for a transaction or set of account keys. */
-  getPriorityFeeEstimate: GetPriorityFeeEstimateFn;
+    // ── V2 RPC Methods ────────────────────────────────────────────────
 
-  // ── V2 RPC Methods ────────────────────────────────────────────────
+    /** Paginated version of `getProgramAccounts` with cursor-based pagination. */
+    getProgramAccountsV2: GetProgramAccountsV2Fn;
+    /** Auto-paginating variant that fetches all program accounts across pages. */
+    getAllProgramAccounts: GetAllProgramAccountsFn;
+    /** Paginated version of `getTokenAccountsByOwner` with cursor-based pagination. */
+    getTokenAccountsByOwnerV2: GetTokenAccountsByOwnerV2Fn;
+    /** Auto-paginating variant that fetches all token accounts for an owner. */
+    getAllTokenAccountsByOwner: GetAllTokenAccountsByOwnerFn;
+    /** Get transactions for a specific address with rich filtering and pagination. */
+    getTransactionsForAddress: GetTransactionsForAddressFn;
+    /** Get parsed token and native SOL transfers for a specific address with rich filtering and pagination. */
+    getTransfersByAddress: GetTransfersByAddressFn;
 
-  /** Paginated version of `getProgramAccounts` with cursor-based pagination. */
-  getProgramAccountsV2: GetProgramAccountsV2Fn;
-  /** Auto-paginating variant that fetches all program accounts across pages. */
-  getAllProgramAccounts: GetAllProgramAccountsFn;
-  /** Paginated version of `getTokenAccountsByOwner` with cursor-based pagination. */
-  getTokenAccountsByOwnerV2: GetTokenAccountsByOwnerV2Fn;
-  /** Auto-paginating variant that fetches all token accounts for an owner. */
-  getAllTokenAccountsByOwner: GetAllTokenAccountsByOwnerFn;
-  /** Get transactions for a specific address with rich filtering and pagination. */
-  getTransactionsForAddress: GetTransactionsForAddressFn;
-  /** Get parsed token and native SOL transfers for a specific address with rich filtering and pagination. */
-  getTransfersByAddress: GetTransfersByAddressFn;
+    // ── Webhooks ──────────────────────────────────────────────────────
 
-  // ── Webhooks ──────────────────────────────────────────────────────
+    /** Webhook management client. Requires an API key. */
+    webhooks: {
+      /** Create a new webhook subscription. */
+      create(params: CreateWebhookRequest): Promise<Webhook>;
+      /** Get a webhook by its ID. */
+      get(webhookID: string): Promise<Webhook>;
+      /** List all webhooks for the current API key. */
+      getAll(): Promise<Webhook[]>;
+      /** Update an existing webhook. */
+      update(webhookID: string, params: UpdateWebhookRequest): Promise<Webhook>;
+      /** Delete a webhook by its ID. */
+      delete(webhookID: string): Promise<boolean>;
+      /** Enable or disable a webhook without deleting it. Use this to re-enable auto-disabled webhooks or temporarily pause deliveries. */
+      toggle(webhookID: string, active: boolean): Promise<Webhook>;
+    } & WebhookClient;
 
-  /** Webhook management client. Requires an API key. */
-  webhooks: {
-    /** Create a new webhook subscription. */
-    create(params: CreateWebhookRequest): Promise<Webhook>;
-    /** Get a webhook by its ID. */
-    get(webhookID: string): Promise<Webhook>;
-    /** List all webhooks for the current API key. */
-    getAll(): Promise<Webhook[]>;
-    /** Update an existing webhook. */
-    update(webhookID: string, params: UpdateWebhookRequest): Promise<Webhook>;
-    /** Delete a webhook by its ID. */
-    delete(webhookID: string): Promise<boolean>;
-    /** Enable or disable a webhook without deleting it. Use this to re-enable auto-disabled webhooks or temporarily pause deliveries. */
-    toggle(webhookID: string, active: boolean): Promise<Webhook>;
-  } & WebhookClient;
+    /**
+     * Enhanced transaction parsing client. Requires an API key.
+     *
+     * @deprecated The Enhanced Transactions API is in maintenance mode. Use
+     * `parsedEvents` instead: `getTransactions` → `parsedEvents.parseTransactions`,
+     * `getTransactionsByAddress` → `parsedEvents.getTransactionHistory` (defaults
+     * differ: `confirmed` commitment, 100-item pages). Parsed Events is
+     * mainnet-only; devnet code can keep using this client. See
+     * https://www.helius.dev/docs/parsed-events/guides/migrate-from-enhanced-transactions
+     */
+    enhanced: EnhancedTxClientLazy;
 
-  /**
-   * Enhanced transaction parsing client. Requires an API key.
-   *
-   * @deprecated The Enhanced Transactions API is in maintenance mode. Use
-   * `parsedEvents` instead: `getTransactions` → `parsedEvents.parseTransactions`,
-   * `getTransactionsByAddress` → `parsedEvents.getTransactionHistory` (defaults
-   * differ: `confirmed` commitment, 100-item pages). Parsed Events is
-   * mainnet-only; devnet code can keep using this client. See
-   * https://www.helius.dev/docs/parsed-events/guides/migrate-from-enhanced-transactions
-   */
-  enhanced: EnhancedTxClientLazy;
+    /** Parsed Events client: decoded instructions, transfers, and summaries for transactions and address history. Requires an API key. Mainnet only. */
+    parsedEvents: ParsedEventsClient;
 
-  /** Parsed Events client: decoded instructions, transfers, and summaries for transactions and address history. Requires an API key. Mainnet only. */
-  parsedEvents: ParsedEventsClient;
+    /** Smart transaction helpers for building, signing, and sending transactions with automatic compute budget and priority fees. */
+    tx: TxHelpersLazy;
 
-  /** Smart transaction helpers for building, signing, and sending transactions with automatic compute budget and priority fees. */
-  tx: TxHelpersLazy;
+    /** WebSocket RPC subscriptions (logs, slots, signatures, programs, accounts). */
+    ws: WsAsync;
 
-  /** WebSocket RPC subscriptions (logs, slots, signatures, programs, accounts). */
-  ws: WsAsync;
+    /** Helius native staking helpers (stake, unstake, withdraw to the Helius validator). */
+    stake: StakeClientLazy;
 
-  /** Helius native staking helpers (stake, unstake, withdraw to the Helius validator). */
-  stake: StakeClientLazy;
+    /** ZK compression RPC methods for Light Protocol compressed accounts and tokens. */
+    zk: ZkClientLazy;
 
-  /** ZK compression RPC methods for Light Protocol compressed accounts and tokens. */
-  zk: ZkClientLazy;
+    /** Wallet API client. Requires an API key. */
+    wallet: WalletClient;
 
-  /** Wallet API client. Requires an API key. */
-  wallet: WalletClient;
+    /** Admin API client. Requires an API key. */
+    admin: AdminClient;
 
-  /** Admin API client. Requires an API key. */
-  admin: AdminClient;
-
-  /** Auth client for agentic signup, checkout, and account management. */
-  auth: AuthClient;
-};
+    /** Auth client for agentic signup, checkout, and account management. */
+    auth: AuthClient;
+  };
 
 /**
  * Create a Helius SDK client.
@@ -272,7 +271,7 @@ export const createHelius = ({
   const call = makeRpcCaller(transport);
 
   // The object we’ll populate lazily
-  const client: any = { raw };
+  const client: any = { kitRpc: baseRpc, raw };
 
   defineLazyNamespace<HeliusClient, WsAsync>(client, "ws", async () => {
     // Promisified facade; individual methods return Promise<...>
