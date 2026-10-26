@@ -298,6 +298,17 @@ export type GetTransactionsForAddressBaseConfig = {
      * - `all`: Include all transactions involving any token account owned by the address
      */
     tokenAccounts?: "none" | "balanceChanged" | "all";
+    /** Only transactions where the address sent or received a matching token transfer. Fields combine with AND. */
+    tokenTransfer?: {
+      /** Counterparty address on the other side of the transfer. */
+      with?: string;
+      /** Transfer direction relative to the queried address. Defaults to `any`. */
+      direction?: "in" | "out" | "any";
+      /** Token mint address. */
+      mint?: string;
+      /** Raw on-chain amount range, not the UI amount. */
+      amount?: TransferComparisonFilter;
+    };
     /** Filter by slot number */
     slot?: {
       /** Equal to */
