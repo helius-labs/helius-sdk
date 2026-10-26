@@ -4,13 +4,16 @@ import type {
   ParseTransactionsResponse,
   GetParsedTransactionHistoryRequest,
   GetParsedTransactionHistoryResponse,
+  ScanParsedTransactionHistoryRequest,
+  ScanParsedTransactionHistoryResponse,
 } from "./types";
 
 /**
  * Parsed Events API client interface
  *
  * Parses transaction signatures or address history into decoded instructions,
- * transfers, and summaries using Helius's IDL catalog. Successor to the
+ * transfers, and summaries using Helius's IDL catalog, and scans address
+ * history server-side by program instruction or token mint. Successor to the
  * Enhanced Transactions API (`helius.enhanced`). Mainnet only.
  *
  * @example
@@ -26,6 +29,11 @@ import type {
  * const history = await helius.parsedEvents.getTransactionHistory({
  *   address: "...",
  *   limit: 50,
+ * });
+ *
+ * const matches = await helius.parsedEvents.scan({
+ *   address: "...",
+ *   match: { mints: ["EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"] },
  * });
  * ```
  */
@@ -51,6 +59,22 @@ export interface ParsedEventsClient {
   getTransactionHistory(
     params: GetParsedTransactionHistoryRequest
   ): Promise<GetParsedTransactionHistoryResponse>;
+
+  /**
+   * Scan an address's history server-side for transactions that call a program
+   * instruction, touch a token mint, or both (when both are set, both must
+   * match), returning only the parsed matches. Only successful transactions are
+   * scanned unless `status` is `"any"` or `"failed"`. Paginated with
+   * `paginationToken`; keep going while one is returned, even when `data` is
+   * empty. Costs 10 credits plus 1 per history page scanned.
+   *
+   * @param params - Address, match criteria, budget, and pagination options
+   * @returns Parsed matches, the next `paginationToken`, and a `scan` summary (`stoppedOn`, `creditsCharged`)
+   * @throws Error on a request-level failure: `Helius HTTP 400` for an invalid body or match, auth or rate-limit errors, or `Helius HTTP 503` when at capacity or the first history page missed the request time limit
+   */
+  scan(
+    params: ScanParsedTransactionHistoryRequest
+  ): Promise<ScanParsedTransactionHistoryResponse>;
 }
 
 /**
@@ -85,5 +109,6 @@ export const makeParsedEventsClient = (
   return {
     parseTransactions: async (p) => (await load()).parseTransactions(p),
     getTransactionHistory: async (p) => (await load()).getTransactionHistory(p),
+    scan: async (p) => (await load()).scan(p),
   };
 };

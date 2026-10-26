@@ -1,6 +1,7 @@
 import type { ParsedEventsClient } from "./client";
 import { parseTransactions } from "./parseTransactions";
 import { getTransactionHistory } from "./getTransactionHistory";
+import { scan } from "./scan";
 import { mainnetGuard } from "./utils";
 import type { ParsedEventsNetworkOptions } from "./types";
 
@@ -32,6 +33,10 @@ export const makeParsedEventsClientEager = (
     getTransactionHistory: async (p) => {
       assertMainnet();
       return getTransactionHistory(apiKey, p, userAgent);
+    },
+    scan: async (p) => {
+      assertMainnet();
+      return scan(apiKey, p, userAgent);
     },
   };
 };

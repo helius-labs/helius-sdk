@@ -96,6 +96,45 @@ describe("parsedEvents.getTransactionHistory Tests", () => {
     });
   });
 
+  it("Forwards a non-object time bound as-is for the API to reject", async () => {
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({ data: [] }),
+    });
+
+    // Spreading a number used to send `time: {}`, silently dropping the filter
+    await rpc.parsedEvents.getTransactionHistory({
+      address: ADDRESS,
+      time: 1767225600,
+    } as unknown as Parameters<
+      typeof rpc.parsedEvents.getTransactionHistory
+    >[0]);
+
+    expect(JSON.parse(mockFetch.mock.calls[0][1].body)).toEqual({
+      address: ADDRESS,
+      time: 1767225600,
+    });
+  });
+
+  it("Serializes a Date bound through toJSON instead of flattening it", async () => {
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({ data: [] }),
+    });
+
+    await rpc.parsedEvents.getTransactionHistory({
+      address: ADDRESS,
+      time: { gte: new Date(0) },
+    } as unknown as Parameters<
+      typeof rpc.parsedEvents.getTransactionHistory
+    >[0]);
+
+    expect(JSON.parse(mockFetch.mock.calls[0][1].body)).toEqual({
+      address: ADDRESS,
+      time: { gte: "1970-01-01T00:00:00.000Z" },
+    });
+  });
+
   it("Omits a null or empty paginationToken from the request body", async () => {
     mockFetch.mockResolvedValue({
       ok: true,

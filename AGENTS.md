@@ -68,7 +68,7 @@ const helius = createHelius({
 | DAS API | `helius.getAsset()`, `helius.getAssetsByOwner()`, etc. | Query NFTs, tokens, compressed assets |
 | RPC V2 | `helius.getTransactionsForAddress()`, `helius.getProgramAccountsV2()` | Enhanced RPC with pagination & filters |
 | Transactions | `helius.tx.*` | Smart transactions & Helius Sender |
-| Parsed Events | `helius.parsedEvents.*` | Parse transactions and address history into decoded instructions, transfers, summaries (mainnet only) |
+| Parsed Events | `helius.parsedEvents.*` | Parse transactions and address history into decoded instructions, transfers, summaries; scan history server-side by program instruction or token mint (mainnet only) |
 | Enhanced (deprecated) | `helius.enhanced.*` | Legacy transaction parsing; use `parsedEvents` |
 | Webhooks | `helius.webhooks.*` | Create/manage webhook subscriptions |
 | WebSockets | `helius.ws.*` | Real-time blockchain data streams |
@@ -405,8 +405,9 @@ helius.tx.sendTransactionWithSender({ ..., region })        // Helius Sender (lo
 ```typescript
 helius.parsedEvents.parseTransactions({ transactions })     // Parse by signatures (mainnet only)
 helius.parsedEvents.getTransactionHistory({ address })      // Parse address history (mainnet only)
+helius.parsedEvents.scan({ address, match })                // Search history by program/mint (mainnet only)
 helius.enhanced.getTransactions({ transactions })           // Deprecated: use parsedEvents.parseTransactions
-helius.enhanced.getTransactionsByAddress({ address })       // Deprecated: use parsedEvents.getTransactionHistory
+helius.enhanced.getTransactionsByAddress({ address })       // Deprecated: use parsedEvents.getTransactionHistory (or parsedEvents.scan to search a program or filter by instruction/mint)
 ```
 
 ### Webhooks

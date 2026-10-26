@@ -1,4 +1,4 @@
-import { compact, postParsedEvents } from "./utils";
+import { postParsedEvents } from "./utils";
 import type {
   GetParsedTransactionHistoryRequest,
   GetParsedTransactionHistoryResponse,
@@ -41,19 +41,15 @@ export const getTransactionHistory = async (
 ): Promise<GetParsedTransactionHistoryResponse> => {
   // Unknown fields are forwarded so the API rejects them loudly (e.g. a
   // leftover enhanced `gteTime` filter) instead of silently returning
-  // unfiltered history. Nulls are dropped: the API's fields are non-nullable.
-  const { paginationToken, slot, time } = params;
-
+  // unfiltered history. postParsedEvents drops nulls.
   return postParsedEvents<GetParsedTransactionHistoryResponse>(
     "transaction-history",
     apiKey,
-    compact({
+    {
       ...params,
       // An empty cursor means "first page", same as no cursor
-      paginationToken: paginationToken || undefined,
-      slot: slot && compact({ ...slot }),
-      time: time && compact({ ...time }),
-    }),
+      paginationToken: params.paginationToken || undefined,
+    },
     userAgent
   );
 };

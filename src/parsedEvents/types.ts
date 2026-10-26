@@ -216,19 +216,15 @@ export interface ParseTransactionsRequest {
 /** Response from `parsedEvents.parseTransactions`. */
 export type ParseTransactionsResponse = ParsedTransactionResult[];
 
-/** Request parameters for `parsedEvents.getTransactionHistory` (POST /v1/parsed-events/transaction-history). */
-export interface GetParsedTransactionHistoryRequest {
-  /** Address whose transaction history should be fetched. Program-wide scans are not supported. */
-  address: string;
-  /** Number of transactions to return, an integer from 1 to 100. Defaults to 100. */
-  limit?: number;
-  /** Return transactions before this signature. */
+/** Window, cursor, and output options shared by `getTransactionHistory` and `parsedEvents.scan`. */
+export interface ParsedHistoryWindowOptions {
+  /** Only transactions before this signature. */
   beforeSignature?: string;
-  /** Return transactions after this signature. */
+  /** Only transactions after this signature. */
   afterSignature?: string;
-  /** Cursor returned by a previous page as `paginationToken`. `null` is ignored, so a response's token can be passed straight back. */
+  /** Cursor returned by a previous request as `paginationToken`. `null` is ignored, so a response's token can be passed straight back. */
   paginationToken?: string | null;
-  /** Sort order. Defaults to `desc` (newest first). */
+  /** Order in which history is walked and results are returned. Defaults to `desc` (newest first). */
   sortOrder?: ParsedEventsSortOrder;
   /** Commitment level. Defaults to `confirmed`. */
   commitment?: ParsedEventsCommitment;
@@ -240,10 +236,126 @@ export interface GetParsedTransactionHistoryRequest {
   time?: ComparisonBounds;
 }
 
+/** Request parameters for `parsedEvents.getTransactionHistory` (POST /v1/parsed-events/transaction-history). */
+export interface GetParsedTransactionHistoryRequest extends ParsedHistoryWindowOptions {
+  /** Address whose transaction history should be fetched. Program-wide history is not supported; to search a program's history, or any history by instruction or token mint, use `parsedEvents.scan`. */
+  address: string;
+  /** Number of transactions to return, an integer from 1 to 100. Defaults to 100. */
+  limit?: number;
+}
+
 /** Response from `parsedEvents.getTransactionHistory`. */
 export interface GetParsedTransactionHistoryResponse {
   /** Parsed transaction results for this page. */
   data: ParsedTransactionResult[];
   /** Cursor for the next page. Absent when the end of the available range is reached. */
   paginationToken?: string | null;
+}
+
+/** Execution result a scan includes. Filtering happens before matching, so excluded transactions don't count toward the budget. */
+export type ParsedEventsStatusFilter = "succeeded" | "failed" | "any";
+
+/**
+ * Match transactions with an instruction of `programId`, top-level or inner
+ * (CPI). Narrow by `instructions` or `discriminators`, not both; set neither
+ * to match any instruction of the program.
+ */
+export type ScanProgramMatch = {
+  /** Program address. */
+  programId: string;
+} & (
+  | {
+      /**
+       * Instruction names from any IDL version of the program, as the IDL
+       * spells them or in snake_case (at most 50). A name not in the program's
+       * IDLs is rejected with a 400.
+       */
+      instructions?: string[];
+      discriminators?: undefined;
+    }
+  | {
+      instructions?: undefined;
+      /**
+       * Instruction data prefixes, each 1 to 8 hex-encoded bytes with an
+       * optional `0x` prefix (at most 50). Use these for programs without an IDL.
+       */
+      discriminators?: string[];
+    }
+);
+
+/**
+ * What a transaction must match. Set `program`, `mints`, or both; when both
+ * are set, a transaction must match both.
+ */
+export type ScanMatch = {
+  /** Match transactions that call this program. */
+  program?: ScanProgramMatch;
+  /** Token mints (at most 20). Matches when one is in the transaction's pre or post token balances. */
+  mints?: string[];
+} & ({ program: ScanProgramMatch } | { mints: string[] });
+
+/** Limits on how much history one scan request covers. */
+export interface ScanBudget {
+  /** Most transactions to scan in this request, an integer from 1 to 10,000. Defaults to 10,000. */
+  maxScannedTransactions?: number;
+}
+
+/** Request parameters for `parsedEvents.scan` (POST /v1/parsed-events/scan). */
+export interface ScanParsedTransactionHistoryRequest extends ParsedHistoryWindowOptions {
+  /** Address whose history is scanned. Prefer the narrowest address: every transaction it has counts toward the budget. */
+  address: string;
+  /** What a transaction must match. */
+  match: ScanMatch;
+  /** Most matches to return, an integer from 1 to 100. Defaults to 100. */
+  limit?: number;
+  /** Limits on how much history this request scans. */
+  budget?: ScanBudget;
+  /**
+   * Execution result to include. Defaults to `succeeded`, so failed
+   * transactions are skipped unless you pass `any` or `failed`.
+   */
+  status?: ParsedEventsStatusFilter;
+  /** Minimum slot at which the request can be evaluated. */
+  minContextSlot?: number;
+}
+
+/**
+ * Why a scan request stopped:
+ * - `windowEnd`: reached the end of the history or the requested window; no `paginationToken`
+ * - `limit`: returned `limit` matches; the token resumes right after the last match
+ * - `budget`: scanned `budget.maxScannedTransactions`; the token resumes at the next history page
+ * - `deadline`: reached the request time limit; the token resumes at the next history page
+ */
+export type ScanStopReason = "windowEnd" | "limit" | "budget" | "deadline";
+
+/** Position of the last transaction a scan request covered, for reporting progress. */
+export interface ScannedThrough {
+  /** Slot of the last transaction scanned. */
+  slot: number;
+  /** Block time of the last transaction scanned, in Unix seconds, when available. */
+  blockTime: number | null;
+}
+
+/** How far a scan request got and why it stopped. */
+export interface ScanSummary {
+  /** Why the scan stopped. */
+  stoppedOn: ScanStopReason;
+  /** Transactions scanned in this request. */
+  scannedTransactions: number;
+  /** Matches returned in this request. */
+  matchedTransactions: number;
+  /** Position of the last transaction scanned. Absent when nothing was scanned. */
+  scannedThrough?: ScannedThrough;
+  /** Credits charged: 10 per request plus 1 per history page scanned (a page is up to 1,000 transactions). */
+  creditsCharged: number;
+}
+
+/** Response from `parsedEvents.scan`. */
+export interface ScanParsedTransactionHistoryResponse {
+  /** Parsed matches, in `sortOrder`. Can be empty while a `paginationToken` is still returned. */
+  data: ParsedTransactionResult[];
+  /** Cursor where the next scan continues. Absent once the scan reaches the end of the history or window. */
+  paginationToken?: string | null;
+  /** How far this request got and why it stopped. */
+  scan: ScanSummary;
 }

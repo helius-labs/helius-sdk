@@ -144,13 +144,15 @@ export type HeliusClient = ResolvedHeliusRpcApi &
      * @deprecated The Enhanced Transactions API is in maintenance mode. Use
      * `parsedEvents` instead: `getTransactions` → `parsedEvents.parseTransactions`,
      * `getTransactionsByAddress` → `parsedEvents.getTransactionHistory` (defaults
-     * differ: `confirmed` commitment, 100-item pages). Parsed Events is
+     * differ: `confirmed` commitment, 100-item pages), or
+     * `parsedEvents.scan` for a program address or
+     * server-side filtering by instruction or mint. Parsed Events is
      * mainnet-only; devnet code can keep using this client. See
      * https://www.helius.dev/docs/parsed-events/guides/migrate-from-enhanced-transactions
      */
     enhanced: EnhancedTxClientLazy;
 
-    /** Parsed Events client: decoded instructions, transfers, and summaries for transactions and address history. Requires an API key. Mainnet only. */
+    /** Parsed Events client: decoded instructions, transfers, and summaries for transactions and address history, plus server-side history scans by program instruction or token mint. Requires an API key. Mainnet only. */
     parsedEvents: ParsedEventsClient;
 
     /** Smart transaction helpers for building, signing, and sending transactions with automatic compute budget and priority fees. */

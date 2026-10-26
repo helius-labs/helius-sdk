@@ -206,6 +206,20 @@ const page = await helius.parsedEvents.getTransactionHistory({
   limit: 100,
   time: { gte: 1767225600 }
 });
+
+// Server-side search of an address's history by program instruction and/or
+// token mint. A request can stop early with no matches (scan.stoppedOn says
+// why), so keep calling while paginationToken is returned. Only successful
+// transactions by default (status: "any" includes failed). Costs 10 credits
+// plus 1 per history page scanned (a page is up to 1,000 transactions).
+const matches = await helius.parsedEvents.scan({
+  address: "program_or_wallet_address",
+  match: {
+    program: { programId: "program_id", instructions: ["buy", "sell"] },
+    mints: ["mint_address"]  // optional; with program set, both must match
+  },
+  time: { gte: 1767225600 }
+});
 ```
 
 ### Staking

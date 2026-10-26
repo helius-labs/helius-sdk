@@ -18,7 +18,7 @@ export interface EnhancedTxClient {
     params: GetEnhancedTransactionsRequest
   ) => Promise<GetEnhancedTransactionsResponse>;
 
-  /** @deprecated On mainnet, use `parsedEvents.getTransactionHistory` instead. */
+  /** @deprecated On mainnet, use `parsedEvents.getTransactionHistory` instead, or `parsedEvents.scan` for a program address or server-side filtering by instruction or mint. */
   getTransactionsByAddress: (
     params: GetEnhancedTransactionsByAddressRequest
   ) => Promise<GetEnhancedTransactionsByAddressResponse>;

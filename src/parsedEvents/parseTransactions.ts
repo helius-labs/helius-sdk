@@ -1,4 +1,4 @@
-import { compact, postParsedEvents } from "./utils";
+import { postParsedEvents } from "./utils";
 import type {
   ParseTransactionsRequest,
   ParseTransactionsResponse,
@@ -38,6 +38,6 @@ export const parseTransactions = async (
   postParsedEvents<ParseTransactionsResponse>(
     "transactions",
     apiKey,
-    compact({ ...params }),
+    params,
     userAgent
   );
