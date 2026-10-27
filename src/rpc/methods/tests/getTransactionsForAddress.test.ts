@@ -75,6 +75,36 @@ describe("getTransactionsForAddress Tests", () => {
     );
   });
 
+  it("Accepts a tokenTransfer filter", async () => {
+    transportMock.mockResolvedValue({
+      jsonrpc: "2.0",
+      id: "1",
+      result: { data: [], paginationToken: null },
+    });
+
+    await rpc.getTransactionsForAddress([
+      address,
+      {
+        filters: {
+          tokenTransfer: {
+            with: "9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM",
+            direction: "in",
+            mint: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+            amount: { gte: 1_000_000, lt: 5_000_000 },
+          },
+        },
+      },
+    ]);
+
+    const payload = transportMock.mock.calls[0][0].payload;
+    expect(payload.params[1].filters.tokenTransfer).toEqual({
+      with: "9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM",
+      direction: "in",
+      mint: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+      amount: { gte: 1_000_000, lt: 5_000_000 },
+    });
+  });
+
   it("Handles RPC errors", async () => {
     transportMock.mockResolvedValue({
       jsonrpc: "2.0",
