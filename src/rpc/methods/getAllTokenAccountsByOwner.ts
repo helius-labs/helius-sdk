@@ -31,14 +31,10 @@ export const makeGetAllTokenAccountsByOwner =
         },
       ]);
 
-      // By default `value` is the accounts array with `paginationKey` beside
-      // it; `withContext: true` nests both under `value` instead
       const raw = res as any;
-      const page = Array.isArray(raw?.value)
-        ? { accounts: raw.value, paginationKey: raw.paginationKey }
-        : (raw?.value ?? raw);
-      out.push(...page.accounts);
-      paginationKey = page.paginationKey;
+      const page = raw?.value ?? raw;
+      out.push(...(Array.isArray(page) ? page : page.accounts));
+      paginationKey = raw?.paginationKey ?? page.paginationKey;
     } while (paginationKey);
 
     return out;
