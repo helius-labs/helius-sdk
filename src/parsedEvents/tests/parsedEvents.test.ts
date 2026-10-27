@@ -38,7 +38,7 @@ describe("parsedEvents namespace Tests", () => {
     await expect(
       helius.parsedEvents.scan({
         address: "x",
-        match: { mints: ["m"] },
+        match: { mints: [{ mint: "m" }] },
       })
     ).resolves.toEqual(page);
     expect(mockFetch.mock.calls[1][0]).toMatch(/\/v1\/parsed-events\/scan\?/);
@@ -89,7 +89,7 @@ describe("parsedEvents namespace Tests", () => {
         await expect(
           parsedEvents.scan({
             address: "x",
-            match: { mints: ["m"] },
+            match: { mints: [{ mint: "m" }] },
           })
         ).rejects.toThrow(MAINNET_ONLY);
       }
@@ -106,7 +106,7 @@ describe("parsedEvents namespace Tests", () => {
     await client.getTransactionHistory({ address: "x" });
     await client.scan({
       address: "x",
-      match: { mints: ["m"] },
+      match: { mints: [{ mint: "m" }] },
     });
 
     expect(mockFetch.mock.calls.map(([url]) => url)).toEqual([

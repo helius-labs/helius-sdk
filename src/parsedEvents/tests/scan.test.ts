@@ -17,6 +17,8 @@ global.fetch = mockFetch as jest.Mock;
 const PUMP = "6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P";
 const PUMP_AMM = "pAMMBay6oceH9fJKBRHGP5D4bD4sWpmSwMn52FMfXEA";
 const USDC = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
+// Matches on lamport changes rather than token balances
+const NATIVE_SOL = "So11111111111111111111111111111111111111111";
 const SCAN_URL =
   "https://mainnet.helius-rpc.com/v1/parsed-events/scan?api-key=test-key";
 
@@ -81,9 +83,12 @@ describe("parsedEvents.scan Tests", () => {
       match: {
         programs: [
           { programId: PUMP, instructions: ["buy", "sell"] },
-          { programId: PUMP_AMM },
+          { programId: PUMP_AMM, scope: "transaction" as const },
         ],
-        mints: [USDC],
+        mints: [
+          { mint: USDC, scope: "address" as const },
+          { mint: NATIVE_SOL, scope: "transaction" as const },
+        ],
       },
       returnShape: "transactions" as const,
       limit: 1,
@@ -180,7 +185,7 @@ describe("parsedEvents.scan Tests", () => {
 
     const result = await rpc.parsedEvents.scan({
       address: PUMP,
-      match: { mints: [USDC] },
+      match: { mints: [{ mint: USDC }] },
       returnShape: "count",
     });
 
@@ -228,7 +233,7 @@ describe("parsedEvents.scan Tests", () => {
 
     const result = await rpc.parsedEvents.scan({
       address: PUMP,
-      match: { mints: [USDC] },
+      match: { mints: [{ mint: USDC }] },
       time: { gte: 4102444800 },
     });
 
@@ -275,7 +280,7 @@ describe("parsedEvents.scan Tests", () => {
     // reach the API to be rejected, not become `{}` (an unbounded scan)
     const request = {
       address: PUMP,
-      match: { mints: [USDC] },
+      match: { mints: [{ mint: USDC }] },
       time: 1767225600,
       budget: 2000,
       extra: { nested: null, kept: 1 },
@@ -286,7 +291,7 @@ describe("parsedEvents.scan Tests", () => {
 
     expect(sentBody()).toEqual({
       address: PUMP,
-      match: { mints: [USDC] },
+      match: { mints: [{ mint: USDC }] },
       time: 1767225600,
       budget: 2000,
       extra: { kept: 1 },
@@ -307,7 +312,7 @@ describe("parsedEvents.scan Tests", () => {
       address: new Key(PUMP),
       match: {
         programs: [{ programId: new Key(PUMP) }],
-        mints: [USDC, null],
+        mints: [{ mint: USDC }, null],
       },
     };
     await rpc.parsedEvents.scan(
@@ -316,13 +321,13 @@ describe("parsedEvents.scan Tests", () => {
 
     expect(sentBody()).toEqual({
       address: PUMP,
-      match: { programs: [{ programId: PUMP }], mints: [USDC, null] },
+      match: { programs: [{ programId: PUMP }], mints: [{ mint: USDC }, null] },
     });
   });
 
   it("Omits a null or empty paginationToken from the request body", async () => {
     respondWith(STOPPED_ON_LIMIT);
-    const match = { mints: [USDC] };
+    const match = { mints: [{ mint: USDC }] };
 
     await rpc.parsedEvents.scan({
       address: PUMP,
@@ -362,7 +367,7 @@ describe("parsedEvents.scan Tests", () => {
     await expect(
       rpc.parsedEvents.scan({
         address: PUMP,
-        match: { mints: [USDC] },
+        match: { mints: [{ mint: USDC }] },
       })
     ).rejects.toThrow("Helius HTTP 503: service unavailable");
   });
@@ -378,26 +383,56 @@ const assertType = <T extends true>(value: T) => value;
 describe("scan types", () => {
   it("requires programs or mints, and rejects the old single `program`", () => {
     const byPrograms: ScanMatch = { programs: [{ programId: PUMP }] };
-    const byMints: ScanMatch = { mints: [USDC] };
+    const byMints: ScanMatch = { mints: [{ mint: USDC }] };
     const byBoth: ScanMatch = {
       programs: [
         { programId: PUMP, instructions: ["buy"], discriminators: ["0x66"] },
       ],
-      mints: [USDC],
+      mints: [{ mint: USDC }],
     };
     // @ts-expect-error a match needs `programs` or `mints`
     const empty: ScanMatch = {};
     // `mints` makes the match otherwise valid, so this only fails on `program`
-    // @ts-expect-error `program` was replaced by `programs`
-    const single: ScanMatch = { program: { programId: PUMP }, mints: [USDC] };
+    const single: ScanMatch = {
+      // @ts-expect-error `program` was replaced by `programs`
+      program: { programId: PUMP },
+      mints: [{ mint: USDC }],
+    };
 
     expect([byPrograms, byMints, byBoth, empty, single]).toHaveLength(5);
+  });
+
+  it("takes mints as { mint, scope } objects and checks scope values", () => {
+    const scoped: ScanMatch = {
+      programs: [{ programId: PUMP, scope: "transaction" }],
+      mints: [{ mint: USDC, scope: "address" }, { mint: NATIVE_SOL }],
+    };
+    // `programs` makes the match otherwise valid, so this only fails on `mints`
+    const strings: ScanMatch = {
+      programs: [{ programId: PUMP }],
+      // @ts-expect-error mints are `{ mint, scope }` objects, not strings
+      mints: [USDC],
+    };
+    const badScope: ScanMatch = {
+      // @ts-expect-error scope is `address` or `transaction`
+      programs: [{ programId: PUMP, scope: "wallet" }],
+    };
+    const badMintScope: ScanMatch = {
+      // @ts-expect-error scope is `address` or `transaction`
+      mints: [{ mint: USDC, scope: "wallet" }],
+    };
+    const noMint: ScanMatch = {
+      // @ts-expect-error a mint entry needs `mint`
+      mints: [{ scope: "transaction" }],
+    };
+
+    expect([scoped, strings, badScope, badMintScope, noMint]).toHaveLength(5);
   });
 
   it("does not accept includeRawTransaction, which the scan endpoint rejects", () => {
     const request: ScanParsedTransactionHistoryRequest = {
       address: PUMP,
-      match: { mints: [USDC] },
+      match: { mints: [{ mint: USDC }] },
       // @ts-expect-error scan takes `rawTransaction`, not `includeRawTransaction`
       includeRawTransaction: true,
     };
@@ -408,7 +443,7 @@ describe("scan types", () => {
   it("infers the response type from returnShape", async () => {
     mockFetch.mockResolvedValue({ ok: true, json: async () => ({}) });
     const { parsedEvents } = createHelius({ apiKey: "test-key" });
-    const request = { address: PUMP, match: { mints: [USDC] } };
+    const request = { address: PUMP, match: { mints: [{ mint: USDC }] } };
     // A shape only known at runtime gives the union of the three responses
     const runtimeShape = "count" as ScanReturnShape;
 
@@ -464,7 +499,10 @@ describe("scan types", () => {
   it("rejects an explicit shape argument that the call doesn't send", () => {
     const shaped = (client: ReturnType<typeof createHelius>["parsedEvents"]) =>
       // @ts-expect-error `scan` is not generic; the shape comes from `returnShape`
-      client.scan<"count">({ address: PUMP, match: { mints: [USDC] } });
+      client.scan<"count">({
+        address: PUMP,
+        match: { mints: [{ mint: USDC }] },
+      });
 
     expect(typeof shaped).toBe("function");
   });

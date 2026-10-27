@@ -37,7 +37,7 @@ import type {
  *
  * const matches = await helius.parsedEvents.scan({
  *   address: "...",
- *   match: { mints: ["EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"] },
+ *   match: { mints: [{ mint: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v" }] },
  * });
  * ```
  */
@@ -68,9 +68,13 @@ export interface ParsedEventsClient {
   /**
    * Scan an address's history server-side for transactions that call any of
    * `match.programs` (optionally specific instructions), touch one of
-   * `match.mints`, or both (when both are set, both must match). Only
-   * successful transactions are scanned unless `status` is `"any"` or
-   * `"failed"`. `returnShape` returns the parsed matches (`transactions`, the
+   * `match.mints`, or both (when both are set, both must match). By default
+   * an instruction or balance only counts when it involves the scanned
+   * address; `scope: "transaction"` on an entry counts it anywhere in the
+   * transaction (see `ScanMatchScope`). The native SOL pseudo-mint
+   * `So11111111111111111111111111111111111111111` matches lamport changes,
+   * not counting the fee (see `ScanMintMatch`). Only successful transactions
+   * are scanned unless `status` is `"any"` or `"failed"`. `returnShape` returns the parsed matches (`transactions`, the
    * default), their signatures (`signatures`), or only `scan.matchedTransactions`
    * (`count`). Paginated with `paginationToken`; keep going while one is
    * returned, even when `data` is empty. Costs 10 credits plus 1 per history

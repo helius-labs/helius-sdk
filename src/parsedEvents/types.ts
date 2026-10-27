@@ -279,7 +279,7 @@ export interface ParsedHistoryWindowOptions {
 
 /** Request parameters for `parsedEvents.getTransactionHistory` (POST /v1/parsed-events/transaction-history). */
 export interface GetParsedTransactionHistoryRequest extends ParsedHistoryWindowOptions {
-  /** Address whose transaction history should be fetched. Program-wide history is not supported; to search a program's history, or any history by instruction or token mint, use `parsedEvents.scan`. */
+  /** Address whose transaction history should be fetched. Program-wide history is not supported; to search a program's history, or any history by instruction or token mint, use `parsedEvents.scan` (for a program's own address, give mints `scope: "transaction"`). */
   address: string;
   /** Number of transactions to return, an integer from 1 to 100. Defaults to 100. */
   limit?: number;
@@ -300,10 +300,26 @@ export interface GetParsedTransactionHistoryResponse {
 }
 
 /**
+ * Where a program's instructions or a mint's balances must be to count:
+ * - `address` (default): they involve the scanned `address`. An instruction
+ *   counts when one of its accounts is the address, a token account the address
+ *   owns, or a token account whose mint is the address, or when the address is
+ *   the program. A token balance counts when its token account is the address,
+ *   is owned by the address, or its mint is the address.
+ * - `transaction`: anywhere in the transaction, e.g. when the address only pays
+ *   the fee or executes a multisig transaction, or to find transactions of a
+ *   token's mint that also hold the token it trades against.
+ *
+ * Token account ownership comes from the token balances' `owner`; in older
+ * transactions that don't record it, only the address itself counts.
+ */
+export type ScanMatchScope = "address" | "transaction";
+
+/**
  * Match transactions with an instruction of `programId`, top-level or inner
- * (CPI). `instructions` and `discriminators` combine: an instruction matches
- * when its data starts with any of them. Set neither to match any instruction
- * of the program.
+ * (CPI), in `scope`. `instructions` and `discriminators` combine: an
+ * instruction matches when its data starts with any of them. Set neither to
+ * match any instruction of the program.
  */
 export interface ScanProgramMatch {
   /** Program address. Each program can appear once in `match.programs`. */
@@ -319,6 +335,32 @@ export interface ScanProgramMatch {
    * `0x` prefix (at most 50). Use these for programs without an IDL.
    */
   discriminators?: string[];
+  /** Which of the program's instructions count. Defaults to `address`, those that involve the scanned address. */
+  scope?: ScanMatchScope;
+}
+
+/**
+ * Match transactions with a pre or post token balance of `mint`, in `scope`,
+ * or, for the native SOL pseudo-mint, a lamport change (see `mint`).
+ *
+ * When the scanned address is a program, its token accounts usually belong
+ * to PDAs rather than the program, so use `scope: "transaction"` there.
+ */
+export interface ScanMintMatch {
+  /**
+   * Token mint. Each mint can appear once in `match.mints`.
+   *
+   * The native SOL pseudo-mint `So11111111111111111111111111111111111111111`
+   * (wrapped SOL is `…112`) matches on lamports instead, not counting the fee:
+   * the address's lamports changed (`address` scope) or any account's did
+   * (`transaction` scope). Each account is compared on its own, so lamports
+   * that leave and come back within the transaction don't count. This catches
+   * SOL a program pays out without a transfer instruction, and also incidental
+   * movements such as Jito tips and rent.
+   */
+  mint: string;
+  /** Which of the mint's balances count. Defaults to `address`, those that belong to the scanned address. */
+  scope?: ScanMatchScope;
 }
 
 /**
@@ -326,11 +368,11 @@ export interface ScanProgramMatch {
  * are set, a transaction must match both.
  */
 export type ScanMatch = {
-  /** Programs (1 to 20, each once). Matches when the transaction calls any of them. An empty array counts as unset. */
+  /** Programs (1 to 20, each once). Matches when the transaction has an instruction of any of them, in its scope. An empty array counts as unset. */
   programs?: ScanProgramMatch[];
-  /** Token mints (1 to 20). Matches when one is in the transaction's pre or post token balances. An empty array counts as unset. */
-  mints?: string[];
-} & ({ programs: ScanProgramMatch[] } | { mints: string[] });
+  /** Token mints (1 to 20, each once). Matches when the transaction has a token balance of any of them in its scope, or a lamport change for the native SOL pseudo-mint. An empty array counts as unset. */
+  mints?: ScanMintMatch[];
+} & ({ programs: ScanProgramMatch[] } | { mints: ScanMintMatch[] });
 
 /**
  * What a scan returns for its matches:
@@ -346,7 +388,7 @@ export type ScanReturnShape = "transactions" | "signatures" | "count";
 
 /** A match returned with `returnShape: "signatures"`. */
 export interface ScanSignature {
-  /** Transaction signature, or `""` in the rare case the stored transaction's signature can't be decoded; `slot` and `transactionIndex` still identify it. */
+  /** Transaction signature. */
   signature: string;
   /** Slot containing the transaction. */
   slot: number;

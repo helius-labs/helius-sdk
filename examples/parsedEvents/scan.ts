@@ -17,6 +17,9 @@ import { createHelius } from "../../src/rpc/index";
     // Pump.fun buys and sells from the last hour. Each request costs 10
     // credits plus 1 per history page scanned (a page is up to 1,000
     // transactions), so cap the request count when scanning a busy address.
+    // The scanned address is the program itself, so the default
+    // `scope: "address"` counts all of its instructions; a mint here would
+    // need `scope: "transaction"`, since PDAs own the program's token accounts.
     do {
       const page = await helius.parsedEvents.scan({
         address: PUMP_FUN,
@@ -74,6 +77,24 @@ import { createHelius } from "../../src/rpc/index";
     console.log(
       `${matches} matches in ${scanned} transactions over ${requests} requests, ${credits} credits` +
         (paginationToken ? " (window not finished: raise the request cap)" : "")
+    );
+
+    // A wallet's native SOL movements in the last hour, as signatures. The
+    // native SOL pseudo-mint matches lamport changes (not counting the fee);
+    // with the default `scope: "address"`, only the wallet's own lamports count.
+    const WALLET = "86xCnPeV69n6t3DnyGvkKobf9FdN2H9oiVDdaMpo2MMY";
+    const NATIVE_SOL = "So11111111111111111111111111111111111111111";
+    const solMoves = await helius.parsedEvents.scan({
+      address: WALLET,
+      match: { mints: [{ mint: NATIVE_SOL }] },
+      time: { gte: oneHourAgo },
+      returnShape: "signatures",
+    });
+    for (const { signature, slot } of solMoves.data) {
+      console.log(slot, signature);
+    }
+    console.log(
+      `${solMoves.data.length} SOL movements (stopped on ${solMoves.scan.stoppedOn}, ${solMoves.scan.creditsCharged} credits)`
     );
   } catch (error) {
     console.error("Error:", error);

@@ -17,8 +17,13 @@ import type {
  * succeeds, possibly with an empty `data`, so keep calling with the returned
  * `paginationToken` until it is absent.
  *
- * A transaction matches when it calls any of `match.programs`; when `mints` is
- * also set, it must touch one of them too. Only successful transactions are
+ * A transaction matches when it has an instruction of any of `match.programs`;
+ * when `mints` is also set, it must have a balance of one of them too. By
+ * default (`scope: "address"`) an instruction or balance only counts when it
+ * involves the scanned address; `scope: "transaction"` on an entry counts it
+ * anywhere in the transaction (see `ScanMatchScope`). The native SOL
+ * pseudo-mint `So11111111111111111111111111111111111111111` matches lamport
+ * changes instead (see `ScanMintMatch`). Only successful transactions are
  * scanned unless you pass `status: "any"` or `"failed"`.
  *
  * `returnShape` picks what comes back: the parsed matches (`transactions`, the
