@@ -38,6 +38,10 @@ export const parseTransactions = async (
   postParsedEvents<ParseTransactionsResponse>(
     "transactions",
     apiKey,
-    params,
+    {
+      ...params,
+      // `false` is the default, and the API rejects it alongside `rawTransaction`
+      includeRawTransaction: params.includeRawTransaction || undefined,
+    },
     userAgent
   );

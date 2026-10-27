@@ -21,7 +21,7 @@ import { createHelius } from "../../src/rpc/index";
       const page = await helius.parsedEvents.scan({
         address: PUMP_FUN,
         match: {
-          program: { programId: PUMP_FUN, instructions: ["buy", "sell"] },
+          programs: [{ programId: PUMP_FUN, instructions: ["buy", "sell"] }],
         },
         time: { gte: oneHourAgo },
         limit: 100,
@@ -46,6 +46,35 @@ import { createHelius } from "../../src/rpc/index";
     } while (paginationToken && requests < 5);
 
     console.log(`${requests} requests, ${credits} credits`);
+
+    // Only count the matches: no parsing, and `limit` doesn't apply, so each
+    // request covers up to its budget (10,000 transactions by default). Sum
+    // across pages for the whole window.
+    let matches = 0;
+    let scanned = 0;
+    requests = 0;
+    credits = 0;
+    do {
+      const { scan, paginationToken: next } = await helius.parsedEvents.scan({
+        address: PUMP_FUN,
+        match: {
+          programs: [{ programId: PUMP_FUN, instructions: ["buy", "sell"] }],
+        },
+        time: { gte: oneHourAgo },
+        returnShape: "count",
+        paginationToken,
+      });
+      matches += scan.matchedTransactions;
+      scanned += scan.scannedTransactions;
+      credits += scan.creditsCharged;
+      requests++;
+      paginationToken = next;
+    } while (paginationToken && requests < 5);
+
+    console.log(
+      `${matches} matches in ${scanned} transactions over ${requests} requests, ${credits} credits` +
+        (paginationToken ? " (window not finished: raise the request cap)" : "")
+    );
   } catch (error) {
     console.error("Error:", error);
   }

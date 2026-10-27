@@ -1,14 +1,21 @@
 import { createHeliusEager as createHelius } from "../../rpc/createHelius.eager";
 import type {
+  ParsedTransactionResult,
+  ScanCountResponse,
   ScanMatch,
+  ScanParsedTransactionHistoryRequest,
   ScanParsedTransactionHistoryResponse,
-  ScanProgramMatch,
+  ScanReturnShape,
+  ScanSignature,
+  ScanSignaturesResponse,
+  ScanTransactionsResponse,
 } from "../types";
 
 const mockFetch = jest.fn();
 global.fetch = mockFetch as jest.Mock;
 
 const PUMP = "6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P";
+const PUMP_AMM = "pAMMBay6oceH9fJKBRHGP5D4bD4sWpmSwMn52FMfXEA";
 const USDC = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
 const SCAN_URL =
   "https://mainnet.helius-rpc.com/v1/parsed-events/scan?api-key=test-key";
@@ -72,16 +79,21 @@ describe("parsedEvents.scan Tests", () => {
     const params = {
       address: PUMP,
       match: {
-        program: { programId: PUMP, instructions: ["buy", "sell"] },
+        programs: [
+          { programId: PUMP, instructions: ["buy", "sell"] },
+          { programId: PUMP_AMM },
+        ],
         mints: [USDC],
       },
+      returnShape: "transactions" as const,
       limit: 1,
       budget: { maxScannedTransactions: 2000 },
       sortOrder: "asc" as const,
       status: "any" as const,
+      tokenAccounts: "balanceChanged" as const,
       commitment: "finalized" as const,
       minContextSlot: 460000000,
-      includeRawTransaction: true,
+      rawTransaction: "base64" as const,
       slot: { gte: 460000000 },
       time: { lt: 1792900000 },
       beforeSignature: "before",
@@ -99,18 +111,82 @@ describe("parsedEvents.scan Tests", () => {
     expect(JSON.parse(init.body)).toEqual(params);
   });
 
-  it("Sends discriminator matches as given", async () => {
+  it("Sends instructions and discriminators together for one program", async () => {
     respondWith(STOPPED_ON_LIMIT);
 
-    await rpc.parsedEvents.scan({
+    const match = {
+      programs: [
+        {
+          programId: PUMP,
+          instructions: ["buy"],
+          discriminators: ["0x66063d12"],
+        },
+      ],
+    };
+    await rpc.parsedEvents.scan({ address: PUMP, match });
+
+    expect(sentBody()).toEqual({ address: PUMP, match });
+  });
+
+  it("Returns signatures with returnShape: signatures", async () => {
+    const signatures: ScanSignature[] = [
+      {
+        signature: "sig1",
+        slot: 42,
+        transactionIndex: 7,
+        blockTime: 1792848886,
+      },
+      { signature: "sig2", slot: 42, transactionIndex: 9, blockTime: null },
+    ];
+    const page: ScanSignaturesResponse = {
+      data: signatures,
+      paginationToken: "42:9",
+      scan: {
+        stoppedOn: "budget",
+        scannedTransactions: 2000,
+        matchedTransactions: 2,
+        scannedThrough: { slot: 42, blockTime: 1792848886 },
+        creditsCharged: 12,
+      },
+    };
+    respondWith(page);
+
+    const result = await rpc.parsedEvents.scan({
       address: PUMP,
-      match: { program: { programId: PUMP, discriminators: ["0x66063d12"] } },
+      match: { programs: [{ programId: PUMP }] },
+      returnShape: "signatures",
     });
 
+    expect(result.data).toEqual(signatures);
+    expect(result.data[0].transactionIndex).toBe(7);
     expect(sentBody()).toEqual({
       address: PUMP,
-      match: { program: { programId: PUMP, discriminators: ["0x66063d12"] } },
+      match: { programs: [{ programId: PUMP }] },
+      returnShape: "signatures",
     });
+  });
+
+  it("Returns only the scan summary with returnShape: count", async () => {
+    const page: ScanCountResponse = {
+      scan: {
+        stoppedOn: "windowEnd",
+        scannedTransactions: 3,
+        matchedTransactions: 3,
+        scannedThrough: { slot: 4, blockTime: 101 },
+        creditsCharged: 11,
+      },
+    };
+    respondWith(page);
+
+    const result = await rpc.parsedEvents.scan({
+      address: PUMP,
+      match: { mints: [USDC] },
+      returnShape: "count",
+    });
+
+    expect(result.data).toBeUndefined();
+    expect(result.paginationToken).toBeUndefined();
+    expect(result.scan.matchedTransactions).toBe(3);
   });
 
   it("Returns a page with no matches but a token to keep scanning", async () => {
@@ -130,7 +206,7 @@ describe("parsedEvents.scan Tests", () => {
 
     const result = await rpc.parsedEvents.scan({
       address: PUMP,
-      match: { program: { programId: PUMP, instructions: ["set_params"] } },
+      match: { programs: [{ programId: PUMP, instructions: ["set_params"] }] },
       budget: { maxScannedTransactions: 2000 },
     });
 
@@ -168,15 +244,14 @@ describe("parsedEvents.scan Tests", () => {
     const request = {
       address: PUMP,
       match: {
-        program: {
-          programId: PUMP,
-          instructions: ["buy"],
-          discriminators: null,
-        },
+        programs: [
+          { programId: PUMP, instructions: ["buy"], discriminators: null },
+        ],
         mints: null,
       },
       budget: { maxScannedTransactions: null },
       limit: null,
+      rawTransaction: null,
       slot: { gte: 1, lt: null },
       type: "SWAP",
     };
@@ -186,7 +261,7 @@ describe("parsedEvents.scan Tests", () => {
 
     expect(sentBody()).toEqual({
       address: PUMP,
-      match: { program: { programId: PUMP, instructions: ["buy"] } },
+      match: { programs: [{ programId: PUMP, instructions: ["buy"] }] },
       budget: {},
       slot: { gte: 1 },
       type: "SWAP",
@@ -231,7 +306,7 @@ describe("parsedEvents.scan Tests", () => {
     const request = {
       address: new Key(PUMP),
       match: {
-        program: { programId: new Key(PUMP) },
+        programs: [{ programId: new Key(PUMP) }],
         mints: [USDC, null],
       },
     };
@@ -241,7 +316,7 @@ describe("parsedEvents.scan Tests", () => {
 
     expect(sentBody()).toEqual({
       address: PUMP,
-      match: { program: { programId: PUMP }, mints: [USDC, null] },
+      match: { programs: [{ programId: PUMP }], mints: [USDC, null] },
     });
   });
 
@@ -266,18 +341,18 @@ describe("parsedEvents.scan Tests", () => {
 
   it("Throws the API's error message on a 400", async () => {
     failWith(400, "Bad Request", {
-      error: `match.program.instructions not found in the IDLs of ${PUMP}: not_a_real_ix`,
+      error: `match.programs instructions not found in the IDLs of ${PUMP}: not_a_real_ix`,
     });
 
     await expect(
       rpc.parsedEvents.scan({
         address: PUMP,
         match: {
-          program: { programId: PUMP, instructions: ["not_a_real_ix"] },
+          programs: [{ programId: PUMP, instructions: ["not_a_real_ix"] }],
         },
       })
     ).rejects.toThrow(
-      `Helius HTTP 400: match.program.instructions not found in the IDLs of ${PUMP}: not_a_real_ix`
+      `Helius HTTP 400: match.programs instructions not found in the IDLs of ${PUMP}: not_a_real_ix`
     );
   });
 
@@ -293,23 +368,104 @@ describe("parsedEvents.scan Tests", () => {
   });
 });
 
-describe("ScanMatch types", () => {
-  it("requires program or mints, and rejects instructions with discriminators", () => {
-    const byProgram: ScanMatch = { program: { programId: PUMP } };
+// Compile-time checks, enforced by `pnpm typecheck` (Jest does not type-check)
+type Equals<A, B> =
+  (<T>() => T extends A ? 1 : 2) extends <T>() => T extends B ? 1 : 2
+    ? true
+    : false;
+const assertType = <T extends true>(value: T) => value;
+
+describe("scan types", () => {
+  it("requires programs or mints, and rejects the old single `program`", () => {
+    const byPrograms: ScanMatch = { programs: [{ programId: PUMP }] };
     const byMints: ScanMatch = { mints: [USDC] };
     const byBoth: ScanMatch = {
-      program: { programId: PUMP, instructions: ["buy"] },
+      programs: [
+        { programId: PUMP, instructions: ["buy"], discriminators: ["0x66"] },
+      ],
       mints: [USDC],
     };
-    // @ts-expect-error a match needs `program` or `mints`
+    // @ts-expect-error a match needs `programs` or `mints`
     const empty: ScanMatch = {};
-    // @ts-expect-error `instructions` and `discriminators` can't be combined
-    const both: ScanProgramMatch = {
-      programId: PUMP,
-      instructions: ["buy"],
-      discriminators: ["0x66"],
+    // `mints` makes the match otherwise valid, so this only fails on `program`
+    // @ts-expect-error `program` was replaced by `programs`
+    const single: ScanMatch = { program: { programId: PUMP }, mints: [USDC] };
+
+    expect([byPrograms, byMints, byBoth, empty, single]).toHaveLength(5);
+  });
+
+  it("does not accept includeRawTransaction, which the scan endpoint rejects", () => {
+    const request: ScanParsedTransactionHistoryRequest = {
+      address: PUMP,
+      match: { mints: [USDC] },
+      // @ts-expect-error scan takes `rawTransaction`, not `includeRawTransaction`
+      includeRawTransaction: true,
     };
 
-    expect([byProgram, byMints, byBoth, empty, both]).toHaveLength(5);
+    expect(request.address).toBe(PUMP);
+  });
+
+  it("infers the response type from returnShape", async () => {
+    mockFetch.mockResolvedValue({ ok: true, json: async () => ({}) });
+    const { parsedEvents } = createHelius({ apiKey: "test-key" });
+    const request = { address: PUMP, match: { mints: [USDC] } };
+    // A shape only known at runtime gives the union of the three responses
+    const runtimeShape = "count" as ScanReturnShape;
+
+    const byDefault = await parsedEvents.scan(request);
+    const signatures = await parsedEvents.scan({
+      ...request,
+      returnShape: "signatures",
+    });
+    const count = await parsedEvents.scan({ ...request, returnShape: "count" });
+    const anyShape = await parsedEvents.scan({
+      ...request,
+      returnShape: runtimeShape,
+    });
+    // An optional shape may send nothing, so the default response is possible
+    const wantCount = Date.now() < 0;
+    const maybeCount = await parsedEvents.scan({
+      ...request,
+      returnShape: wantCount ? "count" : undefined,
+    });
+    // A request typed with the exported request type keeps the default shape
+    const base: ScanParsedTransactionHistoryRequest = request;
+    const fromBase = await parsedEvents.scan({
+      ...base,
+      paginationToken: "1:0",
+    });
+
+    type AnyResponse =
+      | ScanTransactionsResponse
+      | ScanSignaturesResponse
+      | ScanCountResponse;
+    expect([
+      assertType<Equals<typeof byDefault, ScanTransactionsResponse>>(true),
+      assertType<Equals<(typeof byDefault)["data"], ParsedTransactionResult[]>>(
+        true
+      ),
+      assertType<Equals<typeof signatures, ScanSignaturesResponse>>(true),
+      assertType<Equals<typeof count, ScanCountResponse>>(true),
+      assertType<Equals<typeof anyShape, AnyResponse>>(true),
+      assertType<Equals<typeof maybeCount, AnyResponse>>(true),
+      assertType<Equals<typeof fromBase, ScanTransactionsResponse>>(true),
+    ]).not.toContain(false);
+    // Each call resolves to the API's body as-is, whatever the shape
+    expect([
+      byDefault,
+      signatures,
+      count,
+      anyShape,
+      maybeCount,
+      fromBase,
+    ]).toEqual([{}, {}, {}, {}, {}, {}]);
+  });
+
+  it("rejects an explicit shape argument that the call doesn't send", () => {
+    const shaped = (client: ReturnType<typeof createHelius>["parsedEvents"]) =>
+      // @ts-expect-error `scan` is not generic; the shape comes from `returnShape`
+      client.scan<"count">({ address: PUMP, match: { mints: [USDC] } });
+
+    expect(typeof shaped).toBe("function");
   });
 });

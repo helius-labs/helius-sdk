@@ -303,8 +303,10 @@ Estimate optimal priority fees for Solana transactions. Available on the `helius
 Parse transactions into decoded instructions, transfers, and summaries using Helius's IDL catalog (3,600+ programs). Mainnet only. Available on the `helius.parsedEvents` namespace.
 
 - [`parseTransactions()`](https://www.helius.dev/docs/api-reference/parsed-events/transactions): Parses up to 100 transaction signatures. Each result carries a `parserStatus`, so a missing transaction comes back as an item-level error instead of failing the request. 10 credits per request.
-- [`getTransactionHistory()`](https://www.helius.dev/docs/api-reference/parsed-events/transaction-history): Returns parsed transaction history for an address with slot and block-time bounds, paginated with `paginationToken`. 10 credits per request.
-- [`scan()`](https://www.helius.dev/docs/api-reference/parsed-events/scan): Searches an address's history server-side for transactions that call a program instruction (by IDL name or discriminator), touch a token mint, or both (both must match when both are set), and returns only the parsed matches. Only successful transactions are scanned unless you pass `status: "any"` or `"failed"`. Paginated with `paginationToken`; a request can stop early with no matches, so keep going while a token is returned (`scan.stoppedOn` says why it stopped). 10 credits plus 1 per history page scanned (a page is up to 1,000 transactions).
+- [`getTransactionHistory()`](https://www.helius.dev/docs/api-reference/parsed-events/transaction-history): Returns parsed transaction history for an address with slot and block-time bounds, paginated with `paginationToken`. Only successful transactions unless you pass `status: "any"` or `"failed"`; `tokenAccounts` adds transactions that touch only the address's token accounts. 10 credits per request.
+- [`scan()`](https://www.helius.dev/docs/api-reference/parsed-events/scan): Searches an address's history server-side for transactions that call any of up to 20 programs (optionally specific instructions, by IDL name or discriminator), touch one of a set of token mints, or both (both must match when both are set). `returnShape` returns the parsed matches (`transactions`, the default), just their signatures (`signatures`), or only the number of matches (`count`). Takes the same filters as `getTransactionHistory`. Paginated with `paginationToken`; a request can stop early with no matches, so keep going while a token is returned (`scan.stoppedOn` says why it stopped). 10 credits plus 1 per history page scanned (a page is up to 1,000 transactions).
+
+All three can return each original transaction next to the parsed one: pass `rawTransaction` as `"json"`, `"jsonParsed"`, or `"base64"` (`getTransaction` encodings). `includeRawTransaction: true` still works on `parseTransactions` and `getTransactionHistory` as an alias for `rawTransaction: "json"`, but is deprecated.
 
 [**Enhanced Transactions API**](https://www.helius.dev/docs/enhanced-transactions) **(Deprecated)**
 
@@ -312,6 +314,7 @@ Parse transactions into decoded instructions, transfers, and summaries using Hel
 >
 > - `commitment` defaults to `confirmed` (was `finalized`); pass `commitment: "finalized"` to keep the old behavior.
 > - `limit` defaults to 100 (was 10).
+> - History returns only successful transactions by default; pass `status: "any"` to include failed ones.
 > - `getTransactionHistory` requires a wallet address (program-wide history is not supported) and has no `type` / `source` filters. To search a program's history, or any history by instruction or token mint, server-side, use `parsedEvents.scan`; otherwise filter client-side on `parsed.summary.type`.
 > - Results are wrapped: `{ signature, parserStatus, parsed }`, and history pages are `{ data, paginationToken }`.
 >

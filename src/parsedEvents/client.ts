@@ -4,8 +4,12 @@ import type {
   ParseTransactionsResponse,
   GetParsedTransactionHistoryRequest,
   GetParsedTransactionHistoryResponse,
+  ScanCountResponse,
   ScanParsedTransactionHistoryRequest,
   ScanParsedTransactionHistoryResponse,
+  ScanReturnShape,
+  ScanSignaturesResponse,
+  ScanTransactionsResponse,
 } from "./types";
 
 /**
@@ -50,9 +54,10 @@ export interface ParsedEventsClient {
   ): Promise<ParseTransactionsResponse>;
 
   /**
-   * Get parsed transaction history for an address, paginated with `paginationToken`
+   * Get parsed transaction history for an address, paginated with `paginationToken`.
+   * Only successful transactions unless `status` is `"any"` or `"failed"`.
    *
-   * @param params - Address, slot/time bounds, and pagination options
+   * @param params - Address, slot/time bounds, status and token-account filters, and pagination options
    * @returns A page of parsed transactions and the next `paginationToken`
    * @throws Error on a request-level failure (invalid body, auth, rate limit)
    */
@@ -61,20 +66,37 @@ export interface ParsedEventsClient {
   ): Promise<GetParsedTransactionHistoryResponse>;
 
   /**
-   * Scan an address's history server-side for transactions that call a program
-   * instruction, touch a token mint, or both (when both are set, both must
-   * match), returning only the parsed matches. Only successful transactions are
-   * scanned unless `status` is `"any"` or `"failed"`. Paginated with
-   * `paginationToken`; keep going while one is returned, even when `data` is
-   * empty. Costs 10 credits plus 1 per history page scanned.
+   * Scan an address's history server-side for transactions that call any of
+   * `match.programs` (optionally specific instructions), touch one of
+   * `match.mints`, or both (when both are set, both must match). Only
+   * successful transactions are scanned unless `status` is `"any"` or
+   * `"failed"`. `returnShape` returns the parsed matches (`transactions`, the
+   * default), their signatures (`signatures`), or only `scan.matchedTransactions`
+   * (`count`). Paginated with `paginationToken`; keep going while one is
+   * returned, even when `data` is empty. Costs 10 credits plus 1 per history
+   * page scanned.
    *
-   * @param params - Address, match criteria, budget, and pagination options
-   * @returns Parsed matches, the next `paginationToken`, and a `scan` summary (`stoppedOn`, `creditsCharged`)
+   * @param params - Address, match criteria, return shape, budget, and pagination options
+   * @returns The matches for the `returnShape`, the next `paginationToken`, and a `scan` summary (`stoppedOn`, `matchedTransactions`, `creditsCharged`)
    * @throws Error on a request-level failure: `Helius HTTP 400` for an invalid body or match, auth or rate-limit errors, or `Helius HTTP 503` when at capacity or the first history page missed the request time limit
    */
   scan(
-    params: ScanParsedTransactionHistoryRequest
-  ): Promise<ScanParsedTransactionHistoryResponse>;
+    params: ScanParsedTransactionHistoryRequest<"count"> & {
+      returnShape: "count";
+    }
+  ): Promise<ScanCountResponse>;
+  scan(
+    params: ScanParsedTransactionHistoryRequest<"signatures"> & {
+      returnShape: "signatures";
+    }
+  ): Promise<ScanSignaturesResponse>;
+  scan(
+    params: ScanParsedTransactionHistoryRequest<"transactions">
+  ): Promise<ScanTransactionsResponse>;
+  /** A `returnShape` only known at runtime gives the union of the three responses. */
+  scan(
+    params: ScanParsedTransactionHistoryRequest<ScanReturnShape>
+  ): Promise<ScanParsedTransactionHistoryResponse<ScanReturnShape>>;
 }
 
 /**
@@ -109,6 +131,8 @@ export const makeParsedEventsClient = (
   return {
     parseTransactions: async (p) => (await load()).parseTransactions(p),
     getTransactionHistory: async (p) => (await load()).getTransactionHistory(p),
-    scan: async (p) => (await load()).scan(p),
+    // One implementation for every overload; `returnShape` picks the response
+    scan: (async (p: ScanParsedTransactionHistoryRequest<ScanReturnShape>) =>
+      (await load()).scan(p)) as ParsedEventsClient["scan"],
   };
 };

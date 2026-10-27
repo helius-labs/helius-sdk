@@ -52,6 +52,59 @@ describe("parsedEvents.getTransactionHistory Tests", () => {
     expect(JSON.parse(init.body)).toEqual(params);
   });
 
+  it("Sends the status, tokenAccounts, minContextSlot, and rawTransaction options", async () => {
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({ data: [] }),
+    });
+
+    const params = {
+      address: ADDRESS,
+      status: "any" as const,
+      tokenAccounts: "all" as const,
+      minContextSlot: 433000000,
+      rawTransaction: "jsonParsed" as const,
+    };
+    await rpc.parsedEvents.getTransactionHistory(params);
+
+    expect(JSON.parse(mockFetch.mock.calls[0][1].body)).toEqual(params);
+  });
+
+  it("Still accepts the deprecated includeRawTransaction alias", async () => {
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({ data: [] }),
+    });
+
+    await rpc.parsedEvents.getTransactionHistory({
+      address: ADDRESS,
+      includeRawTransaction: true,
+    });
+
+    expect(JSON.parse(mockFetch.mock.calls[0][1].body)).toEqual({
+      address: ADDRESS,
+      includeRawTransaction: true,
+    });
+  });
+
+  it("Omits includeRawTransaction: false, which the API rejects next to rawTransaction", async () => {
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({ data: [] }),
+    });
+
+    await rpc.parsedEvents.getTransactionHistory({
+      address: ADDRESS,
+      includeRawTransaction: false,
+      rawTransaction: "base64",
+    });
+
+    expect(JSON.parse(mockFetch.mock.calls[0][1].body)).toEqual({
+      address: ADDRESS,
+      rawTransaction: "base64",
+    });
+  });
+
   it("Returns a final page without a paginationToken", async () => {
     mockFetch.mockResolvedValue({
       ok: true,

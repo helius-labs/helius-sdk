@@ -144,7 +144,8 @@ export type HeliusClient = ResolvedHeliusRpcApi &
      * @deprecated The Enhanced Transactions API is in maintenance mode. Use
      * `parsedEvents` instead: `getTransactions` → `parsedEvents.parseTransactions`,
      * `getTransactionsByAddress` → `parsedEvents.getTransactionHistory` (defaults
-     * differ: `confirmed` commitment, 100-item pages), or
+     * differ: `confirmed` commitment, 100-item pages, successful transactions
+     * only unless `status: "any"`), or
      * `parsedEvents.scan` for a program address or
      * server-side filtering by instruction or mint. Parsed Events is
      * mainnet-only; devnet code can keep using this client. See

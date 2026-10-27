@@ -10,7 +10,10 @@ import type {
  * Returns up to 100 parsed transactions per page, newest first by default.
  * **Pagination is manual**: pass the returned `paginationToken` back to fetch
  * the next page; it is absent once the end of the range is reached. Filter by
- * slot or block time with `slot` / `time` bounds. Costs 10 credits per request.
+ * slot or block time with `slot` / `time` bounds. Only successful transactions
+ * are returned unless `status` is `"any"` or `"failed"`, and transactions that
+ * touch only the address's token accounts are left out unless you set
+ * `tokenAccounts`. Costs 10 credits per request.
  *
  * Each item has the same shape as `parseTransactions` results, so check
  * `parserStatus` before reading `parsed`.
@@ -49,6 +52,8 @@ export const getTransactionHistory = async (
       ...params,
       // An empty cursor means "first page", same as no cursor
       paginationToken: params.paginationToken || undefined,
+      // `false` is the default, and the API rejects it alongside `rawTransaction`
+      includeRawTransaction: params.includeRawTransaction || undefined,
     },
     userAgent
   );

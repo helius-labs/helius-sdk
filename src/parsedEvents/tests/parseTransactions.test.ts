@@ -150,6 +150,43 @@ describe("parsedEvents.parseTransactions Tests", () => {
     });
   });
 
+  it("Sends the rawTransaction encoding", async () => {
+    mockFetch.mockResolvedValue({ ok: true, json: async () => [] });
+
+    await rpc.parsedEvents.parseTransactions({
+      transactions: [SIG],
+      rawTransaction: "base64",
+    });
+
+    expect(JSON.parse(mockFetch.mock.calls[0][1].body)).toEqual({
+      transactions: [SIG],
+      rawTransaction: "base64",
+    });
+  });
+
+  it("Omits includeRawTransaction: false, which the API rejects next to rawTransaction", async () => {
+    mockFetch.mockResolvedValue({ ok: true, json: async () => [] });
+
+    await rpc.parsedEvents.parseTransactions({
+      transactions: [SIG],
+      includeRawTransaction: false,
+      rawTransaction: "json",
+    });
+    await rpc.parsedEvents.parseTransactions({
+      transactions: [SIG],
+      includeRawTransaction: true,
+    });
+
+    expect(JSON.parse(mockFetch.mock.calls[0][1].body)).toEqual({
+      transactions: [SIG],
+      rawTransaction: "json",
+    });
+    expect(JSON.parse(mockFetch.mock.calls[1][1].body)).toEqual({
+      transactions: [SIG],
+      includeRawTransaction: true,
+    });
+  });
+
   it("Keeps the raw body when the error response is not JSON", async () => {
     mockFetch.mockResolvedValue({
       ok: false,
