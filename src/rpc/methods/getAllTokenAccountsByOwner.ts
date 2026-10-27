@@ -31,9 +31,10 @@ export const makeGetAllTokenAccountsByOwner =
         },
       ]);
 
-      const page = (res as any)?.value ?? (res as any);
-      out.push(...page.accounts);
-      paginationKey = page.paginationKey;
+      const raw = res as any;
+      const page = raw?.value ?? raw;
+      out.push(...(Array.isArray(page) ? page : page.accounts));
+      paginationKey = raw?.paginationKey ?? page.paginationKey;
     } while (paginationKey);
 
     return out;
