@@ -81,6 +81,33 @@ describe("sendTransaction Tests", () => {
     }
   );
 
+  it.each([
+    ["Uint8Array", 0],
+    ["Uint8Array", 5],
+    ["Buffer", 0],
+    ["Buffer", 5],
+  ] as const)(
+    "Encodes only the serialized %s view at offset %s",
+    async (kind, offset) => {
+      const wire = getTransactionEncoder().encode(signed);
+      const storage = new Uint8Array(wire.length + offset + 7).fill(0xab);
+      storage.set(wire, offset);
+      const view =
+        kind === "Buffer"
+          ? Buffer.from(storage.buffer, offset, wire.length)
+          : storage.subarray(offset, offset + wire.length);
+      const serialize = jest.fn(() => view);
+
+      await send({ serialize });
+
+      expect(serialize).toHaveBeenCalledTimes(1);
+      expect(sendTransaction).toHaveBeenCalledWith(
+        getBase64EncodedWireTransaction(signed),
+        { encoding: "base64", skipPreflight: true }
+      );
+    }
+  );
+
   it("Prefers supplied base64 over serialization", async () => {
     const base64 = getBase64EncodedWireTransaction(signed);
     const serialize = jest.fn(() => {
