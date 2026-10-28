@@ -174,7 +174,11 @@ export interface ParserError {
 export interface ParsedTransactionResultBase {
   /** Transaction signature for this item. */
   signature: string;
-  /** Original Solana transaction payload. Present only when `includeRawTransaction` is `true`. */
+  /**
+   * Original Solana transaction, in `getTransaction`'s shape for the requested
+   * `rawTransaction` encoding (with `base64`, `transaction` is `[data, "base64"]`).
+   * Present only when a raw transaction is requested.
+   */
   rawTransaction?: Record<string, unknown>;
 }
 
@@ -203,41 +207,88 @@ export type ParsedTransactionResult =
   | ParsedTransactionResultOk
   | ParsedTransactionResultError;
 
+/**
+ * Encoding of the raw Solana transaction returned next to each parsed one, in
+ * `getTransaction`'s shape: `none` (no raw transaction), `json`, `jsonParsed`,
+ * or `base64`.
+ */
+export type ParsedEventsRawTransactionEncoding =
+  | "none"
+  | "json"
+  | "jsonParsed"
+  | "base64";
+
+/** Execution result to include. For `scan`, filtering happens before matching, so excluded transactions don't count toward the budget. */
+export type ParsedEventsStatusFilter = "succeeded" | "failed" | "any";
+
+/**
+ * Which transactions that reference only a token account owned by the
+ * address (not the address itself) are included: `none` leaves them out,
+ * `balanceChanged` includes those that change the token account's balance,
+ * `all` includes all of them.
+ */
+export type ParsedEventsTokenAccountsFilter = "none" | "balanceChanged" | "all";
+
 /** Request parameters for `parsedEvents.parseTransactions` (POST /v1/parsed-events/transactions). */
 export interface ParseTransactionsRequest {
   /** Transaction signatures to parse (max 100). Results are returned in the same order, including duplicates. */
   transactions: string[];
   /** Commitment level. Defaults to `confirmed`. */
   commitment?: ParsedEventsCommitment;
-  /** Include the original Solana transaction payload as `rawTransaction`. Defaults to `false`. */
+  /** Return each original transaction as `rawTransaction` in this encoding. Defaults to `none`. */
+  rawTransaction?: ParsedEventsRawTransactionEncoding;
+  /**
+   * @deprecated Use `rawTransaction: "json"`, which `true` is an alias for.
+   * `true` together with `rawTransaction` is rejected with a 400; `false` is
+   * the default and isn't sent.
+   */
   includeRawTransaction?: boolean;
 }
 
 /** Response from `parsedEvents.parseTransactions`. */
 export type ParseTransactionsResponse = ParsedTransactionResult[];
 
-/** Request parameters for `parsedEvents.getTransactionHistory` (POST /v1/parsed-events/transaction-history). */
-export interface GetParsedTransactionHistoryRequest {
-  /** Address whose transaction history should be fetched. Program-wide scans are not supported. */
-  address: string;
-  /** Number of transactions to return, an integer from 1 to 100. Defaults to 100. */
-  limit?: number;
-  /** Return transactions before this signature. */
+/** Window, cursor, filter, and output options shared by `getTransactionHistory` and `parsedEvents.scan`. */
+export interface ParsedHistoryWindowOptions {
+  /** Only transactions before this signature. */
   beforeSignature?: string;
-  /** Return transactions after this signature. */
+  /** Only transactions after this signature. */
   afterSignature?: string;
-  /** Cursor returned by a previous page as `paginationToken`. `null` is ignored, so a response's token can be passed straight back. */
+  /** Cursor returned by a previous request as `paginationToken`. `null` is ignored, so a response's token can be passed straight back. */
   paginationToken?: string | null;
-  /** Sort order. Defaults to `desc` (newest first). */
+  /** Order in which history is walked and results are returned. Defaults to `desc` (newest first). */
   sortOrder?: ParsedEventsSortOrder;
   /** Commitment level. Defaults to `confirmed`. */
   commitment?: ParsedEventsCommitment;
-  /** Include raw Solana transaction payloads as `rawTransaction`. Defaults to `false`. */
-  includeRawTransaction?: boolean;
+  /**
+   * Execution result to include. Defaults to `succeeded`, so failed
+   * transactions are left out unless you pass `any` or `failed`.
+   */
+  status?: ParsedEventsStatusFilter;
+  /** Transactions that reference only a token account owned by the address. Defaults to `none` (left out). */
+  tokenAccounts?: ParsedEventsTokenAccountsFilter;
+  /** Minimum slot at which the request can be evaluated. */
+  minContextSlot?: number;
+  /** Return each original transaction as `rawTransaction` in this encoding. Defaults to `none`. */
+  rawTransaction?: ParsedEventsRawTransactionEncoding;
   /** Slot comparison bounds. */
   slot?: ComparisonBounds;
   /** Block-time comparison bounds in whole Unix seconds (e.g. `Math.floor(Date.now() / 1000)`). */
   time?: ComparisonBounds;
+}
+
+/** Request parameters for `parsedEvents.getTransactionHistory` (POST /v1/parsed-events/transaction-history). */
+export interface GetParsedTransactionHistoryRequest extends ParsedHistoryWindowOptions {
+  /** Address whose transaction history should be fetched. Program-wide history is not supported; to search a program's history, or any history by instruction or token mint, use `parsedEvents.scan` (for a program's own address, give mints `scope: "transaction"`). */
+  address: string;
+  /** Number of transactions to return, an integer from 1 to 100. Defaults to 100. */
+  limit?: number;
+  /**
+   * @deprecated Use `rawTransaction: "json"`, which `true` is an alias for.
+   * `true` together with `rawTransaction` is rejected with a 400; `false` is
+   * the default and isn't sent.
+   */
+  includeRawTransaction?: boolean;
 }
 
 /** Response from `parsedEvents.getTransactionHistory`. */
@@ -247,3 +298,194 @@ export interface GetParsedTransactionHistoryResponse {
   /** Cursor for the next page. Absent when the end of the available range is reached. */
   paginationToken?: string | null;
 }
+
+/**
+ * Where a program's instructions or a mint's balances must be to count:
+ * - `address` (default): they involve the scanned `address`. An instruction
+ *   counts when one of its accounts is the address, a token account the address
+ *   owns, or a token account whose mint is the address, or when the address is
+ *   the program. A token balance counts when its token account is the address,
+ *   is owned by the address, or its mint is the address.
+ * - `transaction`: anywhere in the transaction, e.g. when the address only pays
+ *   the fee or executes a multisig transaction, or to find transactions of a
+ *   token's mint that also hold the token it trades against.
+ *
+ * Token account ownership comes from the token balances' `owner`; in older
+ * transactions that don't record it, only the address itself counts.
+ */
+export type ScanMatchScope = "address" | "transaction";
+
+/**
+ * Match transactions with an instruction of `programId`, top-level or inner
+ * (CPI), in `scope`. `instructions` and `discriminators` combine: an
+ * instruction matches when its data starts with any of them. Set neither to
+ * match any instruction of the program.
+ */
+export interface ScanProgramMatch {
+  /** Program address. Each program can appear once in `match.programs`. */
+  programId: string;
+  /**
+   * Instruction names from any IDL version of the program, as the IDL spells
+   * them or in snake_case (at most 50). A name not in the program's IDLs is
+   * rejected with a 400.
+   */
+  instructions?: string[];
+  /**
+   * Instruction data prefixes, each 1 to 8 hex-encoded bytes with an optional
+   * `0x` prefix (at most 50). Use these for programs without an IDL.
+   */
+  discriminators?: string[];
+  /** Which of the program's instructions count. Defaults to `address`, those that involve the scanned address. */
+  scope?: ScanMatchScope;
+}
+
+/**
+ * Match transactions with a pre or post token balance of `mint`, in `scope`,
+ * or, for the native SOL pseudo-mint, a lamport change (see `mint`).
+ *
+ * When the scanned address is a program, its token accounts usually belong
+ * to PDAs rather than the program, so use `scope: "transaction"` there.
+ */
+export interface ScanMintMatch {
+  /**
+   * Token mint. Each mint can appear once in `match.mints`.
+   *
+   * The native SOL pseudo-mint `So11111111111111111111111111111111111111111`
+   * (wrapped SOL is `…112`) matches on lamports instead, not counting the fee:
+   * the address's lamports changed (`address` scope) or any account's did
+   * (`transaction` scope). Each account is compared on its own, so lamports
+   * that leave and come back within the transaction don't count. This catches
+   * SOL a program pays out without a transfer instruction, and also incidental
+   * movements such as Jito tips and rent.
+   */
+  mint: string;
+  /** Which of the mint's balances count. Defaults to `address`, those that belong to the scanned address. */
+  scope?: ScanMatchScope;
+}
+
+/**
+ * What a transaction must match. Set `programs`, `mints`, or both; when both
+ * are set, a transaction must match both.
+ */
+export type ScanMatch = {
+  /** Programs (1 to 20, each once). Matches when the transaction has an instruction of any of them, in its scope. An empty array counts as unset. */
+  programs?: ScanProgramMatch[];
+  /** Token mints (1 to 20, each once). Matches when the transaction has a token balance of any of them in its scope, or a lamport change for the native SOL pseudo-mint. An empty array counts as unset. */
+  mints?: ScanMintMatch[];
+} & ({ programs: ScanProgramMatch[] } | { mints: ScanMintMatch[] });
+
+/**
+ * What a scan returns for its matches:
+ * - `transactions` (default): `data` holds the parsed matches, up to `limit`
+ * - `signatures`: `data` holds a {@link ScanSignature} per match
+ * - `count`: no `data`; `scan.matchedTransactions` is the number of matches
+ *
+ * `signatures` and `count` ignore `limit` and `rawTransaction`: they return
+ * every match in the scanned range, and stop only on `windowEnd`, `budget`, or
+ * `deadline`.
+ */
+export type ScanReturnShape = "transactions" | "signatures" | "count";
+
+/** A match returned with `returnShape: "signatures"`. */
+export interface ScanSignature {
+  /** Transaction signature. */
+  signature: string;
+  /** Slot containing the transaction. */
+  slot: number;
+  /** Position of the transaction within its slot. */
+  transactionIndex: number;
+  /** Unix timestamp (seconds) of the block, when available. */
+  blockTime: number | null;
+}
+
+/** Limits on how much history one scan request covers. */
+export interface ScanBudget {
+  /** Most transactions to scan in this request, an integer from 1 to 10,000. Defaults to 10,000. */
+  maxScannedTransactions?: number;
+}
+
+/**
+ * Request parameters for `parsedEvents.scan` (POST /v1/parsed-events/scan).
+ * `S` types `returnShape`; it defaults to `transactions`, so use
+ * `ScanParsedTransactionHistoryRequest<"count">` (or `<ScanReturnShape>`) for a
+ * request object you build ahead of the call with another shape.
+ */
+export interface ScanParsedTransactionHistoryRequest<
+  S extends ScanReturnShape = "transactions",
+> extends ParsedHistoryWindowOptions {
+  /** Address whose history is scanned. Prefer the narrowest address: every transaction it has counts toward the budget. */
+  address: string;
+  /** What a transaction must match. */
+  match: ScanMatch;
+  /** What the response carries for the matches. Defaults to `transactions`. */
+  returnShape?: S;
+  /** Most matches to return with the `transactions` shape, an integer from 1 to 100. Defaults to 100. Ignored by `signatures` and `count`. */
+  limit?: number;
+  /** Limits on how much history this request scans. */
+  budget?: ScanBudget;
+}
+
+/**
+ * Why a scan request stopped:
+ * - `windowEnd`: reached the end of the history or the requested window; no `paginationToken`
+ * - `limit`: returned `limit` matches (`transactions` shape only); the token resumes right after the last match
+ * - `budget`: scanned `budget.maxScannedTransactions`; the token resumes at the next history page
+ * - `deadline`: reached the request time limit; the token resumes at the next history page
+ */
+export type ScanStopReason = "windowEnd" | "limit" | "budget" | "deadline";
+
+/** Position of the last transaction a scan request covered, for reporting progress. */
+export interface ScannedThrough {
+  /** Slot of the last transaction scanned. */
+  slot: number;
+  /** Block time of the last transaction scanned, in Unix seconds, when available. */
+  blockTime: number | null;
+}
+
+/** How far a scan request got and why it stopped. */
+export interface ScanSummary {
+  /** Why the scan stopped. */
+  stoppedOn: ScanStopReason;
+  /** Transactions scanned in this request. */
+  scannedTransactions: number;
+  /** Matches found in this request. With `returnShape: "count"`, this is the result. */
+  matchedTransactions: number;
+  /** Position of the last transaction scanned. Absent when nothing was scanned. */
+  scannedThrough?: ScannedThrough;
+  /** Credits charged: 10 per request plus 1 per history page scanned (a page is up to 1,000 transactions). */
+  creditsCharged: number;
+}
+
+/** Fields of every `parsedEvents.scan` response, whatever its `returnShape`. */
+export interface ScanResponseBase {
+  /** Cursor where the next scan continues. Absent once the scan reaches the end of the history or window. */
+  paginationToken?: string | null;
+  /** How far this request got and why it stopped. */
+  scan: ScanSummary;
+}
+
+/** Response from `parsedEvents.scan` with the default `transactions` shape. */
+export interface ScanTransactionsResponse extends ScanResponseBase {
+  /** Parsed matches, in `sortOrder`. Can be empty while a `paginationToken` is still returned. */
+  data: ParsedTransactionResult[];
+}
+
+/** Response from `parsedEvents.scan` with `returnShape: "signatures"`. */
+export interface ScanSignaturesResponse extends ScanResponseBase {
+  /** Every match in the scanned range, in `sortOrder`. */
+  data: ScanSignature[];
+}
+
+/** Response from `parsedEvents.scan` with `returnShape: "count"`. The count is `scan.matchedTransactions`. */
+export interface ScanCountResponse extends ScanResponseBase {
+  data?: undefined;
+}
+
+/** Response from `parsedEvents.scan`, by `returnShape`. */
+export type ScanParsedTransactionHistoryResponse<
+  S extends ScanReturnShape = "transactions",
+> = S extends "count"
+  ? ScanCountResponse
+  : S extends "signatures"
+    ? ScanSignaturesResponse
+    : ScanTransactionsResponse;

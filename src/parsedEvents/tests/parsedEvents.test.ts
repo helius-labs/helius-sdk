@@ -18,7 +18,7 @@ describe("parsedEvents namespace Tests", () => {
 
     // The lazy namespace proxy returns a function for any key, so check the
     // real clients' surfaces directly
-    const methods = ["getTransactionHistory", "parseTransactions"];
+    const methods = ["getTransactionHistory", "parseTransactions", "scan"];
     expect(Object.keys(makeParsedEventsClient("k")).sort()).toEqual(methods);
     expect(Object.keys(makeParsedEventsClientEager("k")).sort()).toEqual(
       methods
@@ -32,6 +32,16 @@ describe("parsedEvents namespace Tests", () => {
     expect(mockFetch.mock.calls[0][0]).toMatch(
       /\/v1\/parsed-events\/transactions\?/
     );
+
+    const page = { data: [], scan: { stoppedOn: "windowEnd" } };
+    mockFetch.mockResolvedValue({ ok: true, json: async () => page });
+    await expect(
+      helius.parsedEvents.scan({
+        address: "x",
+        match: { mints: [{ mint: "m" }] },
+      })
+    ).resolves.toEqual(page);
+    expect(mockFetch.mock.calls[1][0]).toMatch(/\/v1\/parsed-events\/scan\?/);
   });
 
   it("Rejects without an API key", async () => {
@@ -76,22 +86,33 @@ describe("parsedEvents namespace Tests", () => {
         await expect(
           parsedEvents.getTransactionHistory({ address: "x" })
         ).rejects.toThrow(MAINNET_ONLY);
+        await expect(
+          parsedEvents.scan({
+            address: "x",
+            match: { mints: [{ mint: "m" }] },
+          })
+        ).rejects.toThrow(MAINNET_ONLY);
       }
 
       expect(mockFetch).not.toHaveBeenCalled();
     }
   );
 
-  it("Standalone lazy client loads once and serves both methods", async () => {
+  it("Standalone lazy client loads once and serves every method", async () => {
     mockFetch.mockResolvedValue({ ok: true, json: async () => [] });
 
     const client = makeParsedEventsClient("test-key");
     await client.parseTransactions({ transactions: [] });
     await client.getTransactionHistory({ address: "x" });
+    await client.scan({
+      address: "x",
+      match: { mints: [{ mint: "m" }] },
+    });
 
     expect(mockFetch.mock.calls.map(([url]) => url)).toEqual([
       "https://mainnet.helius-rpc.com/v1/parsed-events/transactions?api-key=test-key",
       "https://mainnet.helius-rpc.com/v1/parsed-events/transaction-history?api-key=test-key",
+      "https://mainnet.helius-rpc.com/v1/parsed-events/scan?api-key=test-key",
     ]);
   });
 

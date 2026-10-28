@@ -38,18 +38,11 @@ export const mainnetGuard = ({
 };
 
 /**
- * Drop `undefined` and `null` fields: the API types every optional field as
- * non-nullable
- */
-export const compact = (
-  fields: Record<string, unknown>
-): Record<string, unknown> =>
-  Object.fromEntries(
-    Object.entries(fields).filter(([, v]) => v !== undefined && v !== null)
-  );
-
-/**
  * POST a JSON body to a Parsed Events endpoint and return the parsed response
+ *
+ * `null` fields are dropped at every object level, since the API types every
+ * optional field as non-nullable. Values are otherwise sent as given (after
+ * `toJSON`), so a malformed one still reaches the API to be rejected.
  *
  * @throws Error with the HTTP status and the API's `error` message on a non-2xx response
  */
@@ -67,7 +60,10 @@ export const postParsedEvents = async <T>(
       "Content-Type": "application/json",
       ...getSDKHeaders(userAgent),
     },
-    body: JSON.stringify(body),
+    // A replacer runs after toJSON; in arrays an `undefined` still becomes null
+    body: JSON.stringify(body, (_key, value) =>
+      value === null ? undefined : value
+    ),
   });
 
   if (!res.ok) {

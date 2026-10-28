@@ -25,7 +25,7 @@ export interface EnhancedTxClientLazy {
   /**
    * Get parsed transactions for a wallet or program address.
    *
-   * @deprecated On mainnet, use `helius.parsedEvents.getTransactionHistory` instead.
+   * @deprecated On mainnet, use `helius.parsedEvents.getTransactionHistory` instead, or `helius.parsedEvents.scan` for a program address or server-side filtering by instruction or mint.
    */
   getTransactionsByAddress(
     params: GetEnhancedTransactionsByAddressRequest

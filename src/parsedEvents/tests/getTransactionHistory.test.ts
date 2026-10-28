@@ -52,6 +52,59 @@ describe("parsedEvents.getTransactionHistory Tests", () => {
     expect(JSON.parse(init.body)).toEqual(params);
   });
 
+  it("Sends the status, tokenAccounts, minContextSlot, and rawTransaction options", async () => {
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({ data: [] }),
+    });
+
+    const params = {
+      address: ADDRESS,
+      status: "any" as const,
+      tokenAccounts: "all" as const,
+      minContextSlot: 433000000,
+      rawTransaction: "jsonParsed" as const,
+    };
+    await rpc.parsedEvents.getTransactionHistory(params);
+
+    expect(JSON.parse(mockFetch.mock.calls[0][1].body)).toEqual(params);
+  });
+
+  it("Still accepts the deprecated includeRawTransaction alias", async () => {
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({ data: [] }),
+    });
+
+    await rpc.parsedEvents.getTransactionHistory({
+      address: ADDRESS,
+      includeRawTransaction: true,
+    });
+
+    expect(JSON.parse(mockFetch.mock.calls[0][1].body)).toEqual({
+      address: ADDRESS,
+      includeRawTransaction: true,
+    });
+  });
+
+  it("Omits includeRawTransaction: false, which the API rejects next to rawTransaction", async () => {
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({ data: [] }),
+    });
+
+    await rpc.parsedEvents.getTransactionHistory({
+      address: ADDRESS,
+      includeRawTransaction: false,
+      rawTransaction: "base64",
+    });
+
+    expect(JSON.parse(mockFetch.mock.calls[0][1].body)).toEqual({
+      address: ADDRESS,
+      rawTransaction: "base64",
+    });
+  });
+
   it("Returns a final page without a paginationToken", async () => {
     mockFetch.mockResolvedValue({
       ok: true,
@@ -93,6 +146,45 @@ describe("parsedEvents.getTransactionHistory Tests", () => {
       gteTime: 1767225600,
       type: "SWAP",
       slot: { gte: 1 },
+    });
+  });
+
+  it("Forwards a non-object time bound as-is for the API to reject", async () => {
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({ data: [] }),
+    });
+
+    // Spreading a number used to send `time: {}`, silently dropping the filter
+    await rpc.parsedEvents.getTransactionHistory({
+      address: ADDRESS,
+      time: 1767225600,
+    } as unknown as Parameters<
+      typeof rpc.parsedEvents.getTransactionHistory
+    >[0]);
+
+    expect(JSON.parse(mockFetch.mock.calls[0][1].body)).toEqual({
+      address: ADDRESS,
+      time: 1767225600,
+    });
+  });
+
+  it("Serializes a Date bound through toJSON instead of flattening it", async () => {
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({ data: [] }),
+    });
+
+    await rpc.parsedEvents.getTransactionHistory({
+      address: ADDRESS,
+      time: { gte: new Date(0) },
+    } as unknown as Parameters<
+      typeof rpc.parsedEvents.getTransactionHistory
+    >[0]);
+
+    expect(JSON.parse(mockFetch.mock.calls[0][1].body)).toEqual({
+      address: ADDRESS,
+      time: { gte: "1970-01-01T00:00:00.000Z" },
     });
   });
 

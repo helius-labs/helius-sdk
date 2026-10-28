@@ -1,4 +1,4 @@
-import { compact, postParsedEvents } from "./utils";
+import { postParsedEvents } from "./utils";
 import type {
   ParseTransactionsRequest,
   ParseTransactionsResponse,
@@ -38,6 +38,10 @@ export const parseTransactions = async (
   postParsedEvents<ParseTransactionsResponse>(
     "transactions",
     apiKey,
-    compact({ ...params }),
+    {
+      ...params,
+      // `false` is the default, and the API rejects it alongside `rawTransaction`
+      includeRawTransaction: params.includeRawTransaction || undefined,
+    },
     userAgent
   );
