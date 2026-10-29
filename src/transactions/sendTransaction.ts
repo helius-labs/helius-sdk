@@ -22,10 +22,9 @@ export const makeSendTransaction = (rpc: Rpc<SolanaRpcApi>) => {
     }
 
     if ("serialize" in tx && typeof tx.serialize === "function") {
-      // Limit encoding to the serialized view, including a view at offset zero.
-      const wireBytes = new Uint8Array(tx.serialize());
+      // Copy only the serialized bytes.
       return getBase64Decoder().decode(
-        wireBytes
+        new Uint8Array(tx.serialize())
       ) as Base64EncodedWireTransaction;
     }
 
