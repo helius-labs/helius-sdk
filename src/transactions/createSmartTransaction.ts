@@ -14,6 +14,7 @@ import type {
 } from "@solana/kit";
 
 import {
+  addSignersToInstruction,
   compileTransactionMessage,
   getBase64EncodedWireTransaction,
   pipe,
@@ -108,7 +109,9 @@ export const makeCreateSmartTransaction = ({
     feePayer,
   }: CreateSmartTxInput): Promise<CreateSmartTxResult> => {
     const feePayerSigner = resolveFeePayerSigner(signers, feePayer);
-    const userIxs = instructions.filter((ix) => !isComputeBudgetIx(ix));
+    const userIxs = instructions
+      .filter((ix) => !isComputeBudgetIx(ix))
+      .map((ix) => addSignersToInstruction([...signers], ix));
 
     // Fail before spending two RPC round-trips on a transaction that can't be built
     assertNoAddressLookupsOnV1(version, userIxs);
