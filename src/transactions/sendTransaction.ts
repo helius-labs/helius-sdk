@@ -2,6 +2,7 @@ import {
   Base64EncodedWireTransaction,
   Rpc,
   SolanaRpcApi,
+  getBase64Decoder,
   getBase64EncodedWireTransaction,
 } from "@solana/kit";
 import { SendableTransaction, SendTransactionFn } from "./types";
@@ -20,8 +21,11 @@ export const makeSendTransaction = (rpc: Rpc<SolanaRpcApi>) => {
       return getBase64EncodedWireTransaction(tx.signed as any);
     }
 
-    if (typeof (tx as any).serialize === "function") {
-      return getBase64EncodedWireTransaction(tx as any);
+    if ("serialize" in tx && typeof tx.serialize === "function") {
+      // Copy only the serialized bytes.
+      return getBase64Decoder().decode(
+        new Uint8Array(tx.serialize())
+      ) as Base64EncodedWireTransaction;
     }
 
     throw new Error("Unsupported transaction shape passed to sendTransaction");
