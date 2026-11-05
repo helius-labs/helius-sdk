@@ -344,7 +344,7 @@ Stream real-time data with WebSockets using Kit's subscription methods. Availabl
 - [`signatureNotifications()`](https://www.helius.dev/docs/api-reference/rpc/websocket/signaturesubscribe): Streams notifications when a transaction with the provided signature reaches the specified commitment level.
 - [`programNotifications()`](https://www.helius.dev/docs/api-reference/rpc/websocket/programsubscribe): Streams notifications when the lamports or data for an account owned by the specified program changes.
 - [`accountNotifications()`](https://www.helius.dev/docs/api-reference/rpc/websocket/accountsubscribe): Streams notifications when the lamports or data for the specified account changes.
-- `close()`: Closes an open WebSocket connection via Kit's `dispose` method, falling back to `.close()`.
+- `close()`: Ends every subscription opened through `helius.ws` (by aborting each one's signal, so Kit closes the socket) and closes the Enhanced WebSocket connection.
 
 [**Enhanced WebSockets**](https://www.helius.dev/docs/websockets) (Business+ plan)
 

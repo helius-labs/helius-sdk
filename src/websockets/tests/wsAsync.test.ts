@@ -1,15 +1,30 @@
 import type { Address } from "@solana/kit";
 import { makeWsAsync } from "../wsAsync.js";
 
-// Mock @solana/kit
-const mockDispose = jest.fn();
+// Mock @solana/kit. Like Kit's, each method returns a pending request whose
+// subscribe()/reactive() take the abortSignal that ends the subscription.
+const mockSubscribe = jest.fn(async (_config: { abortSignal: AbortSignal }) =>
+  (async function* () {})()
+);
+const mockReactive = jest.fn(async (_config: { abortSignal: AbortSignal }) => ({
+  getUnifiedState: jest.fn(),
+  subscribe: jest.fn(),
+}));
+const pendingRequest = (name: string) => ({
+  name,
+  subscribe: mockSubscribe,
+  reactive: mockReactive,
+});
 const mockRpcSubscriptions = {
-  logsNotifications: jest.fn().mockReturnValue("logs-sub"),
-  slotNotifications: jest.fn().mockReturnValue("slot-sub"),
-  signatureNotifications: jest.fn().mockReturnValue("sig-sub"),
-  programNotifications: jest.fn().mockReturnValue("program-sub"),
-  accountNotifications: jest.fn().mockReturnValue("account-sub"),
-  dispose: mockDispose,
+  logsNotifications: jest.fn().mockReturnValue(pendingRequest("logs-sub")),
+  slotNotifications: jest.fn().mockReturnValue(pendingRequest("slot-sub")),
+  signatureNotifications: jest.fn().mockReturnValue(pendingRequest("sig-sub")),
+  programNotifications: jest
+    .fn()
+    .mockReturnValue(pendingRequest("program-sub")),
+  accountNotifications: jest
+    .fn()
+    .mockReturnValue(pendingRequest("account-sub")),
 };
 const mockCreateSolanaRpcSubscriptions = jest
   .fn()
@@ -89,12 +104,64 @@ describe("makeWsAsync", () => {
 
     // Trigger enhanced load
     await ws.transactionSubscribe({});
-    // Trigger standard load
-    await ws.logsNotifications("all");
+    // Open a standard subscription the caller never aborts
+    const logs = await ws.logsNotifications("all");
+    await logs.subscribe({ abortSignal: new AbortController().signal });
+    const kitSignal = mockSubscribe.mock.calls[0][0].abortSignal;
+    expect(kitSignal.aborted).toBe(false);
 
     ws.close();
     expect(mockEnhancedClose).toHaveBeenCalled();
-    expect(mockDispose).toHaveBeenCalled();
+    // Kit closes a socket once every subscription on it is aborted
+    expect(kitSignal.aborted).toBe(true);
+  });
+
+  it("close() ends every standard subscription, including reactive ones", async () => {
+    const ws = makeWsAsync(WS_URL);
+
+    const slots = await ws.slotNotifications();
+    await slots.subscribe({ abortSignal: new AbortController().signal });
+    const account = await ws.accountNotifications("acctId" as Address);
+    await account.reactive({ abortSignal: new AbortController().signal });
+
+    const signals = [
+      mockSubscribe.mock.calls[0][0].abortSignal,
+      mockReactive.mock.calls[0][0].abortSignal,
+    ];
+    expect(signals.map((s) => s.aborted)).toEqual([false, false]);
+
+    ws.close();
+    expect(signals.map((s) => s.aborted)).toEqual([true, true]);
+  });
+
+  it("subscribing after close() rejects instead of opening a connection", async () => {
+    const ws = makeWsAsync(WS_URL);
+    const logs = await ws.logsNotifications("all");
+
+    ws.close();
+
+    await expect(
+      logs.subscribe({ abortSignal: new AbortController().signal })
+    ).rejects.toThrow("WebSocket client is closed");
+    expect(mockSubscribe).not.toHaveBeenCalled();
+  });
+
+  it("aborting a caller's own signal ends only that subscription", async () => {
+    const ws = makeWsAsync(WS_URL);
+    const first = new AbortController();
+
+    const logs = await ws.logsNotifications("all");
+    await logs.subscribe({ abortSignal: first.signal });
+    await logs.subscribe({ abortSignal: new AbortController().signal });
+    const [a, b] = mockSubscribe.mock.calls.map((c) => c[0].abortSignal);
+
+    first.abort("done");
+    expect(a.aborted).toBe(true);
+    expect(a.reason).toBe("done");
+    expect(b.aborted).toBe(false);
+
+    ws.close();
+    expect(b.aborted).toBe(true);
   });
 
   it("rejects standard subscriptions after close() instead of reopening a connection", async () => {
@@ -125,7 +192,7 @@ describe("makeWsAsync", () => {
     expect(mockCreateSolanaRpcSubscriptions).toHaveBeenCalledTimes(1);
   });
 
-  it("rejects and disposes the connection when close() lands while the first connection is still opening", async () => {
+  it("rejects when close() lands while the first client is still loading", async () => {
     const ws = makeWsAsync(WS_URL, ENHANCED_WS_URL);
 
     // Don't await yet — close() races the in-flight dynamic import in raw().
@@ -134,10 +201,8 @@ describe("makeWsAsync", () => {
 
     await expect(pending).rejects.toThrow("WebSocket client is closed");
 
-    // The client was constructed once and immediately disposed, never
-    // left dangling as a live, undisposed connection.
-    expect(mockCreateSolanaRpcSubscriptions).toHaveBeenCalledTimes(1);
-    expect(mockDispose).toHaveBeenCalledTimes(1);
+    // No client was built, so nothing can subscribe (and connect) later
+    expect(mockCreateSolanaRpcSubscriptions).not.toHaveBeenCalled();
   });
 
   it("enhanced methods throw with apiKey-missing message when no enhancedWsUrl", async () => {
@@ -163,16 +228,16 @@ describe("makeWsAsync", () => {
     const ws = makeWsAsync(WS_URL, ENHANCED_WS_URL);
 
     const logs = await ws.logsNotifications("all");
-    expect(logs).toBe("logs-sub");
+    expect(logs).toMatchObject({ name: "logs-sub" });
 
     const slots = await ws.slotNotifications();
-    expect(slots).toBe("slot-sub");
+    expect(slots).toMatchObject({ name: "slot-sub" });
     // No argument at all: an undefined one goes out as `params: [null]`,
     // which the server rejects.
     expect(mockRpcSubscriptions.slotNotifications).toHaveBeenCalledWith();
 
     const sig = await ws.signatureNotifications("tx-sig");
-    expect(sig).toBe("sig-sub");
+    expect(sig).toMatchObject({ name: "sig-sub" });
 
     ws.close();
   });
