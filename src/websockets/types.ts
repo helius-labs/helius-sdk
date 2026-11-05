@@ -1,4 +1,4 @@
-import type { MaxSupportedTransactionVersion } from "../types/types";
+import type { MaxSupportedTransactionVersion } from "../types/types.js";
 
 /**
  * Filter for `transactionSubscribe`. Controls which transactions are streamed.

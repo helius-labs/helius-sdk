@@ -1,8 +1,8 @@
-import { postParsedEvents } from "./utils";
+import { postParsedEvents } from "./utils.js";
 import type {
   ParseTransactionsRequest,
   ParseTransactionsResponse,
-} from "./types";
+} from "./types.js";
 
 /**
  * Parse transaction signatures into decoded instructions, transfers, and summaries

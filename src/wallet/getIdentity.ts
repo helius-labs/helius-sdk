@@ -3,8 +3,8 @@ import {
   buildQueryString,
   handleResponse,
   getHeaders,
-} from "./utils";
-import type { GetIdentityRequest, GetIdentityResponse } from "./types";
+} from "./utils.js";
+import type { GetIdentityRequest, GetIdentityResponse } from "./types.js";
 
 /**
  * Get wallet identity information for known addresses

@@ -1,4 +1,4 @@
-import { authRequest } from "./utils";
+import { authRequest } from "./utils.js";
 
 export interface OAuthTokenResponse {
   access_token: string;

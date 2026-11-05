@@ -1,4 +1,4 @@
-import { makePollTransactionConfirmation } from "../pollTransactionConfirmation";
+import { makePollTransactionConfirmation } from "../pollTransactionConfirmation.js";
 import type { Rpc, SolanaRpcApi } from "@solana/kit";
 import type { Signature } from "@solana/kit";
 

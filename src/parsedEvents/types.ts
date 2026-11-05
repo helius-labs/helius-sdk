@@ -1,4 +1,4 @@
-import type { HeliusRpcOptions } from "../rpc/types";
+import type { HeliusRpcOptions } from "../rpc/types.js";
 
 /** The `createHelius()` options that say which network a Parsed Events client targets. */
 export type ParsedEventsNetworkOptions = Pick<

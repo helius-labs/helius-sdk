@@ -3,8 +3,8 @@ import type {
   GetTransactionsForAddressConfigSignatures,
   GetTransactionsForAddressResultFull,
   GetTransactionsForAddressResultSignatures,
-} from "../../types";
-import type { RpcCaller } from "../caller";
+} from "../../types/index.js";
+import type { RpcCaller } from "../caller.js";
 
 // Function overloads: return type based on transactionDetails config
 export type GetTransactionsForAddressFn = {

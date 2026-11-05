@@ -1,13 +1,13 @@
-import { PLAN_TO_USAGE_PLAN } from "./constants";
-import { loadKeypair } from "./loadKeypair";
-import { getAddress } from "./getAddress";
-import { signAuthMessage } from "./signAuthMessage";
-import { walletSignup } from "./walletSignup";
-import { listProjects } from "./listProjects";
-import { getProject } from "./getProject";
-import { createApiKey } from "./createApiKey";
-import { buildEndpoints, requireContactInfo } from "./signupHelpers";
-import { createPayment } from "./createPayment";
+import { PLAN_TO_USAGE_PLAN } from "./constants.js";
+import { loadKeypair } from "./loadKeypair.js";
+import { getAddress } from "./getAddress.js";
+import { signAuthMessage } from "./signAuthMessage.js";
+import { walletSignup } from "./walletSignup.js";
+import { listProjects } from "./listProjects.js";
+import { getProject } from "./getProject.js";
+import { createApiKey } from "./createApiKey.js";
+import { buildEndpoints, requireContactInfo } from "./signupHelpers.js";
+import { createPayment } from "./createPayment.js";
 import type {
   Endpoints,
   PreauthenticatedSignupOptions,
@@ -16,7 +16,7 @@ import type {
   SignupOptions,
   SignupResult,
   SupportedPlan,
-} from "./types";
+} from "./types.js";
 
 const SUPPORTED_PLANS: readonly SupportedPlan[] = [
   "agent",

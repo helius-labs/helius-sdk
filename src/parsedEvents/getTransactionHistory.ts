@@ -1,8 +1,8 @@
-import { postParsedEvents } from "./utils";
+import { postParsedEvents } from "./utils.js";
 import type {
   GetParsedTransactionHistoryRequest,
   GetParsedTransactionHistoryResponse,
-} from "./types";
+} from "./types.js";
 
 /**
  * Get parsed transaction history for an address

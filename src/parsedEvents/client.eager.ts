@@ -1,13 +1,13 @@
-import type { ParsedEventsClient } from "./client";
-import { parseTransactions } from "./parseTransactions";
-import { getTransactionHistory } from "./getTransactionHistory";
-import { scan } from "./scan";
-import { mainnetGuard } from "./utils";
+import type { ParsedEventsClient } from "./client.js";
+import { parseTransactions } from "./parseTransactions.js";
+import { getTransactionHistory } from "./getTransactionHistory.js";
+import { scan } from "./scan.js";
+import { mainnetGuard } from "./utils.js";
 import type {
   ParsedEventsNetworkOptions,
   ScanParsedTransactionHistoryRequest,
   ScanReturnShape,
-} from "./types";
+} from "./types.js";
 
 // Re-export ParsedEventsClient type for convenience
 export type { ParsedEventsClient };

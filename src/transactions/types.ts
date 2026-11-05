@@ -16,8 +16,8 @@ import {
   Base64EncodedWireTransaction,
 } from "@solana/kit";
 
-import { GetPriorityFeeEstimateFn } from "../rpc/methods/getPriorityFeeEstimate";
-import { GetComputeUnitsFn } from "./getComputeUnits";
+import { GetPriorityFeeEstimateFn } from "../rpc/methods/getPriorityFeeEstimate.js";
+import { GetComputeUnitsFn } from "./getComputeUnits.js";
 
 /**
  * A transaction version the SDK can build: `"legacy"`, `0`, or `1`.

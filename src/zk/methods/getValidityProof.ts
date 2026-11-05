@@ -1,5 +1,5 @@
-import { RpcCaller } from "../../rpc/caller";
-import { GetValidityProofRequest, GetValidityProofResponse } from "../types";
+import { RpcCaller } from "../../rpc/caller.js";
+import { GetValidityProofRequest, GetValidityProofResponse } from "../types.js";
 
 export type GetValidityProofFn = (
   p: GetValidityProofRequest

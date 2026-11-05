@@ -1,10 +1,10 @@
-import { determineTipSol } from "../determineTip";
-import * as tipFloor from "../fetchTipFloor";
-import * as lamportsUtil from "../lamports";
-import { MIN_TIP_LAMPORTS_MAX, MIN_TIP_LAMPORTS_SWQOS } from "../types";
+import { determineTipSol } from "../determineTip.js";
+import * as tipFloor from "../fetchTipFloor.js";
+import * as lamportsUtil from "../lamports.js";
+import { MIN_TIP_LAMPORTS_MAX, MIN_TIP_LAMPORTS_SWQOS } from "../types.js";
 
-jest.mock("../fetchTipFloor");
-jest.mock("../lamports");
+jest.mock("../fetchTipFloor.js");
+jest.mock("../lamports.js");
 
 const fetchTipFloor75th = tipFloor.fetchTipFloor75th as jest.MockedFunction<
   typeof tipFloor.fetchTipFloor75th

@@ -4,7 +4,7 @@ import {
   SolanaRpcApi,
   getBase64EncodedWireTransaction,
 } from "@solana/kit";
-import { SendableTransaction, SendTransactionFn } from "./types";
+import { SendableTransaction, SendTransactionFn } from "./types.js";
 
 export const makeSendTransaction = (rpc: Rpc<SolanaRpcApi>) => {
   const normalise = (tx: SendableTransaction): Base64EncodedWireTransaction => {

@@ -1,4 +1,4 @@
-import { getSDKHeaders, sanitizeClient, SDK_USER_AGENT } from "./http";
+import { getSDKHeaders, sanitizeClient, SDK_USER_AGENT } from "./http.js";
 
 describe("sanitizeClient", () => {
   it("returns sanitized string for valid input", () => {

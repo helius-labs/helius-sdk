@@ -1,8 +1,8 @@
-import type { RpcCaller } from "../caller";
+import type { RpcCaller } from "../caller.js";
 import type {
   SearchAssetsRequest,
   GetAssetResponseList,
-} from "../../types/das";
+} from "../../types/das.js";
 
 export type SearchAssetsFn = (
   p: SearchAssetsRequest

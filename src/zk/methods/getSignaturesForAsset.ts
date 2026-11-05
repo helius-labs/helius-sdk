@@ -1,8 +1,8 @@
-import { RpcCaller } from "../../rpc/caller";
+import { RpcCaller } from "../../rpc/caller.js";
 import {
   GetSignaturesForAssetRequest,
   GetSignaturesForAssetResponse,
-} from "../types";
+} from "../types.js";
 
 export type GetSignaturesForAssetFn = (
   p: GetSignaturesForAssetRequest

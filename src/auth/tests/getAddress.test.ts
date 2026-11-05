@@ -1,6 +1,6 @@
-import { getAddress } from "../getAddress";
-import { generateKeypair } from "../generateKeypair";
-import { loadKeypair } from "../loadKeypair";
+import { getAddress } from "../getAddress.js";
+import { generateKeypair } from "../generateKeypair.js";
+import { loadKeypair } from "../loadKeypair.js";
 
 describe("getAddress", () => {
   it("returns a base58 address string", async () => {

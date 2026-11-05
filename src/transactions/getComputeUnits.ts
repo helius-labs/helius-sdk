@@ -6,7 +6,7 @@ import {
   estimateComputeUnitLimitFactory,
 } from "@solana/kit";
 import { MAX_COMPUTE_UNIT_LIMIT } from "@solana-program/compute-budget";
-import { GetComputeUnitsOpts } from "./types";
+import { GetComputeUnitsOpts } from "./types.js";
 
 export type GetComputeUnitsFn = (
   message: TransactionMessage & TransactionMessageWithFeePayer,

@@ -5,8 +5,8 @@ import {
   type SolanaRpcApi,
 } from "@solana/kit";
 
-import { makePollTransactionConfirmation } from "./pollTransactionConfirmation";
-import { senderFastUrl, type SenderRegion, type SignedTx } from "./types";
+import { makePollTransactionConfirmation } from "./pollTransactionConfirmation.js";
+import { senderFastUrl, type SenderRegion, type SignedTx } from "./types.js";
 
 const DEFAULT_TIMEOUT_MS = 60_000;
 const DEFAULT_POLL_MS = 2_000;

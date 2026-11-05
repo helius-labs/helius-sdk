@@ -1,8 +1,8 @@
 import type {
   GetAssetProofBatchRequest,
   GetAssetProofBatchResponse,
-} from "../../types";
-import type { RpcCaller } from "../caller";
+} from "../../types/index.js";
+import type { RpcCaller } from "../caller.js";
 
 export type GetAssetProofBatchFn = (
   p: GetAssetProofBatchRequest

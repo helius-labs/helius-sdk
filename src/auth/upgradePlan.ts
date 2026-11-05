@@ -1,13 +1,13 @@
-import { requireContactInfo } from "./signupHelpers";
-import { createPayment } from "./createPayment";
-import { payPaymentLink } from "./payPaymentLink";
-import { pollUntilTerminal } from "./pollPayment";
+import { requireContactInfo } from "./signupHelpers.js";
+import { createPayment } from "./createPayment.js";
+import { payPaymentLink } from "./payPaymentLink.js";
+import { pollUntilTerminal } from "./pollPayment.js";
 import type {
   UpgradePlanAndPayOptions,
   UpgradePlanAndPayResult,
   UpgradePlanOptions,
   UpgradePlanResult,
-} from "./types";
+} from "./types.js";
 
 /**
  * Phase 2 — create a payment intent for upgrading an existing project to a

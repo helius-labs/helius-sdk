@@ -25,7 +25,7 @@ import {
   SYSVAR_CLOCK,
   SYSVAR_STAKE_HISTORY,
   UNUSED_STAKE_CONFIG_ACC,
-} from "./types";
+} from "./types.js";
 
 export const makeCreateStakeTransaction = ({
   rpc,

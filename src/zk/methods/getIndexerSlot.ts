@@ -1,9 +1,9 @@
-import type { RpcCaller } from "../../rpc/caller";
+import type { RpcCaller } from "../../rpc/caller.js";
 import type {
   GetIndexerSlotFn,
   GetIndexerSlotRequest,
   GetIndexerSlotResponse,
-} from "../types";
+} from "../types.js";
 
 export const makeGetIndexerSlot =
   (call: RpcCaller): GetIndexerSlotFn =>

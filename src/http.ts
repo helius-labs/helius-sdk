@@ -1,5 +1,5 @@
 import type { createDefaultRpcTransport } from "@solana/kit";
-import { version } from "./version";
+import { version } from "./version.js";
 
 const getEnvironment = (): "web" | "server" =>
   typeof window !== "undefined" ? "web" : "server";

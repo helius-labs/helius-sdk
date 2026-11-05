@@ -1,5 +1,5 @@
-import { createHelius } from "../../../rpc";
-import { GetCompressedAccountProofResponse } from "../../types";
+import { createHelius } from "../../../rpc/index.js";
+import { GetCompressedAccountProofResponse } from "../../types.js";
 
 const transportMock = jest.fn();
 jest.mock("@solana/kit", () => ({

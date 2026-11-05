@@ -1,7 +1,7 @@
 import { address, Base58EncodedBytes } from "@solana/kit";
 
-import { makeGetHeliusStakeAccounts } from "../getHeliusStakeAccounts";
-import { HELIUS_VALIDATOR_ID, STAKE_PROGRAM_ID } from "../types";
+import { makeGetHeliusStakeAccounts } from "../getHeliusStakeAccounts.js";
+import { HELIUS_VALIDATOR_ID, STAKE_PROGRAM_ID } from "../types.js";
 
 const WALLET = address("8beY2iKosqhApSsWwJ5JTyxzVnMqxarJbYdrHgRUKYPx");
 

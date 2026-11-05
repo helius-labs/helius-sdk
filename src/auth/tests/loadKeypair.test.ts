@@ -1,4 +1,4 @@
-import { loadKeypair } from "../loadKeypair";
+import { loadKeypair } from "../loadKeypair.js";
 
 describe("loadKeypair", () => {
   it("returns publicKey and secretKey from 64-byte input", () => {

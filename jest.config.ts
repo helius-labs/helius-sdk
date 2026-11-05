@@ -12,7 +12,7 @@ const config: Config = {
         "^(\\.{1,2}/.*)\\.js$": "$1"
     },
     transform: {
-        "^.+\\.ts$": ["ts-jest", { tsconfig: "<rootDir>/tsconfig.json" }]
+        "^.+\\.ts$": ["ts-jest", { tsconfig: "<rootDir>/tsconfig.jest.json" }]
     },
     clearMocks: true,
     verbose: true,

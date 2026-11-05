@@ -28,8 +28,8 @@ const mockRpc: any = {
   getLatestBlockhash: jest.fn().mockReturnValue({ send: mockHashSend }),
 };
 
-import { makeCreateUnstakeTransaction } from "../createUnstakeTransaction";
-import { STAKE_PROGRAM_ID } from "../types";
+import { makeCreateUnstakeTransaction } from "../createUnstakeTransaction.js";
+import { STAKE_PROGRAM_ID } from "../types.js";
 
 describe("makeCreateUnstakeTransaction Tests", () => {
   beforeEach(() => jest.clearAllMocks());

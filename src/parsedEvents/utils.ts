@@ -1,5 +1,5 @@
-import { getSDKHeaders } from "../http";
-import type { ParsedEventsNetworkOptions } from "./types";
+import { getSDKHeaders } from "../http.js";
+import type { ParsedEventsNetworkOptions } from "./types.js";
 
 /** Base URL for Parsed Events endpoints. Parsed Events is mainnet-only. */
 const BASE_URL = "https://mainnet.helius-rpc.com/v1/parsed-events";

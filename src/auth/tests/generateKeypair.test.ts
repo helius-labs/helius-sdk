@@ -1,4 +1,4 @@
-import { generateKeypair } from "../generateKeypair";
+import { generateKeypair } from "../generateKeypair.js";
 
 describe("generateKeypair", () => {
   it("returns publicKey (32 bytes) and secretKey (64 bytes)", async () => {

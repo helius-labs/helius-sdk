@@ -3,9 +3,9 @@ import {
   initializeCheckout,
   getCheckoutPreview,
   getCheckoutPreviewByPriceId,
-} from "./checkout";
-import { buildPaymentUrl } from "./paymentUrl";
-import type { PaymentLink, SupportedPlan } from "./types";
+} from "./checkout.js";
+import { buildPaymentUrl } from "./paymentUrl.js";
+import type { PaymentLink, SupportedPlan } from "./types.js";
 
 const planNameFor = (
   plan: SupportedPlan | undefined,

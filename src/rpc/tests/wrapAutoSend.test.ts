@@ -1,4 +1,4 @@
-import { wrapAutoSend } from "../wrapAutoSend";
+import { wrapAutoSend } from "../wrapAutoSend.js";
 
 describe("wrapAutoSend", () => {
   type FakePending<T> = { send: jest.Mock<Promise<T>, any[]> };

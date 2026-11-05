@@ -1,7 +1,7 @@
-import { createHelius } from "../../rpc";
-import { createHeliusEager } from "../../rpc/createHelius.eager";
-import { makeParsedEventsClient } from "../client";
-import { makeParsedEventsClientEager } from "../client.eager";
+import { createHelius } from "../../rpc/index.js";
+import { createHeliusEager } from "../../rpc/createHelius.eager.js";
+import { makeParsedEventsClient } from "../client.js";
+import { makeParsedEventsClientEager } from "../client.eager.js";
 
 const mockFetch = jest.fn();
 global.fetch = mockFetch as jest.Mock;

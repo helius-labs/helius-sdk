@@ -7,7 +7,7 @@ import {
   generateKeyPairSigner,
 } from "@solana/kit";
 
-import { makeCreateSmartTransactionWithTip } from "../createSmartTransactionWithTip";
+import { makeCreateSmartTransactionWithTip } from "../createSmartTransactionWithTip.js";
 
 jest.mock("@solana-program/system", () => ({
   getTransferSolInstruction: jest.fn(() => ({ __tip: true })),

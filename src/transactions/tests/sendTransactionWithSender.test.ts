@@ -1,15 +1,15 @@
-import { determineTipSol } from "../determineTip";
-import { makeSendTransactionWithSender } from "../sendTransactionWithSender";
-import { MIN_TIP_LAMPORTS_MAX, MIN_TIP_LAMPORTS_SWQOS } from "../types";
+import { determineTipSol } from "../determineTip.js";
+import { makeSendTransactionWithSender } from "../sendTransactionWithSender.js";
+import { MIN_TIP_LAMPORTS_MAX, MIN_TIP_LAMPORTS_SWQOS } from "../types.js";
 
 const mockCreateSmartTxWithTip = jest.fn();
 const mockSendViaSender = jest.fn();
 const mockPoll = jest.fn();
 
-jest.mock("../sendViaSender", () => ({
+jest.mock("../sendViaSender.js", () => ({
   sendViaSender: (...args: any[]) => mockSendViaSender(...args),
 }));
-jest.mock("../pollTransactionConfirmation", () => ({
+jest.mock("../pollTransactionConfirmation.js", () => ({
   makePollTransactionConfirmation: () => () => mockPoll(),
 }));
 jest.mock("@solana/kit", () => {
@@ -19,7 +19,7 @@ jest.mock("@solana/kit", () => {
     getBase64EncodedWireTransaction: () => "TX64",
   };
 });
-jest.mock("../determineTip", () => ({
+jest.mock("../determineTip.js", () => ({
   determineTipSol: jest.fn().mockResolvedValue(1n), // Way below any floor
 }));
 

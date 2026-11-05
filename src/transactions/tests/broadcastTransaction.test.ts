@@ -1,4 +1,4 @@
-import { broadcastTransactionFactory } from "../broadcastTransaction";
+import { broadcastTransactionFactory } from "../broadcastTransaction.js";
 import type { Rpc, SolanaRpcApi } from "@solana/kit";
 import type { Signature } from "@solana/kit";
 

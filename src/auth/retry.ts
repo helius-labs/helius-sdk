@@ -1,5 +1,5 @@
-import { sleep } from "./utils";
-import { getHttpStatus } from "./getHttpStatus";
+import { sleep } from "./utils.js";
+import { getHttpStatus } from "./getHttpStatus.js";
 
 export function isRetryableError(error: unknown): boolean {
   const status = getHttpStatus(error);

@@ -1,5 +1,5 @@
-import type { ProjectUsage } from "./types";
-import { adminRequest } from "./utils";
+import type { ProjectUsage } from "./types.js";
+import { adminRequest } from "./utils.js";
 
 export async function getProjectUsage(
   apiKey: string,

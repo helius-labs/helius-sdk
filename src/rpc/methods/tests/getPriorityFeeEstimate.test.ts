@@ -1,5 +1,8 @@
-import { createHeliusEager as createHelius } from "../../createHelius.eager";
-import { GetPriorityFeeEstimateResponse, PriorityLevel } from "../../../types";
+import { createHeliusEager as createHelius } from "../../createHelius.eager.js";
+import {
+  GetPriorityFeeEstimateResponse,
+  PriorityLevel,
+} from "../../../types/index.js";
 
 const transportMock = jest.fn();
 

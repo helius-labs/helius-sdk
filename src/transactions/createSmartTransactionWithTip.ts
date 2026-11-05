@@ -8,7 +8,7 @@ import {
   CreateSmartTransactionWithTipFn,
   MIN_TIP_LAMPORTS_MAX,
   SENDER_TIP_ACCOUNTS,
-} from "./types";
+} from "./types.js";
 
 export const makeCreateSmartTransactionWithTip = (
   createSmartTransaction: CreateSmartTransactionFn

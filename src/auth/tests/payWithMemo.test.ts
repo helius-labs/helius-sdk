@@ -1,8 +1,8 @@
-import { payWithMemo } from "../payWithMemo";
-import { buildAndSendTokenTransfer } from "../buildTokenTransfer";
-import { USDC_MINT, MEMO_PROGRAM_ID } from "../constants";
+import { payWithMemo } from "../payWithMemo.js";
+import { buildAndSendTokenTransfer } from "../buildTokenTransfer.js";
+import { USDC_MINT, MEMO_PROGRAM_ID } from "../constants.js";
 
-jest.mock("../buildTokenTransfer");
+jest.mock("../buildTokenTransfer.js");
 jest.mock("@solana/kit", () => ({
   createKeyPairSignerFromBytes: jest.fn().mockResolvedValue({
     address: "SignerAddress1111111111111111111",

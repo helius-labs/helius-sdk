@@ -1,5 +1,5 @@
-import type { CheckoutStatusResponse } from "./types";
-import { authRequest } from "./utils";
+import type { CheckoutStatusResponse } from "./types.js";
+import { authRequest } from "./utils.js";
 
 export async function getPaymentStatus(
   jwt: string,

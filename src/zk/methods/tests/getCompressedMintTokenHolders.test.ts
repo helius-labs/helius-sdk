@@ -1,5 +1,5 @@
-import { createHelius } from "../../../rpc";
-import type { GetCompressedMintTokenHoldersResponse } from "../../types";
+import { createHelius } from "../../../rpc/index.js";
+import type { GetCompressedMintTokenHoldersResponse } from "../../types.js";
 
 const transportMock = jest.fn();
 jest.mock("@solana/kit", () => ({

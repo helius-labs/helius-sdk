@@ -1,6 +1,6 @@
-import { fetchTipFloor75th } from "./fetchTipFloor";
-import { solToLamports } from "./lamports";
-import { MIN_TIP_LAMPORTS_MAX, MIN_TIP_LAMPORTS_SWQOS } from "./types";
+import { fetchTipFloor75th } from "./fetchTipFloor.js";
+import { solToLamports } from "./lamports.js";
+import { MIN_TIP_LAMPORTS_MAX, MIN_TIP_LAMPORTS_SWQOS } from "./types.js";
 
 /**
  * Returns a lamport tip value:

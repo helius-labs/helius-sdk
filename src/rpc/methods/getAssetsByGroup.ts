@@ -1,8 +1,8 @@
 import type {
   AssetsByGroupRequest,
   GetAssetResponseList,
-} from "../../types/das";
-import type { RpcCaller } from "../caller";
+} from "../../types/das.js";
+import type { RpcCaller } from "../caller.js";
 
 export type GetAssetsByGroupFn = (
   p: AssetsByGroupRequest

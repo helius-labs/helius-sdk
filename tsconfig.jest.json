@@ -1,0 +1,9 @@
+{
+  // Jest runs the tests as CommonJS. Under NodeNext, this "type": "module"
+  // package would compile them to ESM, so ts-jest keeps the bundler settings.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "esnext",
+    "moduleResolution": "bundler"
+  }
+}

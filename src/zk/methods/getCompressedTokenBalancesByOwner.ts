@@ -1,9 +1,9 @@
-import type { RpcCaller } from "../../rpc/caller";
+import type { RpcCaller } from "../../rpc/caller.js";
 import type {
   GetCompressedTokenBalancesByOwnerFn,
   GetCompressedTokenBalancesByOwnerRequest,
   GetCompressedTokenBalancesByOwnerResponse,
-} from "../types";
+} from "../types.js";
 
 export const makeGetCompressedTokenBalancesByOwner =
   (call: RpcCaller): GetCompressedTokenBalancesByOwnerFn =>

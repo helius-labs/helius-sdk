@@ -1,9 +1,9 @@
-import type { RpcCaller } from "../../rpc/caller";
+import type { RpcCaller } from "../../rpc/caller.js";
 import type {
   GetLatestNonVotingSignaturesFn,
   GetLatestNonVotingSignaturesRequest,
   GetLatestNonVotingSignaturesResponse,
-} from "../types";
+} from "../types.js";
 
 export const makeGetLatestNonVotingSignatures =
   (call: RpcCaller): GetLatestNonVotingSignaturesFn =>

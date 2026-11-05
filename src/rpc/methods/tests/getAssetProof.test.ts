@@ -1,5 +1,5 @@
-import type { GetAssetProofResponse } from "../../../types";
-import { createHeliusEager as createHelius } from "../../createHelius.eager";
+import type { GetAssetProofResponse } from "../../../types/index.js";
+import { createHeliusEager as createHelius } from "../../createHelius.eager.js";
 
 const transportMock = jest.fn();
 

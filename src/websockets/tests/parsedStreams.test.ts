@@ -3,7 +3,7 @@ import {
   PARSED_STREAMS_DISCOVERY_URL,
   PARSED_STREAMS_URL,
   type ParsedStreamsError,
-} from "../parsedStreams";
+} from "../parsedStreams.js";
 
 // ── Mock WebSocket ────────────────────────────────────────────────────
 

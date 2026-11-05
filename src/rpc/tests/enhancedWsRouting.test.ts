@@ -1,4 +1,4 @@
-import { createHelius } from "../index";
+import { createHelius } from "../index.js";
 
 // Mock the enhanced WS module so we can inspect if it gets called
 const mockTransactionSubscribe = jest
@@ -14,7 +14,7 @@ const mockMakeEnhancedWsClient = jest.fn((url: string) => ({
   _url: url,
 }));
 
-jest.mock("../../websockets/enhancedWs", () => ({
+jest.mock("../../websockets/enhancedWs.js", () => ({
   makeEnhancedWsClient: mockMakeEnhancedWsClient,
 }));
 

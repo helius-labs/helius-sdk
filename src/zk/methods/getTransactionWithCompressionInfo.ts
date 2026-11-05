@@ -1,9 +1,9 @@
-import type { RpcCaller } from "../../rpc/caller";
+import type { RpcCaller } from "../../rpc/caller.js";
 import type {
   GetTransactionWithCompressionInfoFn,
   GetTransactionWithCompressionInfoRequest,
   GetTransactionWithCompressionInfoResponse,
-} from "../types";
+} from "../types.js";
 
 export const makeGetTransactionWithCompressionInfo =
   (call: RpcCaller): GetTransactionWithCompressionInfoFn =>

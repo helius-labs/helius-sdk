@@ -1,6 +1,6 @@
 import { address, fetchEncodedAccount, type RpcTransport } from "@solana/kit";
-import { createHelius } from "../index";
-import { createHeliusEager } from "../createHelius.eager";
+import { createHelius } from "../index.js";
+import { createHeliusEager } from "../createHelius.eager.js";
 
 // Uses the real @solana/kit; only the network is replaced, via the transport hook
 const ACCOUNT = address("So11111111111111111111111111111111111111112");

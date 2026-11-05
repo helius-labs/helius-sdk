@@ -3,8 +3,8 @@ import {
   buildQueryString,
   handleResponse,
   getHeaders,
-} from "./utils";
-import type { GetBalanceAtRequest, GetBalanceAtResponse } from "./types";
+} from "./utils.js";
+import type { GetBalanceAtRequest, GetBalanceAtResponse } from "./types.js";
 
 /**
  * Get a wallet's balance of a specific token (or native SOL) at a point in the past

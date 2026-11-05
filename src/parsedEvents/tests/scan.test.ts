@@ -1,4 +1,4 @@
-import { createHeliusEager as createHelius } from "../../rpc/createHelius.eager";
+import { createHeliusEager as createHelius } from "../../rpc/createHelius.eager.js";
 import type {
   ParsedTransactionResult,
   ScanCountResponse,
@@ -9,7 +9,7 @@ import type {
   ScanSignature,
   ScanSignaturesResponse,
   ScanTransactionsResponse,
-} from "../types";
+} from "../types.js";
 
 const mockFetch = jest.fn();
 global.fetch = mockFetch as jest.Mock;

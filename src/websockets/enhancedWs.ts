@@ -5,7 +5,7 @@ import type {
   EnhancedAccountSubscribeConfig,
   EnhancedAccountNotificationResult,
   EnhancedSubscription,
-} from "./types";
+} from "./types.js";
 
 /** Maximum buffered notifications per subscription before oldest are dropped. */
 const BUFFER_LIMIT = 10_000;

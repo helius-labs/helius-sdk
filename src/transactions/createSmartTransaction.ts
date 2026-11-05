@@ -4,7 +4,7 @@ import type {
   CreateSmartTxInput,
   CreateSmartTxResult,
   SignedTx,
-} from "./types";
+} from "./types.js";
 import type {
   Address,
   Instruction,
@@ -32,14 +32,14 @@ import {
   getSetComputeUnitPriceInstruction,
 } from "@solana-program/compute-budget";
 
-import { createEmptyTxMessage } from "./createTxMessage";
-import { resolvePriorityFee } from "./priorityFee";
+import { createEmptyTxMessage } from "./createTxMessage.js";
+import { resolvePriorityFee } from "./priorityFee.js";
 import {
   assertNoAddressLookupsOnV1,
   assertValidLoadedAccountsDataSizeLimit,
   assertWithinSizeLimit,
   MAX_LOADED_ACCOUNTS_DATA_SIZE_BYTES,
-} from "./validateTxMessage";
+} from "./validateTxMessage.js";
 
 const COMPUTE_BUDGET_PROGRAM_ADDRESS =
   "ComputeBudget111111111111111111111111111111" as Address;

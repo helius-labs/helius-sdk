@@ -1,5 +1,5 @@
-import type { ApiKey } from "./types";
-import { authRequest } from "./utils";
+import type { ApiKey } from "./types.js";
+import { authRequest } from "./utils.js";
 
 export async function createApiKey(
   jwt: string,

@@ -1,4 +1,4 @@
-import { LAMPORTS_PER_SOL_BIGINT, U64_MAX } from "../types";
+import { LAMPORTS_PER_SOL_BIGINT, U64_MAX } from "../types.js";
 
 describe("Staking constants", () => {
   it("U64_MAX is the max u64 as a bigint", () => {

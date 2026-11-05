@@ -1,4 +1,4 @@
-import { getSDKHeaders } from "../http";
+import { getSDKHeaders } from "../http.js";
 
 export const deleteWebhook = async (
   apiKey: string,

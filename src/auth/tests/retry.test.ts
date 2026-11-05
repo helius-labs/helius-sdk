@@ -1,7 +1,7 @@
-import { isRetryableError, retryWithBackoff } from "../retry";
+import { isRetryableError, retryWithBackoff } from "../retry.js";
 
-jest.mock("../utils", () => ({
-  ...jest.requireActual("../utils"),
+jest.mock("../utils.js", () => ({
+  ...jest.requireActual("../utils.js"),
   sleep: jest.fn().mockResolvedValue(undefined),
 }));
 

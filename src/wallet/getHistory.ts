@@ -3,8 +3,8 @@ import {
   buildQueryString,
   handleResponse,
   getHeaders,
-} from "./utils";
-import type { GetHistoryRequest, GetHistoryResponse } from "./types";
+} from "./utils.js";
+import type { GetHistoryRequest, GetHistoryResponse } from "./types.js";
 
 /**
  * Get transaction history for a given wallet

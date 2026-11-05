@@ -1,11 +1,11 @@
-import type { RpcCaller } from "../caller";
+import type { RpcCaller } from "../caller.js";
 import {
   type GetTokenAccountsByOwnerV2Config,
   type GetTokenAccountsByOwnerV2Request,
   type GetTokenAccountsByOwnerV2Response,
   type GtaV2Account,
-} from "../../types";
-import { makeGetTokenAccountsByOwnerV2 } from "./getTokenAccountsByOwnerV2";
+} from "../../types/index.js";
+import { makeGetTokenAccountsByOwnerV2 } from "./getTokenAccountsByOwnerV2.js";
 
 export type GetAllTokenAccountsByOwnerFn = (
   owner: string,

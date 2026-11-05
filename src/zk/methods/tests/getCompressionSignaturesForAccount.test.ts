@@ -1,5 +1,5 @@
-import { createHelius } from "../../../rpc";
-import { GetCompressionSignaturesForAccountResponse } from "../../types";
+import { createHelius } from "../../../rpc/index.js";
+import { GetCompressionSignaturesForAccountResponse } from "../../types.js";
 
 const transportMock = jest.fn();
 

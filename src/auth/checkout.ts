@@ -3,11 +3,11 @@ import type {
   CheckoutInitializeResponse,
   CheckoutStatusResponse,
   CheckoutPreviewResponse,
-} from "./types";
-import { authRequest } from "./utils";
-import { PLAN_TO_USAGE_PLAN } from "./constants";
-import { fetchStripePriceIds } from "./devPortalConfigs";
-import { pollUntilTerminal } from "./pollPayment";
+} from "./types.js";
+import { authRequest } from "./utils.js";
+import { PLAN_TO_USAGE_PLAN } from "./constants.js";
+import { fetchStripePriceIds } from "./devPortalConfigs.js";
+import { pollUntilTerminal } from "./pollPayment.js";
 
 export async function resolvePriceId(
   jwt: string,

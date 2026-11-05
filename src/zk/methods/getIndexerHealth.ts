@@ -1,9 +1,9 @@
-import type { RpcCaller } from "../../rpc/caller";
+import type { RpcCaller } from "../../rpc/caller.js";
 import type {
   GetIndexerHealthFn,
   GetIndexerHealthResponse,
   GetIndexerHealthRequest,
-} from "../types";
+} from "../types.js";
 
 export const makeGetIndexerHealth =
   (call: RpcCaller): GetIndexerHealthFn =>
