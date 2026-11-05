@@ -22,8 +22,7 @@ export const makeSendTransaction = (rpc: Rpc<SolanaRpcApi>) => {
     }
 
     if ("serialize" in tx && typeof tx.serialize === "function") {
-      // Copy first: for a view at offset 0 (e.g. a pooled Buffer), Kit's Node
-      // base64 decoder encodes the whole backing buffer, not just the view
+      // Copy the view (see tests)
       return getBase64Decoder().decode(
         new Uint8Array(tx.serialize())
       ) as Base64EncodedWireTransaction;

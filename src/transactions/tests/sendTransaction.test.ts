@@ -81,6 +81,9 @@ describe("sendTransaction Tests", () => {
     }
   );
 
+  // sendTransaction copies the serialized bytes before encoding them. For a
+  // view at offset 0 that is shorter than its backing buffer (e.g. a pooled
+  // Buffer), Kit's Node base64 decoder encodes the whole buffer, not the view.
   it.each([
     ["Uint8Array", 0],
     ["Uint8Array", 5],
