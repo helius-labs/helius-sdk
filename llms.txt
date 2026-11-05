@@ -215,6 +215,8 @@ const page = await helius.parsedEvents.getTransactionHistory({
 // By default (scope: "address") an instruction or balance only counts when it
 // involves the scanned address; scope: "transaction" on a program or mint
 // entry counts it anywhere in the transaction.
+// For wallet token-mint scans, pass tokenAccounts: "balanceChanged" to include
+// transfers that reference only the wallet's token accounts (see ScanMintMatch).
 const matches = await helius.parsedEvents.scan({
   address: "wallet_address",
   match: {

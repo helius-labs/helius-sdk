@@ -261,6 +261,8 @@ When querying `getTransactionsForAddress`, the `tokenAccounts` filter controls w
 | `"balanceChanged"` | Also includes token transactions that changed a balance | **Recommended for most agents** — shows token sends/receives without noise |
 | `"all"` | Includes all token account transactions | You need complete token activity (can return many results) |
 
+For `parsedEvents.scan` of a wallet for a token mint, pass `tokenAccounts: "balanceChanged"` to include transfers that reference only the wallet's token accounts (see `ScanMintMatch`).
+
 ## `changedSinceSlot` — Incremental Account Fetching
 
 `getProgramAccountsV2` and `getTokenAccountsByOwnerV2` (and their auto-paginating `getAll*` variants) support `changedSinceSlot`, a Helius-specific parameter that returns only accounts modified after a given slot. This is useful for syncing or indexing workflows where you've already fetched a baseline and only need the delta.
