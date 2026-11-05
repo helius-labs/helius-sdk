@@ -1,10 +1,10 @@
-import { pollUntilTerminal } from "../pollPayment";
-import { getPaymentStatus } from "../getPaymentStatus";
+import { pollUntilTerminal } from "../pollPayment.js";
+import { getPaymentStatus } from "../getPaymentStatus.js";
 
-jest.mock("../getPaymentStatus");
+jest.mock("../getPaymentStatus.js");
 
-jest.mock("../constants", () => ({
-  ...jest.requireActual("../constants"),
+jest.mock("../constants.js", () => ({
+  ...jest.requireActual("../constants.js"),
   CHECKOUT_POLL_INTERVAL_MS: 5,
   CHECKOUT_POLL_TIMEOUT_MS: 50,
 }));

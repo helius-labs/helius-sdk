@@ -1,5 +1,5 @@
 import { getTransactionDecoder, type Transaction } from "@solana/kit";
-import { getSDKHeaders } from "../http";
+import { getSDKHeaders } from "../http.js";
 
 /** Pre Confirmations endpoint (Gatekeeper; `beta` names the host, not the product's status). Append the API key. */
 export const PRECONF_WEBSOCKET_URL = "wss://beta.helius-rpc.com/?api-key=";

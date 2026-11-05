@@ -1,9 +1,9 @@
-import type { RpcCaller } from "../../rpc/caller";
+import type { RpcCaller } from "../../rpc/caller.js";
 import type {
   GetMultipleCompressedAccountsFn,
   GetMultipleCompressedAccountsRequest,
   GetMultipleCompressedAccountsResponse,
-} from "../types";
+} from "../types.js";
 
 export const makeGetMultipleCompressedAccounts =
   (call: RpcCaller): GetMultipleCompressedAccountsFn =>

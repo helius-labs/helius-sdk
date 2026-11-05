@@ -1,4 +1,4 @@
-import { resolvePriorityFee } from "../priorityFee";
+import { resolvePriorityFee } from "../priorityFee.js";
 
 describe("resolvePriorityFee Tests", () => {
   it("Converts a per-CU rate into the equivalent total lamports", () => {

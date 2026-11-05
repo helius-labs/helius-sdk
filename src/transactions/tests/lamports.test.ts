@@ -1,4 +1,4 @@
-import { solToLamports, LAMPORTS_PER_SOL } from "../lamports";
+import { solToLamports, LAMPORTS_PER_SOL } from "../lamports.js";
 
 describe("solToLamports Test", () => {
   it("Converts whole SOL correctly", () => {

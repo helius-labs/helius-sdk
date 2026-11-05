@@ -1,4 +1,4 @@
-import type { WalletClient } from "./client";
+import type { WalletClient } from "./client.js";
 import type {
   GetIdentityRequest,
   GetIdentityResponse,
@@ -14,14 +14,14 @@ import type {
   GetTransfersResponse,
   GetFundedByRequest,
   GetFundedByResponse,
-} from "./types";
-import { getIdentity } from "./getIdentity";
-import { getBatchIdentity } from "./getBatchIdentity";
-import { getBalances } from "./getBalances";
-import { getBalanceAt } from "./getBalanceAt";
-import { getHistory } from "./getHistory";
-import { getTransfers } from "./getTransfers";
-import { getFundedBy } from "./getFundedBy";
+} from "./types.js";
+import { getIdentity } from "./getIdentity.js";
+import { getBatchIdentity } from "./getBatchIdentity.js";
+import { getBalances } from "./getBalances.js";
+import { getBalanceAt } from "./getBalanceAt.js";
+import { getHistory } from "./getHistory.js";
+import { getTransfers } from "./getTransfers.js";
+import { getFundedBy } from "./getFundedBy.js";
 
 // Re-export WalletClient type for convenience
 export type { WalletClient };

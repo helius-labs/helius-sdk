@@ -4,17 +4,17 @@ import {
   getCheckoutPreview,
   getPaymentIntent,
   resolvePriceId,
-} from "../checkout";
-import { getPaymentStatus } from "../getPaymentStatus";
-import { authRequest } from "../utils";
-import { fetchStripePriceIds } from "../devPortalConfigs";
+} from "../checkout.js";
+import { getPaymentStatus } from "../getPaymentStatus.js";
+import { authRequest } from "../utils.js";
+import { fetchStripePriceIds } from "../devPortalConfigs.js";
 
-jest.mock("../utils");
-jest.mock("../devPortalConfigs");
+jest.mock("../utils.js");
+jest.mock("../devPortalConfigs.js");
 
 // Mock polling constants to make tests fast
-jest.mock("../constants", () => ({
-  ...jest.requireActual("../constants"),
+jest.mock("../constants.js", () => ({
+  ...jest.requireActual("../constants.js"),
   CHECKOUT_POLL_INTERVAL_MS: 10,
   CHECKOUT_POLL_TIMEOUT_MS: 100,
   PROJECT_POLL_INTERVAL_MS: 10,

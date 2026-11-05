@@ -1,5 +1,5 @@
 import { Address, Base58EncodedBytes, Rpc, SolanaRpcApi } from "@solana/kit";
-import { HELIUS_VALIDATOR_ID, STAKE_PROGRAM_ID } from "./types";
+import { HELIUS_VALIDATOR_ID, STAKE_PROGRAM_ID } from "./types.js";
 
 export const makeGetHeliusStakeAccounts = ({
   rpc,

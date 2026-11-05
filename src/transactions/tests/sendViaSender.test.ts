@@ -1,4 +1,4 @@
-import { sendViaSender } from "../sendViaSender";
+import { sendViaSender } from "../sendViaSender.js";
 import { signature as toSignature } from "@solana/kit";
 
 jest.mock("@solana/kit", () => {

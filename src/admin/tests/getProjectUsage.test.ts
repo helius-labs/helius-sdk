@@ -1,6 +1,6 @@
-import { createHeliusEager as createHelius } from "../../rpc/createHelius.eager";
-import { ADMIN_API_URL } from "../constants";
-import type { ProjectUsage } from "../types";
+import { createHeliusEager as createHelius } from "../../rpc/createHelius.eager.js";
+import { ADMIN_API_URL } from "../constants.js";
+import type { ProjectUsage } from "../types.js";
 
 const mockFetch = jest.fn();
 global.fetch = mockFetch as jest.Mock;

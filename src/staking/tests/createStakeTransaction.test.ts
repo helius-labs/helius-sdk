@@ -25,7 +25,7 @@ jest.mock("@solana/kit", () => {
   };
 });
 
-import { makeCreateStakeTransaction } from "../createStakeTransaction";
+import { makeCreateStakeTransaction } from "../createStakeTransaction.js";
 
 const STAKE_STATE_LEN = 200;
 const SYSTEM_PROGRAM = address("11111111111111111111111111111111");

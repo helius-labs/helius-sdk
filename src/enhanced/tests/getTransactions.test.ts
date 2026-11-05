@@ -1,8 +1,8 @@
 import {
   type GetEnhancedTransactionsRequest,
   type GetEnhancedTransactionsResponse,
-} from "../types";
-import { makeEnhancedTxClientEager } from "../client.eager";
+} from "../types.js";
+import { makeEnhancedTxClientEager } from "../client.eager.js";
 
 describe("Enhanced getTransactions Tests", () => {
   const apiKey = "test-key";

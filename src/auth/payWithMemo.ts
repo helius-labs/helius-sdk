@@ -1,6 +1,6 @@
 import { createKeyPairSignerFromBytes, type Instruction } from "@solana/kit";
-import { USDC_MINT, MEMO_PROGRAM_ID } from "./constants";
-import { buildAndSendTokenTransfer } from "./buildTokenTransfer";
+import { USDC_MINT, MEMO_PROGRAM_ID } from "./constants.js";
+import { buildAndSendTokenTransfer } from "./buildTokenTransfer.js";
 
 export async function payWithMemo(
   secretKey: Uint8Array,

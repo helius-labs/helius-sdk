@@ -1,4 +1,4 @@
-import { createHelius } from "../../../rpc";
+import { createHelius } from "../../../rpc/index.js";
 
 const transportMock = jest.fn();
 jest.mock("@solana/kit", () => ({

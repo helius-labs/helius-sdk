@@ -1,8 +1,8 @@
 import { address, type TransactionSigner } from "@solana/kit";
 
-import { makeGetStakeInstructions } from "../getStakeInstructions";
-import { makeGetUnstakeInstruction } from "../getUnstakeInstruction";
-import { makeGetWithdrawInstruction } from "../getWithdrawInstruction";
+import { makeGetStakeInstructions } from "../getStakeInstructions.js";
+import { makeGetUnstakeInstruction } from "../getUnstakeInstruction.js";
+import { makeGetWithdrawInstruction } from "../getWithdrawInstruction.js";
 
 const mockRentSend = jest.fn().mockResolvedValue(2_000_000n);
 const dummyRpc: any = {

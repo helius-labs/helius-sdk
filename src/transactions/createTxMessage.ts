@@ -13,11 +13,11 @@ import {
   TransactionSigner,
   TransactionVersion,
 } from "@solana/kit";
-import { CreateTxMessageInput } from "./types";
+import { CreateTxMessageInput } from "./types.js";
 import {
   assertNoAddressLookupsOnV1,
   MAX_LOADED_ACCOUNTS_DATA_SIZE_BYTES,
-} from "./validateTxMessage";
+} from "./validateTxMessage.js";
 
 /**
  * Creates an empty transaction message of any version.

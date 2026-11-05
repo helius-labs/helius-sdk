@@ -1,5 +1,5 @@
 import { Base64EncodedWireTransaction, Signature } from "@solana/kit";
-import { makeSendTransaction } from "../sendTransaction";
+import { makeSendTransaction } from "../sendTransaction.js";
 
 const BASE64_TX = "BASE64_WIRE_TX" as Base64EncodedWireTransaction;
 const SIGNATURE = "sig123" as Signature;

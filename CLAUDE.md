@@ -13,13 +13,14 @@ pnpm format               # Format with Prettier
 pnpm format:check         # Check formatting (CI runs this)
 pnpm lint                 # Lint with ESLint
 pnpm check-bundle         # Build + verify tree-shakability + bundle sizes
+pnpm check-consumer-types # Typecheck test/consumer-types fixtures against dist/ (run after a build)
 pnpm run docs:build       # Generate TypeDoc API docs to docs/ (gitignored)
 pnpm run docs:open        # Generate docs and open in browser via local HTTP server
 ```
 
-Before submitting a PR, run: `pnpm format && pnpm lint && pnpm typecheck && pnpm test && pnpm check-bundle`
+Before submitting a PR, run: `pnpm format && pnpm lint && pnpm typecheck && pnpm test && pnpm check-bundle && pnpm check-consumer-types`
 
-CI runs formatting, linting, type checking, tests, build, tree-shake checks, and bundle size checks on every push and PR to `main`.
+CI runs formatting, linting, type checking, tests, build, tree-shake checks, bundle size checks, and consumer type checks on every push and PR to `main`.
 
 ## Project Structure
 
@@ -116,6 +117,7 @@ All HTTP requests include `helius-node-sdk/<version> (node|browser|deno)` via `S
 - **Functions:** Arrow functions preferred, `const` by default
 - **Async:** async/await with try/catch; never throw non-Error objects
 - **Exports:** Named exports, no default exports
+- **Relative imports:** Always with a `.js` extension (`"./getAsset.js"`, `"../types/index.js"` for a directory). The tsconfig uses `NodeNext`, so `pnpm typecheck` rejects extensionless ones; without the extension, Node ESM consumers silently get `any` types
 - **Types:** Strict TypeScript (noImplicitAny, noUnusedLocals, noUnusedParameters)
 - **JSDoc:** Required on all public methods
 - **File naming:** camelCase or kebab-case, consistent with surrounding files
@@ -126,7 +128,7 @@ Tests are colocated with source in `src/*/tests/` directories. Use Jest with `ts
 
 ```typescript
 // src/rpc/methods/tests/getAsset.test.ts
-import { makeGetAsset } from "../getAsset";
+import { makeGetAsset } from "../getAsset.js";
 
 describe("getAsset", () => {
   it("should fetch asset by id", async () => {

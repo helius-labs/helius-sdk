@@ -1,6 +1,6 @@
 import { Address, TransactionSigner } from "@solana/kit";
 import { getDeactivateInstruction } from "@solana-program/stake";
-import { SYSVAR_CLOCK } from "./types";
+import { SYSVAR_CLOCK } from "./types.js";
 
 export const makeGetUnstakeInstruction =
   () => (owner: TransactionSigner<string> | Address, stakeAccount: Address) =>

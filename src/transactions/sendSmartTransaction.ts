@@ -3,7 +3,7 @@ import type {
   SendSmartTxDeps,
   SendSmartTransactionFn,
   SendSmartTransactionInput,
-} from "./types";
+} from "./types.js";
 import {
   sendAndConfirmTransactionFactory,
   getSignatureFromTransaction,

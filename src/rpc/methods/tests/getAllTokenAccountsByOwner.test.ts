@@ -1,5 +1,5 @@
-import { GetTokenAccountsByOwnerV2Result } from "../../../types";
-import { createHeliusEager as createHelius } from "../../createHelius.eager";
+import { GetTokenAccountsByOwnerV2Result } from "../../../types/index.js";
+import { createHeliusEager as createHelius } from "../../createHelius.eager.js";
 
 const transportMock = jest.fn();
 

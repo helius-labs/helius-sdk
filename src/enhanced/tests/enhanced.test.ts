@@ -1,5 +1,5 @@
-import { createHelius } from "../../rpc";
-import { createHeliusEager } from "../../rpc/createHelius.eager";
+import { createHelius } from "../../rpc/index.js";
+import { createHeliusEager } from "../../rpc/createHelius.eager.js";
 
 const DEVNET_BASE = "https://api-devnet.helius.xyz/v0";
 const MAINNET_BASE = "https://api-mainnet.helius-rpc.com/v0";

@@ -1,4 +1,4 @@
-import { adminRequest } from "../utils";
+import { adminRequest } from "../utils.js";
 
 const mockFetch = jest.fn();
 global.fetch = mockFetch as jest.Mock;

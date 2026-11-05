@@ -21,7 +21,7 @@ jest.mock("@solana-program/token", () => ({
   TOKEN_PROGRAM_ADDRESS: "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
 }));
 
-import { checkSolBalance, checkUsdcBalance } from "../checkBalances";
+import { checkSolBalance, checkUsdcBalance } from "../checkBalances.js";
 
 // Valid 32-byte base58 Solana address
 const VALID_ADDRESS = "11111111111111111111111111111111";

@@ -3,7 +3,7 @@ import type {
   GetEnhancedTransactionsResponse,
   GetEnhancedTransactionsByAddressRequest,
   GetEnhancedTransactionsByAddressResponse,
-} from "./types";
+} from "./types.js";
 
 /**
  * Client for the Helius Enhanced Transactions API. Parses raw transactions into human-readable format.
@@ -40,7 +40,7 @@ export const makeEnhancedTxClientLazy = (
   baseUrl?: string
 ): EnhancedTxClientLazy => {
   const load = async () => {
-    const { makeEnhancedTxClientEager } = await import("./client.eager");
+    const { makeEnhancedTxClientEager } = await import("./client.eager.js");
     return makeEnhancedTxClientEager(apiKey, network, userAgent, baseUrl);
   };
 

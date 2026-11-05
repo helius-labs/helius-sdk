@@ -119,6 +119,7 @@
     "bundle:size": "bundlemon",
     "check-all-tree": "node check-all-tree-shake.js",
     "check-bundle": "pnpm run build && pnpm check-all-tree && bundlemon",
+    "check-consumer-types": "node check-consumer-types.js",
     "changelog": "auto-changelog --template keepachangelog",
     "docs:build": "typedoc",
     "docs:open": "typedoc && npx --yes http-server docs -o -c-1"

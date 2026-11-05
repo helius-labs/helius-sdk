@@ -1,5 +1,5 @@
 import type { Rpc, Signature, SolanaRpcApi } from "@solana/kit";
-import { PollTxOptions } from "./types";
+import { PollTxOptions } from "./types.js";
 
 /**
  * Serializes a transaction error for error messages. @solana/kit upcasts

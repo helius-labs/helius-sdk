@@ -10,7 +10,7 @@ import type {
   ScanReturnShape,
   ScanSignaturesResponse,
   ScanTransactionsResponse,
-} from "./types";
+} from "./types.js";
 
 /**
  * Parsed Events API client interface

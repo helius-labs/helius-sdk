@@ -1,5 +1,5 @@
-import type { Webhook } from "../types/webhooks";
-import { getSDKHeaders } from "../http";
+import type { Webhook } from "../types/webhooks.js";
+import { getSDKHeaders } from "../http.js";
 
 export const getAllWebhooks = async (
   apiKey: string,

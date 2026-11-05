@@ -3,9 +3,9 @@ import {
   type GetEnhancedTransactionsResponse,
   type GetEnhancedTransactionsByAddressRequest,
   type GetEnhancedTransactionsByAddressResponse,
-} from "./types";
-import { getSDKHeaders } from "../http";
-import { isDevnetHost } from "../parsedEvents/utils";
+} from "./types.js";
+import { getSDKHeaders } from "../http.js";
+import { isDevnetHost } from "../parsedEvents/utils.js";
 
 /**
  * @deprecated The Enhanced Transactions API is in maintenance mode. Use the

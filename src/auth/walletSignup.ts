@@ -1,5 +1,5 @@
-import type { SignupResponse } from "./types";
-import { authRequest } from "./utils";
+import type { SignupResponse } from "./types.js";
+import { authRequest } from "./utils.js";
 
 export async function walletSignup(
   message: string,

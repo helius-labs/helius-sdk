@@ -285,7 +285,7 @@ export interface AuthClient {
    * advanced callers; signup / upgrade / credits / renewal-link wrap it.
    */
   createPayment(
-    request: import("./createPayment").CreatePaymentRequest
+    request: import("./createPayment.js").CreatePaymentRequest
   ): Promise<PaymentLink>;
   /**
    * Phase 1 unified signup. Authenticates the wallet, detects existing

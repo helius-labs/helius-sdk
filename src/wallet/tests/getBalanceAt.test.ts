@@ -1,5 +1,5 @@
-import { createHeliusEager as createHelius } from "../../rpc/createHelius.eager";
-import type { GetBalanceAtResponse } from "../types";
+import { createHeliusEager as createHelius } from "../../rpc/createHelius.eager.js";
+import type { GetBalanceAtResponse } from "../types.js";
 
 const mockFetch = jest.fn();
 global.fetch = mockFetch as jest.Mock;

@@ -1,5 +1,5 @@
 import { Address, Rpc, SolanaRpcApi, address } from "@solana/kit";
-import { STAKE_STATE_LEN } from "./types";
+import { STAKE_STATE_LEN } from "./types.js";
 
 export const makeGetWithdrawableAmount = ({
   rpc,

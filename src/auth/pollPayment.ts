@@ -1,11 +1,11 @@
 import {
   CHECKOUT_POLL_INTERVAL_MS,
   CHECKOUT_POLL_TIMEOUT_MS,
-} from "./constants";
-import { getPaymentStatus } from "./getPaymentStatus";
-import { getHttpStatus } from "./getHttpStatus";
-import { sleep } from "./utils";
-import type { CheckoutStatusResponse } from "./types";
+} from "./constants.js";
+import { getPaymentStatus } from "./getPaymentStatus.js";
+import { getHttpStatus } from "./getHttpStatus.js";
+import { sleep } from "./utils.js";
+import type { CheckoutStatusResponse } from "./types.js";
 
 export type PollOutcome =
   | { kind: "completed"; status: CheckoutStatusResponse }

@@ -1,9 +1,9 @@
-import { RpcCaller } from "../../rpc/caller";
+import { RpcCaller } from "../../rpc/caller.js";
 import {
   GetCompressedTokenAccountBalanceFn,
   GetCompressedTokenAccountBalanceRequest as Req,
   GetCompressedTokenAccountBalanceResponse as Res,
-} from "../types";
+} from "../types.js";
 
 export const makeGetCompressedTokenAccountBalance =
   (call: RpcCaller): GetCompressedTokenAccountBalanceFn =>

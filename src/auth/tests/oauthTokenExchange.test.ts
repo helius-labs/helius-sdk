@@ -1,5 +1,5 @@
-import { oauthTokenExchange } from "../oauthTokenExchange";
-import { API_URL } from "../constants";
+import { oauthTokenExchange } from "../oauthTokenExchange.js";
+import { API_URL } from "../constants.js";
 
 const mockFetch = jest.fn();
 global.fetch = mockFetch as jest.Mock;

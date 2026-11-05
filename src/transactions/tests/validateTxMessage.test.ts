@@ -15,7 +15,7 @@ import {
   assertValidLoadedAccountsDataSizeLimit,
   assertWithinSizeLimit,
   MAX_LOADED_ACCOUNTS_DATA_SIZE_BYTES,
-} from "../validateTxMessage";
+} from "../validateTxMessage.js";
 
 const PROGRAM = address("11111111111111111111111111111111");
 const FEE_PAYER = address("11111111111111111111111111111112");

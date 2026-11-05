@@ -1,6 +1,6 @@
 import type { Rpc, SolanaRpcApi } from "@solana/kit";
-import type { ResolvedHeliusRpcApi } from "./heliusRpcApi";
-import type { TransportHook } from "./transport";
+import type { ResolvedHeliusRpcApi } from "./heliusRpcApi.js";
+import type { TransportHook } from "./transport.js";
 
 /** Standard Solana RPC clients exposed by both `createHelius` and `createHeliusEager`. */
 export type HeliusRpcAccess = {

@@ -1,18 +1,21 @@
-import { PROJECT_POLL_INTERVAL_MS, PROJECT_POLL_TIMEOUT_MS } from "./constants";
-import { listProjects } from "./listProjects";
-import { getProject } from "./getProject";
-import { createApiKey } from "./createApiKey";
-import { buildEndpoints } from "./signupHelpers";
-import { payPaymentLink } from "./payPaymentLink";
-import { pollUntilTerminal } from "./pollPayment";
-import { signup } from "./signup";
-import { sleep } from "./utils";
+import {
+  PROJECT_POLL_INTERVAL_MS,
+  PROJECT_POLL_TIMEOUT_MS,
+} from "./constants.js";
+import { listProjects } from "./listProjects.js";
+import { getProject } from "./getProject.js";
+import { createApiKey } from "./createApiKey.js";
+import { buildEndpoints } from "./signupHelpers.js";
+import { payPaymentLink } from "./payPaymentLink.js";
+import { pollUntilTerminal } from "./pollPayment.js";
+import { signup } from "./signup.js";
+import { sleep } from "./utils.js";
 import type {
   Endpoints,
   SecretKeySignupOptions,
   SignupAndPayOptions,
   SignupAndPayResult,
-} from "./types";
+} from "./types.js";
 
 const provisionApiKey = async (
   jwt: string,

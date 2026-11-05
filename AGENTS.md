@@ -547,8 +547,9 @@ pnpm test             # Run tests (65%+ coverage required)
 pnpm format           # Format with Prettier
 pnpm lint             # Lint with ESLint
 pnpm check-bundle     # Verify tree-shakability & bundle sizes
+pnpm check-consumer-types # Typecheck consumer fixtures against the build
 ```
 
-Before submitting a PR: `pnpm format && pnpm lint && pnpm test && pnpm check-bundle`
+Before submitting a PR: `pnpm format && pnpm lint && pnpm test && pnpm check-bundle && pnpm check-consumer-types`
 
 Key architecture decisions, code style conventions, lazy loading patterns, and PR process are documented in [CLAUDE.md](CLAUDE.md) and [CONTRIBUTING.md](CONTRIBUTING.md).

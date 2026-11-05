@@ -1,4 +1,4 @@
-import { fetchTipFloor75th } from "../fetchTipFloor";
+import { fetchTipFloor75th } from "../fetchTipFloor.js";
 
 const g = global as any;
 

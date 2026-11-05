@@ -1,5 +1,5 @@
-import { payWithMemo } from "./payWithMemo";
-import type { PaymentLink } from "./types";
+import { payWithMemo } from "./payWithMemo.js";
+import type { PaymentLink } from "./types.js";
 
 /**
  * USDC has 6 decimals; payment-intent amounts are in cents (2 decimals),

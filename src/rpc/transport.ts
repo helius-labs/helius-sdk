@@ -1,5 +1,5 @@
 import type { RpcTransport } from "@solana/kit";
-import type { HeliusRpcOptions } from "./types";
+import type { HeliusRpcOptions } from "./types.js";
 
 /**
  * Hook for augmenting or replacing the SDK's default RPC transport.

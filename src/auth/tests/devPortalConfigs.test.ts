@@ -2,10 +2,10 @@ import {
   fetchDevPortalConfigs,
   fetchStripePriceIds,
   fetchPrepaidCreditsPriceIds,
-} from "../devPortalConfigs";
-import { authRequest } from "../utils";
+} from "../devPortalConfigs.js";
+import { authRequest } from "../utils.js";
 
-jest.mock("../utils");
+jest.mock("../utils.js");
 
 const mockAuthRequest = authRequest as jest.MockedFunction<typeof authRequest>;
 

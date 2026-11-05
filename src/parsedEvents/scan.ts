@@ -1,9 +1,9 @@
-import { postParsedEvents } from "./utils";
+import { postParsedEvents } from "./utils.js";
 import type {
   ScanParsedTransactionHistoryRequest,
   ScanParsedTransactionHistoryResponse,
   ScanReturnShape,
-} from "./types";
+} from "./types.js";
 
 /**
  * Scan an address's history for transactions that call one of a set of

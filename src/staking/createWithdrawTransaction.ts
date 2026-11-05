@@ -12,7 +12,7 @@ import {
   SolanaRpcApi,
 } from "@solana/kit";
 import { getWithdrawInstruction } from "@solana-program/stake";
-import { SYSVAR_CLOCK, SYSVAR_STAKE_HISTORY } from "./types";
+import { SYSVAR_CLOCK, SYSVAR_STAKE_HISTORY } from "./types.js";
 
 export const makeCreateWithdrawTransaction = ({
   rpc,
