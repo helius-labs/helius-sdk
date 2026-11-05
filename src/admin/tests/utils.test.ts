@@ -44,4 +44,34 @@ describe("adminRequest", () => {
     expect(result).toEqual({ result: "ok" });
     expect(mockFetch).toHaveBeenCalled();
   });
+
+  it.each(["record", "Headers", "tuples"] as const)(
+    "forwards %s headers and overrides defaults without mutating the caller",
+    async (shape) => {
+      mockFetch.mockResolvedValue({
+        ok: true,
+        json: async () => ({ result: "ok" }),
+      });
+      const entries: [string, string][] = [
+        ["X-Request-Id", "request-123"],
+        ["content-type", "application/problem+json"],
+      ];
+      const headers =
+        shape === "Headers"
+          ? new Headers(entries)
+          : shape === "tuples"
+            ? entries
+            : Object.fromEntries(entries);
+      const original = [...new Headers(headers)];
+
+      await adminRequest("test-key", "/test", { method: "GET", headers });
+
+      const sent = new Headers(mockFetch.mock.calls[0][1].headers);
+      expect(sent.get("X-Request-Id")).toBe("request-123");
+      expect(sent.get("Content-Type")).toBe("application/problem+json");
+      expect(sent.get("X-Api-Key")).toBe("test-key");
+      expect(sent.get("User-Agent")).toMatch(/^helius-node-sdk\//);
+      expect([...new Headers(headers)]).toEqual(original);
+    }
+  );
 });

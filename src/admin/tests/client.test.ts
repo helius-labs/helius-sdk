@@ -56,11 +56,10 @@ describe("makeAdminClient", () => {
       `${ADMIN_API_URL}/admin/projects/proj-123/usage`,
       expect.objectContaining({
         method: "GET",
-        headers: expect.objectContaining({
-          "X-Api-Key": "test-key",
-          "X-Helius-Client": "helius-sdk-tests/1.0.0",
-        }),
       })
     );
+    const headers = new Headers(mockFetch.mock.calls[0][1].headers);
+    expect(headers.get("X-Api-Key")).toBe("test-key");
+    expect(headers.get("X-Helius-Client")).toBe("helius-sdk-tests/1.0.0");
   });
 });
