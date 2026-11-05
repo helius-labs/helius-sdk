@@ -343,6 +343,10 @@ export interface ScanProgramMatch {
  * Match transactions with a pre or post token balance of `mint`, in `scope`,
  * or, for the native SOL pseudo-mint, a lamport change (see `mint`).
  *
+ * When scanning a wallet for a token mint, set `tokenAccounts: "balanceChanged"`
+ * to include transfers that reference only its token accounts; the default
+ * `none` leaves them out (see {@link ParsedEventsTokenAccountsFilter}).
+ *
  * When the scanned address is a program, its token accounts usually belong
  * to PDAs rather than the program, so use `scope: "transaction"` there.
  */

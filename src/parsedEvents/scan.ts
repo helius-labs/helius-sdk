@@ -26,6 +26,9 @@ import type {
  * changes instead (see `ScanMintMatch`). Only successful transactions are
  * scanned unless you pass `status: "any"` or `"failed"`.
  *
+ * For wallet token-mint scans, set `tokenAccounts: "balanceChanged"` to include
+ * transfers that reference only the wallet's token accounts (see `ScanMintMatch`).
+ *
  * `returnShape` picks what comes back: the parsed matches (`transactions`, the
  * default), just their signatures and positions (`signatures`), or only the
  * number of matches (`count`, in `scan.matchedTransactions`). `signatures` and
