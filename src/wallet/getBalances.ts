@@ -3,8 +3,8 @@ import {
   buildQueryString,
   handleResponse,
   getHeaders,
-} from "./utils";
-import type { GetBalancesRequest, GetBalancesResponse } from "./types";
+} from "./utils.js";
+import type { GetBalancesRequest, GetBalancesResponse } from "./types.js";
 
 /**
  * Get all token and NFT balances for a given wallet

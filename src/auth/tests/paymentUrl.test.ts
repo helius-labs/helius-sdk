@@ -1,5 +1,5 @@
-import { buildPaymentUrl, resolvePaymentHost } from "../paymentUrl";
-import { PAYMENT_HOST } from "../constants";
+import { buildPaymentUrl, resolvePaymentHost } from "../paymentUrl.js";
+import { PAYMENT_HOST } from "../constants.js";
 
 describe("paymentUrl", () => {
   const originalEnv = process.env.HELIUS_PAYMENT_HOST;

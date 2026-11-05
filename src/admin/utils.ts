@@ -1,5 +1,5 @@
-import { getSDKHeaders } from "../http";
-import { ADMIN_API_URL } from "./constants";
+import { getSDKHeaders } from "../http.js";
+import { ADMIN_API_URL } from "./constants.js";
 
 function getHeaderValue(
   headers: HeadersInit | undefined,

@@ -1,8 +1,8 @@
-import { getPaymentIntent } from "./checkout";
-import { payPaymentLink } from "./payPaymentLink";
-import { buildPaymentUrl } from "./paymentUrl";
-import { pollUntilTerminal } from "./pollPayment";
-import type { PayRenewalAndPayResult, PayRenewalResult } from "./types";
+import { getPaymentIntent } from "./checkout.js";
+import { payPaymentLink } from "./payPaymentLink.js";
+import { buildPaymentUrl } from "./paymentUrl.js";
+import { pollUntilTerminal } from "./pollPayment.js";
+import type { PayRenewalAndPayResult, PayRenewalResult } from "./types.js";
 
 /**
  * Phase 2 — wrap an existing renewal payment intent as a {@link PaymentLink}.

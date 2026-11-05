@@ -1,5 +1,5 @@
-import type { GetAssetRequest, GetAssetResponse } from "../../types";
-import type { RpcCaller } from "../caller";
+import type { GetAssetRequest, GetAssetResponse } from "../../types/index.js";
+import type { RpcCaller } from "../caller.js";
 
 export type GetAssetFn = (p: GetAssetRequest) => Promise<GetAssetResponse>;
 

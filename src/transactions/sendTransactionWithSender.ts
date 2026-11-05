@@ -1,13 +1,13 @@
 import { getBase64EncodedWireTransaction } from "@solana/kit";
-import { makePollTransactionConfirmation } from "./pollTransactionConfirmation";
+import { makePollTransactionConfirmation } from "./pollTransactionConfirmation.js";
 import {
   MIN_TIP_LAMPORTS_MAX,
   MIN_TIP_LAMPORTS_SWQOS,
   type SendTransactionWithSenderFn,
   type SendSmartTxSenderDeps,
-} from "./types";
-import { sendViaSender } from "./sendViaSender";
-import { determineTipSol } from "./determineTip";
+} from "./types.js";
+import { sendViaSender } from "./sendViaSender.js";
+import { determineTipSol } from "./determineTip.js";
 
 const DEFAULT_TIMEOUT_MS = 60_000;
 const DEFAULT_POLL_MS = 2_000;

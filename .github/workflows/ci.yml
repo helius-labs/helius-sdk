@@ -110,6 +110,9 @@ jobs:
       - name: Build, tree-shake check, and bundle size check
         run: pnpm check-bundle
 
+      - name: Typecheck consumer projects against the build
+        run: pnpm check-consumer-types
+
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:

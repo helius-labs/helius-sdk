@@ -8,8 +8,8 @@ import {
   type Rpc,
   type SolanaRpcApi,
 } from "@solana/kit";
-import { createTxMessage } from "../createTxMessage";
-import { makeSendTransaction } from "../sendTransaction";
+import { createTxMessage } from "../createTxMessage.js";
+import { makeSendTransaction } from "../sendTransaction.js";
 
 const makeSignedTransaction = async () => {
   const signer = await createKeyPairSignerFromPrivateKeyBytes(
@@ -130,6 +130,16 @@ describe("sendTransaction Tests", () => {
         },
       })
     ).rejects.toBe(error);
+    expect(sendTransaction).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ["no known field", {}],
+    ["a non-function serialize", { serialize: "AQID" }],
+  ])("Rejects an input with %s without sending", async (_label, input) => {
+    await expect(send(input as never)).rejects.toThrow(
+      "Unsupported transaction shape passed to sendTransaction"
+    );
     expect(sendTransaction).not.toHaveBeenCalled();
   });
 });

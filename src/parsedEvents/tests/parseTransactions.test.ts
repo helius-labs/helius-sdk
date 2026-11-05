@@ -1,5 +1,5 @@
-import { createHeliusEager as createHelius } from "../../rpc/createHelius.eager";
-import type { ParseTransactionsResponse } from "../types";
+import { createHeliusEager as createHelius } from "../../rpc/createHelius.eager.js";
+import type { ParseTransactionsResponse } from "../types.js";
 
 const mockFetch = jest.fn();
 global.fetch = mockFetch as jest.Mock;
@@ -147,6 +147,43 @@ describe("parsedEvents.parseTransactions Tests", () => {
     expect(JSON.parse(mockFetch.mock.calls[0][1].body)).toEqual({
       transactions: [SIG],
       limit: 5,
+    });
+  });
+
+  it("Sends the rawTransaction encoding", async () => {
+    mockFetch.mockResolvedValue({ ok: true, json: async () => [] });
+
+    await rpc.parsedEvents.parseTransactions({
+      transactions: [SIG],
+      rawTransaction: "base64",
+    });
+
+    expect(JSON.parse(mockFetch.mock.calls[0][1].body)).toEqual({
+      transactions: [SIG],
+      rawTransaction: "base64",
+    });
+  });
+
+  it("Omits includeRawTransaction: false, which the API rejects next to rawTransaction", async () => {
+    mockFetch.mockResolvedValue({ ok: true, json: async () => [] });
+
+    await rpc.parsedEvents.parseTransactions({
+      transactions: [SIG],
+      includeRawTransaction: false,
+      rawTransaction: "json",
+    });
+    await rpc.parsedEvents.parseTransactions({
+      transactions: [SIG],
+      includeRawTransaction: true,
+    });
+
+    expect(JSON.parse(mockFetch.mock.calls[0][1].body)).toEqual({
+      transactions: [SIG],
+      rawTransaction: "json",
+    });
+    expect(JSON.parse(mockFetch.mock.calls[1][1].body)).toEqual({
+      transactions: [SIG],
+      includeRawTransaction: true,
     });
   });
 

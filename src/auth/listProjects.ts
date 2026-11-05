@@ -1,5 +1,5 @@
-import type { ProjectListItem } from "./types";
-import { authRequest } from "./utils";
+import type { ProjectListItem } from "./types.js";
+import { authRequest } from "./utils.js";
 
 export async function listProjects(
   jwt: string,

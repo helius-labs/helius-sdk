@@ -1,9 +1,9 @@
-import { createHelius } from "../../../rpc";
+import { createHelius } from "../../../rpc/index.js";
 import {
   AddressWithTree,
   CompressedProofWithContext,
   GetValidityProofResponse,
-} from "../../types";
+} from "../../types.js";
 
 const transportMock = jest.fn();
 

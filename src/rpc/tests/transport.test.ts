@@ -1,4 +1,4 @@
-import { buildRpcUrl } from "../transport";
+import { buildRpcUrl } from "../transport.js";
 
 describe("buildRpcUrl", () => {
   it("uses the network endpoint when no baseUrl is given", () => {

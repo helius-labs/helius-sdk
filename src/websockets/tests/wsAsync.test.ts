@@ -1,5 +1,5 @@
 import type { Address } from "@solana/kit";
-import { makeWsAsync } from "../wsAsync";
+import { makeWsAsync } from "../wsAsync.js";
 
 // Mock @solana/kit
 const mockDispose = jest.fn();
@@ -28,7 +28,7 @@ const mockAccountSubscribe = jest.fn().mockResolvedValue({ subscriptionId: 2 });
 const mockAccountUnsubscribe = jest.fn().mockResolvedValue(true);
 const mockEnhancedClose = jest.fn();
 
-jest.mock("../enhancedWs", () => ({
+jest.mock("../enhancedWs.js", () => ({
   makeEnhancedWsClient: jest.fn().mockReturnValue({
     transactionSubscribe: mockTransactionSubscribe,
     transactionUnsubscribe: mockTransactionUnsubscribe,

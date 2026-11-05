@@ -1,7 +1,7 @@
 import { address } from "@solana/kit";
 
-import { makeGetWithdrawableAmount } from "../getWithdrawableAmount";
-import { STAKE_STATE_LEN, U64_MAX } from "../types";
+import { makeGetWithdrawableAmount } from "../getWithdrawableAmount.js";
+import { STAKE_STATE_LEN, U64_MAX } from "../types.js";
 
 const stakeAccount = address("4RiZvuXvR5dr6VtUCaQhyE355sWJ5kJy7N8PwegmnPHS");
 

@@ -13,7 +13,7 @@ import type {
   EnhancedAccountSubscribeConfig,
   EnhancedAccountNotificationResult,
   EnhancedSubscription,
-} from "./types";
+} from "./types.js";
 
 type WsRaw = RpcSubscriptions<SolanaRpcSubscriptionsApi>;
 
@@ -158,9 +158,9 @@ export const makeWsAsync = (
 ): WsAsync => {
   let _raw: WsRaw | undefined;
   let _rawLoading: Promise<WsRaw> | undefined;
-  let _enhanced: import("./enhancedWs").EnhancedWsClient | undefined;
+  let _enhanced: import("./enhancedWs.js").EnhancedWsClient | undefined;
   let _enhancedLoading:
-    | Promise<import("./enhancedWs").EnhancedWsClient>
+    | Promise<import("./enhancedWs.js").EnhancedWsClient>
     | undefined;
   let closed = false;
 
@@ -183,7 +183,7 @@ export const makeWsAsync = (
   };
 
   const enhanced = async (): Promise<
-    import("./enhancedWs").EnhancedWsClient
+    import("./enhancedWs.js").EnhancedWsClient
   > => {
     if (!enhancedWsUrl) {
       throw new Error(
@@ -195,7 +195,7 @@ export const makeWsAsync = (
     if (_enhanced) return _enhanced;
     if (_enhancedLoading) return _enhancedLoading;
 
-    _enhancedLoading = import("./enhancedWs").then(
+    _enhancedLoading = import("./enhancedWs.js").then(
       ({ makeEnhancedWsClient }) => {
         if (closed) {
           const client = makeEnhancedWsClient(enhancedWsUrl);

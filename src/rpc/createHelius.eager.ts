@@ -4,99 +4,109 @@ import {
   createSolanaRpcApi,
   DEFAULT_RPC_CONFIG,
 } from "@solana/kit";
-import { wrapAutoSend } from "./wrapAutoSend";
-import { makeRpcCaller } from "./caller";
-import { buildRpcUrl, resolveTransport, withSdkRequestId } from "./transport";
+import { wrapAutoSend } from "./wrapAutoSend.js";
+import { makeRpcCaller } from "./caller.js";
+import {
+  buildRpcUrl,
+  resolveTransport,
+  withSdkRequestId,
+} from "./transport.js";
 
-export type { TransportHook } from "./transport";
+export type { TransportHook } from "./transport.js";
 export type { RpcTransport } from "@solana/kit";
-export { HeliusRpcError } from "./caller";
-import { getSDKHeaders, type AllowedRpcHeaders } from "../http";
+export { HeliusRpcError } from "./caller.js";
+import { getSDKHeaders, type AllowedRpcHeaders } from "../http.js";
 
-import { GetAssetFn, makeGetAsset } from "./methods/getAsset";
-import { GetAssetBatchFn, makeGetAssetBatch } from "./methods/getAssetBatch";
-import { GetAssetProofFn, makeGetAssetProof } from "./methods/getAssetProof";
+import { GetAssetFn, makeGetAsset } from "./methods/getAsset.js";
+import { GetAssetBatchFn, makeGetAssetBatch } from "./methods/getAssetBatch.js";
+import { GetAssetProofFn, makeGetAssetProof } from "./methods/getAssetProof.js";
 import {
   GetAssetProofBatchFn,
   makeGetAssetProofBatch,
-} from "./methods/getAssetProofBatch";
+} from "./methods/getAssetProofBatch.js";
 import {
   GetAssetsByAuthorityFn,
   makeGetAssetsByAuthority,
-} from "./methods/getAssetsByAuthority";
+} from "./methods/getAssetsByAuthority.js";
 import {
   GetAssetsByCreatorFn,
   makeGetAssetsByCreator,
-} from "./methods/getAssetsByCreator";
+} from "./methods/getAssetsByCreator.js";
 import {
   GetAssetsByGroupFn,
   makeGetAssetsByGroup,
-} from "./methods/getAssetsByGroup";
+} from "./methods/getAssetsByGroup.js";
 import {
   GetPriorityFeeEstimateFn,
   makeGetPriorityFeeEstimate,
-} from "./methods/getPriorityFeeEstimate";
+} from "./methods/getPriorityFeeEstimate.js";
 
 import {
   makeWebhookClientEager,
   type WebhookClient,
-} from "../webhooks/client.eager";
+} from "../webhooks/client.eager.js";
 import {
   makeWalletClientEager,
   type WalletClient,
-} from "../wallet/client.eager";
+} from "../wallet/client.eager.js";
 import {
   makeParsedEventsClientEager,
   type ParsedEventsClient,
-} from "../parsedEvents/client.eager";
-import { makeAdminClientEager, type AdminClient } from "../admin/client.eager";
+} from "../parsedEvents/client.eager.js";
+import {
+  makeAdminClientEager,
+  type AdminClient,
+} from "../admin/client.eager.js";
 import {
   GetAssetsByOwnerFn,
   makeGetAssetsByOwner,
-} from "./methods/getAssetsByOwner";
-import { GetNftEditionsFn, makeGetNftEditions } from "./methods/getNftEditions";
+} from "./methods/getAssetsByOwner.js";
+import {
+  GetNftEditionsFn,
+  makeGetNftEditions,
+} from "./methods/getNftEditions.js";
 import {
   GetSignaturesForAssetFn,
   makeGetSignaturesForAsset,
-} from "./methods/getSignaturesForAsset";
+} from "./methods/getSignaturesForAsset.js";
 import {
   GetTokenAccountsFn,
   makeGetTokenAccounts,
-} from "./methods/getTokenAccounts";
-import { makeSearchAssets, SearchAssetsFn } from "./methods/searchAssets";
+} from "./methods/getTokenAccounts.js";
+import { makeSearchAssets, SearchAssetsFn } from "./methods/searchAssets.js";
 import {
   EnhancedTxClient,
   makeEnhancedTxClientEager,
-} from "../enhanced/client.eager";
-import type { HeliusRpcAccess, HeliusRpcOptions } from "./types";
+} from "../enhanced/client.eager.js";
+import type { HeliusRpcAccess, HeliusRpcOptions } from "./types.js";
 import {
   makeTxHelpersEager,
   TxHelpersEager,
-} from "../transactions/client.eager";
+} from "../transactions/client.eager.js";
 import {
   GetProgramAccountsV2Fn,
   makeGetProgramAccountsV2,
-} from "./methods/getProgramAccountsV2";
+} from "./methods/getProgramAccountsV2.js";
 import {
   GetAllProgramAccountsFn,
   makeGetAllProgramAccounts,
-} from "./methods/getAllProgramAccounts";
+} from "./methods/getAllProgramAccounts.js";
 import {
   GetTokenAccountsByOwnerV2Fn,
   makeGetTokenAccountsByOwnerV2,
-} from "./methods/getTokenAccountsByOwnerV2";
+} from "./methods/getTokenAccountsByOwnerV2.js";
 import {
   GetAllTokenAccountsByOwnerFn,
   makeGetAllTokenAccountsByOwner,
-} from "./methods/getAllTokenAccountsByOwner";
+} from "./methods/getAllTokenAccountsByOwner.js";
 import {
   GetTransactionsForAddressFn,
   makeGetTransactionsForAddress,
-} from "./methods/getTransactionsForAddress";
+} from "./methods/getTransactionsForAddress.js";
 import {
   GetTransfersByAddressFn,
   makeGetTransfersByAddress,
-} from "./methods/getTransfersByAddress";
+} from "./methods/getTransfersByAddress.js";
 
 export interface HeliusClientEager extends HeliusRpcAccess {
   getAsset: GetAssetFn;

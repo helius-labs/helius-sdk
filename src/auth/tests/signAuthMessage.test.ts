@@ -1,5 +1,5 @@
-import { signAuthMessage } from "../signAuthMessage";
-import { generateKeypair } from "../generateKeypair";
+import { signAuthMessage } from "../signAuthMessage.js";
+import { generateKeypair } from "../generateKeypair.js";
 
 describe("signAuthMessage", () => {
   it("returns a message and base58 signature", async () => {

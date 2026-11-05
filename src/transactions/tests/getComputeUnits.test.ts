@@ -1,4 +1,4 @@
-import { makeGetComputeUnits } from "../getComputeUnits";
+import { makeGetComputeUnits } from "../getComputeUnits.js";
 import type {
   TransactionMessage,
   TransactionMessageWithFeePayer,

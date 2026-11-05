@@ -2,7 +2,7 @@ import type { Address } from "@solana/kit";
 import {
   buildAndSendTokenTransfer,
   type TokenTransferParams,
-} from "../buildTokenTransfer";
+} from "../buildTokenTransfer.js";
 
 // Mock @solana/kit
 const mockSend = jest.fn();

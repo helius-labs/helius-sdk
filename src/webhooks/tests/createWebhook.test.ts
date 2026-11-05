@@ -1,5 +1,5 @@
-import type { CreateWebhookRequest, Webhook } from "../../types/webhooks";
-import { createHeliusEager as createHelius } from "../../rpc/createHelius.eager";
+import type { CreateWebhookRequest, Webhook } from "../../types/webhooks.js";
+import { createHeliusEager as createHelius } from "../../rpc/createHelius.eager.js";
 
 const mockFetch = jest.fn();
 

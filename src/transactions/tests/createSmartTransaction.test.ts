@@ -6,7 +6,7 @@ import {
   generateKeyPairSigner,
   getTransactionMessageLoadedAccountsDataSizeLimit,
 } from "@solana/kit";
-import { MAX_LOADED_ACCOUNTS_DATA_SIZE_BYTES } from "../validateTxMessage";
+import { MAX_LOADED_ACCOUNTS_DATA_SIZE_BYTES } from "../validateTxMessage.js";
 import {
   getSetComputeUnitLimitInstruction,
   getSetComputeUnitPriceInstruction,
@@ -28,7 +28,7 @@ jest.mock("@solana/kit", () => {
   };
 });
 
-import { makeCreateSmartTransaction } from "../createSmartTransaction";
+import { makeCreateSmartTransaction } from "../createSmartTransaction.js";
 
 // Minimal no-op instruction that satisfies @solana/kit’s shape
 const makeNoopIx = (program: Address): Instruction<string, readonly any[]> => ({

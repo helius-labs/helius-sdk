@@ -3,8 +3,8 @@ import type {
   SolanaRpcApi,
   Base64EncodedWireTransaction,
 } from "@solana/kit";
-import { BroadcastOptions } from "./types";
-import { stringifyTxError } from "./pollTransactionConfirmation";
+import { BroadcastOptions } from "./types.js";
+import { stringifyTxError } from "./pollTransactionConfirmation.js";
 
 export const broadcastTransactionFactory = (raw: Rpc<SolanaRpcApi>) => {
   return async function broadcastBase64(

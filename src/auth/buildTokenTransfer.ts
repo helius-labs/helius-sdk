@@ -19,7 +19,7 @@ import {
   findAssociatedTokenPda,
   TOKEN_PROGRAM_ADDRESS,
 } from "@solana-program/token";
-import { RPC_URL, WS_URL } from "./constants";
+import { RPC_URL, WS_URL } from "./constants.js";
 
 export interface TokenTransferParams {
   secretKey: Uint8Array;

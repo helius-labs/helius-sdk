@@ -1,8 +1,8 @@
 import {
   GetSignaturesForAssetRequest,
   GetSignaturesForAssetResponse,
-} from "../../../types/das";
-import { createHeliusEager as createHelius } from "../../createHelius.eager";
+} from "../../../types/das.js";
+import { createHeliusEager as createHelius } from "../../createHelius.eager.js";
 
 const transportMock = jest.fn();
 

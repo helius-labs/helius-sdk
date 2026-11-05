@@ -3,7 +3,7 @@ import type {
   ParsedNativeTransfer,
   ParsedSummary,
   ParsedTokenTransfer,
-} from "../parsedEvents/types";
+} from "../parsedEvents/types.js";
 
 /** Gatekeeper endpoint that serves Parsed Streams subscriptions. The API key is appended. */
 export const PARSED_STREAMS_URL = "wss://beta.helius-rpc.com/?api-key=";

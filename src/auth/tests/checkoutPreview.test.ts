@@ -1,9 +1,9 @@
-import { getCheckoutPreview } from "../checkout";
-import { authRequest } from "../utils";
-import { fetchStripePriceIds } from "../devPortalConfigs";
+import { getCheckoutPreview } from "../checkout.js";
+import { authRequest } from "../utils.js";
+import { fetchStripePriceIds } from "../devPortalConfigs.js";
 
-jest.mock("../utils");
-jest.mock("../devPortalConfigs");
+jest.mock("../utils.js");
+jest.mock("../devPortalConfigs.js");
 
 const mockAuthRequest = authRequest as jest.MockedFunction<typeof authRequest>;
 const mockFetchStripePriceIds = fetchStripePriceIds as jest.MockedFunction<

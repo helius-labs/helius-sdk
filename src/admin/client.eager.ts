@@ -1,6 +1,6 @@
-import type { AdminClient } from "./client";
-import type { ProjectUsage } from "./types";
-import { getProjectUsage } from "./getProjectUsage";
+import type { AdminClient } from "./client.js";
+import type { ProjectUsage } from "./types.js";
+import { getProjectUsage } from "./getProjectUsage.js";
 
 export type { AdminClient };
 

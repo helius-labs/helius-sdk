@@ -1,4 +1,4 @@
-import { getSDKHeaders } from "../http";
+import { getSDKHeaders } from "../http.js";
 
 /**
  * Base URL for Wallet API endpoints

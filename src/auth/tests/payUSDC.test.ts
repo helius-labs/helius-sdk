@@ -1,9 +1,9 @@
 const mockBuildAndSend = jest.fn();
-jest.mock("../buildTokenTransfer", () => ({
+jest.mock("../buildTokenTransfer.js", () => ({
   buildAndSendTokenTransfer: mockBuildAndSend,
 }));
 
-import { payUSDC } from "../payUSDC";
+import { payUSDC } from "../payUSDC.js";
 
 describe("payUSDC", () => {
   it("throws without sending any funds", async () => {

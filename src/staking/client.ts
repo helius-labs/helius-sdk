@@ -1,5 +1,5 @@
 import type { Rpc, SolanaRpcApi } from "@solana/kit";
-import { makeCreateStakeTransaction } from "./createStakeTransaction";
+import { makeCreateStakeTransaction } from "./createStakeTransaction.js";
 import {
   GetHeliusStakeAccountsFn,
   GetStakeInstructionsFn,
@@ -9,14 +9,14 @@ import {
   type CreateStakeTransactionFn,
   type createUnstakeTransactionFn,
   type CreateWithdrawTransactionFn,
-} from "./types";
-import { makeCreateUnstakeTransaction } from "./createUnstakeTransaction";
-import { makeCreateWithdrawTransaction } from "./createWithdrawTransaction";
-import { makeGetHeliusStakeAccounts } from "./getHeliusStakeAccounts";
-import { makeGetWithdrawableAmount } from "./getWithdrawableAmount";
-import { makeGetStakeInstructions } from "./getStakeInstructions";
-import { makeGetUnstakeInstruction } from "./getUnstakeInstruction";
-import { makeGetWithdrawInstruction } from "./getWithdrawInstruction";
+} from "./types.js";
+import { makeCreateUnstakeTransaction } from "./createUnstakeTransaction.js";
+import { makeCreateWithdrawTransaction } from "./createWithdrawTransaction.js";
+import { makeGetHeliusStakeAccounts } from "./getHeliusStakeAccounts.js";
+import { makeGetWithdrawableAmount } from "./getWithdrawableAmount.js";
+import { makeGetStakeInstructions } from "./getStakeInstructions.js";
+import { makeGetUnstakeInstruction } from "./getUnstakeInstruction.js";
+import { makeGetWithdrawInstruction } from "./getWithdrawInstruction.js";
 
 /**
  * Client for Helius native staking operations. All delegations

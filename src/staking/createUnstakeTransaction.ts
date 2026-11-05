@@ -14,7 +14,7 @@ import {
 
 import { getDeactivateInstruction } from "@solana-program/stake";
 
-import { SYSVAR_CLOCK } from "./types";
+import { SYSVAR_CLOCK } from "./types.js";
 
 export const makeCreateUnstakeTransaction = ({
   rpc,
