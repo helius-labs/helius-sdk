@@ -42,9 +42,10 @@ describe("walletSignup", () => {
     await walletSignup("msg", "sig", "addr", "my-agent/1.0");
 
     const [, init] = mockFetch.mock.calls[0];
-    expect(init.headers["Content-Type"]).toBe("application/json");
-    expect(init.headers["User-Agent"]).toMatch(/^helius-node-sdk\//);
-    expect(init.headers["X-Helius-Client"]).toBe("my-agent/1.0");
+    const headers = new Headers(init.headers);
+    expect(headers.get("Content-Type")).toBe("application/json");
+    expect(headers.get("User-Agent")).toMatch(/^helius-node-sdk\//);
+    expect(headers.get("X-Helius-Client")).toBe("my-agent/1.0");
   });
 
   it("throws on HTTP error", async () => {
