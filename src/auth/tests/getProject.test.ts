@@ -34,11 +34,10 @@ describe("getProject", () => {
       `${API_URL}/projects/proj-123`,
       expect.objectContaining({
         method: "GET",
-        headers: expect.objectContaining({
-          Authorization: "Bearer jwt-token",
-        }),
       })
     );
+    const headers = new Headers(mockFetch.mock.calls[0][1].headers);
+    expect(headers.get("Authorization")).toBe("Bearer jwt-token");
   });
 
   it("throws on HTTP error", async () => {

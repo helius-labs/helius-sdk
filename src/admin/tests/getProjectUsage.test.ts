@@ -50,11 +50,11 @@ describe("getProjectUsage", () => {
       `${ADMIN_API_URL}/admin/projects/proj-123/usage`,
       expect.objectContaining({
         method: "GET",
-        headers: expect.objectContaining({
-          "X-Api-Key": "test-key",
-        }),
       })
     );
+    expect(
+      new Headers(mockFetch.mock.calls[0][1].headers).get("X-Api-Key")
+    ).toBe("test-key");
   });
 
   it("throws on HTTP error", async () => {

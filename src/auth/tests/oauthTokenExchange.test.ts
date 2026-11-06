@@ -38,7 +38,7 @@ describe("oauthTokenExchange", () => {
     expect(url).toBe(`${API_URL}/oauth/token`);
     expect(init.method).toBe("POST");
     // Caller's content type must win over authRequest's JSON default.
-    expect(init.headers["Content-Type"]).toBe(
+    expect(new Headers(init.headers).get("Content-Type")).toBe(
       "application/x-www-form-urlencoded"
     );
 

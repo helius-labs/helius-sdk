@@ -32,12 +32,11 @@ describe("createApiKey", () => {
       `${API_URL}/projects/proj-1/add-key`,
       expect.objectContaining({
         method: "POST",
-        headers: expect.objectContaining({
-          Authorization: "Bearer jwt-token",
-        }),
         body: JSON.stringify({ userId: "wallet-addr" }),
       })
     );
+    const headers = new Headers(mockFetch.mock.calls[0][1].headers);
+    expect(headers.get("Authorization")).toBe("Bearer jwt-token");
   });
 
   it("throws on HTTP error", async () => {

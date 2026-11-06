@@ -26,13 +26,17 @@ export async function authRequest<T>(
   userAgent?: string
 ): Promise<T> {
   const url = `${resolveApiUrl()}${endpoint}`;
+  const headers = new Headers(options.headers);
+  for (const [name, value] of Object.entries({
+    "Content-Type": "application/json",
+    ...getSDKHeaders(userAgent),
+  })) {
+    if (!headers.has(name)) headers.set(name, value);
+  }
+
   const response = await fetch(url, {
     ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...getSDKHeaders(userAgent),
-      ...options.headers,
-    },
+    headers,
   });
 
   if (!response.ok) {
