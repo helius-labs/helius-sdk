@@ -1,5 +1,5 @@
 import type { RpcTransport } from "@solana/kit";
-import { HeliusRpcError, makeRpcCaller } from "../caller";
+import { HeliusRpcError, makeRpcCaller } from "../caller.js";
 
 const callerReturning = (response: unknown) => {
   const transport = jest.fn().mockResolvedValue(response);

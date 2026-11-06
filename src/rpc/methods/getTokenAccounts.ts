@@ -1,8 +1,8 @@
 import type {
   GetTokenAccountsRequest,
   GetTokenAccountsResponse,
-} from "../../types/das";
-import type { RpcCaller } from "../caller";
+} from "../../types/das.js";
+import type { RpcCaller } from "../caller.js";
 
 export type GetTokenAccountsFn = (
   p: GetTokenAccountsRequest

@@ -3,8 +3,8 @@ import {
   buildQueryString,
   handleResponse,
   getHeaders,
-} from "./utils";
-import type { GetFundedByRequest, GetFundedByResponse } from "./types";
+} from "./utils.js";
+import type { GetFundedByRequest, GetFundedByResponse } from "./types.js";
 
 /**
  * Get the original funding source of a given wallet

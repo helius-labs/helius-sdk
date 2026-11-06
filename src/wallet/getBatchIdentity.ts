@@ -3,11 +3,11 @@ import {
   buildQueryString,
   handleResponse,
   getHeaders,
-} from "./utils";
+} from "./utils.js";
 import type {
   GetBatchIdentityRequest,
   GetBatchIdentityResponse,
-} from "./types";
+} from "./types.js";
 
 /**
  * Batch identity lookup for multiple wallet addresses

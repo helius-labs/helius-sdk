@@ -1,9 +1,9 @@
-import type { RpcCaller } from "../../rpc/caller";
+import type { RpcCaller } from "../../rpc/caller.js";
 import type {
   GetCompressionSignaturesForAccountFn,
   GetCompressionSignaturesForAccountRequest,
   GetCompressionSignaturesForAccountResponse,
-} from "../types";
+} from "../types.js";
 
 export const makeGetCompressionSignaturesForAccount =
   (call: RpcCaller): GetCompressionSignaturesForAccountFn =>

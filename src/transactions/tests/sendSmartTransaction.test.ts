@@ -1,5 +1,5 @@
 import { address, type Instruction } from "@solana/kit";
-import { makeSendSmartTransaction } from "../sendSmartTransaction";
+import { makeSendSmartTransaction } from "../sendSmartTransaction.js";
 
 // Inner send‑and‑confirm implementation
 const mockSendAndConfirm = jest.fn().mockResolvedValue(undefined);

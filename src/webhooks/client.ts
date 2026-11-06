@@ -2,7 +2,7 @@ import type {
   CreateWebhookRequest,
   UpdateWebhookRequest,
   Webhook,
-} from "../types/webhooks";
+} from "../types/webhooks.js";
 
 /** Client for managing Helius webhook subscriptions. */
 export interface WebhookClient {

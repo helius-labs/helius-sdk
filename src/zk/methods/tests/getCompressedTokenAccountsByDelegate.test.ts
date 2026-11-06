@@ -2,8 +2,8 @@
  * Tests for helius.zk.getCompressedTokenAccountsByDelegate
  * Rebel‑Alliance themed.
  */
-import { createHelius } from "../../../rpc";
-import type { GetCompressedTokenAccountsByDelegateResponse } from "../../types";
+import { createHelius } from "../../../rpc/index.js";
+import type { GetCompressedTokenAccountsByDelegateResponse } from "../../types.js";
 
 const transportMock = jest.fn();
 jest.mock("@solana/kit", () => ({

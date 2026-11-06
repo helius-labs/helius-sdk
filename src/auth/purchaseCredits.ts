@@ -1,14 +1,14 @@
-import { createPayment } from "./createPayment";
-import { payPaymentLink } from "./payPaymentLink";
-import { listProjects } from "./listProjects";
-import { getProject } from "./getProject";
-import { pollUntilTerminal } from "./pollPayment";
+import { createPayment } from "./createPayment.js";
+import { payPaymentLink } from "./payPaymentLink.js";
+import { listProjects } from "./listProjects.js";
+import { getProject } from "./getProject.js";
+import { pollUntilTerminal } from "./pollPayment.js";
 import type {
   PurchaseCreditsAndPayOptions,
   PurchaseCreditsAndPayResult,
   PurchaseCreditsLinkOptions,
   PurchaseCreditsLinkResult,
-} from "./types";
+} from "./types.js";
 
 const AGENT_PLAN_ID = "agent_v4";
 

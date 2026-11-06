@@ -1,5 +1,5 @@
-import { GetTransfersByAddressResult } from "../../../types";
-import { createHeliusEager as createHelius } from "../../createHelius.eager";
+import { GetTransfersByAddressResult } from "../../../types/index.js";
+import { createHeliusEager as createHelius } from "../../createHelius.eager.js";
 
 const transportMock = jest.fn();
 

@@ -5,57 +5,57 @@ import {
   DEFAULT_RPC_CONFIG,
 } from "@solana/kit";
 
-import { getSDKHeaders, type AllowedRpcHeaders } from "../http";
+import { getSDKHeaders, type AllowedRpcHeaders } from "../http.js";
 
-import { wrapAutoSend } from "./wrapAutoSend";
-import type { WebhookClient } from "../webhooks/client";
+import { wrapAutoSend } from "./wrapAutoSend.js";
+import type { WebhookClient } from "../webhooks/client.js";
 import type {
   CreateWebhookRequest,
   UpdateWebhookRequest,
   Webhook,
-} from "../types/webhooks";
-import { defineLazyMethod, defineLazyNamespace } from "./lazy";
-import { makeRpcCaller } from "./caller";
-import type { GetAssetFn } from "./methods/getAsset";
-import type { GetAssetBatchFn } from "./methods/getAssetBatch";
-import type { GetAssetProofFn } from "./methods/getAssetProof";
-import type { GetAssetProofBatchFn } from "./methods/getAssetProofBatch";
-import type { GetAssetsByAuthorityFn } from "./methods/getAssetsByAuthority";
-import type { GetAssetsByCreatorFn } from "./methods/getAssetsByCreator";
-import type { GetAssetsByGroupFn } from "./methods/getAssetsByGroup";
-import type { GetPriorityFeeEstimateFn } from "./methods/getPriorityFeeEstimate";
-import type { GetAssetsByOwnerFn } from "./methods/getAssetsByOwner";
-import type { GetNftEditionsFn } from "./methods/getNftEditions";
-import type { GetSignaturesForAssetFn } from "./methods/getSignaturesForAsset";
-import type { GetTokenAccountsFn } from "./methods/getTokenAccounts";
-import type { SearchAssetsFn } from "./methods/searchAssets";
-import type { GetProgramAccountsV2Fn } from "./methods/getProgramAccountsV2";
-import type { GetAllProgramAccountsFn } from "./methods/getAllProgramAccounts";
-import type { GetTokenAccountsByOwnerV2Fn } from "./methods/getTokenAccountsByOwnerV2";
+} from "../types/webhooks.js";
+import { defineLazyMethod, defineLazyNamespace } from "./lazy.js";
+import { makeRpcCaller } from "./caller.js";
+import type { GetAssetFn } from "./methods/getAsset.js";
+import type { GetAssetBatchFn } from "./methods/getAssetBatch.js";
+import type { GetAssetProofFn } from "./methods/getAssetProof.js";
+import type { GetAssetProofBatchFn } from "./methods/getAssetProofBatch.js";
+import type { GetAssetsByAuthorityFn } from "./methods/getAssetsByAuthority.js";
+import type { GetAssetsByCreatorFn } from "./methods/getAssetsByCreator.js";
+import type { GetAssetsByGroupFn } from "./methods/getAssetsByGroup.js";
+import type { GetPriorityFeeEstimateFn } from "./methods/getPriorityFeeEstimate.js";
+import type { GetAssetsByOwnerFn } from "./methods/getAssetsByOwner.js";
+import type { GetNftEditionsFn } from "./methods/getNftEditions.js";
+import type { GetSignaturesForAssetFn } from "./methods/getSignaturesForAsset.js";
+import type { GetTokenAccountsFn } from "./methods/getTokenAccounts.js";
+import type { SearchAssetsFn } from "./methods/searchAssets.js";
+import type { GetProgramAccountsV2Fn } from "./methods/getProgramAccountsV2.js";
+import type { GetAllProgramAccountsFn } from "./methods/getAllProgramAccounts.js";
+import type { GetTokenAccountsByOwnerV2Fn } from "./methods/getTokenAccountsByOwnerV2.js";
 import type { GetAllTokenAccountsByOwnerFn } from "./methods/getAllTokenAccountsByOwner.js";
-import type { GetTransactionsForAddressFn } from "./methods/getTransactionsForAddress";
-import type { GetTransfersByAddressFn } from "./methods/getTransfersByAddress";
-import type { EnhancedTxClientLazy } from "../enhanced";
-import { TxHelpersLazy } from "../transactions";
-import type { ResolvedHeliusRpcApi } from "./heliusRpcApi";
-import { makeWsAsync, WsAsync } from "../websockets/wsAsync";
-import { StakeClientLazy } from "../staking/client";
-import { ZkClientLazy } from "../zk/client";
-import type { WalletClient } from "../wallet/client";
-import type { ParsedEventsClient } from "../parsedEvents/client";
-import type { AdminClient } from "../admin/client";
-import type { AuthClient } from "../auth/types";
-import type { HeliusRpcAccess, HeliusRpcOptions } from "./types";
+import type { GetTransactionsForAddressFn } from "./methods/getTransactionsForAddress.js";
+import type { GetTransfersByAddressFn } from "./methods/getTransfersByAddress.js";
+import type { EnhancedTxClientLazy } from "../enhanced/index.js";
+import { TxHelpersLazy } from "../transactions/index.js";
+import type { ResolvedHeliusRpcApi } from "./heliusRpcApi.js";
+import { makeWsAsync, WsAsync } from "../websockets/wsAsync.js";
+import { StakeClientLazy } from "../staking/client.js";
+import { ZkClientLazy } from "../zk/client.js";
+import type { WalletClient } from "../wallet/client.js";
+import type { ParsedEventsClient } from "../parsedEvents/client.js";
+import type { AdminClient } from "../admin/client.js";
+import type { AuthClient } from "../auth/types.js";
+import type { HeliusRpcAccess, HeliusRpcOptions } from "./types.js";
 import {
   buildRpcUrl,
   resolveTransport,
   withSdkRequestId,
   type TransportHook,
-} from "./transport";
+} from "./transport.js";
 
 export type { HeliusRpcOptions, TransportHook, HeliusRpcAccess };
 export type { RpcTransport } from "@solana/kit";
-export { HeliusRpcError } from "./caller";
+export { HeliusRpcError } from "./caller.js";
 
 /**
  * The main Helius SDK client. Provides access to all Helius and Solana RPC
@@ -144,13 +144,16 @@ export type HeliusClient = ResolvedHeliusRpcApi &
      * @deprecated The Enhanced Transactions API is in maintenance mode. Use
      * `parsedEvents` instead: `getTransactions` → `parsedEvents.parseTransactions`,
      * `getTransactionsByAddress` → `parsedEvents.getTransactionHistory` (defaults
-     * differ: `confirmed` commitment, 100-item pages). Parsed Events is
+     * differ: `confirmed` commitment, 100-item pages, successful transactions
+     * only unless `status: "any"`), or
+     * `parsedEvents.scan` for a program address or
+     * server-side filtering by instruction or mint. Parsed Events is
      * mainnet-only; devnet code can keep using this client. See
      * https://www.helius.dev/docs/parsed-events/guides/migrate-from-enhanced-transactions
      */
     enhanced: EnhancedTxClientLazy;
 
-    /** Parsed Events client: decoded instructions, transfers, and summaries for transactions and address history. Requires an API key. Mainnet only. */
+    /** Parsed Events client: decoded instructions, transfers, and summaries for transactions and address history, plus server-side history scans by program instruction or token mint. Requires an API key. Mainnet only. */
     parsedEvents: ParsedEventsClient;
 
     /** Smart transaction helpers for building, signing, and sending transactions with automatic compute budget and priority fees. */
@@ -493,7 +496,7 @@ export const createHelius = ({
           "An API key is required to use webhooks/enhanced transactions. Provide apiKey in createHelius() options."
         );
       }
-      const { makeEnhancedTxClientLazy } = await import("../enhanced");
+      const { makeEnhancedTxClientLazy } = await import("../enhanced/index.js");
       return makeEnhancedTxClientLazy(apiKey, network, userAgent, baseUrl);
     }
   );
@@ -518,7 +521,7 @@ export const createHelius = ({
   );
 
   defineLazyNamespace<HeliusClient, TxHelpersLazy>(client, "tx", async () => {
-    const { makeTxHelpersLazy } = await import("../transactions");
+    const { makeTxHelpersLazy } = await import("../transactions/index.js");
     const { makeGetPriorityFeeEstimate } =
       await import("./methods/getPriorityFeeEstimate.js");
     const getPriorityFeeEstimate = makeGetPriorityFeeEstimate(call);
@@ -541,7 +544,7 @@ export const createHelius = ({
   );
 
   defineLazyNamespace<HeliusClient, ZkClientLazy>(client, "zk", async () => {
-    const { makeZkClientLazy } = await import("../zk/client");
+    const { makeZkClientLazy } = await import("../zk/client.js");
     return makeZkClientLazy(call);
   });
 

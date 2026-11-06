@@ -30,7 +30,7 @@ const mockRpc: any = {
   getLatestBlockhash: jest.fn().mockReturnValue({ send: mockHashSend }),
 };
 
-import { makeCreateWithdrawTransaction } from "../createWithdrawTransaction";
+import { makeCreateWithdrawTransaction } from "../createWithdrawTransaction.js";
 
 describe("makeCreateWithdrawTransaction Tests", () => {
   beforeEach(() => jest.clearAllMocks());

@@ -8,8 +8,8 @@ import {
   PreconfSlotStatus,
   PreconfStatus,
   type PreconfFilter,
-} from "../preconfWs";
-import { createTxMessage } from "../../transactions/createTxMessage";
+} from "../preconfWs.js";
+import { createTxMessage } from "../../transactions/createTxMessage.js";
 import {
   generateKeyPairSigner,
   getTransactionEncoder,

@@ -1,9 +1,9 @@
-import { createHelius, HeliusRpcError } from "../index";
+import { createHelius, HeliusRpcError } from "../index.js";
 import {
   createHeliusEager,
   HeliusRpcError as EagerHeliusRpcError,
-} from "../createHelius.eager";
-import { makeWsAsync } from "../../websockets/wsAsync";
+} from "../createHelius.eager.js";
+import { makeWsAsync } from "../../websockets/wsAsync.js";
 
 const transportMock = jest.fn();
 const createDefaultRpcTransportMock = jest.fn((_opts?: any) => transportMock);
@@ -19,7 +19,7 @@ jest.mock("@solana/kit", () => ({
   createRpc: jest.fn().mockReturnValue({}),
 }));
 
-jest.mock("../../websockets/wsAsync", () => ({
+jest.mock("../../websockets/wsAsync.js", () => ({
   makeWsAsync: jest.fn(() => ({ close: jest.fn() })),
 }));
 

@@ -1,6 +1,6 @@
-import type { Asset } from "../../../types/das";
-import { Interface, OwnershipModel } from "../../../types/enums";
-import { createHeliusEager as createHelius } from "../../createHelius.eager";
+import type { Asset } from "../../../types/das.js";
+import { Interface, OwnershipModel } from "../../../types/enums.js";
+import { createHeliusEager as createHelius } from "../../createHelius.eager.js";
 
 const transportMock = jest.fn();
 

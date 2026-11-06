@@ -1,8 +1,8 @@
-import { createHelius } from "../../../rpc";
+import { createHelius } from "../../../rpc/index.js";
 import {
   GetCompressedTokenAccountsByOwnerResponse,
   CompressedAccount,
-} from "../../types";
+} from "../../types.js";
 
 const transportMock = jest.fn();
 

@@ -4,7 +4,10 @@ import type {
   SolanaRpcApi,
   SolanaRpcSubscriptionsApi,
 } from "@solana/kit";
-import { makeGetComputeUnits, type GetComputeUnitsFn } from "./getComputeUnits";
+import {
+  makeGetComputeUnits,
+  type GetComputeUnitsFn,
+} from "./getComputeUnits.js";
 import {
   SendTransactionFn,
   SendTransactionWithSenderFn,
@@ -12,20 +15,20 @@ import {
   type CreateSmartTransactionFn,
   type PollTransactionConfirmationFn,
   type SendSmartTransactionFn,
-} from "./types";
-import { makeCreateSmartTransaction } from "./createSmartTransaction";
-import { GetPriorityFeeEstimateFn } from "../rpc/methods/getPriorityFeeEstimate";
-import { makeSendSmartTransaction } from "./sendSmartTransaction";
-import { makePollTransactionConfirmation } from "./pollTransactionConfirmation";
-import { broadcastTransactionFactory } from "./broadcastTransaction";
-import { makeCreateSmartTransactionWithTip } from "./createSmartTransactionWithTip";
-import { makeSendTransactionWithSender } from "./sendTransactionWithSender";
+} from "./types.js";
+import { makeCreateSmartTransaction } from "./createSmartTransaction.js";
+import { GetPriorityFeeEstimateFn } from "../rpc/methods/getPriorityFeeEstimate.js";
+import { makeSendSmartTransaction } from "./sendSmartTransaction.js";
+import { makePollTransactionConfirmation } from "./pollTransactionConfirmation.js";
+import { broadcastTransactionFactory } from "./broadcastTransaction.js";
+import { makeCreateSmartTransactionWithTip } from "./createSmartTransactionWithTip.js";
+import { makeSendTransactionWithSender } from "./sendTransactionWithSender.js";
 import {
   makeSendBundleWithSender,
   type SendBundleOptions,
   type SignedBundleTransaction,
-} from "./sendBundleWithSender";
-import { makeSendTransaction } from "./sendTransaction";
+} from "./sendBundleWithSender.js";
+import { makeSendTransaction } from "./sendTransaction.js";
 
 /**
  * Transaction helper methods available on `helius.tx`.

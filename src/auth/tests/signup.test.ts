@@ -1,60 +1,60 @@
-jest.mock("../loadKeypair", () => ({
+jest.mock("../loadKeypair.js", () => ({
   loadKeypair: jest.fn(() => ({
     publicKey: new Uint8Array(32),
     secretKey: new Uint8Array(64),
   })),
 }));
 
-jest.mock("../getAddress", () => ({
+jest.mock("../getAddress.js", () => ({
   getAddress: jest.fn().mockResolvedValue("Wallet111"),
 }));
 
-jest.mock("../signAuthMessage", () => ({
+jest.mock("../signAuthMessage.js", () => ({
   signAuthMessage: jest
     .fn()
     .mockResolvedValue({ message: "msg", signature: "sig" }),
 }));
 
-jest.mock("../walletSignup", () => ({
+jest.mock("../walletSignup.js", () => ({
   walletSignup: jest
     .fn()
     .mockResolvedValue({ token: "jwt-1", refId: "ref-1", newUser: true }),
 }));
 
-jest.mock("../listProjects", () => ({
+jest.mock("../listProjects.js", () => ({
   listProjects: jest.fn(),
 }));
 
-jest.mock("../getProject", () => ({
+jest.mock("../getProject.js", () => ({
   getProject: jest.fn(),
 }));
 
-jest.mock("../createApiKey", () => ({
+jest.mock("../createApiKey.js", () => ({
   createApiKey: jest.fn(),
 }));
 
-jest.mock("../checkout", () => ({
+jest.mock("../checkout.js", () => ({
   resolvePriceId: jest.fn().mockResolvedValue("price_agent_1_usdc"),
   getCheckoutPreview: jest.fn(),
   initializeCheckout: jest.fn(),
 }));
 
-jest.mock("../getPaymentStatus", () => ({
+jest.mock("../getPaymentStatus.js", () => ({
   getPaymentStatus: jest.fn(),
 }));
 
-jest.mock("../payPaymentLink", () => ({
+jest.mock("../payPaymentLink.js", () => ({
   payPaymentLink: jest.fn().mockResolvedValue({ txSignature: "tx-abc" }),
 }));
 
-import { signup } from "../signup";
-import { signupAndPay } from "../signupAndPay";
-import { listProjects } from "../listProjects";
-import { getProject } from "../getProject";
-import { createApiKey } from "../createApiKey";
-import { getCheckoutPreview, initializeCheckout } from "../checkout";
-import { getPaymentStatus } from "../getPaymentStatus";
-import { payPaymentLink } from "../payPaymentLink";
+import { signup } from "../signup.js";
+import { signupAndPay } from "../signupAndPay.js";
+import { listProjects } from "../listProjects.js";
+import { getProject } from "../getProject.js";
+import { createApiKey } from "../createApiKey.js";
+import { getCheckoutPreview, initializeCheckout } from "../checkout.js";
+import { getPaymentStatus } from "../getPaymentStatus.js";
+import { payPaymentLink } from "../payPaymentLink.js";
 
 const mockListProjects = listProjects as jest.MockedFunction<
   typeof listProjects
@@ -380,7 +380,7 @@ describe("signup", () => {
     mockGetCheckoutPreview.mockResolvedValue(preview);
     mockInitializeCheckout.mockResolvedValue(intent);
 
-    const { signAuthMessage } = await import("../signAuthMessage");
+    const { signAuthMessage } = await import("../signAuthMessage.js");
     (signAuthMessage as jest.Mock).mockClear();
 
     const result = await signup({

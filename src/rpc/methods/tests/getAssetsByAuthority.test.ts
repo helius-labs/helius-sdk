@@ -1,11 +1,11 @@
-import type { GetAssetResponseList } from "../../../types/das";
+import type { GetAssetResponseList } from "../../../types/das.js";
 import {
   Interface,
   OwnershipModel,
   AssetSortBy,
   AssetSortDirection,
-} from "../../../types";
-import { createHeliusEager as createHelius } from "../../createHelius.eager";
+} from "../../../types/index.js";
+import { createHeliusEager as createHelius } from "../../createHelius.eager.js";
 
 const transportMock = jest.fn();
 

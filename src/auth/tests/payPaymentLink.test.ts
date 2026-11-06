@@ -1,10 +1,10 @@
-jest.mock("../payWithMemo", () => ({
+jest.mock("../payWithMemo.js", () => ({
   payWithMemo: jest.fn().mockResolvedValue("tx-sig-abc"),
 }));
 
-import { payPaymentLink } from "../payPaymentLink";
-import { payWithMemo } from "../payWithMemo";
-import type { PaymentLink } from "../types";
+import { payPaymentLink } from "../payPaymentLink.js";
+import { payWithMemo } from "../payWithMemo.js";
+import type { PaymentLink } from "../types.js";
 
 const mockPayWithMemo = payWithMemo as jest.MockedFunction<typeof payWithMemo>;
 

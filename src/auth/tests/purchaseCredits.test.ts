@@ -1,25 +1,25 @@
-jest.mock("../listProjects", () => ({ listProjects: jest.fn() }));
-jest.mock("../getProject", () => ({ getProject: jest.fn() }));
-jest.mock("../checkout", () => ({
+jest.mock("../listProjects.js", () => ({ listProjects: jest.fn() }));
+jest.mock("../getProject.js", () => ({ getProject: jest.fn() }));
+jest.mock("../checkout.js", () => ({
   resolvePriceId: jest.fn(),
   initializeCheckout: jest.fn(),
   getCheckoutPreview: jest.fn(),
 }));
-jest.mock("../getPaymentStatus", () => ({
+jest.mock("../getPaymentStatus.js", () => ({
   getPaymentStatus: jest.fn(),
 }));
-jest.mock("../payPaymentLink", () => ({
+jest.mock("../payPaymentLink.js", () => ({
   payPaymentLink: jest
     .fn()
     .mockResolvedValue({ txSignature: "tx-sig-credits" }),
 }));
 
-import { purchaseCredits, purchaseCreditsAndPay } from "../purchaseCredits";
-import { listProjects } from "../listProjects";
-import { getProject } from "../getProject";
-import { initializeCheckout } from "../checkout";
-import { getPaymentStatus } from "../getPaymentStatus";
-import { payPaymentLink } from "../payPaymentLink";
+import { purchaseCredits, purchaseCreditsAndPay } from "../purchaseCredits.js";
+import { listProjects } from "../listProjects.js";
+import { getProject } from "../getProject.js";
+import { initializeCheckout } from "../checkout.js";
+import { getPaymentStatus } from "../getPaymentStatus.js";
+import { payPaymentLink } from "../payPaymentLink.js";
 
 const mockListProjects = listProjects as jest.MockedFunction<
   typeof listProjects

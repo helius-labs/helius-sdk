@@ -7,8 +7,8 @@ import {
   RoyaltyModel,
   Scope,
   UseMethods,
-} from "./enums";
-import { GetAssetResponse } from "./types";
+} from "./enums.js";
+import { GetAssetResponse } from "./types.js";
 
 /** Token type filter for DAS queries. */
 export type TokenType =

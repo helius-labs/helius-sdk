@@ -1,5 +1,5 @@
-import { createProject } from "../createProject";
-import { API_URL } from "../constants";
+import { createProject } from "../createProject.js";
+import { API_URL } from "../constants.js";
 
 const mockFetch = jest.fn();
 global.fetch = mockFetch as jest.Mock;

@@ -1,4 +1,4 @@
-import { PAYMENT_HOST } from "./constants";
+import { PAYMENT_HOST } from "./constants.js";
 
 const ENV_VAR = "HELIUS_PAYMENT_HOST";
 

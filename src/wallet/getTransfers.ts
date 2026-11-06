@@ -3,8 +3,8 @@ import {
   buildQueryString,
   handleResponse,
   getHeaders,
-} from "./utils";
-import type { GetTransfersRequest, GetTransfersResponse } from "./types";
+} from "./utils.js";
+import type { GetTransfersRequest, GetTransfersResponse } from "./types.js";
 
 /**
  * Get all token transfer activity for a given wallet

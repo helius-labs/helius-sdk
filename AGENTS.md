@@ -68,7 +68,7 @@ const helius = createHelius({
 | DAS API | `helius.getAsset()`, `helius.getAssetsByOwner()`, etc. | Query NFTs, tokens, compressed assets |
 | RPC V2 | `helius.getTransactionsForAddress()`, `helius.getProgramAccountsV2()` | Enhanced RPC with pagination & filters |
 | Transactions | `helius.tx.*` | Smart transactions & Helius Sender |
-| Parsed Events | `helius.parsedEvents.*` | Parse transactions and address history into decoded instructions, transfers, summaries (mainnet only) |
+| Parsed Events | `helius.parsedEvents.*` | Parse transactions and address history into decoded instructions, transfers, summaries; scan history server-side by program instruction or token mint (mainnet only) |
 | Enhanced (deprecated) | `helius.enhanced.*` | Legacy transaction parsing; use `parsedEvents` |
 | Webhooks | `helius.webhooks.*` | Create/manage webhook subscriptions |
 | WebSockets | `helius.ws.*` | Real-time blockchain data streams |
@@ -261,6 +261,8 @@ When querying `getTransactionsForAddress`, the `tokenAccounts` filter controls w
 | `"balanceChanged"` | Also includes token transactions that changed a balance | **Recommended for most agents** — shows token sends/receives without noise |
 | `"all"` | Includes all token account transactions | You need complete token activity (can return many results) |
 
+For `parsedEvents.scan` of a wallet for a token mint, pass `tokenAccounts: "balanceChanged"` to include transfers that reference only the wallet's token accounts (see `ScanMintMatch`).
+
 ## `changedSinceSlot` — Incremental Account Fetching
 
 `getProgramAccountsV2` and `getTokenAccountsByOwnerV2` (and their auto-paginating `getAll*` variants) support `changedSinceSlot`, a Helius-specific parameter that returns only accounts modified after a given slot. This is useful for syncing or indexing workflows where you've already fetched a baseline and only need the delta.
@@ -405,8 +407,9 @@ helius.tx.sendTransactionWithSender({ ..., region })        // Helius Sender (lo
 ```typescript
 helius.parsedEvents.parseTransactions({ transactions })     // Parse by signatures (mainnet only)
 helius.parsedEvents.getTransactionHistory({ address })      // Parse address history (mainnet only)
+helius.parsedEvents.scan({ address, match })                // Search history by program/mint (mainnet only); entries count only when they involve `address` unless `scope: "transaction"`
 helius.enhanced.getTransactions({ transactions })           // Deprecated: use parsedEvents.parseTransactions
-helius.enhanced.getTransactionsByAddress({ address })       // Deprecated: use parsedEvents.getTransactionHistory
+helius.enhanced.getTransactionsByAddress({ address })       // Deprecated: use parsedEvents.getTransactionHistory (or parsedEvents.scan to search a program or filter by instruction/mint)
 ```
 
 ### Webhooks
@@ -546,8 +549,9 @@ pnpm test             # Run tests (65%+ coverage required)
 pnpm format           # Format with Prettier
 pnpm lint             # Lint with ESLint
 pnpm check-bundle     # Verify tree-shakability & bundle sizes
+pnpm check-consumer-types # Typecheck consumer fixtures against the build
 ```
 
-Before submitting a PR: `pnpm format && pnpm lint && pnpm test && pnpm check-bundle`
+Before submitting a PR: `pnpm format && pnpm lint && pnpm test && pnpm check-bundle && pnpm check-consumer-types`
 
 Key architecture decisions, code style conventions, lazy loading patterns, and PR process are documented in [CLAUDE.md](CLAUDE.md) and [CONTRIBUTING.md](CONTRIBUTING.md).

@@ -1,8 +1,8 @@
 import type {
   GetPriorityFeeEstimateRequest,
   GetPriorityFeeEstimateResponse,
-} from "../../types";
-import type { RpcCaller } from "../caller";
+} from "../../types/index.js";
+import type { RpcCaller } from "../caller.js";
 
 export type GetPriorityFeeEstimateFn = (
   p: GetPriorityFeeEstimateRequest

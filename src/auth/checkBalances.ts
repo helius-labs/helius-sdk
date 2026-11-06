@@ -3,7 +3,7 @@ import {
   findAssociatedTokenPda,
   TOKEN_PROGRAM_ADDRESS,
 } from "@solana-program/token";
-import { RPC_URL, USDC_MINT } from "./constants";
+import { RPC_URL, USDC_MINT } from "./constants.js";
 
 export async function checkSolBalance(walletAddress: string): Promise<bigint> {
   const rpc = createSolanaRpc(RPC_URL);

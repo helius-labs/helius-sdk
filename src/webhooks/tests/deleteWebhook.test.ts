@@ -1,4 +1,4 @@
-import { createHeliusEager as createHelius } from "../../rpc/createHelius.eager";
+import { createHeliusEager as createHelius } from "../../rpc/createHelius.eager.js";
 
 const mockFetch = jest.fn();
 

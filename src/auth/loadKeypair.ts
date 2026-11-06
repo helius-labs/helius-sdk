@@ -1,4 +1,4 @@
-import type { WalletKeypair } from "./types";
+import type { WalletKeypair } from "./types.js";
 
 export function loadKeypair(bytes: Uint8Array): WalletKeypair {
   if (bytes.length !== 64) {

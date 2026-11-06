@@ -1,8 +1,8 @@
 import type {
   GetProgramAccountsV2Request,
   GetProgramAccountsV2Response,
-} from "../../types";
-import type { RpcCaller } from "../caller";
+} from "../../types/index.js";
+import type { RpcCaller } from "../caller.js";
 
 export type GetProgramAccountsV2Fn = (
   p: GetProgramAccountsV2Request

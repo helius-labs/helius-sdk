@@ -3,9 +3,9 @@ import {
   type GetEnhancedTransactionsResponse,
   type GetEnhancedTransactionsByAddressRequest,
   type GetEnhancedTransactionsByAddressResponse,
-} from "./types";
-import { getSDKHeaders } from "../http";
-import { isDevnetHost } from "../parsedEvents/utils";
+} from "./types.js";
+import { getSDKHeaders } from "../http.js";
+import { isDevnetHost } from "../parsedEvents/utils.js";
 
 /**
  * @deprecated The Enhanced Transactions API is in maintenance mode. Use the
@@ -18,7 +18,7 @@ export interface EnhancedTxClient {
     params: GetEnhancedTransactionsRequest
   ) => Promise<GetEnhancedTransactionsResponse>;
 
-  /** @deprecated On mainnet, use `parsedEvents.getTransactionHistory` instead. */
+  /** @deprecated On mainnet, use `parsedEvents.getTransactionHistory` instead, or `parsedEvents.scan` for a program address or server-side filtering by instruction or mint. */
   getTransactionsByAddress: (
     params: GetEnhancedTransactionsByAddressRequest
   ) => Promise<GetEnhancedTransactionsByAddressResponse>;

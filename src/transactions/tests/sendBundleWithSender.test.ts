@@ -1,9 +1,9 @@
-import { makeSendBundleWithSender } from "../sendBundleWithSender";
-import { makeTxHelpersLazy } from "../client";
+import { makeSendBundleWithSender } from "../sendBundleWithSender.js";
+import { makeTxHelpersLazy } from "../client.js";
 
 const mockPoll = jest.fn();
 
-jest.mock("../pollTransactionConfirmation", () => ({
+jest.mock("../pollTransactionConfirmation.js", () => ({
   makePollTransactionConfirmation:
     () =>
     (...args: any[]) =>

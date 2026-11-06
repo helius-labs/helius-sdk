@@ -39,6 +39,7 @@ Pull Requests are the best way to propose changes to the SDK. We actively welcom
 pnpm build
 pnpm test
 pnpm check-bundle # Verified tree-shakability and bundle sizes
+pnpm check-consumer-types # Verifies the types resolve for Node (NodeNext, Node16) and bundler consumers
 ```
 
 - Format your code:

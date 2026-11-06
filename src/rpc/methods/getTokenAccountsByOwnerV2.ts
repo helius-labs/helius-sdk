@@ -1,8 +1,8 @@
 import type {
   GetTokenAccountsByOwnerV2Request,
   GetTokenAccountsByOwnerV2Response,
-} from "../../types";
-import type { RpcCaller } from "../caller";
+} from "../../types/index.js";
+import type { RpcCaller } from "../caller.js";
 
 export type GetTokenAccountsByOwnerV2Fn = (
   p: GetTokenAccountsByOwnerV2Request

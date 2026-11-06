@@ -1,5 +1,5 @@
-import { defineLazyMethod } from "../rpc/lazy";
-import type { RpcCaller } from "../rpc/caller";
+import { defineLazyMethod } from "../rpc/lazy.js";
+import type { RpcCaller } from "../rpc/caller.js";
 import type {
   GetCompressedBalanceByOwnerFn,
   GetCompressedBalanceFn,
@@ -27,7 +27,7 @@ import type {
   GetCompressedAccountsByOwnerFn,
   GetCompressedAccountProofFn,
   GetCompressedAccountFn,
-} from "./types";
+} from "./types.js";
 
 /**
  * Client for ZK compression RPC methods (Light Protocol).
@@ -98,7 +98,7 @@ export const makeZkClientLazy = (call: RpcCaller): ZkClientLazy => {
     "getCompressedAccount",
     async () => {
       const { makeGetCompressedAccount } =
-        await import("./methods/getCompressedAccount");
+        await import("./methods/getCompressedAccount.js");
       return makeGetCompressedAccount(call);
     }
   );
@@ -108,20 +108,20 @@ export const makeZkClientLazy = (call: RpcCaller): ZkClientLazy => {
     "getCompressedAccountProof",
     async () => {
       const { makeGetCompressedAccountProof } =
-        await import("./methods/getCompressedAccountProof");
+        await import("./methods/getCompressedAccountProof.js");
       return makeGetCompressedAccountProof(call);
     }
   );
 
   defineLazyMethod(obj, "getCompressedAccountsByOwner", async () => {
     const { makeGetCompressedAccountsByOwner } =
-      await import("./methods/getCompressedAccountsByOwner");
+      await import("./methods/getCompressedAccountsByOwner.js");
     return makeGetCompressedAccountsByOwner(call);
   });
 
   defineLazyMethod(obj, "getCompressedBalance", async () => {
     const { makeGetCompressedBalance } =
-      await import("./methods/getCompressedBalance");
+      await import("./methods/getCompressedBalance.js");
     return makeGetCompressedBalance(call);
   });
 
@@ -130,7 +130,7 @@ export const makeZkClientLazy = (call: RpcCaller): ZkClientLazy => {
     "getCompressedBalanceByOwner",
     async () => {
       const { makeGetCompressedBalanceByOwner } =
-        await import("./methods/getCompressedBalanceByOwner");
+        await import("./methods/getCompressedBalanceByOwner.js");
       return makeGetCompressedBalanceByOwner(call);
     }
   );
@@ -140,7 +140,7 @@ export const makeZkClientLazy = (call: RpcCaller): ZkClientLazy => {
     "getCompressedMintTokenHolders",
     async () => {
       const { makeGetCompressedMintTokenHolders } =
-        await import("./methods/getCompressedMintTokenHolders");
+        await import("./methods/getCompressedMintTokenHolders.js");
       return makeGetCompressedMintTokenHolders(call);
     }
   );
@@ -150,7 +150,7 @@ export const makeZkClientLazy = (call: RpcCaller): ZkClientLazy => {
     "getCompressedTokenAccountBalance",
     async () => {
       const { makeGetCompressedTokenAccountBalance } =
-        await import("./methods/getCompressedTokenAccountBalance");
+        await import("./methods/getCompressedTokenAccountBalance.js");
       return makeGetCompressedTokenAccountBalance(call);
     }
   );
@@ -160,7 +160,7 @@ export const makeZkClientLazy = (call: RpcCaller): ZkClientLazy => {
     "getCompressedTokenAccountsByDelegate",
     async () => {
       const { makeGetCompressedTokenAccountsByDelegate } =
-        await import("./methods/getCompressedTokenAccountsByDelegate");
+        await import("./methods/getCompressedTokenAccountsByDelegate.js");
       return makeGetCompressedTokenAccountsByDelegate(call);
     }
   );
@@ -170,7 +170,7 @@ export const makeZkClientLazy = (call: RpcCaller): ZkClientLazy => {
     "getCompressedTokenAccountsByOwner",
     async () => {
       const { makeGetCompressedTokenAccountsByOwner } =
-        await import("./methods/getCompressedTokenAccountsByOwner");
+        await import("./methods/getCompressedTokenAccountsByOwner.js");
       return makeGetCompressedTokenAccountsByOwner(call);
     }
   );
@@ -180,7 +180,7 @@ export const makeZkClientLazy = (call: RpcCaller): ZkClientLazy => {
     "getCompressedTokenBalancesByOwner",
     async () => {
       const { makeGetCompressedTokenBalancesByOwner } =
-        await import("./methods/getCompressedTokenBalancesByOwner");
+        await import("./methods/getCompressedTokenBalancesByOwner.js");
       return makeGetCompressedTokenBalancesByOwner(call);
     }
   );
@@ -190,7 +190,7 @@ export const makeZkClientLazy = (call: RpcCaller): ZkClientLazy => {
     "getCompressedTokenBalancesByOwnerV2",
     async () => {
       const { makeGetCompressedTokenBalancesByOwnerV2 } =
-        await import("./methods/getCompressedTokenBalancesByOwnerV2");
+        await import("./methods/getCompressedTokenBalancesByOwnerV2.js");
       return makeGetCompressedTokenBalancesByOwnerV2(call);
     }
   );
@@ -200,7 +200,7 @@ export const makeZkClientLazy = (call: RpcCaller): ZkClientLazy => {
     "getCompressionSignaturesForAccount",
     async () => {
       const { makeGetCompressionSignaturesForAccount } =
-        await import("./methods/getCompressionSignaturesForAccount");
+        await import("./methods/getCompressionSignaturesForAccount.js");
       return makeGetCompressionSignaturesForAccount(call);
     }
   );
@@ -210,7 +210,7 @@ export const makeZkClientLazy = (call: RpcCaller): ZkClientLazy => {
     "getCompressionSignaturesForAddress",
     async () => {
       const { makeGetCompressionSignaturesForAddress } =
-        await import("./methods/getCompressionSignaturesForAddress");
+        await import("./methods/getCompressionSignaturesForAddress.js");
       return makeGetCompressionSignaturesForAddress(call);
     }
   );
@@ -220,7 +220,7 @@ export const makeZkClientLazy = (call: RpcCaller): ZkClientLazy => {
     "getCompressionSignaturesForOwner",
     async () => {
       const { makeGetCompressionSignaturesForOwner } =
-        await import("./methods/getCompressionSignaturesForOwner");
+        await import("./methods/getCompressionSignaturesForOwner.js");
       return makeGetCompressionSignaturesForOwner(call);
     }
   );
@@ -230,7 +230,7 @@ export const makeZkClientLazy = (call: RpcCaller): ZkClientLazy => {
     "getCompressionSignaturesForTokenOwner",
     async () => {
       const { makeGetCompressionSignaturesForTokenOwner } =
-        await import("./methods/getCompressionSignaturesForTokenOwner");
+        await import("./methods/getCompressionSignaturesForTokenOwner.js");
       return makeGetCompressionSignaturesForTokenOwner(call);
     }
   );
@@ -240,7 +240,7 @@ export const makeZkClientLazy = (call: RpcCaller): ZkClientLazy => {
     "getIndexerHealth",
     async () => {
       const { makeGetIndexerHealth } =
-        await import("./methods/getIndexerHealth");
+        await import("./methods/getIndexerHealth.js");
       return makeGetIndexerHealth(call);
     }
   );
@@ -249,7 +249,8 @@ export const makeZkClientLazy = (call: RpcCaller): ZkClientLazy => {
     obj,
     "getIndexerSlot",
     async () => {
-      const { makeGetIndexerSlot } = await import("./methods/getIndexerSlot");
+      const { makeGetIndexerSlot } =
+        await import("./methods/getIndexerSlot.js");
       return makeGetIndexerSlot(call);
     }
   );
@@ -259,7 +260,7 @@ export const makeZkClientLazy = (call: RpcCaller): ZkClientLazy => {
     "getLatestCompressionSignatures",
     async () => {
       const { makeGetLatestCompressionSignatures } =
-        await import("./methods/getLatestCompressionSignatures");
+        await import("./methods/getLatestCompressionSignatures.js");
       return makeGetLatestCompressionSignatures(call);
     }
   );
@@ -269,7 +270,7 @@ export const makeZkClientLazy = (call: RpcCaller): ZkClientLazy => {
     "getLatestNonVotingSignatures",
     async () => {
       const { makeGetLatestNonVotingSignatures } =
-        await import("./methods/getLatestNonVotingSignatures");
+        await import("./methods/getLatestNonVotingSignatures.js");
       return makeGetLatestNonVotingSignatures(call);
     }
   );
@@ -279,7 +280,7 @@ export const makeZkClientLazy = (call: RpcCaller): ZkClientLazy => {
     "getMultipleCompressedAccountProofs",
     async () => {
       const { makeGetMultipleCompressedAccountProofs } =
-        await import("./methods/getMultipleCompressedAccountProofs");
+        await import("./methods/getMultipleCompressedAccountProofs.js");
       return makeGetMultipleCompressedAccountProofs(call);
     }
   );
@@ -289,7 +290,7 @@ export const makeZkClientLazy = (call: RpcCaller): ZkClientLazy => {
     "getMultipleCompressedAccounts",
     async () => {
       const { makeGetMultipleCompressedAccounts } =
-        await import("./methods/getMultipleCompressedAccounts");
+        await import("./methods/getMultipleCompressedAccounts.js");
       return makeGetMultipleCompressedAccounts(call);
     }
   );
@@ -299,7 +300,7 @@ export const makeZkClientLazy = (call: RpcCaller): ZkClientLazy => {
     "getMultipleNewAddressProofs",
     async () => {
       const { makeGetMultipleNewAddressProofs } =
-        await import("./methods/getMultipleNewAddressProofs");
+        await import("./methods/getMultipleNewAddressProofs.js");
       return makeGetMultipleNewAddressProofs(call);
     }
   );
@@ -309,7 +310,7 @@ export const makeZkClientLazy = (call: RpcCaller): ZkClientLazy => {
     "getMultipleNewAddressProofsV2",
     async () => {
       const { makeGetMultipleNewAddressProofsV2 } =
-        await import("./methods/getMultipleNewAddressProofsV2");
+        await import("./methods/getMultipleNewAddressProofsV2.js");
       return makeGetMultipleNewAddressProofsV2(call);
     }
   );
@@ -319,7 +320,7 @@ export const makeZkClientLazy = (call: RpcCaller): ZkClientLazy => {
     "getTransactionWithCompressionInfo",
     async () => {
       const { makeGetTransactionWithCompressionInfo } =
-        await import("./methods/getTransactionWithCompressionInfo");
+        await import("./methods/getTransactionWithCompressionInfo.js");
       return makeGetTransactionWithCompressionInfo(call);
     }
   );
@@ -329,7 +330,7 @@ export const makeZkClientLazy = (call: RpcCaller): ZkClientLazy => {
     "getValidityProof",
     async () => {
       const { makeGetValidityProof } =
-        await import("./methods/getValidityProof");
+        await import("./methods/getValidityProof.js");
       return makeGetValidityProof(call);
     }
   );
@@ -339,7 +340,7 @@ export const makeZkClientLazy = (call: RpcCaller): ZkClientLazy => {
     "getSignaturesForAsset",
     async () => {
       const { makeGetSignaturesForAsset } =
-        await import("./methods/getSignaturesForAsset");
+        await import("./methods/getSignaturesForAsset.js");
       return makeGetSignaturesForAsset(call);
     }
   );

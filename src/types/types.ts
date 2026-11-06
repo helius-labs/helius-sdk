@@ -1,7 +1,7 @@
 import type { Commitment, RpcResponse } from "@solana/kit";
 
-import { Asset } from "./das";
-import { PriorityLevel, UiTransactionEncoding } from "./enums";
+import { Asset } from "./das.js";
+import { PriorityLevel, UiTransactionEncoding } from "./enums.js";
 
 /**
  * Maximum transaction version the caller can handle, for version-aware read

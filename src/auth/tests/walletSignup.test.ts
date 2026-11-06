@@ -1,5 +1,5 @@
-import { walletSignup } from "../walletSignup";
-import { API_URL } from "../constants";
+import { walletSignup } from "../walletSignup.js";
+import { API_URL } from "../constants.js";
 
 const mockFetch = jest.fn();
 global.fetch = mockFetch as jest.Mock;

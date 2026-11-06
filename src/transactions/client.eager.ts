@@ -1,5 +1,8 @@
 import type { Rpc, SolanaRpcApi } from "@solana/kit";
-import { makeGetComputeUnits, type GetComputeUnitsFn } from "./getComputeUnits";
+import {
+  makeGetComputeUnits,
+  type GetComputeUnitsFn,
+} from "./getComputeUnits.js";
 
 export interface TxHelpersEager {
   getComputeUnits: GetComputeUnitsFn;

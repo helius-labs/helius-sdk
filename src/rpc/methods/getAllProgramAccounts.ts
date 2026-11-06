@@ -1,10 +1,10 @@
-import type { RpcCaller } from "../caller";
+import type { RpcCaller } from "../caller.js";
 import {
   type GetProgramAccountsV2Config,
   type GetProgramAccountsV2Response,
   type GpaV2Account,
-} from "../../types";
-import { makeGetProgramAccountsV2 } from "./getProgramAccountsV2";
+} from "../../types/index.js";
+import { makeGetProgramAccountsV2 } from "./getProgramAccountsV2.js";
 
 export type GetAllProgramAccountsFn = (
   programId: string,

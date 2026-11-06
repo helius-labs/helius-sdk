@@ -1,29 +1,29 @@
-import type { AuthClient } from "./types";
-import { generateKeypair } from "./generateKeypair";
-import { loadKeypair } from "./loadKeypair";
-import { getAddress } from "./getAddress";
-import { signAuthMessage } from "./signAuthMessage";
-import { walletSignup } from "./walletSignup";
-import { listProjects } from "./listProjects";
-import { createProject } from "./createProject";
-import { getProject } from "./getProject";
-import { createApiKey } from "./createApiKey";
-import { checkSolBalance, checkUsdcBalance } from "./checkBalances";
-import { payUSDC } from "./payUSDC";
-import { payWithMemo } from "./payWithMemo";
+import type { AuthClient } from "./types.js";
+import { generateKeypair } from "./generateKeypair.js";
+import { loadKeypair } from "./loadKeypair.js";
+import { getAddress } from "./getAddress.js";
+import { signAuthMessage } from "./signAuthMessage.js";
+import { walletSignup } from "./walletSignup.js";
+import { listProjects } from "./listProjects.js";
+import { createProject } from "./createProject.js";
+import { getProject } from "./getProject.js";
+import { createApiKey } from "./createApiKey.js";
+import { checkSolBalance, checkUsdcBalance } from "./checkBalances.js";
+import { payUSDC } from "./payUSDC.js";
+import { payWithMemo } from "./payWithMemo.js";
 import {
   initializeCheckout,
   getCheckoutPreview,
   getPaymentIntent,
-} from "./checkout";
-import { getPaymentStatus } from "./getPaymentStatus";
-import { purchaseCredits, purchaseCreditsAndPay } from "./purchaseCredits";
-import { upgradePlan, upgradePlanAndPay } from "./upgradePlan";
-import { payRenewal, payRenewalAndPay } from "./payRenewal";
-import { signup } from "./signup";
-import { signupAndPay } from "./signupAndPay";
-import { payPaymentLink } from "./payPaymentLink";
-import { createPayment } from "./createPayment";
+} from "./checkout.js";
+import { getPaymentStatus } from "./getPaymentStatus.js";
+import { purchaseCredits, purchaseCreditsAndPay } from "./purchaseCredits.js";
+import { upgradePlan, upgradePlanAndPay } from "./upgradePlan.js";
+import { payRenewal, payRenewalAndPay } from "./payRenewal.js";
+import { signup } from "./signup.js";
+import { signupAndPay } from "./signupAndPay.js";
+import { payPaymentLink } from "./payPaymentLink.js";
+import { createPayment } from "./createPayment.js";
 
 export function makeAuthClient(userAgent?: string): AuthClient {
   return {

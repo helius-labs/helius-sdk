@@ -13,7 +13,7 @@ import type {
   GetTransfersResponse,
   GetFundedByRequest,
   GetFundedByResponse,
-} from "./types";
+} from "./types.js";
 
 /**
  * Wallet API client interface

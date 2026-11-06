@@ -1,4 +1,4 @@
-import { defineLazyMethod, defineLazyNamespace } from "../lazy";
+import { defineLazyMethod, defineLazyNamespace } from "../lazy.js";
 
 type Ns = {
   greet: (name: string) => string;

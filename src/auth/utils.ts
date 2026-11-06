@@ -1,5 +1,5 @@
-import { getSDKHeaders } from "../http";
-import { API_URL } from "./constants";
+import { getSDKHeaders } from "../http.js";
+import { API_URL } from "./constants.js";
 
 export const sleep = (ms: number) =>
   new Promise((resolve) => setTimeout(resolve, ms));

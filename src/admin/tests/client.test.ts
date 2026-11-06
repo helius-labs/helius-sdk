@@ -1,7 +1,7 @@
-import { makeAdminClient } from "../client";
-import { makeAdminClientEager } from "../client.eager";
-import { ADMIN_API_URL } from "../constants";
-import type { ProjectUsage } from "../types";
+import { makeAdminClient } from "../client.js";
+import { makeAdminClientEager } from "../client.eager.js";
+import { ADMIN_API_URL } from "../constants.js";
+import type { ProjectUsage } from "../types.js";
 
 const mockFetch = jest.fn();
 global.fetch = mockFetch as jest.Mock;

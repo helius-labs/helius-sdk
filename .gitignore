@@ -35,3 +35,5 @@ Thumbs.db
 .claude
 .mcp.json
 src/main.ts
+# Consumer type fixtures resolve helius-sdk through a symlink to this checkout
+/test/consumer-types/node_modules

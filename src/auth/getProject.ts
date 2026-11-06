@@ -1,5 +1,5 @@
-import type { ProjectDetails } from "./types";
-import { authRequest } from "./utils";
+import type { ProjectDetails } from "./types.js";
+import { authRequest } from "./utils.js";
 
 export async function getProject(
   jwt: string,

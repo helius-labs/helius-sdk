@@ -1,17 +1,17 @@
-jest.mock("../checkout", () => ({
+jest.mock("../checkout.js", () => ({
   getPaymentIntent: jest.fn(),
 }));
-jest.mock("../getPaymentStatus", () => ({
+jest.mock("../getPaymentStatus.js", () => ({
   getPaymentStatus: jest.fn(),
 }));
-jest.mock("../payPaymentLink", () => ({
+jest.mock("../payPaymentLink.js", () => ({
   payPaymentLink: jest.fn().mockResolvedValue({ txSignature: "tx-renew" }),
 }));
 
-import { payRenewal, payRenewalAndPay } from "../payRenewal";
-import { getPaymentIntent } from "../checkout";
-import { getPaymentStatus } from "../getPaymentStatus";
-import { payPaymentLink } from "../payPaymentLink";
+import { payRenewal, payRenewalAndPay } from "../payRenewal.js";
+import { getPaymentIntent } from "../checkout.js";
+import { getPaymentStatus } from "../getPaymentStatus.js";
+import { payPaymentLink } from "../payPaymentLink.js";
 
 const mockGetPaymentIntent = getPaymentIntent as jest.MockedFunction<
   typeof getPaymentIntent

@@ -1,5 +1,5 @@
 import { Signature, signature } from "@solana/kit";
-import { SenderRegion, senderFastUrl } from "./types";
+import { SenderRegion, senderFastUrl } from "./types.js";
 
 /**
  * POST a base‑64 transaction to the chosen Sender region.

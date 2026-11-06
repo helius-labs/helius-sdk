@@ -1,5 +1,5 @@
-import { createHelius } from "../../../rpc";
-import { GetTransactionWithCompressionInfoResponse } from "../../types";
+import { createHelius } from "../../../rpc/index.js";
+import { GetTransactionWithCompressionInfoResponse } from "../../types.js";
 
 const transportMock = jest.fn();
 

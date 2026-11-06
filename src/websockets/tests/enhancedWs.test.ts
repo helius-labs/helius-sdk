@@ -1,5 +1,5 @@
-import { makeEnhancedWsClient } from "../enhancedWs";
-import type { TransactionSubscribeConfig } from "../types";
+import { makeEnhancedWsClient } from "../enhancedWs.js";
+import type { TransactionSubscribeConfig } from "../types.js";
 
 // ── Mock WebSocket ──────────────────────────────────────────────────
 

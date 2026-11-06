@@ -1,4 +1,4 @@
-import type { ProjectUsage } from "./types";
+import type { ProjectUsage } from "./types.js";
 
 /** Client for API-key authenticated Admin API endpoints. */
 export interface AdminClient {

@@ -1,4 +1,4 @@
-import { authRequest } from "./utils";
+import { authRequest } from "./utils.js";
 
 /**
  * Response shape of `GET /dev-portal/configs`, mirroring the monorepo's

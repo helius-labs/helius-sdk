@@ -8,8 +8,8 @@ import {
   type AccountMeta,
   type AccountLookupMeta,
 } from "@solana/kit";
-import { createTxMessage } from "../createTxMessage";
-import { MAX_LOADED_ACCOUNTS_DATA_SIZE_BYTES } from "../validateTxMessage";
+import { createTxMessage } from "../createTxMessage.js";
+import { MAX_LOADED_ACCOUNTS_DATA_SIZE_BYTES } from "../validateTxMessage.js";
 
 type IxAccounts = readonly (
   | AccountMeta<string>

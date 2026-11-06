@@ -10,8 +10,8 @@ import {
   type Transaction,
 } from "@solana/kit";
 import { getTransferSolInstruction } from "@solana-program/system";
-import { makeCreateSmartTransaction } from "../createSmartTransaction";
-import type { CreateSmartTxDeps } from "../types";
+import { makeCreateSmartTransaction } from "../createSmartTransaction.js";
+import type { CreateSmartTxDeps } from "../types.js";
 
 const makeSigner = (seed: number) =>
   createKeyPairSignerFromPrivateKeyBytes(new Uint8Array(32).fill(seed));
@@ -142,6 +142,53 @@ describe("createSmartTransaction supplied signers", () => {
       ],
     });
     expect(result.message.feePayer.address).toBe(payer.address);
+    await expectValidSignatures(result.signed);
+  });
+
+  // Kit rejects two different signer objects for one address, so a second
+  // object for the same key must not reach the instructions
+  it("Prefers the explicit payer signer over another object for the same key", async () => {
+    const payer = await makeSigner(1);
+    const payerAgain = await makeSigner(1);
+    const destination = await makeSigner(2);
+    const { create } = makeCreateSmartTransaction(makeDeps());
+    const result = await create({
+      signers: [payerAgain],
+      feePayer: payer,
+      instructions: [
+        withoutSigners(
+          getTransferSolInstruction({
+            source: payer,
+            destination: destination.address,
+            amount: 1n,
+          })
+        ),
+      ],
+    });
+    expect(Object.keys(result.signed.signatures)).toEqual([payer.address]);
+    await expectValidSignatures(result.signed);
+  });
+
+  it("Accepts the same key twice in the signers array", async () => {
+    const payer = await makeSigner(1);
+    const payerAgain = await makeSigner(1);
+    const source = await makeSigner(2);
+    const { create } = makeCreateSmartTransaction(makeDeps());
+    const result = await create({
+      signers: [payer, payerAgain, source],
+      instructions: [
+        withoutSigners(
+          getTransferSolInstruction({
+            source,
+            destination: payer.address,
+            amount: 1n,
+          })
+        ),
+      ],
+    });
+    expect(Object.keys(result.signed.signatures).sort()).toEqual(
+      [payer.address, source.address].sort()
+    );
     await expectValidSignatures(result.signed);
   });
 
