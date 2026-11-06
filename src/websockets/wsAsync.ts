@@ -141,15 +141,6 @@ export interface WsAsync {
 const importWs = async () =>
   (await import("@solana/kit")).createSolanaRpcSubscriptions;
 
-const closeRaw = (client: WsRaw): void => {
-  const c = client as { dispose?: () => void; close?: () => void };
-  if (typeof c.dispose === "function") {
-    c.dispose();
-  } else if (typeof c.close === "function") {
-    c.close();
-  }
-};
-
 /** Create a promisified WebSocket RPC subscription client. */
 export const makeWsAsync = (
   wsUrl: string,
@@ -164,18 +155,53 @@ export const makeWsAsync = (
     | undefined;
   let closed = false;
 
+  // Kit's subscriptions client has no dispose() or close() (its proxy turns
+  // any property into a subscription request), and keeps a connection open
+  // until every subscription on it is aborted. So each subscription opened
+  // here also listens to this signal, and close() aborts it.
+  const lifetime = new AbortController();
+
+  const linkSignal = (signal?: AbortSignal): AbortSignal => {
+    const linked = new AbortController();
+    for (const s of [signal, lifetime.signal]) {
+      if (!s) continue;
+      if (s.aborted) linked.abort(s.reason);
+      else
+        s.addEventListener("abort", () => linked.abort(s.reason), {
+          signal: linked.signal,
+        });
+    }
+    return linked.signal;
+  };
+
+  const bindToClient = <T>(request: T): T => {
+    const req = request as Record<string, unknown>;
+    const bound = { ...req };
+    for (const key of ["subscribe", "reactive"]) {
+      const fn = req[key];
+      if (typeof fn === "function") {
+        bound[key] = async (config?: { abortSignal?: AbortSignal }) => {
+          // Kit would still connect for an already aborted signal
+          if (closed) throw new Error("WebSocket client is closed");
+          return fn.call(req, {
+            ...config,
+            abortSignal: linkSignal(config?.abortSignal),
+          });
+        };
+      }
+    }
+    return bound as T;
+  };
+
   const raw = async (): Promise<WsRaw> => {
     if (closed) throw new Error("WebSocket client is closed");
     if (_raw) return _raw;
     if (_rawLoading) return _rawLoading;
 
+    // Constructing the client opens nothing; Kit connects on subscribe
     _rawLoading = importWs().then((ctor) => {
-      const client = ctor(wsUrl);
-      if (closed) {
-        closeRaw(client);
-        throw new Error("WebSocket client is closed");
-      }
-      _raw = client;
+      if (closed) throw new Error("WebSocket client is closed");
+      _raw = ctor(wsUrl);
       return _raw;
     });
 
@@ -212,20 +238,29 @@ export const makeWsAsync = (
 
   return {
     logsNotifications: (filter, config) =>
-      raw().then((r) => r.logsNotifications(filter as any, config)),
+      raw().then((r) =>
+        bindToClient(r.logsNotifications(filter as any, config))
+      ),
 
     // Called with no arguments: Kit serializes a passed `undefined` as
     // `params: [null]`, which slotSubscribe rejects.
-    slotNotifications: () => raw().then((r) => r.slotNotifications()),
+    slotNotifications: () =>
+      raw().then((r) => bindToClient(r.slotNotifications())),
 
     signatureNotifications: (sig, config) =>
-      raw().then((r) => r.signatureNotifications(sig as Signature, config)),
+      raw().then((r) =>
+        bindToClient(r.signatureNotifications(sig as Signature, config))
+      ),
 
     programNotifications: (...args) =>
-      raw().then((r) => (r.programNotifications as any)(...args)),
+      raw().then((r) =>
+        bindToClient((r.programNotifications as any)(...args) as ProgramReq)
+      ),
 
     accountNotifications: (...args) =>
-      raw().then((r) => (r.accountNotifications as any)(...args)),
+      raw().then((r) =>
+        bindToClient((r.accountNotifications as any)(...args) as AccountReq)
+      ),
 
     transactionSubscribe: (filter, config) =>
       enhanced().then((e) => e.transactionSubscribe(filter, config)),
@@ -247,7 +282,8 @@ export const makeWsAsync = (
       }
       _enhancedLoading = undefined;
 
-      if (_raw) closeRaw(_raw);
+      // Ends every standard subscription, which lets Kit close its sockets
+      lifetime.abort();
       _raw = undefined;
       _rawLoading = undefined;
     },
