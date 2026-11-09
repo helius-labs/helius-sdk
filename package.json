@@ -23,84 +23,164 @@
   ],
   "exports": {
     ".": {
-      "types": "./dist/esm/rpc/index.d.ts",
-      "import": "./dist/esm/rpc/index.js",
-      "require": "./dist/cjs/rpc/index.cjs"
+      "import": {
+        "types": "./dist/esm/rpc/index.d.ts",
+        "default": "./dist/esm/rpc/index.js"
+      },
+      "require": {
+        "types": "./dist/cjs/rpc/index.d.cts",
+        "default": "./dist/cjs/rpc/index.cjs"
+      }
     },
     "./rpc": {
-      "types": "./dist/esm/rpc/index.d.ts",
-      "import": "./dist/esm/rpc/index.js",
-      "require": "./dist/cjs/rpc/index.cjs"
+      "import": {
+        "types": "./dist/esm/rpc/index.d.ts",
+        "default": "./dist/esm/rpc/index.js"
+      },
+      "require": {
+        "types": "./dist/cjs/rpc/index.d.cts",
+        "default": "./dist/cjs/rpc/index.cjs"
+      }
     },
     "./rpc/eager": {
-      "types": "./dist/esm/rpc/createHelius.eager.d.ts",
-      "import": "./dist/esm/rpc/createHelius.eager.js",
-      "require": "./dist/cjs/rpc/createHelius.eager.cjs"
+      "import": {
+        "types": "./dist/esm/rpc/createHelius.eager.d.ts",
+        "default": "./dist/esm/rpc/createHelius.eager.js"
+      },
+      "require": {
+        "types": "./dist/cjs/rpc/createHelius.eager.d.cts",
+        "default": "./dist/cjs/rpc/createHelius.eager.cjs"
+      }
     },
     "./rpc/methods/*": {
-      "types": "./dist/esm/rpc/methods/*.d.ts",
-      "import": "./dist/esm/rpc/methods/*.js",
-      "require": "./dist/cjs/rpc/methods/*.cjs"
+      "import": {
+        "types": "./dist/esm/rpc/methods/*.d.ts",
+        "default": "./dist/esm/rpc/methods/*.js"
+      },
+      "require": {
+        "types": "./dist/cjs/rpc/methods/*.d.cts",
+        "default": "./dist/cjs/rpc/methods/*.cjs"
+      }
     },
     "./transactions/*": {
-      "types": "./dist/esm/transactions/*.d.ts",
-      "import": "./dist/esm/transactions/*.js",
-      "require": "./dist/cjs/transactions/*.cjs"
+      "import": {
+        "types": "./dist/esm/transactions/*.d.ts",
+        "default": "./dist/esm/transactions/*.js"
+      },
+      "require": {
+        "types": "./dist/cjs/transactions/*.d.cts",
+        "default": "./dist/cjs/transactions/*.cjs"
+      }
     },
     "./rpc/wrapAutoSend": {
-      "types": "./dist/esm/rpc/wrapAutoSend.d.ts",
-      "import": "./dist/esm/rpc/wrapAutoSend.js",
-      "require": "./dist/cjs/rpc/wrapAutoSend.cjs"
+      "import": {
+        "types": "./dist/esm/rpc/wrapAutoSend.d.ts",
+        "default": "./dist/esm/rpc/wrapAutoSend.js"
+      },
+      "require": {
+        "types": "./dist/cjs/rpc/wrapAutoSend.d.cts",
+        "default": "./dist/cjs/rpc/wrapAutoSend.cjs"
+      }
     },
     "./webhooks/*": {
-      "types": "./dist/esm/webhooks/*.d.ts",
-      "import": "./dist/esm/webhooks/*.js",
-      "require": "./dist/cjs/webhooks/*.cjs"
+      "import": {
+        "types": "./dist/esm/webhooks/*.d.ts",
+        "default": "./dist/esm/webhooks/*.js"
+      },
+      "require": {
+        "types": "./dist/cjs/webhooks/*.d.cts",
+        "default": "./dist/cjs/webhooks/*.cjs"
+      }
     },
     "./enhanced/*": {
-      "types": "./dist/esm/enhanced/*.d.ts",
-      "import": "./dist/esm/enhanced/*.js",
-      "require": "./dist/cjs/enhanced/*.cjs"
+      "import": {
+        "types": "./dist/esm/enhanced/*.d.ts",
+        "default": "./dist/esm/enhanced/*.js"
+      },
+      "require": {
+        "types": "./dist/cjs/enhanced/*.d.cts",
+        "default": "./dist/cjs/enhanced/*.cjs"
+      }
     },
     "./staking/*": {
-      "types": "./dist/esm/staking/*.d.ts",
-      "import": "./dist/esm/staking/*.js",
-      "require": "./dist/cjs/staking/*.cjs"
+      "import": {
+        "types": "./dist/esm/staking/*.d.ts",
+        "default": "./dist/esm/staking/*.js"
+      },
+      "require": {
+        "types": "./dist/cjs/staking/*.d.cts",
+        "default": "./dist/cjs/staking/*.cjs"
+      }
     },
     "./websockets/*": {
-      "types": "./dist/esm/websockets/*.d.ts",
-      "import": "./dist/esm/websockets/*.js",
-      "require": "./dist/cjs/websockets/*.cjs"
+      "import": {
+        "types": "./dist/esm/websockets/*.d.ts",
+        "default": "./dist/esm/websockets/*.js"
+      },
+      "require": {
+        "types": "./dist/cjs/websockets/*.d.cts",
+        "default": "./dist/cjs/websockets/*.cjs"
+      }
     },
     "./zk/*": {
-      "types": "./dist/esm/zk/*.d.ts",
-      "import": "./dist/esm/zk/*.js",
-      "require": "./dist/cjs/zk/*.cjs"
+      "import": {
+        "types": "./dist/esm/zk/*.d.ts",
+        "default": "./dist/esm/zk/*.js"
+      },
+      "require": {
+        "types": "./dist/cjs/zk/*.d.cts",
+        "default": "./dist/cjs/zk/*.cjs"
+      }
     },
     "./wallet/*": {
-      "types": "./dist/esm/wallet/*.d.ts",
-      "import": "./dist/esm/wallet/*.js",
-      "require": "./dist/cjs/wallet/*.cjs"
+      "import": {
+        "types": "./dist/esm/wallet/*.d.ts",
+        "default": "./dist/esm/wallet/*.js"
+      },
+      "require": {
+        "types": "./dist/cjs/wallet/*.d.cts",
+        "default": "./dist/cjs/wallet/*.cjs"
+      }
     },
     "./parsedEvents/*": {
-      "types": "./dist/esm/parsedEvents/*.d.ts",
-      "import": "./dist/esm/parsedEvents/*.js",
-      "require": "./dist/cjs/parsedEvents/*.cjs"
+      "import": {
+        "types": "./dist/esm/parsedEvents/*.d.ts",
+        "default": "./dist/esm/parsedEvents/*.js"
+      },
+      "require": {
+        "types": "./dist/cjs/parsedEvents/*.d.cts",
+        "default": "./dist/cjs/parsedEvents/*.cjs"
+      }
     },
     "./types/*": {
-      "types": "./dist/esm/types/*.d.ts",
-      "import": "./dist/esm/types/*.js",
-      "require": "./dist/cjs/types/*.cjs"
+      "import": {
+        "types": "./dist/esm/types/*.d.ts",
+        "default": "./dist/esm/types/*.js"
+      },
+      "require": {
+        "types": "./dist/cjs/types/*.d.cts",
+        "default": "./dist/cjs/types/*.cjs"
+      }
     },
     "./auth/*": {
-      "types": "./dist/esm/auth/*.d.ts",
-      "import": "./dist/esm/auth/*.js",
-      "require": "./dist/cjs/auth/*.cjs"
+      "import": {
+        "types": "./dist/esm/auth/*.d.ts",
+        "default": "./dist/esm/auth/*.js"
+      },
+      "require": {
+        "types": "./dist/cjs/auth/*.d.cts",
+        "default": "./dist/cjs/auth/*.cjs"
+      }
     },
     "./admin/*": {
-      "types": "./dist/esm/admin/*.d.ts",
-      "import": "./dist/esm/admin/*.js",
-      "require": "./dist/cjs/admin/*.cjs"
+      "import": {
+        "types": "./dist/esm/admin/*.d.ts",
+        "default": "./dist/esm/admin/*.js"
+      },
+      "require": {
+        "types": "./dist/cjs/admin/*.d.cts",
+        "default": "./dist/cjs/admin/*.cjs"
+      }
     },
     "./package.json": "./package.json"
   },
@@ -189,6 +269,7 @@
     "src/**/*.{js,ts,json,md}": "prettier --write"
   },
   "devDependencies": {
+    "@arethetypeswrong/cli": "^0.18.5",
     "@rollup/plugin-commonjs": "^28.0.6",
     "@rollup/plugin-node-resolve": "^16.0.1",
     "@rollup/plugin-typescript": "^12.1.4",

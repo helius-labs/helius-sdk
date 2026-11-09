@@ -13,7 +13,7 @@ pnpm format               # Format with Prettier
 pnpm format:check         # Check formatting (CI runs this)
 pnpm lint                 # Lint with ESLint
 pnpm check-bundle         # Build + verify tree-shakability + bundle sizes
-pnpm check-consumer-types # Typecheck test/consumer-types fixtures against dist/ (run after a build)
+pnpm check-consumer-types # Typecheck test/consumer-types fixtures against dist/, then check exports with attw (run after a build)
 pnpm run docs:build       # Generate TypeDoc API docs to docs/ (gitignored)
 pnpm run docs:open        # Generate docs and open in browser via local HTTP server
 ```
@@ -92,7 +92,7 @@ Standard Solana RPC methods (getBalance, getSlot, etc.) are available directly o
 
 ### Dual ESM/CJS
 
-Rollup builds both formats from a single source. ESM for modern bundlers, CJS for legacy Node.js and Jest. `preserveModules` is enabled for tree-shaking. Both outputs live under `dist/`.
+Rollup builds both formats from a single source. ESM for modern bundlers, CJS for legacy Node.js and Jest. `preserveModules` is enabled for tree-shaking. Both outputs live under `dist/`, each with its own declarations: `.d.ts` beside the ESM `.js`, and `.d.cts` (relative imports rewritten to `.cjs`) beside the CJS `.cjs`. Every `exports` entry nests `types` under both `import` and `require`; keep new entries in that shape. Declarations are built from `tsconfig.build.json`, which leaves out tests.
 
 ### No Side Effects
 
