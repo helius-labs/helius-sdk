@@ -381,12 +381,13 @@ Decoded transactions pushed in real time, filtered on the server by program, ins
 - `describeProgram(program)`: List a program's exact instruction names, events, and account roles, so filters match what you expect. Pass the program address rather than a name.
 - `close()`: Close the connection and end every subscription.
 
-Delivery is **at most once**: the server doesn't replay what confirmed while a connection was down, and it closes connections routinely (10 minutes without a match, deploys, network edge recycling). The client reconnects with backoff and resubscribes every filter on its own, and `onReconnect` reports the last slot it delivered so you can backfill the gap from RPC. A slow consumer (more than 2048 notifications behind, close code 1008) ends the stream with an error instead. Client messages are paced to the server's 10-per-second limit, and each connection holds up to 25 subscriptions.
+Delivery is **at most once**: the server doesn't replay what confirmed while a connection was down, and it closes connections routinely (10 minutes without a match, deploys, network edge recycling). The client reconnects with backoff and resubscribes every filter on its own. `onDisconnect` reports the last slot it delivered as soon as the connection drops, before any notification from the new connection, and `onReconnect` reports it again once it has resubscribed, so you can backfill the gap from RPC. A slow consumer (more than 2048 notifications behind, close code 1008) ends the stream with an error instead. Client messages are paced to the server's 10-per-second limit, and each connection holds up to 25 subscriptions.
 
 ```typescript
 import { makeParsedStreamsClient } from "helius-sdk/websockets/parsedStreams";
 
 const streams = makeParsedStreamsClient(apiKey, {
+  onDisconnect: ({ lastSlot }) => console.warn("gap starts after slot", lastSlot),
   onReconnect: ({ lastSlot }) => console.warn("backfill after slot", lastSlot),
 });
 

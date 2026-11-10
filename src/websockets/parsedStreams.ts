@@ -170,9 +170,12 @@ export interface ProgramDescription {
   roles: string[];
 }
 
-/** Passed to `onReconnect` once subscriptions are restored on a new connection. */
+/**
+ * Passed to `onReconnect` once subscriptions are restored on a new connection.
+ * `onDisconnect` gets the same fields when the connection drops.
+ */
 export interface ParsedStreamsReconnectInfo {
-  /** WebSocket close code that caused the reconnect (e.g. 1000 idle, 1001 deploy, 1006 network). */
+  /** WebSocket close code that started the outage (e.g. 1000 idle, 1001 deploy, 1006 network). */
   closeCode: number;
   /**
    * Highest `context.slot` delivered before the disconnect, or `undefined` if
@@ -181,6 +184,9 @@ export interface ParsedStreamsReconnectInfo {
    */
   lastSlot: number | undefined;
 }
+
+/** Passed to `onDisconnect` when the connection drops. */
+export type ParsedStreamsDisconnectInfo = ParsedStreamsReconnectInfo;
 
 /** A JSON-RPC error from Parsed Streams, with its `code` (e.g. -32602 invalid params). */
 export type ParsedStreamsError = Error & { code?: number };
@@ -195,7 +201,26 @@ export interface ParsedStreamsClientOptions {
   reconnect?: boolean;
   /** Consecutive failed reconnect attempts before giving up. Defaults to 10. */
   maxReconnectAttempts?: number;
-  /** Called after a reconnect restores the subscriptions. */
+  /**
+   * Called when the connection drops while subscriptions are open, before any
+   * reconnect attempt, so before any notification from the new connection.
+   * Notifications already buffered can still be read after it fires; they are
+   * all at or before `lastSlot`.
+   *
+   * Fires once per outage, which lasts until `onReconnect`. Failed reconnect
+   * attempts don't fire it again. With several subscriptions, those already
+   * resubscribed deliver again before `onReconnect`, and a drop in that window
+   * doesn't fire it again either; backfilling from the first `lastSlot` covers
+   * both. If the subscriptions can't be restored (reconnect off, slow consumer,
+   * attempts exhausted), their iterators throw and `onReconnect` never
+   * follows. Not called for {@link ParsedStreamsClient.close}, or once every
+   * subscription has ended.
+   */
+  onDisconnect?: (info: ParsedStreamsDisconnectInfo) => void;
+  /**
+   * Called after a reconnect resubscribes the open subscriptions. A filter the
+   * server now rejects ends that subscription's iterator with the error.
+   */
   onReconnect?: (info: ParsedStreamsReconnectInfo) => void;
   /**
    * WebSocket implementation. Defaults to the global `WebSocket` (browsers,
@@ -215,8 +240,9 @@ export interface ParsedStreamsClientOptions {
  *
  * Delivery is **at most once**: the server does not replay what confirmed while
  * a connection was down. This client reconnects and resubscribes automatically
- * when the server closes the connection (idle timeout, deploy, network edge),
- * and reports the last slot it delivered through `onReconnect` so you can
+ * when the server closes the connection (idle timeout, deploy, network edge).
+ * `onDisconnect` reports the last slot it delivered as soon as the connection
+ * drops, and `onReconnect` again once the subscriptions are back, so you can
  * backfill the gap from RPC if you need to.
  *
  * @example
@@ -224,6 +250,7 @@ export interface ParsedStreamsClientOptions {
  * import { makeParsedStreamsClient } from "helius-sdk/websockets/parsedStreams";
  *
  * const streams = makeParsedStreamsClient("your-api-key", {
+ *   onDisconnect: ({ lastSlot }) => console.log("disconnected; gap after", lastSlot),
  *   onReconnect: ({ lastSlot }) => console.log("reconnected; backfill after", lastSlot),
  * });
  *
@@ -410,6 +437,7 @@ export const makeParsedStreamsClient = (
     discoveryUrl = `${PARSED_STREAMS_DISCOVERY_URL}${apiKey}`,
     reconnect = true,
     maxReconnectAttempts = 10,
+    onDisconnect,
     onReconnect,
   } = options;
   const WS = (options.WebSocket ?? globalThis.WebSocket) as
@@ -432,6 +460,17 @@ export const makeParsedStreamsClient = (
   const subs = new Set<SubState>();
   const byServerId = new Map<number, SubState>();
 
+  const report = (
+    callback: ((info: ParsedStreamsReconnectInfo) => void) | undefined,
+    info: ParsedStreamsReconnectInfo
+  ) => {
+    try {
+      callback?.({ ...info });
+    } catch {
+      // A throwing callback must not break the stream
+    }
+  };
+
   const failAll = (err?: Error) => {
     // The next subscription starts with a full budget
     attempts = 0;
@@ -442,6 +481,13 @@ export const makeParsedStreamsClient = (
     }
     subs.clear();
     byServerId.clear();
+  };
+
+  const drop = (sub: SubState) => {
+    sub.active = false;
+    subs.delete(sub);
+    // Nothing left to restore: the outage is over, with no onReconnect
+    if (!subs.size) outage = undefined;
   };
 
   const handleClose = (code: number) => {
@@ -455,36 +501,35 @@ export const makeParsedStreamsClient = (
     for (const sub of subs) sub.serverId = undefined;
 
     if (closed || !subs.size) return;
+    // The first close of an outage marks where the gap starts
+    const fresh = !outage;
+    const info = (outage ??= { closeCode: code, lastSlot });
     if (code === SLOW_CONSUMER_CODE) {
       failAll(
         new Error(
           `Parsed Streams closed the connection because this client fell more than 2048 notifications behind (code 1008). Narrow the filter, use details: "matched" or "raw", or process notifications faster.`
         )
       );
-      return;
-    }
-    if (!reconnect) {
+    } else if (!reconnect) {
       failAll(err);
-      return;
-    }
-    // The first close of an outage marks where the gap starts
-    outage ??= { closeCode: code, lastSlot };
-    if (++attempts > maxReconnectAttempts) {
+    } else if (++attempts > maxReconnectAttempts) {
       failAll(
         new Error(
           `Parsed Streams gave up after ${maxReconnectAttempts} reconnect attempts (last close code ${code})`
         )
       );
-      return;
+    } else {
+      const delay = Math.min(
+        BACKOFF_BASE_MS * 2 ** (attempts - 1),
+        BACKOFF_MAX_MS
+      );
+      reconnectTimer = setTimeout(() => {
+        reconnectTimer = undefined;
+        void restore();
+      }, delay);
     }
-    const delay = Math.min(
-      BACKOFF_BASE_MS * 2 ** (attempts - 1),
-      BACKOFF_MAX_MS
-    );
-    reconnectTimer = setTimeout(() => {
-      reconnectTimer = undefined;
-      void restore();
-    }, delay);
+    // Last, so a callback that closes, subscribes or unsubscribes sees settled state
+    if (fresh) report(onDisconnect, info);
   };
 
   const handleMessage = (data: unknown) => {
@@ -667,8 +712,7 @@ export const makeParsedStreamsClient = (
             return;
           }
           // Filter now rejected: fail just this subscription
-          subs.delete(sub);
-          sub.active = false;
+          drop(sub);
           sub.queue.end(err);
         }
       }
@@ -679,18 +723,11 @@ export const makeParsedStreamsClient = (
     stableTimer = setTimeout(() => (attempts = 0), STABLE_CONNECTION_MS);
     const info = outage;
     outage = undefined;
-    if (info && onReconnect) {
-      try {
-        onReconnect(info);
-      } catch {
-        // A throwing callback must not break the stream
-      }
-    }
+    if (info) report(onReconnect, info);
   };
 
   const unsubscribeSub = async (sub: SubState): Promise<boolean> => {
-    sub.active = false;
-    subs.delete(sub);
+    drop(sub);
     sub.queue.end();
     const id = sub.serverId;
     if (id === undefined || ws?.readyState !== OPEN) return false;

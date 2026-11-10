@@ -318,6 +318,7 @@ helius.ws.close();
 // program / instruction / account / role. Reconnects and resubscribes on its own.
 import { makeParsedStreamsClient } from "helius-sdk/websockets/parsedStreams";
 const streams = makeParsedStreamsClient(apiKey, {
+  onDisconnect: ({ lastSlot }) => console.warn("gap starts after slot", lastSlot), // fires on the drop
   onReconnect: ({ lastSlot }) => console.warn("backfill after slot", lastSlot),
 });
 const { instructions } = await streams.describeProgram(JUPITER_PROGRAM_ID); // exact names

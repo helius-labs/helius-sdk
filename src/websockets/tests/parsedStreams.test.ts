@@ -448,6 +448,254 @@ describe("reconnects", () => {
   });
 });
 
+// ── onDisconnect ──────────────────────────────────────────────────────
+
+describe("onDisconnect", () => {
+  it("fires once per outage, before reconnecting and before new notifications", async () => {
+    const events: string[] = [];
+    const client = makeParsedStreamsClient("KEY", {
+      WebSocket: WS,
+      onDisconnect: (info) =>
+        events.push(
+          `disconnect ${JSON.stringify(info)} sockets=${sockets.length}`
+        ),
+      onReconnect: (info) => events.push(`reconnect ${JSON.stringify(info)}`),
+    });
+    const a = await subscribeWith(client, 1, { programs: ["A"] });
+    await subscribeWith(client, 2, { programs: ["B"] });
+    last().notify(1, 100);
+    failNextOpen = 2;
+    last().serverClose(1001);
+
+    // Synchronous with the close, before any reconnect attempt
+    expect(events).toEqual([
+      'disconnect {"closeCode":1001,"lastSlot":100} sockets=1',
+    ]);
+
+    // Two failed attempts (close 1006) don't fire it again
+    await until(() => sockets.length === 4 && last().sent.length === 1);
+    expect(events).toHaveLength(1);
+
+    // A is back and delivering while B is still resubscribing
+    last().reply(10);
+    await until(() => a.subscriptionId === 10);
+    last().notify(10, 105);
+    const it = a[Symbol.asyncIterator]();
+    expect((await it.next()).value).toMatchObject({ context: { slot: 100 } });
+    expect((await it.next()).value).toMatchObject({ context: { slot: 105 } });
+    expect(events).toHaveLength(1);
+
+    await until(() => last().sent.length === 2);
+    last().reply(20);
+    await until(() => events.length === 2);
+    expect(events[1]).toBe('reconnect {"closeCode":1001,"lastSlot":100}');
+
+    // The next outage fires again, with the new last slot
+    last().serverClose(1000);
+    expect(events[2]).toBe(
+      'disconnect {"closeCode":1000,"lastSlot":105} sockets=4'
+    );
+    client.close();
+  });
+
+  it.each([
+    ["a slow-consumer close", {}, 1008],
+    ["a close with reconnect off", { reconnect: false }, 1001],
+    ["a close with no reconnect budget", { maxReconnectAttempts: 0 }, 1006],
+  ])("fires for %s, and onReconnect never follows", async (_, extra, code) => {
+    const onDisconnect = jest.fn();
+    const onReconnect = jest.fn();
+    const client = makeParsedStreamsClient("KEY", {
+      WebSocket: WS,
+      onDisconnect,
+      onReconnect,
+      ...extra,
+    });
+    const sub = await subscribeWith(client, 1);
+    last().serverClose(code);
+
+    expect(onDisconnect).toHaveBeenCalledWith({
+      closeCode: code,
+      lastSlot: undefined,
+    });
+    await expect(sub[Symbol.asyncIterator]().next()).rejects.toThrow();
+    await jest.advanceTimersByTimeAsync(60_000);
+    expect(onDisconnect).toHaveBeenCalledTimes(1);
+    expect(onReconnect).not.toHaveBeenCalled();
+    expect(sockets).toHaveLength(1);
+  });
+
+  it("does not fire for close() or with no subscriptions open", async () => {
+    const onDisconnect = jest.fn();
+    const client = makeParsedStreamsClient("KEY", {
+      WebSocket: WS,
+      onDisconnect,
+    });
+    const sub = await subscribeWith(client, 1);
+    const done = sub.unsubscribe();
+    await until(() => last().sent.length === 2);
+    last().reply(true);
+    await done;
+    last().serverClose(1000);
+
+    await subscribeWith(client, 2);
+    client.close();
+    expect(onDisconnect).not.toHaveBeenCalled();
+  });
+
+  it("keeps reconnecting when onDisconnect throws", async () => {
+    const client = makeParsedStreamsClient("KEY", {
+      WebSocket: WS,
+      onDisconnect: () => {
+        throw new Error("boom");
+      },
+    });
+    const sub = await subscribeWith(client, 1);
+    last().serverClose(1001);
+
+    await until(() => sockets.length === 2 && last().sent.length === 1);
+    last().reply(2);
+    await until(() => sub.subscriptionId === 2);
+    client.close();
+  });
+
+  it("stops reconnecting when onDisconnect closes the client", async () => {
+    const client = makeParsedStreamsClient("KEY", {
+      WebSocket: WS,
+      onDisconnect: () => client.close(),
+    });
+    const sub = await subscribeWith(client, 1);
+    last().serverClose(1001);
+
+    await expect(sub[Symbol.asyncIterator]().next()).resolves.toEqual({
+      value: undefined,
+      done: true,
+    });
+    expect(jest.getTimerCount()).toBe(0);
+    await jest.advanceTimersByTimeAsync(60_000);
+    expect(sockets).toHaveLength(1);
+  });
+
+  type Sub = Awaited<ReturnType<typeof subscribeWith>>;
+  let onDrop: (() => void) | undefined;
+
+  it.each<[string, (sub: Sub) => Promise<void>]>([
+    [
+      "unsubscribed mid-backoff",
+      async (sub) => {
+        last().serverClose(1001);
+        await sub.unsubscribe();
+      },
+    ],
+    [
+      "unsubscribed in onDisconnect",
+      async (sub) => {
+        onDrop = () => void sub.unsubscribe();
+        last().serverClose(1001);
+        onDrop = undefined;
+      },
+    ],
+    [
+      "unsubscribed while the reconnect handshake hangs",
+      async (sub) => {
+        hangNextOpen = 1;
+        last().serverClose(1001);
+        await until(() => sockets.length === 2);
+        await sub.unsubscribe();
+      },
+    ],
+    [
+      "rejected on resubscribe",
+      async (sub) => {
+        last().serverClose(1001);
+        await until(() => sockets.length === 2 && last().sent.length === 1);
+        last().replyError(-32602, "unknown field");
+        const it = sub[Symbol.asyncIterator]();
+        await it.next(); // Slot 50, buffered before the drop
+        await expect(it.next()).rejects.toThrow("unknown field");
+      },
+    ],
+  ])(
+    "ends the outage without onReconnect when the last subscription is %s",
+    async (_, end) => {
+      const onDisconnect = jest.fn(() => onDrop?.());
+      const onReconnect = jest.fn();
+      const client = makeParsedStreamsClient("KEY", {
+        WebSocket: WS,
+        onDisconnect,
+        onReconnect,
+      });
+      const first = await subscribeWith(client, 1);
+      last().notify(1, 50);
+      await end(first);
+      await jest.advanceTimersByTimeAsync(60_000);
+      expect(onDisconnect).toHaveBeenCalledWith({
+        closeCode: 1001,
+        lastSlot: 50,
+      });
+      expect(onReconnect).not.toHaveBeenCalled();
+
+      // The next outage reports itself, not the one that ended
+      await subscribeWith(client, 2);
+      last().notify(2, 200);
+      const count = sockets.length;
+      last().serverClose(1006);
+      expect(onDisconnect).toHaveBeenCalledTimes(2);
+      expect(onDisconnect).toHaveBeenLastCalledWith({
+        closeCode: 1006,
+        lastSlot: 200,
+      });
+
+      await until(
+        () => sockets.length === count + 1 && last().sent.length === 1
+      );
+      last().reply(3);
+      await until(() => onReconnect.mock.calls.length === 1);
+      expect(onReconnect).toHaveBeenCalledWith({
+        closeCode: 1006,
+        lastSlot: 200,
+      });
+      client.close();
+    }
+  );
+
+  it("schedules one reconnect when onDisconnect subscribes and the socket can't be created", async () => {
+    let throwNext = false;
+    class FlakyWebSocket extends MockWebSocket {
+      constructor(url: string) {
+        if (throwNext) {
+          throwNext = false;
+          throw new Error("cannot create socket");
+        }
+        super(url);
+      }
+    }
+    const client = makeParsedStreamsClient("KEY", {
+      WebSocket: FlakyWebSocket as unknown as typeof WS,
+      onDisconnect: () => {
+        throwNext = true;
+        client
+          .parsedTransactionSubscribe({ programs: ["B"] })
+          .catch(() => undefined);
+      },
+    });
+    await subscribeWith(client, 1, { programs: ["A"] });
+    last().serverClose(1001);
+    await jest.advanceTimersByTimeAsync(5_000);
+
+    // One restore, so one resubscribe of A: no second, orphaned reconnect timer
+    const subscribesOfA = sockets
+      .flatMap((s) => s.sent)
+      .filter(
+        (m) =>
+          m.method === "parsedTransactionSubscribe" &&
+          (m.params[0] as { programs: string[] }).programs[0] === "A"
+      );
+    expect(subscribesOfA).toHaveLength(2);
+    client.close();
+  });
+});
+
 // ── Lifecycle edge cases ──────────────────────────────────────────────
 
 /** A `ws`-package-style socket: exposes server pings and terminate(). */
