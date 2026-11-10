@@ -1,0 +1,6 @@
+{
+  // Rollup builds from this. Tests are still type-checked by `pnpm typecheck`
+  // (tsconfig.json), but their declarations aren't shipped.
+  "extends": "./tsconfig.json",
+  "exclude": ["node_modules", "dist", "src/**/tests/**", "src/**/*.test.ts"]
+}
