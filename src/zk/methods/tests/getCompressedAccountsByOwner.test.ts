@@ -64,6 +64,51 @@ describe("getCompressedAccountsByOwner Tests", () => {
     );
   });
 
+  it("Accepts V1 and V2 tree accounts in the same page", async () => {
+    const mockResponse: GetCompressedAccountsByOwnerResponse = {
+      context: { slot: 0 },
+      value: {
+        items: [
+          {
+            address: null,
+            data: null,
+            hash: "2veKUPKieajFG7yzPNGARHq7jYS1FiXcXG8P9Txhvhcn",
+            lamports: 1_000_000,
+            leafIndex: 4,
+            owner: "J6ULJViDpQTRntYTmfkpUZZ71KTVkZNJFSDcQhFCo5Ef",
+            seq: 4,
+            slotCreated: 0,
+            tree: "smt1NamzXdq4AMqS2fS2F1i5KTYPZRhoHgWx38d8WsT",
+          },
+          {
+            address: null,
+            data: null,
+            hash: "JReC6h68m3EdCKP7S35e7BE4pBPwQz1HfjUkboeQy9r",
+            lamports: 999_998_000,
+            leafIndex: 3,
+            owner: "J6ULJViDpQTRntYTmfkpUZZ71KTVkZNJFSDcQhFCo5Ef",
+            seq: null,
+            slotCreated: 0,
+            tree: "bmt1LryLZUMmF7ZtqESaw7wifBXLfXHQYoE4GAmrahU",
+          },
+        ],
+      },
+    };
+
+    transportMock.mockResolvedValue({
+      jsonrpc: "2.0",
+      id: "1",
+      result: mockResponse,
+    });
+
+    const result = await helius.zk.getCompressedAccountsByOwner({
+      owner: "J6ULJViDpQTRntYTmfkpUZZ71KTVkZNJFSDcQhFCo5Ef",
+    });
+
+    expect(result).toEqual(mockResponse);
+    expect(result.value.items.map((account) => account.seq)).toEqual([4, null]);
+  });
+
   it("Propagates RPC errors from the Empire", async () => {
     transportMock.mockResolvedValue({
       jsonrpc: "2.0",

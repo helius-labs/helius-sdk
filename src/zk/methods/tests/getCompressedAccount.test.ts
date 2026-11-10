@@ -66,6 +66,56 @@ describe("getCompressedAccount Tests", () => {
     );
   });
 
+  it("Returns a null value when no account matches", async () => {
+    const mockResponse: GetCompressedAccountResponse = {
+      context: { slot: 0 },
+      value: null,
+    };
+
+    transportMock.mockResolvedValue({
+      jsonrpc: "2.0",
+      id: "1",
+      result: mockResponse,
+    });
+
+    const result = await helius.zk.getCompressedAccount({
+      address: "AlderaanWasHere1111111111111111111111111111",
+    });
+
+    expect(result.value).toBeNull();
+  });
+
+  it("Returns a null seq for an account still in a V2 tree's output queue", async () => {
+    const mockResponse: GetCompressedAccountResponse = {
+      context: { slot: 0 },
+      value: {
+        hash: "2veKUPKieajFG7yzPNGARHq7jYS1FiXcXG8P9Txhvhcn",
+        address: null,
+        data: null,
+        owner: "J6ULJViDpQTRntYTmfkpUZZ71KTVkZNJFSDcQhFCo5Ef",
+        lamports: 999_998_000,
+        tree: "bmt1LryLZUMmF7ZtqESaw7wifBXLfXHQYoE4GAmrahU",
+        leafIndex: 3,
+        seq: null,
+        slotCreated: 0,
+      },
+    };
+
+    transportMock.mockResolvedValue({
+      jsonrpc: "2.0",
+      id: "1",
+      result: mockResponse,
+    });
+
+    const result = await helius.zk.getCompressedAccount({
+      address: null,
+      hash: "2veKUPKieajFG7yzPNGARHq7jYS1FiXcXG8P9Txhvhcn",
+    });
+
+    expect(result).toStrictEqual(mockResponse);
+    expect(result.value?.seq).toBeNull();
+  });
+
   it("Surfaces RPC errors from the dark side", async () => {
     transportMock.mockResolvedValue({
       jsonrpc: "2.0",

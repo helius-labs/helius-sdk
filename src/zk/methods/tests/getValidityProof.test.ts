@@ -7,6 +7,9 @@ import {
 
 const transportMock = jest.fn();
 
+// The indexer sends each proof component as a JSON array of bytes
+const bytes = (length: number) => Array.from({ length }, (_, i) => i + 1);
+
 jest.mock("@solana/kit", () => ({
   createSolanaRpcApi: jest.fn().mockReturnValue({}),
   DEFAULT_RPC_CONFIG: {},
@@ -31,7 +34,7 @@ describe("getValidityProof Tests", () => {
     };
 
     const proofPayload: CompressedProofWithContext = {
-      compressedProof: { a: "0xAa", b: "0xBb", c: "0xCc" },
+      compressedProof: { a: bytes(32), b: bytes(64), c: bytes(32) },
       leafIndices: [0],
       leaves: ["LeafHash_0"],
       merkleTrees: [addrWithTree.tree],
@@ -55,7 +58,7 @@ describe("getValidityProof Tests", () => {
     });
 
     expect(result).toEqual(mockResp);
-    expect(result.value.compressedProof.a).toMatch(/0xAa/);
+    expect(result.value.compressedProof.a).toHaveLength(32);
     expect(transportMock).toHaveBeenCalledWith(
       expect.objectContaining({
         payload: expect.objectContaining({
@@ -73,7 +76,7 @@ describe("getValidityProof Tests", () => {
       result: {
         context: { slot: 777 },
         value: {
-          compressedProof: { a: "0x1", b: "0x2", c: "0x3" },
+          compressedProof: { a: bytes(32), b: bytes(64), c: bytes(32) },
           leafIndices: [7],
           leaves: ["Leaf7"],
           merkleTrees: ["AnyTree"],
@@ -88,6 +91,33 @@ describe("getValidityProof Tests", () => {
     });
 
     expect(res.value.leafIndices[0]).toBe(7);
+  });
+
+  it("Types the proof components as the byte arrays the indexer sends", async () => {
+    transportMock.mockResolvedValue({
+      jsonrpc: "2.0",
+      id: "1",
+      result: {
+        context: { slot: 0 },
+        value: {
+          compressedProof: { a: bytes(32), b: bytes(64), c: bytes(32) },
+          leafIndices: [6],
+          leaves: ["JReC6h68m3EdCKP7S35e7BE4pBPwQz1HfjUkboeQy9r"],
+          merkleTrees: ["smt1NamzXdq4AMqS2fS2F1i5KTYPZRhoHgWx38d8WsT"],
+          rootIndices: [7],
+          roots: ["2wBDKLscN4SBNzNdVsHq17PVXycvM8n4LNiKzJrebqZ7"],
+        },
+      },
+    });
+
+    const res = await helius.zk.getValidityProof({
+      hashes: ["JReC6h68m3EdCKP7S35e7BE4pBPwQz1HfjUkboeQy9r"],
+    });
+    const { a, b, c } = res.value.compressedProof;
+
+    expect(Uint8Array.from(a)).toHaveLength(32);
+    expect(Uint8Array.from(b)).toHaveLength(64);
+    expect(Uint8Array.from(c)).toHaveLength(32);
   });
 
   it("Surfaces Sith-level RPC errors", async () => {
