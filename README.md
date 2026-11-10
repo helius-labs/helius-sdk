@@ -308,6 +308,21 @@ Parse transactions into decoded instructions, transfers, and summaries using Hel
 
 All three can return each original transaction next to the parsed one: pass `rawTransaction` as `"json"`, `"jsonParsed"`, or `"base64"` (`getTransaction` encodings). `includeRawTransaction: true` still works on `parseTransactions` and `getTransactionHistory` as an alias for `rawTransaction: "json"`, but is deprecated.
 
+Every method also takes per-call options, such as `{ signal }` to abort a request. Set `parsedEventsTimeoutMs` in `createHelius()` to time-limit every request, and `parsedEventsUrl` to send them to another host, such as a proxy:
+
+```typescript
+const helius = createHelius({
+  apiKey,
+  parsedEventsTimeoutMs: 30_000, // Rejects with an Error named "TimeoutError"
+  parsedEventsUrl: "https://proxy.example.com/v1/parsed-events", // API key still appended
+});
+
+const page = await helius.parsedEvents.scan(
+  { address, match: { mints: [{ mint }] } },
+  { signal: AbortSignal.timeout(10_000) } // Per-call limit or cancellation
+);
+```
+
 [**Enhanced Transactions API**](https://www.helius.dev/docs/enhanced-transactions) **(Deprecated)**
 
 > **Deprecated:** the Enhanced Transactions API is in maintenance mode. Use `helius.parsedEvents` for new mainnet code — see the [migration guide](https://www.helius.dev/docs/parsed-events/guides/migrate-from-enhanced-transactions). `getTransactions` maps to `parseTransactions` and `getTransactionsByAddress` to `getTransactionHistory`, with these differences:

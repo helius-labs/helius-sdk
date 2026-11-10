@@ -1,4 +1,4 @@
-import { postParsedEvents } from "./utils.js";
+import { postParsedEvents, type ParsedEventsRequestConfig } from "./utils.js";
 import type {
   ParseTransactionsRequest,
   ParseTransactionsResponse,
@@ -15,6 +15,8 @@ import type {
  *
  * @param apiKey - Helius API key
  * @param params - Signatures to parse (max 100) and options
+ * @param userAgent - Custom User-Agent string
+ * @param config - `parsedEventsUrl`, `parsedEventsTimeoutMs`, and an abort `signal`
  * @returns One result per input signature
  * @throws Error on a request-level failure (invalid body, auth, rate limit)
  *
@@ -33,7 +35,8 @@ import type {
 export const parseTransactions = async (
   apiKey: string,
   params: ParseTransactionsRequest,
-  userAgent?: string
+  userAgent?: string,
+  config?: ParsedEventsRequestConfig
 ): Promise<ParseTransactionsResponse> =>
   postParsedEvents<ParseTransactionsResponse>(
     "transactions",
@@ -43,5 +46,6 @@ export const parseTransactions = async (
       // `false` is the default, and the API rejects it alongside `rawTransaction`
       includeRawTransaction: params.includeRawTransaction || undefined,
     },
-    userAgent
+    userAgent,
+    config
   );

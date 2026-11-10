@@ -1,5 +1,9 @@
 import { getSDKHeaders } from "../http.js";
-import type { ParsedEventsNetworkOptions } from "./types.js";
+import type {
+  ParsedEventsClientOptions,
+  ParsedEventsNetworkOptions,
+  ParsedEventsRequestOptions,
+} from "./types.js";
 
 /** Base URL for Parsed Events endpoints. Parsed Events is mainnet-only. */
 const BASE_URL = "https://mainnet.helius-rpc.com/v1/parsed-events";
@@ -37,6 +41,10 @@ export const mainnetGuard = ({
   };
 };
 
+/** The client's host and time limit, plus the call's abort signal. Other keys are ignored. */
+export type ParsedEventsRequestConfig = ParsedEventsClientOptions &
+  ParsedEventsRequestOptions;
+
 /**
  * POST a JSON body to a Parsed Events endpoint and return the parsed response
  *
@@ -45,27 +53,68 @@ export const mainnetGuard = ({
  * `toJSON`), so a malformed one still reaches the API to be rejected.
  *
  * @throws Error with the HTTP status and the API's `error` message on a non-2xx response
+ * @throws The signal's `reason` when `signal` aborts, or an Error named `TimeoutError` after `parsedEventsTimeoutMs`
  */
 export const postParsedEvents = async <T>(
   path: string,
   apiKey: string,
   body: unknown,
-  userAgent?: string
+  userAgent?: string,
+  {
+    parsedEventsUrl: url,
+    parsedEventsTimeoutMs: timeoutMs,
+    signal,
+  }: ParsedEventsRequestConfig = {}
 ): Promise<T> => {
-  const url = `${BASE_URL}/${path}?api-key=${encodeURIComponent(apiKey)}`;
+  // Via URL, so a proxy's own query string survives
+  const target = new URL(url || BASE_URL);
+  target.pathname = `${target.pathname.replace(/\/+$/, "")}/${path}`;
+  target.searchParams.set("api-key", apiKey);
 
-  const res = await fetch(url, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      ...getSDKHeaders(userAgent),
-    },
-    // A replacer runs after toJSON; in arrays an `undefined` still becomes null
-    body: JSON.stringify(body, (_key, value) =>
-      value === null ? undefined : value
-    ),
-  });
+  // One signal for the caller's abort and the timeout, without
+  // AbortSignal.any (Node 20.3+)
+  const controller = new AbortController();
+  const abort = () => controller.abort(signal?.reason);
+  if (signal?.aborted) abort();
+  signal?.addEventListener("abort", abort);
+  // Node fires longer delays (and Infinity) after 1ms, so cap them
+  const timer =
+    timeoutMs && timeoutMs > 0
+      ? setTimeout(
+          () =>
+            controller.abort(
+              Object.assign(
+                new Error(
+                  `Parsed Events request timed out after ${timeoutMs}ms`
+                ),
+                { name: "TimeoutError" }
+              )
+            ),
+          Math.min(timeoutMs, 2 ** 31 - 1)
+        )
+      : undefined;
 
+  try {
+    const res = await fetch(target.href, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...getSDKHeaders(userAgent),
+      },
+      // A replacer runs after toJSON; in arrays an `undefined` still becomes null
+      body: JSON.stringify(body, (_key, value) =>
+        value === null ? undefined : value
+      ),
+      signal: controller.signal,
+    });
+    return await readResponse<T>(res);
+  } finally {
+    clearTimeout(timer);
+    signal?.removeEventListener("abort", abort);
+  }
+};
+
+const readResponse = async <T>(res: Response): Promise<T> => {
   if (!res.ok) {
     const text = await res.text();
     let message = text || res.statusText;

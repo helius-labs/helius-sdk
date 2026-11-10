@@ -6,6 +6,22 @@ export type ParsedEventsNetworkOptions = Pick<
   "network" | "baseUrl"
 >;
 
+/** The `createHelius()` options a Parsed Events client uses. */
+export type ParsedEventsClientOptions = Pick<
+  HeliusRpcOptions,
+  "network" | "baseUrl" | "parsedEventsUrl" | "parsedEventsTimeoutMs"
+>;
+
+/** Per-call options for Parsed Events methods. */
+export interface ParsedEventsRequestOptions {
+  /**
+   * Abort the request. It rejects with the signal's `reason`. Combine with the
+   * client's `parsedEventsTimeoutMs`, or pass `AbortSignal.timeout(ms)` for a
+   * per-call timeout.
+   */
+  signal?: AbortSignal;
+}
+
 /** Commitment level for Parsed Events queries. `processed` is not supported. */
 export type ParsedEventsCommitment = "confirmed" | "finalized";
 

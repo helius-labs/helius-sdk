@@ -1,4 +1,4 @@
-import { postParsedEvents } from "./utils.js";
+import { postParsedEvents, type ParsedEventsRequestConfig } from "./utils.js";
 import type {
   ScanParsedTransactionHistoryRequest,
   ScanParsedTransactionHistoryResponse,
@@ -40,6 +40,8 @@ import type {
  *
  * @param apiKey - Helius API key
  * @param params - Address, match criteria, return shape, budget, and pagination options
+ * @param userAgent - Custom User-Agent string
+ * @param config - `parsedEventsUrl`, `parsedEventsTimeoutMs`, and an abort `signal`
  * @returns The matches for the `returnShape`, the next `paginationToken`, and a `scan` summary
  * @throws Error on a request-level failure: `Helius HTTP 400` for an invalid
  * body or match (including an instruction name not in the program's IDLs),
@@ -87,7 +89,8 @@ import type {
 export const scan = async (
   apiKey: string,
   params: ScanParsedTransactionHistoryRequest<ScanReturnShape>,
-  userAgent?: string
+  userAgent?: string,
+  config?: ParsedEventsRequestConfig
 ): Promise<ScanParsedTransactionHistoryResponse<ScanReturnShape>> =>
   // As with getTransactionHistory, unknown fields are forwarded for the API to
   // reject; postParsedEvents drops nulls.
@@ -99,5 +102,6 @@ export const scan = async (
       // An empty cursor means "start of the scan", same as no cursor
       paginationToken: params.paginationToken || undefined,
     },
-    userAgent
+    userAgent,
+    config
   );

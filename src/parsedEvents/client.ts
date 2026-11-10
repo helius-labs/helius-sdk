@@ -1,5 +1,6 @@
 import type {
-  ParsedEventsNetworkOptions,
+  ParsedEventsClientOptions,
+  ParsedEventsRequestOptions,
   ParseTransactionsRequest,
   ParseTransactionsResponse,
   GetParsedTransactionHistoryRequest,
@@ -46,11 +47,13 @@ export interface ParsedEventsClient {
    * Parse transaction signatures (max 100) into decoded instructions, transfers, and summaries
    *
    * @param params - Signatures to parse and options
+   * @param options - Per-call options, such as an abort `signal`
    * @returns One result per input signature, in input order; check `parserStatus` per item
    * @throws Error on a request-level failure (invalid body, auth, rate limit)
    */
   parseTransactions(
-    params: ParseTransactionsRequest
+    params: ParseTransactionsRequest,
+    options?: ParsedEventsRequestOptions
   ): Promise<ParseTransactionsResponse>;
 
   /**
@@ -58,11 +61,13 @@ export interface ParsedEventsClient {
    * Only successful transactions unless `status` is `"any"` or `"failed"`.
    *
    * @param params - Address, slot/time bounds, status and token-account filters, and pagination options
+   * @param options - Per-call options, such as an abort `signal`
    * @returns A page of parsed transactions and the next `paginationToken`
    * @throws Error on a request-level failure (invalid body, auth, rate limit)
    */
   getTransactionHistory(
-    params: GetParsedTransactionHistoryRequest
+    params: GetParsedTransactionHistoryRequest,
+    options?: ParsedEventsRequestOptions
   ): Promise<GetParsedTransactionHistoryResponse>;
 
   /**
@@ -81,25 +86,30 @@ export interface ParsedEventsClient {
    * page scanned.
    *
    * @param params - Address, match criteria, return shape, budget, and pagination options
+   * @param options - Per-call options, such as an abort `signal`
    * @returns The matches for the `returnShape`, the next `paginationToken`, and a `scan` summary (`stoppedOn`, `matchedTransactions`, `creditsCharged`)
    * @throws Error on a request-level failure: `Helius HTTP 400` for an invalid body or match, auth or rate-limit errors, or `Helius HTTP 503` when at capacity or the first history page missed the request time limit
    */
   scan(
     params: ScanParsedTransactionHistoryRequest<"count"> & {
       returnShape: "count";
-    }
+    },
+    options?: ParsedEventsRequestOptions
   ): Promise<ScanCountResponse>;
   scan(
     params: ScanParsedTransactionHistoryRequest<"signatures"> & {
       returnShape: "signatures";
-    }
+    },
+    options?: ParsedEventsRequestOptions
   ): Promise<ScanSignaturesResponse>;
   scan(
-    params: ScanParsedTransactionHistoryRequest<"transactions">
+    params: ScanParsedTransactionHistoryRequest<"transactions">,
+    options?: ParsedEventsRequestOptions
   ): Promise<ScanTransactionsResponse>;
   /** A `returnShape` only known at runtime gives the union of the three responses. */
   scan(
-    params: ScanParsedTransactionHistoryRequest<ScanReturnShape>
+    params: ScanParsedTransactionHistoryRequest<ScanReturnShape>,
+    options?: ParsedEventsRequestOptions
   ): Promise<ScanParsedTransactionHistoryResponse<ScanReturnShape>>;
 }
 
@@ -110,7 +120,7 @@ export interface ParsedEventsClient {
  * This is the default client used by `createHelius()`.
  *
  * @param apiKey - Helius API key
- * @param options - The client's `network` / `baseUrl`. Methods reject on devnet: Parsed Events is mainnet-only.
+ * @param options - The client's `network` / `baseUrl` (methods reject on devnet: Parsed Events is mainnet-only), `parsedEventsUrl` and `parsedEventsTimeoutMs`
  * @returns ParsedEventsClient instance with lazy-loaded methods
  *
  * @example
@@ -123,7 +133,7 @@ export interface ParsedEventsClient {
  */
 export const makeParsedEventsClient = (
   apiKey: string,
-  options: ParsedEventsNetworkOptions = {},
+  options: ParsedEventsClientOptions = {},
   userAgent?: string
 ): ParsedEventsClient => {
   let client: Promise<ParsedEventsClient> | undefined;
@@ -133,10 +143,13 @@ export const makeParsedEventsClient = (
     ));
 
   return {
-    parseTransactions: async (p) => (await load()).parseTransactions(p),
-    getTransactionHistory: async (p) => (await load()).getTransactionHistory(p),
+    parseTransactions: async (p, o) => (await load()).parseTransactions(p, o),
+    getTransactionHistory: async (p, o) =>
+      (await load()).getTransactionHistory(p, o),
     // One implementation for every overload; `returnShape` picks the response
-    scan: (async (p: ScanParsedTransactionHistoryRequest<ScanReturnShape>) =>
-      (await load()).scan(p)) as ParsedEventsClient["scan"],
+    scan: (async (
+      p: ScanParsedTransactionHistoryRequest<ScanReturnShape>,
+      o?: ParsedEventsRequestOptions
+    ) => (await load()).scan(p, o)) as ParsedEventsClient["scan"],
   };
 };

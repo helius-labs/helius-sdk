@@ -153,6 +153,8 @@ export const createHeliusEager = ({
   baseUrl,
   userAgent,
   transport: transportHook,
+  parsedEventsUrl,
+  parsedEventsTimeoutMs,
 }: HeliusRpcOptions): HeliusClientEager => {
   const url = buildRpcUrl({
     baseUrl,
@@ -236,7 +238,7 @@ export const createHeliusEager = ({
       }
       return makeParsedEventsClientEager(
         apiKey,
-        { network, baseUrl },
+        { network, baseUrl, parsedEventsUrl, parsedEventsTimeoutMs },
         userAgent
       );
     },
