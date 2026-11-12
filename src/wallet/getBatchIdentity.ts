@@ -19,18 +19,21 @@ import type {
  *
  * @param apiKey - Helius API key
  * @param params - Request parameters including array of wallet addresses (max 100)
- * @returns Array of identity information for requested addresses
+ * @returns Array of resolved or unresolved identity entries, in request order
  * @throws Error if HTTP error or invalid request
  *
  * @example
  * ```ts
  * const identities = await helius.wallet.getBatchIdentity({
- *   addresses: [
- *     "HXsKP7wrBWaQ8T2Vtjry3Nj3oUgwYcqq9vrHDM12G664",
- *     "2ojv9BAiHUrvsm9gxDe7fJSzbNZSJcxZvf8dqmWGHG8S"
- *   ]
+ *   addresses: ["toly.sol", "nonexistent-xyz.sol"]
  * });
- * identities.forEach(id => console.log(id.name));
+ * for (const id of identities) {
+ *   if ("unresolved" in id) {
+ *     console.log(`${id.inputDomain} could not be resolved`);
+ *     continue;
+ *   }
+ *   console.log(id.name);
+ * }
  * ```
  */
 export const getBatchIdentity = async (
