@@ -1,4 +1,5 @@
 import type {
+  GetHistoricalTokenAccountsByOwnerConfig,
   GetHistoricalTokenAccountsByOwnerRequest,
   GetHistoricalTokenAccountsByOwnerResponse,
   HistoricalEncodedAccountData,
@@ -134,7 +135,7 @@ describe("getHistoricalTokenAccountsByOwner", () => {
     const promise = rpc.getHistoricalTokenAccountsByOwner([
       OWNER,
       {},
-      { mint: USDC, programId: TOKEN_V1 },
+      { limit: 0 },
     ]);
 
     await expect(promise).rejects.toBeInstanceOf(HeliusRpcError);
@@ -214,5 +215,28 @@ describe("getHistoricalTokenAccountsByOwner types", () => {
     ];
 
     expect(indexOnly).toHaveLength(2);
+  });
+
+  it("accepts mint or programId, but not both", () => {
+    const maybeMint = Date.now() < 0 ? USDC : undefined;
+
+    const byMint: GetHistoricalTokenAccountsByOwnerConfig = { mint: USDC };
+    const byProgram: GetHistoricalTokenAccountsByOwnerConfig = {
+      programId: TOKEN_2022,
+    };
+    const optionalMint: GetHistoricalTokenAccountsByOwnerConfig = {
+      mint: maybeMint,
+    };
+    const nextPage: GetHistoricalTokenAccountsByOwnerConfig = {
+      ...byMint,
+      paginationKey: `${USDC}:A`,
+    };
+    // @ts-expect-error mint and programId can't be combined
+    const both: GetHistoricalTokenAccountsByOwnerConfig = {
+      mint: USDC,
+      programId: TOKEN_V1,
+    };
+
+    expect([byMint, byProgram, optionalMint, nextPage, both]).toHaveLength(5);
   });
 });

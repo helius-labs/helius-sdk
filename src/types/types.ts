@@ -576,12 +576,13 @@ export type GetHistoricalAccountInfoResponse<TData = HistoricalAccountData> = {
 /** Configuration for `getHistoricalTokenAccountsByOwner`. Set at most one of `mint` or `programId`. */
 export type GetHistoricalTokenAccountsByOwnerConfig =
   GetHistoricalAccountInfoConfig & {
-    mint?: string;
-    programId?: string;
     /** 1–100,000. Defaults to 100,000. */
     limit?: number;
     paginationKey?: string;
-  };
+  } & (
+      | { mint?: string; programId?: never }
+      | { programId?: string; mint?: never }
+    );
 
 /** Request tuple for `getHistoricalTokenAccountsByOwner`: `[owner, query?, config?]`. */
 export type GetHistoricalTokenAccountsByOwnerRequest = [
