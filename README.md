@@ -257,12 +257,12 @@ Enhanced RPC methods, available only with Helius.
 - [`getTransactionsForAddress()`](https://www.helius.dev/docs/rpc/gettransactionsforaddress): Get transaction history for an address with advanced filtering by slot, time, and bidirectional sorting options. Supports both signature-only and full transaction details. Optionally include transactions from associated token accounts.
 - [`getTransfersByAddress()`](https://www.helius.dev/docs/rpc/gettransfersbyaddress): Get parsed token and native SOL transfer history for an address with filters by mint, time, amount, counterparty, direction, and cursor pagination.
 
-[**Historical Accounts (Beta)**](https://www.helius.dev/docs/rpc/historical-accounts)
+**Historical Accounts (Beta)**
 
 Read accounts as they were at a past slot, or immediately after a specific transaction within that slot. Mainnet only, from slot 444959999 onward.
 
-- [`getHistoricalAccountInfo()`](https://www.helius.dev/docs/api-reference/rpc/http/gethistoricalaccountinfo): Get an account at a past slot or transaction, with `lastUpdatedAt` pointing to the write that produced that state.
-- [`getHistoricalTokenAccountsByOwner()`](https://www.helius.dev/docs/api-reference/rpc/http/gethistoricaltokenaccountsbyowner): Get the SPL Token and Token-2022 accounts a wallet owned at a past slot or transaction, optionally for one mint or token program, with cursor pagination.
+- `getHistoricalAccountInfo()`: Get an account at a past slot or transaction, with `lastUpdatedAt` pointing to the write that produced that state.
+- `getHistoricalTokenAccountsByOwner()`: Get the SPL Token and Token-2022 accounts a wallet owned at a past slot or transaction, optionally for one mint or token program, with cursor pagination.
 
 [**Staking**](https://www.helius.dev/docs/staking/how-to-stake-with-helius-programmatically)
 
