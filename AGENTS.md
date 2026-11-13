@@ -305,7 +305,7 @@ const { value } = await helius.getHistoricalAccountInfo([
 - **`value: null`** means the account didn't exist at that position (not created yet, or closed). It's not an error.
 - **`lastUpdatedAt`** is the `{ slot, transactionIndex }` of the write that produced the returned state. `transactionIndex: null` means a non-transaction write such as epoch rewards.
 - **`context.slot`** is the latest slot Helius had indexed, not the slot you queried.
-- **Paginating `getHistoricalTokenAccountsByOwner`**: pin `slot` on every page, and stop only when `paginationKey` is `null`. Each call scans at most 100,000 accounts, so a short or empty page can still have more behind it.
+- **Paginating `getHistoricalTokenAccountsByOwner`**: pin `slot` on every page, and stop only when `paginationKey` is `null`. A short or empty page can still have more behind it.
 - **`jsonParsed` data** falls back to `[data, "base64"]` for accounts that can't be parsed, so check `Array.isArray(account.data)`. `base58` and `processed` aren't supported.
 
 ## Rate Limits & Plans

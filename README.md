@@ -257,7 +257,7 @@ Enhanced RPC methods, available only with Helius.
 - [`getTransactionsForAddress()`](https://www.helius.dev/docs/rpc/gettransactionsforaddress): Get transaction history for an address with advanced filtering by slot, time, and bidirectional sorting options. Supports both signature-only and full transaction details. Optionally include transactions from associated token accounts.
 - [`getTransfersByAddress()`](https://www.helius.dev/docs/rpc/gettransfersbyaddress): Get parsed token and native SOL transfer history for an address with filters by mint, time, amount, counterparty, direction, and cursor pagination.
 
-[**Historical Account State (Beta)**](https://www.helius.dev/docs/rpc/historical-account-state)
+[**Historical Accounts (Beta)**](https://www.helius.dev/docs/rpc/historical-accounts)
 
 Read accounts as they were at a past slot, or immediately after a specific transaction within that slot. Mainnet only, from slot 444959999 onward.
 
