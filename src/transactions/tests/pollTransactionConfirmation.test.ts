@@ -186,6 +186,30 @@ describe("pollTransactionConfirmation Tests", () => {
     }
   });
 
+  it("Resolves when the tx confirms during the wait that runs past the timeout", async () => {
+    // The deadline passes while waiting between reads; a tx that confirmed
+    // during that wait must be read before the timeout error is thrown
+    const rpc = buildMockRpc(
+      [100],
+      [null, { confirmationStatus: "confirmed", err: null }]
+    );
+
+    const nowSpy = jest
+      .spyOn(Date, "now")
+      .mockReturnValueOnce(0) // started
+      .mockReturnValueOnce(0) // first iteration's timeout check
+      .mockReturnValue(10_000); // deadline long past after the first wait
+
+    try {
+      const poll = makePollTransactionConfirmation(rpc);
+      await expect(poll(SIG, { interval: 1, timeout: 50 })).resolves.toBe(SIG);
+    } finally {
+      nowSpy.mockRestore();
+    }
+
+    expect(rpc.getSignatureStatuses).toHaveBeenCalledTimes(2);
+  });
+
   it("Throws when wall-clock timeout is hit", async () => {
     const rpc = buildMockRpc([100, 100, 100], [null, null, null]);
 

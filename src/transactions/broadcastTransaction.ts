@@ -45,10 +45,6 @@ export const broadcastTransactionFactory = (raw: Rpc<SolanaRpcApi>) => {
     let expired = false;
 
     while (true) {
-      if (!expired && Date.now() - started > pollTimeoutMs) {
-        throw new Error("Transaction confirmation timed-out");
-      }
-
       const { value } = await raw
         .getSignatureStatuses([signature], { searchTransactionHistory: false })
         .send();
@@ -73,6 +69,12 @@ export const broadcastTransactionFactory = (raw: Rpc<SolanaRpcApi>) => {
         throw new Error(
           "Block height exceeded lastValidBlockHeight, and the transaction failed to land on-chain"
         );
+      }
+
+      // Check the deadline after the status read, not before it, so a tx
+      // that landed during the last wait is not reported as timed out
+      if (Date.now() - started > pollTimeoutMs) {
+        throw new Error("Transaction confirmation timed-out");
       }
 
       const blockHeight = Number(await raw.getBlockHeight().send());

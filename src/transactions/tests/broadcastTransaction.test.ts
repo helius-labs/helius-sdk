@@ -141,6 +141,32 @@ describe("broadcastTransaction Tests", () => {
     }
   });
 
+  it("Resolves when the tx confirms during the wait that runs past the timeout", async () => {
+    // The deadline passes while waiting between reads; a tx that confirmed
+    // during that wait must be read before the timeout error is thrown
+    const rpc = buildMockRpc({
+      heights: [100],
+      statuses: [null, { confirmationStatus: "confirmed", err: null }],
+    });
+
+    const nowSpy = jest
+      .spyOn(Date, "now")
+      .mockReturnValueOnce(0) // started
+      .mockReturnValueOnce(0) // first iteration's timeout check
+      .mockReturnValue(10_000); // deadline long past after the first wait
+
+    try {
+      const broadcast = broadcastTransactionFactory(rpc);
+      await expect(
+        broadcast(TX64, { pollIntervalMs: 1, pollTimeoutMs: 50 })
+      ).resolves.toBe("3U9JYc3QkWeSFX36zWYD4bMFheh1J2g1AEB7B1ohRvHC");
+    } finally {
+      nowSpy.mockRestore();
+    }
+
+    expect(rpc.getSignatureStatuses).toHaveBeenCalledTimes(2);
+  });
+
   it("Throws on wall-clock timeout", async () => {
     const rpc = buildMockRpc({
       heights: [100, 100, 100, 100],
