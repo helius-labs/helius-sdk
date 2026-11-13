@@ -35,6 +35,8 @@ import type { GetTokenAccountsByOwnerV2Fn } from "./methods/getTokenAccountsByOw
 import type { GetAllTokenAccountsByOwnerFn } from "./methods/getAllTokenAccountsByOwner.js";
 import type { GetTransactionsForAddressFn } from "./methods/getTransactionsForAddress.js";
 import type { GetTransfersByAddressFn } from "./methods/getTransfersByAddress.js";
+import type { GetHistoricalAccountInfoFn } from "./methods/getHistoricalAccountInfo.js";
+import type { GetHistoricalTokenAccountsByOwnerFn } from "./methods/getHistoricalTokenAccountsByOwner.js";
 import type { EnhancedTxClientLazy } from "../enhanced/index.js";
 import { TxHelpersLazy } from "../transactions/index.js";
 import type { ResolvedHeliusRpcApi } from "./heliusRpcApi.js";
@@ -119,6 +121,13 @@ export type HeliusClient = ResolvedHeliusRpcApi &
     getTransactionsForAddress: GetTransactionsForAddressFn;
     /** Get parsed token and native SOL transfers for a specific address with rich filtering and pagination. */
     getTransfersByAddress: GetTransfersByAddressFn;
+
+    // ── Historical Account State (beta) ───────────────────────────────
+
+    /** Get an account as it was at a past slot or transaction. Mainnet only. */
+    getHistoricalAccountInfo: GetHistoricalAccountInfoFn;
+    /** Get a page of a wallet's token accounts as they were at a past slot or transaction. Mainnet only. */
+    getHistoricalTokenAccountsByOwner: GetHistoricalTokenAccountsByOwnerFn;
 
     // ── Webhooks ──────────────────────────────────────────────────────
 
@@ -468,6 +477,26 @@ export const createHelius = ({
       const { makeGetTransfersByAddress } =
         await import("./methods/getTransfersByAddress.js");
       return makeGetTransfersByAddress(call);
+    }
+  );
+
+  defineLazyMethod<HeliusClient, GetHistoricalAccountInfoFn>(
+    client,
+    "getHistoricalAccountInfo",
+    async () => {
+      const { makeGetHistoricalAccountInfo } =
+        await import("./methods/getHistoricalAccountInfo.js");
+      return makeGetHistoricalAccountInfo(call);
+    }
+  );
+
+  defineLazyMethod<HeliusClient, GetHistoricalTokenAccountsByOwnerFn>(
+    client,
+    "getHistoricalTokenAccountsByOwner",
+    async () => {
+      const { makeGetHistoricalTokenAccountsByOwner } =
+        await import("./methods/getHistoricalTokenAccountsByOwner.js");
+      return makeGetHistoricalTokenAccountsByOwner(call);
     }
   );
 

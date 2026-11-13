@@ -67,6 +67,7 @@ const helius = createHelius({
 |-----------|--------|---------|
 | DAS API | `helius.getAsset()`, `helius.getAssetsByOwner()`, etc. | Query NFTs, tokens, compressed assets |
 | RPC V2 | `helius.getTransactionsForAddress()`, `helius.getProgramAccountsV2()` | Enhanced RPC with pagination & filters |
+| Historical Account State (beta) | `helius.getHistoricalAccountInfo()`, `helius.getHistoricalTokenAccountsByOwner()` | Accounts as they were at a past slot or transaction |
 | Transactions | `helius.tx.*` | Smart transactions & Helius Sender |
 | Parsed Events | `helius.parsedEvents.*` | Parse transactions and address history into decoded instructions, transfers, summaries; scan history server-side by program instruction or token mint (mainnet only) |
 | Enhanced (deprecated) | `helius.enhanced.*` | Legacy transaction parsing; use `parsedEvents` |
@@ -285,6 +286,28 @@ const updates = await helius.getProgramAccountsV2([
 | Building an indexer that tracks state changes | You need the complete set regardless of recency |
 | Reducing response size on large programs (thousands of accounts) | The program has very few accounts |
 
+## Historical Account State (Beta)
+
+`getHistoricalAccountInfo` and `getHistoricalTokenAccountsByOwner` return accounts as they were at a past slot, or immediately after a specific transaction within that slot. Both take `[address, query?, config?]`. Mainnet only, Business plans and above, from slot 444959999 onward (earlier slots throw a `HeliusRpcError` with code `-32018`).
+
+```typescript
+// After the transaction at index 10 in slot 445000000. Get a transaction's
+// slot and transactionIndex from getTransactionsForAddress.
+const { value } = await helius.getHistoricalAccountInfo([
+  "account_address",
+  { slot: 445000000, transactionIndex: 10 },
+  { encoding: "jsonParsed" },
+]);
+
+// Before it: the same slot with transactionIndex - 1, or { slot: slot - 1 } for index 0
+```
+
+- **`value: null`** means the account didn't exist at that position (not created yet, or closed). It's not an error.
+- **`lastUpdatedAt`** is the `{ slot, transactionIndex }` of the write that produced the returned state. `transactionIndex: null` means a non-transaction write such as epoch rewards.
+- **`context.slot`** is the latest slot Helius had indexed, not the slot you queried.
+- **Paginating `getHistoricalTokenAccountsByOwner`**: pin `slot` on every page, and stop only when `paginationKey` is `null`. Each call scans at most 100,000 accounts, so a short or empty page can still have more behind it.
+- **`jsonParsed` data** falls back to `[data, "base64"]` for accounts that can't be parsed, so check `Array.isArray(account.data)`. `base58` and `processed` aren't supported.
+
 ## Rate Limits & Plans
 
 | Feature | Free | Developer $49/mo | Business $499/mo | Professional $999/mo |
@@ -391,6 +414,8 @@ helius.getSignaturesForAsset({ id })                        // Transaction histo
 helius.getTransactionsForAddress([address, config])         // Transaction history (paginationToken)
 helius.getProgramAccountsV2([programId, config])            // Program accounts (paginationKey)
 helius.getTokenAccountsByOwnerV2([owner, filter?, config?]) // Token accounts — same shape as gPAv2 (paginationKey)
+helius.getHistoricalAccountInfo([address, query?, config?]) // Account at a past slot/transaction (beta)
+helius.getHistoricalTokenAccountsByOwner([owner, query?, config?]) // Token accounts at a past slot (beta, paginationKey)
 helius.getPriorityFeeEstimate({ accountKeys, options })     // Fee estimates
 ```
 

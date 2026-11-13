@@ -1,5 +1,5 @@
 ---
-last_updated: 2026-05-05
+last_updated: 2026-11-13
 ---
 
 # Helius SDK
@@ -71,7 +71,7 @@ The `examples/` directory contains working code samples for every method in the 
 ```
 examples/
 ├── helius/das/       # DAS API: getAsset, getAssetsByOwner, searchAssets, etc.
-├── helius/           # RPC V2: getProgramAccountsV2, getTransactionsForAddress, getTransfersByAddress, etc.
+├── helius/           # RPC V2: getProgramAccountsV2, getTransactionsForAddress, getHistoricalAccountInfo, etc.
 ├── transactions/     # Helius Sender, smart transactions, sendTransaction
 ├── parsedEvents/     # Parsed Events transaction parsing
 ├── enhanced/         # Enhanced transaction parsing (deprecated)
@@ -186,6 +186,31 @@ const accounts = await helius.getProgramAccountsV2([
   programId,
   { encoding: "base64", limit: 1000 }
 ]);
+```
+
+### Historical Account State (Beta)
+Read accounts as they were at a past slot, or immediately after a specific transaction within that slot (mainnet only, Business plans and above). History starts at slot 444959999. Query: `{}` (latest indexed slot), `{ slot }` (end of slot), or `{ slot, transactionIndex }` (right after that transaction). `getTransactionsForAddress` returns `slot` and `transactionIndex` for each transaction.
+
+```typescript
+// One account right after a transaction; value is null if it didn't exist
+const { value } = await helius.getHistoricalAccountInfo([
+  "account_address",
+  { slot: 445000000, transactionIndex: 10 },
+  { encoding: "jsonParsed" }, // "base64" (default) | "base64+zstd" | "jsonParsed"
+]);
+console.log(value?.lastUpdatedAt); // { slot, transactionIndex } of the write that produced this state
+
+// A wallet's token accounts at a past slot. Pin the slot across pages and
+// stop only when paginationKey is null (short or empty pages can have one).
+let paginationKey: string | undefined;
+do {
+  const page = await helius.getHistoricalTokenAccountsByOwner([
+    "wallet_address",
+    { slot: 445000000 },
+    { mint: "token_mint", encoding: "jsonParsed", paginationKey }, // or programId, not both
+  ]);
+  paginationKey = page.value.paginationKey ?? undefined;
+} while (paginationKey);
 ```
 
 ### Parsed Events
