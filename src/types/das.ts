@@ -457,7 +457,11 @@ export type GetAssetResponseList = {
   last_indexed_slot?: number;
   /** Total count across all pages (only present if `showGrandTotal` is set). */
   grand_total?: number;
-  /** The total number of assets found. */
+  /**
+   * Number of assets in this page. On a full page this equals `limit`, so the
+   * count across all pages comes from `grand_total` (with `showGrandTotal`) and
+   * paging ends on a page with fewer than `limit` assets.
+   */
   total: number;
   /** The maximum number of assets requested. */
   limit: number;
@@ -607,7 +611,10 @@ export interface GetSignaturesForAssetRequest {
 export interface GetSignaturesForAssetResponse {
   /** All on-chain data up to and including this slot is guaranteed to have been indexed. */
   last_indexed_slot?: number;
-  /** The total number of transactions found in this asset's history. */
+  /**
+   * Number of transactions in this page. Paging ends on a page with fewer than
+   * `limit` transactions; this is not a count across pages.
+   */
   total: number;
   /** The maximum number of transaction signatures requested per page. */
   limit: number;
