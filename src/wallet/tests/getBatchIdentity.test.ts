@@ -1,5 +1,5 @@
 import { createHeliusEager as createHelius } from "../../rpc/createHelius.eager.js";
-import type { GetBatchIdentityResponse } from "../types.js";
+import type { GetBatchIdentityResponse, UnresolvedIdentity } from "../types.js";
 
 const mockFetch = jest.fn();
 global.fetch = mockFetch as jest.Mock;
@@ -52,6 +52,48 @@ describe("getBatchIdentity Tests", () => {
         }),
       })
     );
+  });
+
+  it("Preserves unresolved domain entries in a mixed batch", async () => {
+    const mockResponse: GetBatchIdentityResponse = [
+      {
+        address: "7v91N7iZ9mNicL8WfG6cgSCKyRXydQjLh6UYBWwm6y1Q",
+        type: "wallet",
+        name: "toly",
+        category: "Key Opinion Leader",
+        tags: ["Key Opinion Leader"],
+        inputDomain: "toly.sol",
+      },
+      {
+        address: null,
+        type: "unknown",
+        inputDomain: "nonexistent-xyz.sol",
+        unresolved: true,
+      },
+    ];
+
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: async () => mockResponse,
+    });
+
+    const result = await rpc.wallet.getBatchIdentity({
+      addresses: ["toly.sol", "nonexistent-xyz.sol"],
+    });
+
+    expect(result).toEqual(mockResponse);
+
+    const [resolved] = result;
+    if (!resolved || "unresolved" in resolved) {
+      throw new Error("expected a resolved identity first");
+    }
+    expect(resolved.name).toBe("toly");
+
+    const readUnresolvedAddress = (row: UnresolvedIdentity) => {
+      // @ts-expect-error address is null on unresolved entries
+      return row.address.toUpperCase();
+    };
+    expect(readUnresolvedAddress).toBeInstanceOf(Function);
   });
 
   it("Handles HTTP errors", async () => {

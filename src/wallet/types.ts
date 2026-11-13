@@ -48,9 +48,35 @@ export interface GetBatchIdentityRequest {
 }
 
 /**
+ * A resolved entry in a batch identity lookup, with the queried domain when
+ * the input was a domain.
+ */
+export interface ResolvedBatchIdentity extends Identity {
+  /** SNS/ANS domain from the request, present when the input was a domain */
+  inputDomain?: string;
+}
+
+/**
+ * A batch entry whose domain input could not be resolved. The batch still
+ * succeeds and keeps request order.
+ */
+export interface UnresolvedIdentity {
+  /** Always null */
+  address: null;
+  /** Always "unknown" */
+  type: "unknown";
+  /** SNS/ANS domain that could not be resolved */
+  inputDomain: string;
+  /** Always true; narrow with this before reading `name` */
+  unresolved: true;
+}
+
+export type BatchIdentityResult = ResolvedBatchIdentity | UnresolvedIdentity;
+
+/**
  * Response from getBatchIdentity endpoint
  */
-export type GetBatchIdentityResponse = Identity[];
+export type GetBatchIdentityResponse = BatchIdentityResult[];
 
 /**
  * Token program type
