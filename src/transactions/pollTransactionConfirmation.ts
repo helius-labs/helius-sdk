@@ -36,15 +36,6 @@ export const makePollTransactionConfirmation = (raw: Rpc<SolanaRpcApi>) => {
 
     // eslint-disable-next-line no-constant-condition
     while (true) {
-      // The post-expiry pass is terminal within one iteration, so its status
-      // decode outruns the wall-clock deadline rather than masking a
-      // conclusive result with a timeout error
-      if (expiredAtHeight === undefined && Date.now() - started > timeout) {
-        throw new Error(
-          `Transaction ${signature} not confirmed within ${timeout} ms`
-        );
-      }
-
       const { value } = await raw
         .getSignatureStatuses([signature], { searchTransactionHistory: false })
         .send();
@@ -72,6 +63,15 @@ export const makePollTransactionConfirmation = (raw: Rpc<SolanaRpcApi>) => {
       if (expiredAtHeight !== undefined) {
         throw new Error(
           `Block height (${expiredAtHeight}) exceeded lastValidBlockHeight (${lastValidBlockHeight}) and tx not found in a confirmed block`
+        );
+      }
+
+      // Check the deadline after the status read, not before it: a tx that
+      // confirmed (or failed) during the last wait would otherwise be
+      // reported as not confirmed
+      if (Date.now() - started > timeout) {
+        throw new Error(
+          `Transaction ${signature} not confirmed within ${timeout} ms`
         );
       }
 
