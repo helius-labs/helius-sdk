@@ -576,7 +576,7 @@ export type GetHistoricalAccountInfoResponse<TData = HistoricalAccountData> = {
 /** Configuration for `getHistoricalTokenAccountsByOwner`. Set at most one of `mint` or `programId`. */
 export type GetHistoricalTokenAccountsByOwnerConfig =
   GetHistoricalAccountInfoConfig & {
-    /** 1–100,000. Defaults to 100,000. */
+    /** 1–25,000. Defaults to 25,000. */
     limit?: number;
     paginationKey?: string;
   } & (
