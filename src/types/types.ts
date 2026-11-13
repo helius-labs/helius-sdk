@@ -501,3 +501,109 @@ export type GetTransfersByAddressResult = {
   data: ReadonlyArray<TokenTransfer>;
   paginationToken: string | null;
 };
+
+// ── Historical account state (beta) ─────────────────────────────────
+
+/**
+ * Position in history: `{}` for the latest indexed slot, `{ slot }` for the
+ * end of that slot, or `{ slot, transactionIndex }` for the state right after
+ * that transaction. History starts at slot 444959999.
+ */
+export type HistoricalAccountQuery =
+  | { slot?: number; transactionIndex?: never }
+  | { slot: number; transactionIndex?: number };
+
+/** Account data encodings supported by the historical account methods. */
+export type HistoricalAccountEncoding = "base64" | "base64+zstd" | "jsonParsed";
+
+/** `[data, encoding]`, returned for `base64` and `base64+zstd`. */
+export type HistoricalEncodedAccountData = [string, "base64" | "base64+zstd"];
+
+/** Parsed account data, returned for `jsonParsed`. */
+export type HistoricalParsedAccountData = {
+  program: string;
+  parsed: any;
+  space: number;
+};
+
+/** With `jsonParsed`, accounts that can't be parsed fall back to `[data, "base64"]`. */
+export type HistoricalAccountData =
+  | HistoricalEncodedAccountData
+  | HistoricalParsedAccountData;
+
+/** Position of the write that produced an account's state. */
+export type HistoricalAccountWritePosition = {
+  slot: number;
+  /** `null` for writes outside a transaction, such as epoch rewards. */
+  transactionIndex: number | null;
+};
+
+/** An account as it was at the requested position. */
+export type HistoricalAccount<TData = HistoricalAccountData> = {
+  lamports: number;
+  owner: string;
+  data: TData;
+  executable: boolean;
+  rentEpoch: number;
+  space: number;
+  lastUpdatedAt: HistoricalAccountWritePosition;
+};
+
+/** `slot` is the latest slot Helius had indexed, not the slot you queried. */
+export type HistoricalContext = { slot: number };
+
+/** Configuration for `getHistoricalAccountInfo`. */
+export type GetHistoricalAccountInfoConfig = {
+  encoding?: HistoricalAccountEncoding;
+  dataSlice?: { offset: number; length: number };
+  commitment?: "finalized" | "confirmed";
+  minContextSlot?: number;
+};
+
+/** Request tuple for `getHistoricalAccountInfo`: `[address, query?, config?]`. */
+export type GetHistoricalAccountInfoRequest = [
+  string,
+  HistoricalAccountQuery?,
+  GetHistoricalAccountInfoConfig?,
+];
+
+/** `value` is `null` if the account didn't exist at that position. */
+export type GetHistoricalAccountInfoResponse<TData = HistoricalAccountData> = {
+  context: HistoricalContext;
+  value: HistoricalAccount<TData> | null;
+};
+
+/** Configuration for `getHistoricalTokenAccountsByOwner`. Set at most one of `mint` or `programId`. */
+export type GetHistoricalTokenAccountsByOwnerConfig =
+  GetHistoricalAccountInfoConfig & {
+    /** 1–100,000. Defaults to 100,000. */
+    limit?: number;
+    paginationKey?: string;
+  } & (
+      | { mint?: string; programId?: never }
+      | { programId?: string; mint?: never }
+    );
+
+/** Request tuple for `getHistoricalTokenAccountsByOwner`: `[owner, query?, config?]`. */
+export type GetHistoricalTokenAccountsByOwnerRequest = [
+  string,
+  HistoricalAccountQuery?,
+  GetHistoricalTokenAccountsByOwnerConfig?,
+];
+
+/** A token account in a `getHistoricalTokenAccountsByOwner` page. */
+export type HistoricalKeyedAccount<TData = HistoricalAccountData> = {
+  pubkey: string;
+  account: HistoricalAccount<TData>;
+};
+
+/** One page of token accounts. A short or empty page can still have a `paginationKey`. */
+export type GetHistoricalTokenAccountsByOwnerResponse<
+  TData = HistoricalAccountData,
+> = {
+  context: HistoricalContext;
+  value: {
+    accounts: ReadonlyArray<HistoricalKeyedAccount<TData>>;
+    paginationKey: string | null;
+  };
+};

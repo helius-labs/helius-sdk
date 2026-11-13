@@ -107,6 +107,14 @@ import {
   GetTransfersByAddressFn,
   makeGetTransfersByAddress,
 } from "./methods/getTransfersByAddress.js";
+import {
+  GetHistoricalAccountInfoFn,
+  makeGetHistoricalAccountInfo,
+} from "./methods/getHistoricalAccountInfo.js";
+import {
+  GetHistoricalTokenAccountsByOwnerFn,
+  makeGetHistoricalTokenAccountsByOwner,
+} from "./methods/getHistoricalTokenAccountsByOwner.js";
 
 export interface HeliusClientEager extends HeliusRpcAccess {
   getAsset: GetAssetFn;
@@ -130,6 +138,9 @@ export interface HeliusClientEager extends HeliusRpcAccess {
   getAllTokenAccountsByOwner: GetAllTokenAccountsByOwnerFn;
   getTransactionsForAddress: GetTransactionsForAddressFn;
   getTransfersByAddress: GetTransfersByAddressFn;
+
+  getHistoricalAccountInfo: GetHistoricalAccountInfoFn;
+  getHistoricalTokenAccountsByOwner: GetHistoricalTokenAccountsByOwnerFn;
 
   webhooks: WebhookClient;
 
@@ -208,6 +219,9 @@ export const createHeliusEager = ({
     getAllTokenAccountsByOwner: makeGetAllTokenAccountsByOwner(call),
     getTransactionsForAddress: makeGetTransactionsForAddress(call),
     getTransfersByAddress: makeGetTransfersByAddress(call),
+    getHistoricalAccountInfo: makeGetHistoricalAccountInfo(call),
+    getHistoricalTokenAccountsByOwner:
+      makeGetHistoricalTokenAccountsByOwner(call),
 
     // Webhooks
     get webhooks() {
