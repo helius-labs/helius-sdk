@@ -145,6 +145,15 @@ export default {
       maxSize: '4.75kb',
     },
     {
+      // Opt out of the default 15% growth ratchet: postParsedEvents now builds
+      // its URL on the parsedEventsUrl host (keeping a proxy's query string)
+      // and links the caller's AbortSignal with the parsedEventsTimeoutMs
+      // timer by hand (AbortSignal.any needs Node 20.3). Lands at ~1.8KB; the
+      // absolute cap still gates unbounded growth.
+      path: 'dist/esm/parsedEvents/utils.js',
+      maxSize: '2kb',
+    },
+    {
       // Opt out of the default 15% growth ratchet: Sender Max pricing adds
       // MIN_TIP_LAMPORTS_MAX + deprecated MIN_TIP_LAMPORTS_DUAL alias and the
       // corrected SWQOS floor. Absolute cap still gates unbounded growth.

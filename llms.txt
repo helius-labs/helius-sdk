@@ -254,6 +254,11 @@ const { scan, paginationToken } = await helius.parsedEvents.scan({
 
 // Raw transactions next to the parsed ones (all three methods):
 // rawTransaction: "json" | "jsonParsed" | "base64"
+
+// Cancellation, timeouts and host: a second argument on every method, plus
+// client options. Defaults: no timeout, https://mainnet.helius-rpc.com/v1/parsed-events
+await helius.parsedEvents.getTransactionHistory({ address }, { signal: AbortSignal.timeout(10_000) });
+createHelius({ apiKey, parsedEventsTimeoutMs: 30_000, parsedEventsUrl: "https://proxy.example.com/v1/parsed-events" });
 ```
 
 ### Staking

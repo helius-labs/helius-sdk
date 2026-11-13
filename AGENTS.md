@@ -408,6 +408,7 @@ helius.tx.sendTransactionWithSender({ ..., region })        // Helius Sender (lo
 helius.parsedEvents.parseTransactions({ transactions })     // Parse by signatures (mainnet only)
 helius.parsedEvents.getTransactionHistory({ address })      // Parse address history (mainnet only)
 helius.parsedEvents.scan({ address, match })                // Search history by program/mint (mainnet only); entries count only when they involve `address` unless `scope: "transaction"`
+helius.parsedEvents.scan(params, { signal })                // Every method takes per-call { signal }; createHelius({ parsedEventsTimeoutMs, parsedEventsUrl }) sets a time limit and host
 helius.enhanced.getTransactions({ transactions })           // Deprecated: use parsedEvents.parseTransactions
 helius.enhanced.getTransactionsByAddress({ address })       // Deprecated: use parsedEvents.getTransactionHistory (or parsedEvents.scan to search a program or filter by instruction/mint)
 ```

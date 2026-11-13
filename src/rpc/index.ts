@@ -208,6 +208,8 @@ export const createHelius = ({
   baseUrl,
   userAgent,
   transport: transportHook,
+  parsedEventsUrl,
+  parsedEventsTimeoutMs,
 }: HeliusRpcOptions): HeliusClient => {
   const urlOptions = { baseUrl, network, apiKey, rebateAddress };
   const url = buildRpcUrl({ ...urlOptions, mevProtect });
@@ -514,7 +516,7 @@ export const createHelius = ({
         await import("../parsedEvents/client.eager.js");
       return makeParsedEventsClientEager(
         apiKey,
-        { network, baseUrl },
+        { network, baseUrl, parsedEventsUrl, parsedEventsTimeoutMs },
         userAgent
       );
     }

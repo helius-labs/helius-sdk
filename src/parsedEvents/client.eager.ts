@@ -4,7 +4,8 @@ import { getTransactionHistory } from "./getTransactionHistory.js";
 import { scan } from "./scan.js";
 import { mainnetGuard } from "./utils.js";
 import type {
-  ParsedEventsNetworkOptions,
+  ParsedEventsClientOptions,
+  ParsedEventsRequestOptions,
   ScanParsedTransactionHistoryRequest,
   ScanReturnShape,
 } from "./types.js";
@@ -19,28 +20,36 @@ export type { ParsedEventsClient };
  * where lazy loading is not needed.
  *
  * @param apiKey - Helius API key
- * @param options - The client's `network` / `baseUrl`. Methods reject on devnet: Parsed Events is mainnet-only.
+ * @param options - The client's `network` / `baseUrl` (methods reject on devnet: Parsed Events is mainnet-only), `parsedEventsUrl` and `parsedEventsTimeoutMs`
  * @returns ParsedEventsClient instance with eagerly-loaded methods
  */
 export const makeParsedEventsClientEager = (
   apiKey: string,
-  options: ParsedEventsNetworkOptions = {},
+  options: ParsedEventsClientOptions = {},
   userAgent?: string
 ): ParsedEventsClient => {
   const assertMainnet = mainnetGuard(options);
-
   return {
-    parseTransactions: async (p) => {
+    parseTransactions: async (p, o) => {
       assertMainnet();
-      return parseTransactions(apiKey, p, userAgent);
+      return parseTransactions(apiKey, p, userAgent, {
+        ...options,
+        signal: o?.signal,
+      });
     },
-    getTransactionHistory: async (p) => {
+    getTransactionHistory: async (p, o) => {
       assertMainnet();
-      return getTransactionHistory(apiKey, p, userAgent);
+      return getTransactionHistory(apiKey, p, userAgent, {
+        ...options,
+        signal: o?.signal,
+      });
     },
-    scan: (async (p: ScanParsedTransactionHistoryRequest<ScanReturnShape>) => {
+    scan: (async (
+      p: ScanParsedTransactionHistoryRequest<ScanReturnShape>,
+      o?: ParsedEventsRequestOptions
+    ) => {
       assertMainnet();
-      return scan(apiKey, p, userAgent);
+      return scan(apiKey, p, userAgent, { ...options, signal: o?.signal });
     }) as ParsedEventsClient["scan"],
   };
 };

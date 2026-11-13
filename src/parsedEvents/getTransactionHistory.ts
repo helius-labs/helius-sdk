@@ -1,4 +1,4 @@
-import { postParsedEvents } from "./utils.js";
+import { postParsedEvents, type ParsedEventsRequestConfig } from "./utils.js";
 import type {
   GetParsedTransactionHistoryRequest,
   GetParsedTransactionHistoryResponse,
@@ -20,6 +20,8 @@ import type {
  *
  * @param apiKey - Helius API key
  * @param params - Address, filters, and pagination options
+ * @param userAgent - Custom User-Agent string
+ * @param config - `parsedEventsUrl`, `parsedEventsTimeoutMs`, and an abort `signal`
  * @returns A page of parsed transactions and the next `paginationToken`
  * @throws Error on a request-level failure (invalid body, auth, rate limit)
  *
@@ -40,7 +42,8 @@ import type {
 export const getTransactionHistory = async (
   apiKey: string,
   params: GetParsedTransactionHistoryRequest,
-  userAgent?: string
+  userAgent?: string,
+  config?: ParsedEventsRequestConfig
 ): Promise<GetParsedTransactionHistoryResponse> => {
   // Unknown fields are forwarded so the API rejects them loudly (e.g. a
   // leftover enhanced `gteTime` filter) instead of silently returning
@@ -55,6 +58,7 @@ export const getTransactionHistory = async (
       // `false` is the default, and the API rejects it alongside `rawTransaction`
       includeRawTransaction: params.includeRawTransaction || undefined,
     },
-    userAgent
+    userAgent,
+    config
   );
 };
