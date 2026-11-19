@@ -11,9 +11,9 @@ export interface GetCompressedAccountRequest {
 
 /** A compressed account's on-chain data. */
 export interface GetCompressedAccountValue {
-  /** Unique identifier address for the compressed account. */
-  address: string;
-  /** On-chain data stored in the compressed account. */
+  /** Unique identifier address for the compressed account, or `null` when the account has none. */
+  address: string | null;
+  /** On-chain data stored in the compressed account, or `null` when it holds none. */
   data: {
     /** Base64-encoded raw data stored in this compressed account. */
     data: string;
@@ -21,7 +21,7 @@ export interface GetCompressedAccountValue {
     dataHash: string;
     /** Discriminator used to identify the account type. */
     discriminator: number;
-  };
+  } | null;
   /** Cryptographic hash of the compressed account data for verification. */
   hash: string;
   /** SOL balance held by this compressed account in lamports (1 SOL = 1,000,000,000 lamports). */
@@ -30,8 +30,12 @@ export interface GetCompressedAccountValue {
   leafIndex: number;
   /** Solana program that owns this compressed account (typically the compression program). */
   owner: string;
-  /** Sequence number for tracking updates to this compressed account. */
-  seq: number;
+  /**
+   * Sequence number for tracking updates to this compressed account. `null`
+   * for an account in a V2 (batched) state tree that is still in the tree's
+   * output queue.
+   */
+  seq: number | null;
   /** Solana blockchain slot when this compressed account was created. */
   slotCreated: number;
   /** Address of the Merkle tree where this compressed account is stored. */
@@ -40,8 +44,8 @@ export interface GetCompressedAccountValue {
 
 /** Response from `getCompressedAccount`. */
 export interface GetCompressedAccountResponse {
-  /** The compressed account data. */
-  value: GetCompressedAccountValue;
+  /** The compressed account data, or `null` if no matching account was found. */
+  value: GetCompressedAccountValue | null;
   /** The slot context for this response. */
   context: { slot: number };
 }
@@ -103,9 +107,9 @@ export interface AccountData {
 /** A compressed account entry. */
 export interface CompressedAccount {
   /** Base58-encoded account address; only present for PDAs and explicitly addressed accounts. */
-  address?: string;
+  address?: string | null;
   /** Application data stored in this account, if any. */
-  data?: AccountData;
+  data?: AccountData | null;
   /** Base58-encoded hash of the compressed account's leaf node in the Merkle tree. */
   hash: string;
   /** Lamport balance of the account. */
@@ -114,8 +118,12 @@ export interface CompressedAccount {
   leafIndex: number;
   /** Base58-encoded public key of the program that owns this account. */
   owner: string;
-  /** Sequence number that increments on each state change; used to order updates. */
-  seq: number;
+  /**
+   * Sequence number that increments on each state change; used to order
+   * updates. `null` for an account in a V2 (batched) state tree that is still
+   * in the tree's output queue.
+   */
+  seq: number | null;
   /** Slot in which this account was created. */
   slotCreated: number;
   /** Base58-encoded public key of the state Merkle tree storing this account. */
@@ -694,14 +702,17 @@ export interface GetTransactionWithCompressionInfoResponse {
 
 // ── Validity Proofs ─────────────────────────────────────────────────
 
-/** A Groth16 compressed proof (a, b, c curve points). */
+/**
+ * A Groth16 compressed proof (a, b, c curve points). Each component is the
+ * point's bytes as a JSON array of integers (0 to 255).
+ */
 export interface CompressedProof {
-  /** First component (G1 point) of the Groth16 zero-knowledge proof, base64-encoded. */
-  a: string;
-  /** Second component (G2 point) of the Groth16 zero-knowledge proof, base64-encoded. */
-  b: string;
-  /** Third component (G1 point) of the Groth16 zero-knowledge proof, base64-encoded. */
-  c: string;
+  /** First component (G1 point) of the Groth16 zero-knowledge proof, 32 bytes. */
+  a: number[];
+  /** Second component (G2 point) of the Groth16 zero-knowledge proof, 64 bytes. */
+  b: number[];
+  /** Third component (G1 point) of the Groth16 zero-knowledge proof, 32 bytes. */
+  c: number[];
 }
 
 /** A compressed validity proof with Merkle tree context. */
