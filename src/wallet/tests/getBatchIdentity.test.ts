@@ -1,5 +1,5 @@
 import { createHeliusEager as createHelius } from "../../rpc/createHelius.eager.js";
-import type { GetBatchIdentityResponse, UnresolvedIdentity } from "../types.js";
+import type { GetBatchIdentityResponse } from "../types.js";
 
 const mockFetch = jest.fn();
 global.fetch = mockFetch as jest.Mock;
@@ -83,17 +83,19 @@ describe("getBatchIdentity Tests", () => {
 
     expect(result).toEqual(mockResponse);
 
-    const [resolved] = result;
-    if (!resolved || "unresolved" in resolved) {
+    const [resolved, unresolved] = result;
+    if (!resolved || resolved.unresolved) {
       throw new Error("expected a resolved identity first");
     }
     expect(resolved.name).toBe("toly");
 
-    const readUnresolvedAddress = (row: UnresolvedIdentity) => {
-      // @ts-expect-error address is null on unresolved entries
-      return row.address.toUpperCase();
-    };
-    expect(readUnresolvedAddress).toBeInstanceOf(Function);
+    if (!unresolved?.unresolved) {
+      throw new Error("expected an unresolved identity second");
+    }
+    expect(unresolved.address).toBeNull();
+    expect(unresolved.inputDomain).toBe("nonexistent-xyz.sol");
+    // @ts-expect-error unresolved entries have no name
+    expect(unresolved.name).toBeUndefined();
   });
 
   it("Handles HTTP errors", async () => {

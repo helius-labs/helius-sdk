@@ -18,7 +18,7 @@ import type {
  * @beta The Wallet API is currently in beta. APIs and response formats may change.
  *
  * @param apiKey - Helius API key
- * @param params - Request parameters including array of wallet addresses (max 100)
+ * @param params - Request parameters including wallet addresses or SNS/ANS domains (max 100)
  * @returns Array of resolved or unresolved identity entries, in request order
  * @throws Error if HTTP error or invalid request
  *
@@ -28,7 +28,7 @@ import type {
  *   addresses: ["toly.sol", "nonexistent-xyz.sol"]
  * });
  * for (const id of identities) {
- *   if ("unresolved" in id) {
+ *   if (id.unresolved) {
  *     console.log(`${id.inputDomain} could not be resolved`);
  *     continue;
  *   }

@@ -50,10 +50,12 @@ export interface WalletClient {
   getIdentity(params: GetIdentityRequest): Promise<GetIdentityResponse>;
 
   /**
-   * Batch identity lookup for multiple wallet addresses (max 100)
+   * Batch identity lookup for multiple wallet addresses or SNS/ANS domains (max 100)
    *
-   * @param params - Request parameters including array of wallet addresses
-   * @returns Array of identity information for requested addresses
+   * @param params - Request parameters including wallet addresses or SNS/ANS domains
+   * @returns Array of resolved or unresolved identity entries, in request order.
+   * A domain that can't be resolved comes back with `unresolved: true` and no
+   * `name`, so check `if (id.unresolved)` first.
    * @throws Error if HTTP error or invalid request
    */
   getBatchIdentity(
