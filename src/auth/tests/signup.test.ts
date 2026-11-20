@@ -273,7 +273,7 @@ describe("signup", () => {
     expect(mockInitializeCheckout).toHaveBeenCalledTimes(1);
   });
 
-  it("returns already_subscribed and creates an API key when none exists", async () => {
+  it("returns already_subscribed with a null key and never creates one when the project has no keys", async () => {
     mockListProjects.mockResolvedValue([
       {
         id: "proj-1",
@@ -296,25 +296,91 @@ describe("signup", () => {
       },
       prepaidCreditsLink: "",
     });
-    mockCreateApiKey.mockResolvedValue({
-      keyId: "key-new",
-      keyName: "",
-      walletId: "",
+
+    const result = await signup(baseOpts);
+    expect(result).toEqual({
+      kind: "already_subscribed",
+      jwt: "jwt-1",
+      refId: "ref-1",
+      walletAddress: "Wallet111",
       projectId: "proj-1",
-      usagePlan: "agent_v4",
-      createdAt: 0,
-      prepaidCredits: 0,
+      apiKey: null,
+      endpoints: null,
+    });
+    expect(mockCreateApiKey).not.toHaveBeenCalled();
+  });
+
+  it("returns a null key when the project response has no apiKeys field", async () => {
+    mockListProjects.mockResolvedValue([
+      {
+        id: "proj-1",
+        name: "p",
+        createdAt: "",
+        verifiedEmail: null,
+        subscription: subscription("agent_v4"),
+        users: [],
+        dnsRecords: [],
+      },
+    ]);
+    mockGetProject.mockResolvedValue({} as never);
+
+    const result = await signup(baseOpts);
+    if (result.kind !== "already_subscribed") throw new Error(result.kind);
+    expect(result.apiKey).toBeNull();
+    expect(result.endpoints).toBeNull();
+    expect(mockCreateApiKey).not.toHaveBeenCalled();
+  });
+
+  it("treats an empty keyId as no key", async () => {
+    mockListProjects.mockResolvedValue([
+      {
+        id: "proj-1",
+        name: "p",
+        createdAt: "",
+        verifiedEmail: null,
+        subscription: subscription("agent_v4"),
+        users: [],
+        dnsRecords: [],
+      },
+    ]);
+    mockGetProject.mockResolvedValue({
+      apiKeys: [{ keyId: "" } as never],
+    } as never);
+
+    const result = await signup(baseOpts);
+    if (result.kind !== "already_subscribed") throw new Error(result.kind);
+    expect(result.apiKey).toBeNull();
+    expect(result.endpoints).toBeNull();
+  });
+
+  it("returns the project's existing API key and endpoints for already_subscribed", async () => {
+    mockListProjects.mockResolvedValue([
+      {
+        id: "proj-1",
+        name: "p",
+        createdAt: "",
+        verifiedEmail: null,
+        subscription: subscription("agent_v4"),
+        users: [],
+        dnsRecords: [],
+      },
+    ]);
+    mockGetProject.mockResolvedValue({
+      apiKeys: [{ keyId: "key-1" } as never, { keyId: "key-2" } as never],
+      creditsUsage: {} as never,
+      billingCycle: { start: "", end: "" },
+      subscriptionPlanDetails: {} as never,
+      prepaidCreditsLink: "",
     });
 
     const result = await signup(baseOpts);
-    expect(result.kind).toBe("already_subscribed");
-    if (result.kind !== "already_subscribed") throw new Error();
-    expect(result.apiKey).toBe("key-new");
-    expect(mockCreateApiKey).toHaveBeenCalledWith(
-      "jwt-1",
-      "proj-1",
-      "Wallet111"
-    );
+    if (result.kind !== "already_subscribed") throw new Error(result.kind);
+    expect(result.apiKey).toBe("key-1");
+    expect(result.endpoints).toEqual({
+      mainnet: "https://mainnet.helius-rpc.com/?api-key=key-1",
+      devnet: "https://devnet.helius-rpc.com/?api-key=key-1",
+    });
+    expect(mockCreateApiKey).not.toHaveBeenCalled();
   });
 
   it("returns upgrade_required when existing project is on a different plan", async () => {
@@ -429,6 +495,34 @@ describe("signupAndPay", () => {
     expect(mockPayPaymentLink).not.toHaveBeenCalled();
   });
 
+  it("passes through already_subscribed with a null key and never creates one", async () => {
+    mockListProjects.mockResolvedValue([
+      {
+        id: "proj-1",
+        name: "p",
+        createdAt: "",
+        verifiedEmail: null,
+        subscription: subscription("agent_v4"),
+        users: [],
+        dnsRecords: [],
+      },
+    ]);
+    mockGetProject.mockResolvedValue({
+      apiKeys: [],
+      creditsUsage: {} as never,
+      billingCycle: { start: "", end: "" },
+      subscriptionPlanDetails: {} as never,
+      prepaidCreditsLink: "",
+    });
+
+    const result = await signupAndPay(baseOpts);
+    if (result.kind !== "already_subscribed") throw new Error(result.kind);
+    expect(result.apiKey).toBeNull();
+    expect(result.endpoints).toBeNull();
+    expect(mockPayPaymentLink).not.toHaveBeenCalled();
+    expect(mockCreateApiKey).not.toHaveBeenCalled();
+  });
+
   it("short-circuits on upgrade_required without paying", async () => {
     mockListProjects.mockResolvedValue([
       {
@@ -460,7 +554,7 @@ describe("signupAndPay", () => {
           users: [],
           dnsRecords: [],
         },
-      ]); // provisionApiKey
+      ]); // waitForProject
     mockGetCheckoutPreview.mockResolvedValue(preview);
     mockInitializeCheckout.mockResolvedValue(intent);
     mockGetPaymentStatus.mockResolvedValue({
@@ -483,7 +577,58 @@ describe("signupAndPay", () => {
     if (result.kind !== "completed") throw new Error();
     expect(result.txSignature).toBe("tx-abc");
     expect(result.apiKey).toBe("key-new");
+    expect(result.endpoints?.mainnet).toBe(
+      "https://mainnet.helius-rpc.com/?api-key=key-new"
+    );
     expect(mockPayPaymentLink).toHaveBeenCalledTimes(1);
+    expect(mockCreateApiKey).not.toHaveBeenCalled();
+  });
+
+  it("returns completed with a null key and never creates one when the new project has no keys", async () => {
+    mockListProjects
+      .mockResolvedValueOnce([]) // signup: no existing project
+      .mockResolvedValueOnce([
+        {
+          id: "proj-new",
+          name: "p",
+          createdAt: "",
+          verifiedEmail: null,
+          subscription: subscription("agent_v4"),
+          users: [],
+          dnsRecords: [],
+        },
+      ]); // waitForProject
+    mockGetCheckoutPreview.mockResolvedValue(preview);
+    mockInitializeCheckout.mockResolvedValue(intent);
+    mockGetPaymentStatus.mockResolvedValue({
+      status: "completed",
+      phase: "complete",
+      subscriptionActive: true,
+      readyToRedirect: true,
+      message: "ok",
+    });
+    mockGetProject.mockResolvedValue({
+      apiKeys: [],
+      creditsUsage: {} as never,
+      billingCycle: { start: "", end: "" },
+      subscriptionPlanDetails: {} as never,
+      prepaidCreditsLink: "",
+    });
+
+    const result = await signupAndPay(baseOpts);
+    expect(result).toEqual({
+      kind: "completed",
+      jwt: "jwt-1",
+      refId: "ref-1",
+      walletAddress: "Wallet111",
+      projectId: "proj-new",
+      apiKey: null,
+      endpoints: null,
+      txSignature: "tx-abc",
+      paymentIntentId: "pi_abc",
+    });
+    expect(mockGetProject).toHaveBeenCalledWith("jwt-1", "proj-new");
+    expect(mockCreateApiKey).not.toHaveBeenCalled();
   });
 
   it("returns expired when status reports expired phase", async () => {

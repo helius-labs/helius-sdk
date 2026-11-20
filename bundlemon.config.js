@@ -29,7 +29,8 @@ export default {
     },
     {
       // Opt out of the default 15% growth ratchet: adds normalizeContactField,
-      // requireContactInfo and EMAIL_PATTERN, shared by signup and upgradePlan.
+      // requireContactInfo and EMAIL_PATTERN, shared by signup and upgradePlan,
+      // and existingApiKey, shared by signup and signupAndPay.
       path: 'dist/esm/auth/signupHelpers.js',
       maxSize: '1kb',
     },

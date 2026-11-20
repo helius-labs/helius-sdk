@@ -1,8 +1,22 @@
-export function buildEndpoints(apiKey: string) {
+import type { Endpoints, ProjectDetails } from "./types.js";
+
+export function buildEndpoints(apiKey: string): Endpoints {
   return {
     mainnet: `https://mainnet.helius-rpc.com/?api-key=${apiKey}`,
     devnet: `https://devnet.helius-rpc.com/?api-key=${apiKey}`,
   };
+}
+
+/**
+ * The project's first existing API key and its endpoints, or `null` for both
+ * when the project has no keys. Never creates a key.
+ */
+export function existingApiKey(details: Pick<ProjectDetails, "apiKeys">): {
+  apiKey: string | null;
+  endpoints: Endpoints | null;
+} {
+  const apiKey = details.apiKeys?.[0]?.keyId || null;
+  return { apiKey, endpoints: apiKey ? buildEndpoints(apiKey) : null };
 }
 
 /**

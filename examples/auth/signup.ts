@@ -28,7 +28,18 @@ import { makeAuthClient } from "helius-sdk/auth/client";
     console.log(" ", result.paymentLink.destinationWallet);
     console.log("with memo =", result.paymentLink.memo);
   } else if (result.kind === "already_subscribed") {
-    console.log("Project already exists; API key:", result.apiKey);
+    console.log("Project already exists:", result.projectId);
+    if (result.apiKey) {
+      console.log("API key:", result.apiKey);
+    } else {
+      // Signup never creates a key. Create the first one when you need it.
+      const { keyId } = await auth.createApiKey(
+        result.jwt,
+        result.projectId,
+        result.walletAddress
+      );
+      console.log("Created API key:", keyId);
+    }
   } else if (result.kind === "upgrade_required") {
     console.log(
       `Wallet is on plan "${result.currentPlan}"; switching to ` +
