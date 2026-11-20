@@ -43,14 +43,48 @@ export type GetIdentityResponse = Identity;
  * Request parameters for batch identity lookup
  */
 export interface GetBatchIdentityRequest {
-  /** Array of Solana wallet addresses to lookup (max 100) */
+  /** Solana wallet addresses or SNS/ANS domains to look up (max 100) */
   addresses: string[];
 }
 
 /**
+ * A resolved entry in a batch identity lookup, with the queried domain when
+ * the input was a domain.
+ */
+export interface ResolvedBatchIdentity extends Identity {
+  /** SNS/ANS domain from the request, present when the input was a domain */
+  inputDomain?: string;
+  /** Never true on resolved entries; lets `if (id.unresolved)` narrow the union */
+  unresolved?: false;
+}
+
+/**
+ * A batch entry whose domain input could not be resolved. The batch still
+ * succeeds and keeps request order.
+ */
+export interface UnresolvedBatchIdentity {
+  /** Always null */
+  address: null;
+  /** Always "unknown" */
+  type: "unknown";
+  /** SNS/ANS domain that could not be resolved */
+  inputDomain: string;
+  /** Always true; check `if (id.unresolved)` before reading `name` */
+  unresolved: true;
+}
+
+/**
+ * One entry in a batch identity response: resolved, or an SNS/ANS domain
+ * that could not be resolved. Narrow with `if (id.unresolved)`.
+ */
+export type BatchIdentityResult =
+  | ResolvedBatchIdentity
+  | UnresolvedBatchIdentity;
+
+/**
  * Response from getBatchIdentity endpoint
  */
-export type GetBatchIdentityResponse = Identity[];
+export type GetBatchIdentityResponse = BatchIdentityResult[];
 
 /**
  * Token program type

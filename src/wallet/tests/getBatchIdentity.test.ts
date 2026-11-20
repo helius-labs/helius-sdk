@@ -54,6 +54,50 @@ describe("getBatchIdentity Tests", () => {
     );
   });
 
+  it("Preserves unresolved domain entries in a mixed batch", async () => {
+    const mockResponse: GetBatchIdentityResponse = [
+      {
+        address: "7v91N7iZ9mNicL8WfG6cgSCKyRXydQjLh6UYBWwm6y1Q",
+        type: "wallet",
+        name: "toly",
+        category: "Key Opinion Leader",
+        tags: ["Key Opinion Leader"],
+        inputDomain: "toly.sol",
+      },
+      {
+        address: null,
+        type: "unknown",
+        inputDomain: "nonexistent-xyz.sol",
+        unresolved: true,
+      },
+    ];
+
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: async () => mockResponse,
+    });
+
+    const result = await rpc.wallet.getBatchIdentity({
+      addresses: ["toly.sol", "nonexistent-xyz.sol"],
+    });
+
+    expect(result).toEqual(mockResponse);
+
+    const [resolved, unresolved] = result;
+    if (!resolved || resolved.unresolved) {
+      throw new Error("expected a resolved identity first");
+    }
+    expect(resolved.name).toBe("toly");
+
+    if (!unresolved?.unresolved) {
+      throw new Error("expected an unresolved identity second");
+    }
+    expect(unresolved.address).toBeNull();
+    expect(unresolved.inputDomain).toBe("nonexistent-xyz.sol");
+    // @ts-expect-error unresolved entries have no name
+    expect(unresolved.name).toBeUndefined();
+  });
+
   it("Handles HTTP errors", async () => {
     mockFetch.mockResolvedValue({
       ok: false,
