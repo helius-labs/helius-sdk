@@ -1,6 +1,6 @@
 import {
   GetTokenAccountsByOwnerV2Request,
-  GetTokenAccountsByOwnerV2Result,
+  GetTokenAccountsByOwnerV2Response,
 } from "../../../types/index.js";
 import { createHeliusEager as createHelius } from "../../createHelius.eager.js";
 
@@ -27,8 +27,8 @@ describe("getTokenAccountsByOwnerV2 Tests", () => {
   });
 
   it("Fetches the first page for a SPL Token (jsonParsed, limit)", async () => {
-    const mockResponse: GetTokenAccountsByOwnerV2Result = {
-      accounts: [
+    const mockResponse: GetTokenAccountsByOwnerV2Response = {
+      value: [
         {
           pubkey: "BGocb4GEpbTFm8UFV2VsDSaBXHELPfAXrvd4vtt8QWrA",
           account: {
@@ -59,7 +59,6 @@ describe("getTokenAccountsByOwnerV2 Tests", () => {
         },
       ],
       paginationKey: "cursor-1",
-      totalResults: 5000,
     };
 
     transportMock.mockResolvedValue({
@@ -88,8 +87,8 @@ describe("getTokenAccountsByOwnerV2 Tests", () => {
   });
 
   it("Continues pagination using the paginationKey", async () => {
-    const page1: GetTokenAccountsByOwnerV2Result = {
-      accounts: [
+    const page1: GetTokenAccountsByOwnerV2Response = {
+      value: [
         {
           pubkey: "First",
           account: {
@@ -103,10 +102,9 @@ describe("getTokenAccountsByOwnerV2 Tests", () => {
         },
       ],
       paginationKey: "next-1",
-      totalResults: 3,
     };
-    const page2: GetTokenAccountsByOwnerV2Result = {
-      accounts: [
+    const page2: GetTokenAccountsByOwnerV2Response = {
+      value: [
         {
           pubkey: "Second",
           account: {
@@ -131,7 +129,6 @@ describe("getTokenAccountsByOwnerV2 Tests", () => {
         },
       ],
       paginationKey: null,
-      totalResults: 3,
     };
 
     transportMock.mockResolvedValueOnce({
@@ -151,6 +148,7 @@ describe("getTokenAccountsByOwnerV2 Tests", () => {
       { encoding: "jsonParsed", limit: 1000 },
     ]);
     expect(res1).toEqual(page1);
+    if ("context" in res1) throw new Error("expected a page without context");
 
     const res2 = await rpc.getTokenAccountsByOwnerV2([
       owner,
@@ -179,8 +177,8 @@ describe("getTokenAccountsByOwnerV2 Tests", () => {
 
   it("Filters by mint and supports changedSinceSlot", async () => {
     const usdcMint = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
-    const mock: GetTokenAccountsByOwnerV2Result = {
-      accounts: [
+    const mock: GetTokenAccountsByOwnerV2Response = {
+      value: [
         {
           pubkey: "USDCacc1",
           account: {
@@ -203,7 +201,6 @@ describe("getTokenAccountsByOwnerV2 Tests", () => {
         },
       ],
       paginationKey: null,
-      totalResults: 1,
     };
 
     transportMock.mockResolvedValue({
@@ -234,8 +231,8 @@ describe("getTokenAccountsByOwnerV2 Tests", () => {
   });
 
   it("Supports Token-2022 program and base64 encoding", async () => {
-    const mock: GetTokenAccountsByOwnerV2Result = {
-      accounts: [
+    const mock: GetTokenAccountsByOwnerV2Response = {
+      value: [
         {
           pubkey: "Base64Acc",
           account: {
@@ -249,7 +246,6 @@ describe("getTokenAccountsByOwnerV2 Tests", () => {
         },
       ],
       paginationKey: null,
-      totalResults: 1,
     };
 
     transportMock.mockResolvedValue({
@@ -265,7 +261,10 @@ describe("getTokenAccountsByOwnerV2 Tests", () => {
     ]);
 
     expect(res).toEqual(mock);
-    expect(Array.isArray(res.accounts[0].account.data)).toBe(true);
+    if ("context" in res) throw new Error("expected a page without context");
+    expect(Array.isArray(res.value[0].account.data)).toBe(true);
+    // @ts-expect-error the accounts are under `value` without `withContext`
+    expect(res.accounts).toBeUndefined();
     expect(transportMock).toHaveBeenCalledWith(
       expect.objectContaining({
         payload: expect.objectContaining({
@@ -278,6 +277,30 @@ describe("getTokenAccountsByOwnerV2 Tests", () => {
         }),
       })
     );
+  });
+
+  it("Returns the page under value with withContext", async () => {
+    const mock: GetTokenAccountsByOwnerV2Response = {
+      context: { slot: 411895550, apiVersion: "3.1.9" },
+      value: { accounts: [], paginationKey: null },
+    };
+
+    transportMock.mockResolvedValue({
+      jsonrpc: "2.0",
+      id: "1",
+      result: mock,
+    });
+
+    const res = await rpc.getTokenAccountsByOwnerV2([
+      owner,
+      { programId: TOKEN_V1 },
+      { withContext: true },
+    ]);
+
+    expect(res).toEqual(mock);
+    if (!("context" in res)) throw new Error("expected a page with context");
+    expect(res.value.accounts).toEqual([]);
+    expect(res.value.paginationKey).toBeNull();
   });
 
   it("Handles RPC errors", async () => {

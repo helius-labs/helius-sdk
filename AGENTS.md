@@ -227,7 +227,7 @@ do {
 } while (paginationToken);
 
 // getProgramAccountsV2 — uses paginationKey
-// getTokenAccountsByOwnerV2 follows the same shape (paginationKey, accounts, totalResults)
+// getTokenAccountsByOwnerV2 also uses paginationKey, but its accounts are in result.value
 let paginationKey = null;
 do {
   const result = await helius.getProgramAccountsV2([
@@ -413,7 +413,7 @@ helius.getSignaturesForAsset({ id })                        // Transaction histo
 ```typescript
 helius.getTransactionsForAddress([address, config])         // Transaction history (paginationToken)
 helius.getProgramAccountsV2([programId, config])            // Program accounts (paginationKey)
-helius.getTokenAccountsByOwnerV2([owner, filter?, config?]) // Token accounts — same shape as gPAv2 (paginationKey)
+helius.getTokenAccountsByOwnerV2([owner, filter?, config?]) // Token accounts — accounts in `value`, paginationKey next to it
 helius.getHistoricalAccountInfo([address, query?, config?]) // Account at a past slot/transaction (beta)
 helius.getHistoricalTokenAccountsByOwner([owner, query?, config?]) // Token accounts at a past slot (beta, paginationKey)
 helius.getPriorityFeeEstimate({ accountKeys, options })     // Fee estimates
