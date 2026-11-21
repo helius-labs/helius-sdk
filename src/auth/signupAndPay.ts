@@ -4,23 +4,24 @@ import {
 } from "./constants.js";
 import { listProjects } from "./listProjects.js";
 import { getProject } from "./getProject.js";
-import { createApiKey } from "./createApiKey.js";
-import { buildEndpoints } from "./signupHelpers.js";
+import { existingApiKey } from "./signupHelpers.js";
 import { payPaymentLink } from "./payPaymentLink.js";
 import { pollUntilTerminal } from "./pollPayment.js";
 import { signup } from "./signup.js";
 import { sleep } from "./utils.js";
 import type {
-  Endpoints,
   SecretKeySignupOptions,
   SignupAndPayOptions,
   SignupAndPayResult,
 } from "./types.js";
 
-const provisionApiKey = async (
-  jwt: string,
-  walletAddress: string
-): Promise<{ projectId: string; apiKey: string; endpoints: Endpoints }> => {
+/**
+ * Waits for the payment webhook to provision the project, then returns its
+ * first existing API key (or `null`). Never creates a key.
+ */
+const waitForProject = async (
+  jwt: string
+): Promise<{ projectId: string } & ReturnType<typeof existingApiKey>> => {
   const deadline = Date.now() + PROJECT_POLL_TIMEOUT_MS;
   let projectId: string | undefined;
   while (Date.now() < deadline) {
@@ -37,22 +38,16 @@ const provisionApiKey = async (
     );
   }
   const details = await getProject(jwt, projectId);
-  let apiKey = details.apiKeys?.[0]?.keyId;
-  if (!apiKey) {
-    apiKey = (await createApiKey(jwt, projectId, walletAddress)).keyId;
-  }
-  return {
-    projectId,
-    apiKey,
-    endpoints: buildEndpoints(apiKey) as Endpoints,
-  };
+  return { projectId, ...existingApiKey(details) };
 };
 
 /**
  * `signup` + auto-pay. For `payment_required`, sends USDC + memo from the
  * local keypair, polls authenticated `getPaymentStatus` until either:
  *
- * - `readyToRedirect: true` → provisions API key, returns `kind: "completed"`
+ * - `readyToRedirect: true` → waits for the project, returns `kind: "completed"`
+ *   with its first existing API key. Never creates a key: `apiKey` and
+ *   `endpoints` are `null` when the project has none (call `createApiKey`).
  * - terminal `expired` / `failed` → returns the matching kind
  * - poll timeout → returns `kind: "pending"` with `paymentLink` + `txSignature`
  *
@@ -78,10 +73,7 @@ export const signupAndPay = async (
   const paymentIntentId = paymentLink.paymentIntentId;
 
   if (outcome.kind === "completed") {
-    const { projectId, apiKey, endpoints } = await provisionApiKey(
-      jwt,
-      walletAddress
-    );
+    const { projectId, apiKey, endpoints } = await waitForProject(jwt);
     return {
       kind: "completed",
       jwt,

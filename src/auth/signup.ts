@@ -5,11 +5,9 @@ import { signAuthMessage } from "./signAuthMessage.js";
 import { walletSignup } from "./walletSignup.js";
 import { listProjects } from "./listProjects.js";
 import { getProject } from "./getProject.js";
-import { createApiKey } from "./createApiKey.js";
-import { buildEndpoints, requireContactInfo } from "./signupHelpers.js";
+import { existingApiKey, requireContactInfo } from "./signupHelpers.js";
 import { createPayment } from "./createPayment.js";
 import type {
-  Endpoints,
   PreauthenticatedSignupOptions,
   ProjectListItem,
   SecretKeySignupOptions,
@@ -75,8 +73,9 @@ const authenticate = async (
  * Phase 1 unified signup. See `SignupResult` for the discriminated outcomes.
  *
  * Existing-project rules:
- * - Same plan + period (or `agent`) → `kind: "already_subscribed"`. Creates an
- *   API key if the project has none, so `apiKey` is always non-null.
+ * - Same plan + period (or `agent`) → `kind: "already_subscribed"` with the
+ *   project's first existing API key. Never creates a key: `apiKey` and
+ *   `endpoints` are `null` when the project has none (call `createApiKey`).
  * - Different plan/period → `kind: "upgrade_required"`. Phase 1 cannot create
  *   upgrade intents; use `upgradePlan` in Phase 2.
  *
@@ -95,18 +94,13 @@ export const signup = async (options: SignupOptions): Promise<SignupResult> => {
     const project = projects[0];
     if (matchesExistingPlan(project, plan, options.period)) {
       const details = await getProject(jwt, project.id);
-      let apiKey = details.apiKeys?.[0]?.keyId;
-      if (!apiKey) {
-        apiKey = (await createApiKey(jwt, project.id, walletAddress)).keyId;
-      }
       return {
         kind: "already_subscribed",
         jwt,
         refId,
         walletAddress,
         projectId: project.id,
-        apiKey,
-        endpoints: buildEndpoints(apiKey) as Endpoints,
+        ...existingApiKey(details),
       };
     }
     return {

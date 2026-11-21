@@ -12,6 +12,8 @@ The SDK ships two signup helpers on `helius.auth`:
 - `signup(opts)` — authenticates the wallet, detects existing projects, and returns either `kind: "already_subscribed"`, `kind: "upgrade_required"`, or `kind: "payment_required"` with a hosted-checkout link the user opens in a browser.
 - `signupAndPay(opts)` — same as `signup`, plus auto-pays USDC + memo from the local keypair and polls activation. On poll timeout returns `kind: "pending"` with the `txSignature` so callers can resume later.
 
+Neither helper creates an API key. A project can have zero keys, even on a paid plan: `already_subscribed` and `completed` return the project's existing key, or `apiKey: null` and `endpoints: null` if it has none. Call `auth.createApiKey(result.jwt, result.projectId, result.walletAddress)` when you need one.
+
 ```ts
 import { makeAuthClient } from "helius-sdk/auth/client";
 
