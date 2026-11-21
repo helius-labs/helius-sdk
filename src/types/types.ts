@@ -53,8 +53,8 @@ export type GetAssetBatchRequest = {
     showInscription?: boolean;
   };
 };
-/** Response from `getAssetBatch`. An array of `Asset` objects. */
-export type GetAssetBatchResponse = Asset[];
+/** Response from `getAssetBatch`. One entry per requested id, in order; `null` for an id that was not found. */
+export type GetAssetBatchResponse = (Asset | null)[];
 
 /** Request parameters for `getAssetProof` — get the Merkle proof for a compressed asset. */
 export type GetAssetProofRequest = {
