@@ -210,6 +210,41 @@ describe("pollTransactionConfirmation Tests", () => {
     expect(rpc.getSignatureStatuses).toHaveBeenCalledTimes(2);
   });
 
+  it("Reports expiry rather than a timeout when both have passed", async () => {
+    // Past the deadline with the blockhash expired, the caller gets the
+    // definite expiry error (safe to resend), not the ambiguous timeout
+    const rpc = buildMockRpc([100, 102], [null, null]);
+
+    const nowSpy = jest
+      .spyOn(Date, "now")
+      .mockReturnValueOnce(0) // started
+      .mockReturnValue(10_000); // deadline long past for every check
+
+    try {
+      const poll = makePollTransactionConfirmation(rpc);
+      await expect(
+        poll(SIG, { interval: 1, timeout: 50, lastValidBlockHeight: 101 })
+      ).rejects.toThrow(/exceeded lastValidBlockHeight/);
+    } finally {
+      nowSpy.mockRestore();
+    }
+
+    expect(rpc.getSignatureStatuses).toHaveBeenCalledTimes(2);
+  });
+
+  it("Stops the last wait at the deadline instead of a full interval", async () => {
+    // A full 60s interval would outlast Jest's test timeout
+    const rpc = buildMockRpc([100], [null]);
+
+    const poll = makePollTransactionConfirmation(rpc);
+    await expect(poll(SIG, { interval: 60_000, timeout: 30 })).rejects.toThrow(
+      /not confirmed within/i
+    );
+
+    // The final read runs at the deadline before the timeout is reported
+    expect(rpc.getSignatureStatuses).toHaveBeenCalledTimes(2);
+  });
+
   it("Throws when wall-clock timeout is hit", async () => {
     const rpc = buildMockRpc([100, 100, 100], [null, null, null]);
 

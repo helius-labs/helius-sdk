@@ -66,15 +66,8 @@ export const makePollTransactionConfirmation = (raw: Rpc<SolanaRpcApi>) => {
         );
       }
 
-      // Check the deadline after the status read, not before it: a tx that
-      // confirmed (or failed) during the last wait would otherwise be
-      // reported as not confirmed
-      if (Date.now() - started > timeout) {
-        throw new Error(
-          `Transaction ${signature} not confirmed within ${timeout} ms`
-        );
-      }
-
+      // Expiry is checked before the deadline so a caller past both gets the
+      // definite expiry error (safe to resend), not the ambiguous timeout
       if (lastValidBlockHeight !== undefined) {
         const blockHeight = Number(await raw.getBlockHeight().send());
         if (blockHeight > Number(lastValidBlockHeight)) {
@@ -83,7 +76,18 @@ export const makePollTransactionConfirmation = (raw: Rpc<SolanaRpcApi>) => {
         }
       }
 
-      await new Promise((r) => setTimeout(r, interval));
+      // Check the deadline after the status read, not before it: a tx that
+      // confirmed (or failed) during the last wait would otherwise be
+      // reported as not confirmed. The wait stops at the deadline, so the
+      // last read lands there rather than up to a full interval past it
+      const remaining = started + timeout - Date.now();
+      if (remaining <= 0) {
+        throw new Error(
+          `Transaction ${signature} not confirmed within ${timeout} ms`
+        );
+      }
+
+      await new Promise((r) => setTimeout(r, Math.min(interval, remaining)));
     }
   };
 };
