@@ -141,6 +141,70 @@ describe("broadcastTransaction Tests", () => {
     }
   });
 
+  it("Resolves when the tx confirms during the wait that runs past the timeout", async () => {
+    // The deadline passes while waiting between reads; a tx that confirmed
+    // during that wait must be read before the timeout error is thrown
+    const rpc = buildMockRpc({
+      heights: [100],
+      statuses: [null, { confirmationStatus: "confirmed", err: null }],
+    });
+
+    const nowSpy = jest
+      .spyOn(Date, "now")
+      .mockReturnValueOnce(0) // started
+      .mockReturnValueOnce(0) // first iteration's timeout check
+      .mockReturnValue(10_000); // deadline long past after the first wait
+
+    try {
+      const broadcast = broadcastTransactionFactory(rpc);
+      await expect(
+        broadcast(TX64, { pollIntervalMs: 1, pollTimeoutMs: 50 })
+      ).resolves.toBe("3U9JYc3QkWeSFX36zWYD4bMFheh1J2g1AEB7B1ohRvHC");
+    } finally {
+      nowSpy.mockRestore();
+    }
+
+    expect(rpc.getSignatureStatuses).toHaveBeenCalledTimes(2);
+  });
+
+  it("Reports expiry rather than a timeout when both have passed", async () => {
+    // Past the deadline with the blockhash expired, the caller gets the
+    // definite expiry error (safe to resend), not the ambiguous timeout
+    const rpc = buildMockRpc({
+      heights: [100, 102],
+      statuses: [null, null],
+    });
+
+    const nowSpy = jest
+      .spyOn(Date, "now")
+      .mockReturnValueOnce(0) // started
+      .mockReturnValue(10_000); // deadline long past for every check
+
+    try {
+      const broadcast = broadcastTransactionFactory(rpc);
+      await expect(
+        broadcast(TX64, { pollIntervalMs: 1, pollTimeoutMs: 50 })
+      ).rejects.toThrow(/exceeded lastValidBlockHeight/);
+    } finally {
+      nowSpy.mockRestore();
+    }
+
+    expect(rpc.getSignatureStatuses).toHaveBeenCalledTimes(2);
+  });
+
+  it("Stops the last wait at the deadline instead of a full interval", async () => {
+    // A full 60s interval would outlast Jest's test timeout
+    const rpc = buildMockRpc({ heights: [100], statuses: [null] });
+
+    const broadcast = broadcastTransactionFactory(rpc);
+    await expect(
+      broadcast(TX64, { pollIntervalMs: 60_000, pollTimeoutMs: 30 })
+    ).rejects.toThrow(/timed-out/);
+
+    // The final read runs at the deadline before the timeout is reported
+    expect(rpc.getSignatureStatuses).toHaveBeenCalledTimes(2);
+  });
+
   it("Throws on wall-clock timeout", async () => {
     const rpc = buildMockRpc({
       heights: [100, 100, 100, 100],

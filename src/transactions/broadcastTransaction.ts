@@ -45,10 +45,6 @@ export const broadcastTransactionFactory = (raw: Rpc<SolanaRpcApi>) => {
     let expired = false;
 
     while (true) {
-      if (!expired && Date.now() - started > pollTimeoutMs) {
-        throw new Error("Transaction confirmation timed-out");
-      }
-
       const { value } = await raw
         .getSignatureStatuses([signature], { searchTransactionHistory: false })
         .send();
@@ -75,13 +71,23 @@ export const broadcastTransactionFactory = (raw: Rpc<SolanaRpcApi>) => {
         );
       }
 
+      // Expiry before the deadline: past both, the definite error wins
       const blockHeight = Number(await raw.getBlockHeight().send());
       if (blockHeight > expiry) {
         expired = true;
         continue;
       }
 
-      await new Promise((r) => setTimeout(r, pollIntervalMs));
+      // Deadline after the status read, so a tx that landed during the last
+      // wait (capped at the deadline) is not reported as timed out
+      const remaining = started + pollTimeoutMs - Date.now();
+      if (remaining <= 0) {
+        throw new Error("Transaction confirmation timed-out");
+      }
+
+      await new Promise((r) =>
+        setTimeout(r, Math.min(pollIntervalMs, remaining))
+      );
     }
   };
 };
