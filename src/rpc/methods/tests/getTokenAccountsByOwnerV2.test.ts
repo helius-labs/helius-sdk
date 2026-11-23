@@ -148,7 +148,6 @@ describe("getTokenAccountsByOwnerV2 Tests", () => {
       { encoding: "jsonParsed", limit: 1000 },
     ]);
     expect(res1).toEqual(page1);
-    if ("context" in res1) throw new Error("expected a page without context");
 
     const res2 = await rpc.getTokenAccountsByOwnerV2([
       owner,
@@ -261,7 +260,6 @@ describe("getTokenAccountsByOwnerV2 Tests", () => {
     ]);
 
     expect(res).toEqual(mock);
-    if ("context" in res) throw new Error("expected a page without context");
     expect(Array.isArray(res.value[0].account.data)).toBe(true);
     // @ts-expect-error the accounts are under `value` without `withContext`
     expect(res.accounts).toBeUndefined();
@@ -298,7 +296,7 @@ describe("getTokenAccountsByOwnerV2 Tests", () => {
     ]);
 
     expect(res).toEqual(mock);
-    if (!("context" in res)) throw new Error("expected a page with context");
+    expect(res.context.slot).toBe(411895550);
     expect(res.value.accounts).toEqual([]);
     expect(res.value.paginationKey).toBeNull();
   });

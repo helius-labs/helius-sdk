@@ -265,17 +265,25 @@ export type GetTokenAccountsByOwnerV2Result = {
   totalResults?: number | null;
 };
 
+/** Default `getTokenAccountsByOwnerV2` response: `value` is the array of accounts, with `paginationKey` next to it. */
+export type GetTokenAccountsByOwnerV2DirectResponse = {
+  value: ReadonlyArray<GtaV2Account>;
+  paginationKey: string | null;
+};
+
+/** `getTokenAccountsByOwnerV2` response with `withContext: true`: the page is under `value`, next to `context`. */
+export type GetTokenAccountsByOwnerV2ContextResponse = {
+  context: { slot: number; apiVersion?: string };
+  value: GetTokenAccountsByOwnerV2Result;
+};
+
 /**
- * Response from `getTokenAccountsByOwnerV2`. By default `value` is the array
- * of accounts with `paginationKey` next to it; with `withContext: true` it is
- * the page object next to `context`. Narrow with `"context" in response`.
+ * Response from `getTokenAccountsByOwnerV2` when `withContext` isn't known at
+ * compile time. Narrow with `"context" in response`.
  */
 export type GetTokenAccountsByOwnerV2Response =
-  | { value: ReadonlyArray<GtaV2Account>; paginationKey: string | null }
-  | {
-      context: { slot: number; apiVersion?: string };
-      value: GetTokenAccountsByOwnerV2Result;
-    };
+  | GetTokenAccountsByOwnerV2DirectResponse
+  | GetTokenAccountsByOwnerV2ContextResponse;
 
 // ── getTransactionsForAddress ───────────────────────────────────────
 
