@@ -223,6 +223,8 @@ export type GetTokenAccountsByOwnerV2Filter = {
 export type GetTokenAccountsByOwnerV2Config = {
   commitment?: Commitment;
   minContextSlot?: number;
+  /** Wrap the page in an RPC context object with slot info. */
+  withContext?: boolean;
   dataSlice?: GtaV2DataSlice;
   encoding?: Encoding;
   /** Max results per page (up to 10,000). */
@@ -256,17 +258,32 @@ export type GtaV2Account = {
   account: GtaV2AccountInfo;
 };
 
-/** Result payload from `getTokenAccountsByOwnerV2`. */
+/** Page of `getTokenAccountsByOwnerV2` results, found under `value` when `withContext` is `true`. */
 export type GetTokenAccountsByOwnerV2Result = {
   accounts: ReadonlyArray<GtaV2Account>;
   paginationKey: string | null;
   totalResults?: number | null;
 };
 
-/** Response from `getTokenAccountsByOwnerV2` (raw or wrapped in RPC context). */
+/** Default `getTokenAccountsByOwnerV2` response: `value` is the array of accounts, with `paginationKey` next to it. */
+export type GetTokenAccountsByOwnerV2DirectResponse = {
+  value: ReadonlyArray<GtaV2Account>;
+  paginationKey: string | null;
+};
+
+/** `getTokenAccountsByOwnerV2` response with `withContext: true`: the page is under `value`, next to `context`. */
+export type GetTokenAccountsByOwnerV2ContextResponse = {
+  context: { slot: number; apiVersion?: string };
+  value: GetTokenAccountsByOwnerV2Result;
+};
+
+/**
+ * Response from `getTokenAccountsByOwnerV2` when `withContext` isn't known at
+ * compile time. Narrow with `"context" in response`.
+ */
 export type GetTokenAccountsByOwnerV2Response =
-  | GetTokenAccountsByOwnerV2Result
-  | RpcResponse<GetTokenAccountsByOwnerV2Result>;
+  | GetTokenAccountsByOwnerV2DirectResponse
+  | GetTokenAccountsByOwnerV2ContextResponse;
 
 // ── getTransactionsForAddress ───────────────────────────────────────
 

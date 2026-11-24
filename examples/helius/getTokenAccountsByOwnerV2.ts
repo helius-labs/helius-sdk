@@ -1,5 +1,8 @@
 import { createHelius } from "helius-sdk";
 
+// By default the accounts are the `value` array and `paginationKey` sits next
+// to it. With `withContext: true` both move under `value` (see Example 7)
+
 (async () => {
   const apiKey = ""; // From Helius dashboard
   const helius = createHelius({ apiKey });
@@ -11,15 +14,14 @@ import { createHelius } from "helius-sdk";
   console.log("\n=== Example 1: Get SPL token accounts ===");
 
   const firstPage = await helius.getTokenAccountsByOwnerV2([
-
     ownerAddress,
     { programId: "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA" },
     { encoding: "jsonParsed", limit: 10 },
   ]);
 
-  console.log(`Found ${firstPage.accounts.length} token accounts`);
+  console.log(`Found ${firstPage.value.length} token accounts`);
 
-  firstPage.accounts.forEach((account) => {
+  firstPage.value.forEach((account) => {
     const parsed = account.account.data?.parsed;
 
     if (parsed?.info) {
@@ -41,7 +43,7 @@ import { createHelius } from "helius-sdk";
       { encoding: "jsonParsed", limit: 10, paginationKey: firstPage.paginationKey },
     ]);
 
-    console.log(`Fetched ${secondPage.accounts.length} more accounts`);
+    console.log(`Fetched ${secondPage.value.length} more accounts`);
   }
 
    // === Example 3: Get accounts for a specific mint (e.g., USDC) ===
@@ -54,10 +56,10 @@ import { createHelius } from "helius-sdk";
     { encoding: "jsonParsed" },
   ]);
 
-  if (usdcAccounts.accounts.length > 0) {
-    console.log(`Found ${usdcAccounts.accounts.length} USDC account(s)`);
+  if (usdcAccounts.value.length > 0) {
+    console.log(`Found ${usdcAccounts.value.length} USDC account(s)`);
 
-    const account = usdcAccounts.accounts[0];
+    const account = usdcAccounts.value[0];
     const parsed = account.account.data?.parsed;
 
     console.log(`USDC Balance: ${parsed?.info?.tokenAmount?.uiAmountString ?? "0"}`);
@@ -74,7 +76,7 @@ import { createHelius } from "helius-sdk";
     { encoding: "jsonParsed", limit: 5 },
   ]);
 
-  console.log(`Found ${token2022Accounts.accounts.length} Token-2022 accounts`);
+  console.log(`Found ${token2022Accounts.value.length} Token-2022 accounts`);
 
   // === Example 5: Recently changed accounts (incremental) ===
   console.log("\n=== Example 5: Recently changed accounts ===");
@@ -86,10 +88,10 @@ import { createHelius } from "helius-sdk";
     { encoding: "jsonParsed", limit: 5, changedSinceSlot: recentSlot },
   ]);
 
-  console.log(`Found ${changedAccounts.accounts.length} accounts changed since slot ${recentSlot}`);
+  console.log(`Found ${changedAccounts.value.length} accounts changed since slot ${recentSlot}`);
 
   // === Example 6: Using base64 encoding ===
-  console.log("\n=== Example 7: Using base64 encoding ===");
+  console.log("\n=== Example 6: Using base64 encoding ===");
 
   const base64Accounts = await helius.getTokenAccountsByOwnerV2([
     ownerAddress,
@@ -97,15 +99,28 @@ import { createHelius } from "helius-sdk";
     { encoding: "base64", limit: 2 },
   ]);
 
-  console.log(`Fetched ${base64Accounts.accounts.length} accounts with base64 encoding`);
+  console.log(`Fetched ${base64Accounts.value.length} accounts with base64 encoding`);
 
-  base64Accounts.accounts.forEach((account) => {
+  base64Accounts.value.forEach((account) => {
     // base64 encoding returns [data, encoding]
     const arr = account.account.data as [string, string];
     console.log(`Account ${account.pubkey.slice(0, 8)}...`);
     console.log(`Data length: ${arr?.[0]?.length ?? 0} bytes`);
     console.log(`Encoding: ${arr?.[1]}`);
   });
+
+  // === Example 7: With context (slot the response was built at) ===
+  console.log("\n=== Example 7: With context ===");
+
+  const withContext = await helius.getTokenAccountsByOwnerV2([
+    ownerAddress,
+    { programId: "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA" },
+    { encoding: "jsonParsed", limit: 5, withContext: true },
+  ]);
+
+  console.log(
+    `Found ${withContext.value.accounts.length} accounts at slot ${withContext.context.slot}`
+  );
   } catch (error) {
     console.error("Error with RPC:", error);
   }
