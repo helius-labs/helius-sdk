@@ -97,6 +97,23 @@ describe("getAssetBatch Tests", () => {
     );
   });
 
+  it("Returns null for an id that was not found", async () => {
+    transportMock.mockResolvedValue({
+      jsonrpc: "2.0",
+      id: "1",
+      result: [{ id: "kyber-crystal-1138" }, null],
+    });
+
+    const result = await rpc.getAssetBatch({
+      ids: ["kyber-crystal-1138", "11111111111111111111111111111112"],
+    });
+
+    expect(result[0]?.id).toBe("kyber-crystal-1138");
+    expect(result[1]).toBeNull();
+    // @ts-expect-error an entry can be null
+    expect(() => result[1].id).toThrow(TypeError);
+  });
+
   it("Successfully fetches assets with options", async () => {
     const mockAssets: Asset[] = [
       {
