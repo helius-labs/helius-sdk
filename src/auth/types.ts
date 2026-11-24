@@ -410,8 +410,13 @@ export type SignupResult =
       refId: string;
       walletAddress: string;
       projectId: string;
-      apiKey: string;
-      endpoints: Endpoints;
+      /**
+       * The project's first existing API key, or `null` if it has none.
+       * Signup never creates a key; call `createApiKey` to add one.
+       */
+      apiKey: string | null;
+      /** RPC URLs for `apiKey`, or `null` when `apiKey` is `null`. */
+      endpoints: Endpoints | null;
     }
   | {
       kind: "upgrade_required";
@@ -431,8 +436,13 @@ export type SignupAndPayResult =
       refId: string;
       walletAddress: string;
       projectId: string;
-      apiKey: string;
-      endpoints: Endpoints;
+      /**
+       * The project's first existing API key, or `null` if it has none.
+       * Signup never creates a key; call `createApiKey` to add one.
+       */
+      apiKey: string | null;
+      /** RPC URLs for `apiKey`, or `null` when `apiKey` is `null`. */
+      endpoints: Endpoints | null;
       txSignature?: string;
       paymentIntentId?: string;
     }

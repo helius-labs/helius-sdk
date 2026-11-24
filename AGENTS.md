@@ -533,11 +533,20 @@ const result = await helius.auth.signupAndPay({
   lastName: "Doe",
 });
 // Discriminated by `result.kind`:
-//   "completed"          — { jwt, walletAddress, projectId, apiKey, endpoints, txSignature, paymentIntentId }
-//   "already_subscribed" — { jwt, walletAddress, projectId, apiKey, endpoints }
+//   "completed"          — { jwt, walletAddress, projectId, apiKey | null, endpoints | null, txSignature, paymentIntentId }
+//   "already_subscribed" — { jwt, walletAddress, projectId, apiKey | null, endpoints | null }
 //   "upgrade_required"   — { jwt, walletAddress, currentPlan, ... }
 //   "pending"            — poll timed out after payment; resume with the returned txSignature + paymentLink
 //   "expired" / "failed" — payment never completed; inspect `paymentIntentId` (and `reason` for failed)
+
+// Signup never creates an API key. On "completed" / "already_subscribed",
+// `apiKey` and `endpoints` are null when the project has no key yet:
+if (result.kind === "completed" || result.kind === "already_subscribed") {
+  const apiKey =
+    result.apiKey ??
+    (await helius.auth.createApiKey(result.jwt, result.projectId, result.walletAddress)).keyId;
+  const client = createHelius({ apiKey });
+}
 ```
 
 Recovering the API key for a wallet that already has an account (no contact info needed):
