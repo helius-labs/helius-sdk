@@ -63,13 +63,9 @@ describe("createSmartTransaction Tests", () => {
     jest.clearAllMocks();
   });
 
-  it("Builds, signs, estimates, caps fees, refreshes blockhash, and prepends compute-budget ixs", async () => {
-    const sendDraft = jest.fn().mockResolvedValue({ value: lifetimeA });
-    const sendFinal = jest.fn().mockResolvedValue({ value: lifetimeB });
-    const getLatestBlockhash = jest
-      .fn()
-      .mockReturnValueOnce({ send: sendDraft })
-      .mockReturnValueOnce({ send: sendFinal });
+  it("Builds, signs, estimates, caps fees, fetches one blockhash, and prepends compute-budget ixs", async () => {
+    const sendLatest = jest.fn().mockResolvedValue({ value: lifetimeB });
+    const getLatestBlockhash = jest.fn().mockReturnValue({ send: sendLatest });
 
     const raw: any = { getLatestBlockhash };
 
@@ -103,16 +99,21 @@ describe("createSmartTransaction Tests", () => {
       priorityFeeCap: 7_000, // Cap below recommendation → should clamp
     });
 
-    expect(getLatestBlockhash).toHaveBeenCalledTimes(2);
-    expect(sendDraft).toHaveBeenCalled();
-    expect(sendFinal).toHaveBeenCalled();
+    // Only the final transaction's blockhash is fetched; the draft uses a placeholder
+    expect(getLatestBlockhash).toHaveBeenCalledTimes(1);
+    expect(sendLatest).toHaveBeenCalledTimes(1);
     expect(getComputeUnits).toHaveBeenCalledTimes(1);
-    // cannot deep-equal the message easily, but we know it was called
-
-    expect(mockSign).toHaveBeenCalled(); // Draft sign
-    expect(mockBase64).toHaveBeenCalledWith(
-      expect.objectContaining({ signed: true, msg: expect.anything() })
+    expect(getComputeUnits.mock.calls[0][0].lifetimeConstraint.blockhash).toBe(
+      "11111111111111111111111111111111"
     );
+
+    // Only the final transaction is signed; the fee API gets the draft compiled
+    // but unsigned
+    expect(mockSign).toHaveBeenCalledTimes(1);
+    expect(mockSign.mock.calls[0][0].lifetimeConstraint).toEqual(lifetimeB);
+    const draftWire = mockBase64.mock.calls[0][0];
+    expect(draftWire.messageBytes).toBeInstanceOf(Uint8Array);
+    expect(Object.values(draftWire.signatures)).toEqual([null]);
     expect(getPriorityFeeEstimate).toHaveBeenCalledWith({
       transaction: "BASE64_DRAFT_TX",
       options: { transactionEncoding: "base64", recommended: true },
@@ -125,12 +126,215 @@ describe("createSmartTransaction Tests", () => {
     expect(addrs[1]).toBe(CB_ADDR); // Limit
     expect(addrs[2]).toBe(userIx.programAddress); // User's ix
 
-    // Lifetime is refreshed to B (not the draft A)
+    // Lifetime is the fetched blockhash, not the draft placeholder
     expect(result.lifetime).toEqual(lifetimeB);
+    expect((result.message as any).lifetimeConstraint).toEqual(lifetimeB);
 
     // Final is signed and encoded to base64 returned to caller
     expect(result.base64).toBe("BASE64_FINAL_TX");
     expect(result.units).toBe(42_000);
+  });
+
+  describe("request scheduling", () => {
+    // A promise plus the handles to settle it from the test
+    const deferred = <T>() => {
+      let resolve!: (v: T) => void;
+      let reject!: (e: unknown) => void;
+      const promise = new Promise<T>((res, rej) => {
+        resolve = res;
+        reject = rej;
+      });
+      return { promise, resolve, reject };
+    };
+
+    // Lets every already-queued continuation run
+    const flush = () => new Promise((r) => setImmediate(r));
+
+    const setup = () => {
+      const blockhash = deferred<{ value: typeof lifetimeB }>();
+      const units = deferred<number>();
+      const fee = deferred<{ priorityFeeEstimate?: number }>();
+
+      const raw: any = {
+        getLatestBlockhash: jest
+          .fn()
+          .mockReturnValue({ send: () => blockhash.promise }),
+      };
+      const getComputeUnits = jest.fn(() => units.promise);
+      const getPriorityFeeEstimate = jest.fn(() => fee.promise);
+
+      const { create } = makeCreateSmartTransaction({
+        raw,
+        getComputeUnits,
+        getPriorityFeeEstimate,
+      });
+
+      return {
+        create,
+        raw,
+        getComputeUnits,
+        getPriorityFeeEstimate,
+        blockhash,
+        units,
+        fee,
+      };
+    };
+
+    const ix = () => makeNoopIx(address("11111111111111111111111111111111"));
+
+    it.each(["legacy", 0, 1] as const)(
+      "starts the simulation, fee estimate, and blockhash fetch together on version %s",
+      async (version) => {
+        const s = setup();
+        mockBase64.mockReturnValue("BASE64_TX");
+
+        const pending = s.create({
+          signers: [feePayerSigner],
+          instructions: [ix()],
+          version,
+        });
+
+        await flush();
+
+        // All three are in flight before any has answered, and nothing has
+        // been signed yet
+        expect(s.getComputeUnits).toHaveBeenCalledTimes(1);
+        expect(s.getPriorityFeeEstimate).toHaveBeenCalledTimes(1);
+        expect(s.raw.getLatestBlockhash).toHaveBeenCalledTimes(1);
+        expect(mockSign).not.toHaveBeenCalled();
+
+        s.units.resolve(42_000);
+        s.fee.resolve({ priorityFeeEstimate: 10_000 });
+        s.blockhash.resolve({ value: lifetimeB });
+
+        await expect(pending).resolves.toMatchObject({
+          units: 42_000,
+          lifetime: lifetimeB,
+        });
+        // One signature per build: the final transaction's
+        expect(mockSign).toHaveBeenCalledTimes(1);
+      }
+    );
+
+    it("never asks for a signature when simulation fails", async () => {
+      const s = setup();
+      mockBase64.mockReturnValue("BASE64_TX");
+
+      const pending = s.create({
+        signers: [feePayerSigner],
+        instructions: [ix()],
+        version: 0,
+      });
+
+      s.units.reject(new Error("simulation failed"));
+      s.fee.resolve({ priorityFeeEstimate: 10_000 });
+      s.blockhash.resolve({ value: lifetimeB });
+
+      await expect(pending).rejects.toThrow("simulation failed");
+      expect(mockSign).not.toHaveBeenCalled();
+    });
+
+    it("fails as soon as simulation fails, without waiting on the other requests", async () => {
+      const s = setup();
+      const pending = s.create({
+        signers: [feePayerSigner],
+        instructions: [ix()],
+        version: 1,
+      });
+
+      // The fee estimate and blockhash never answer
+      s.units.reject(new Error("simulation failed"));
+
+      await expect(pending).rejects.toThrow("simulation failed");
+    });
+
+    describe("unhandled rejections", () => {
+      const unhandled = jest.fn();
+      beforeEach(() => {
+        unhandled.mockReset();
+        process.on("unhandledRejection", unhandled);
+      });
+      afterEach(() => {
+        process.off("unhandledRejection", unhandled);
+      });
+
+      it("leaves none when the fee estimate fails while simulation is in flight", async () => {
+        const s = setup();
+        const pending = s.create({
+          signers: [feePayerSigner],
+          instructions: [ix()],
+          version: 1,
+        });
+
+        s.fee.reject(new Error("fee API down"));
+        s.blockhash.resolve({ value: lifetimeB });
+        await flush();
+        await flush();
+        s.units.resolve(42_000);
+
+        await expect(pending).rejects.toThrow("fee API down");
+        await flush();
+        expect(unhandled).not.toHaveBeenCalled();
+      });
+
+      it("leaves none when a dependency throws synchronously after a request started", async () => {
+        const blockhash = deferred<{ value: typeof lifetimeB }>();
+        const { create } = makeCreateSmartTransaction({
+          raw: {
+            getLatestBlockhash: () => ({ send: () => blockhash.promise }),
+          } as any,
+          getComputeUnits: () => {
+            throw new Error("estimator misconfigured");
+          },
+          getPriorityFeeEstimate: jest.fn(),
+        });
+
+        await expect(
+          create({
+            signers: [feePayerSigner],
+            instructions: [ix()],
+            version: 1,
+          })
+        ).rejects.toThrow("estimator misconfigured");
+
+        // The blockhash request already went out; its failure must be handled
+        blockhash.reject(new Error("blockhash unavailable"));
+        await flush();
+        await flush();
+        expect(unhandled).not.toHaveBeenCalled();
+      });
+    });
+
+    it("reports a simulation failure over a fee failure that happened first", async () => {
+      const s = setup();
+      const pending = s.create({
+        signers: [feePayerSigner],
+        instructions: [ix()],
+        version: 1,
+      });
+
+      s.fee.reject(new Error("fee API down"));
+      s.blockhash.resolve({ value: lifetimeB });
+      await flush();
+      s.units.reject(new Error("simulation failed"));
+
+      await expect(pending).rejects.toThrow("simulation failed");
+    });
+
+    it("surfaces a blockhash failure when the estimates succeed", async () => {
+      const s = setup();
+      const pending = s.create({
+        signers: [feePayerSigner],
+        instructions: [ix()],
+        version: 1,
+      });
+
+      s.units.resolve(42_000);
+      s.fee.resolve({ priorityFeeEstimate: 10_000 });
+      s.blockhash.reject(new Error("blockhash unavailable"));
+
+      await expect(pending).rejects.toThrow("blockhash unavailable");
+    });
   });
 
   it("Resolves fee payer override given as Address to the matching signer", async () => {

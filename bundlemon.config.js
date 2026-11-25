@@ -174,9 +174,12 @@ export default {
       // and always writes the v1 loaded-accounts-data-size limit (an absent
       // field is a 0-byte budget that fails account loading). The fee math
       // lives in priorityFee.js and the version checks in validateTxMessage.js
-      // to keep further growth out of this module.
+      // to keep further growth out of this module. Bumped from 2.6KB for running
+      // the simulation, fee estimate, and blockhash fetch concurrently (with
+      // ordered, always-handled errors) on an unsigned draft (~2.8KB), which
+      // removes three sequential RPC round-trips from every smart transaction.
       path: 'dist/esm/transactions/createSmartTransaction.js',
-      maxSize: '2.6kb',
+      maxSize: '2.85kb',
     },
     {
       // Opt out of the default 15% growth ratchet: createTxMessage is now
