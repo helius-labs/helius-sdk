@@ -259,6 +259,7 @@
       "minimatch@>=7 <11.0.1": "^11.0.1",
       "picomatch@^2": "^2.3.2",
       "picomatch@^4": "^4.0.4",
+      "typedoc>minimatch": "^10.2.5",
       "ws": "^8.21.0"
     }
   },
