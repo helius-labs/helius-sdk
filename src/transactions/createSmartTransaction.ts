@@ -7,6 +7,7 @@ import type {
 } from "./types.js";
 import type {
   Address,
+  Blockhash,
   Instruction,
   TransactionMessage,
   TransactionMessageWithFeePayer,
@@ -15,6 +16,7 @@ import type {
 
 import {
   addSignersToInstruction,
+  compileTransaction,
   compileTransactionMessage,
   getBase64EncodedWireTransaction,
   pipe,
@@ -47,6 +49,14 @@ const COMPUTE_BUDGET_PROGRAM_ADDRESS =
 
 /** The version 1 arm of kit's `TransactionMessage` union. */
 type V1TransactionMessage = Extract<TransactionMessage, { version: 1 }>;
+
+// Draft-only: simulation swaps in a current blockhash (replaceRecentBlockhash)
+const DRAFT_LIFETIME: BlockhashLifetime = {
+  blockhash: "11111111111111111111111111111111" as Blockhash,
+  lastValidBlockHeight: 0n,
+};
+
+const ignore = () => {};
 
 const isComputeBudgetIx = (ix: Instruction<string, readonly any[]>) =>
   ix.programAddress === COMPUTE_BUDGET_PROGRAM_ADDRESS;
@@ -118,7 +128,7 @@ export const makeCreateSmartTransaction = ({
       .filter((ix) => !isComputeBudgetIx(ix))
       .map((ix) => addSignersToInstruction(ixSigners, ix));
 
-    // Fail before spending two RPC round-trips on a transaction that can't be built
+    // Fail before spending any RPC calls on a transaction that can't be built
     assertNoAddressLookupsOnV1(version, userIxs);
     assertValidLoadedAccountsDataSizeLimit(loadedAccountsDataSizeLimit);
 
@@ -131,15 +141,11 @@ export const makeCreateSmartTransaction = ({
       loadedAccountsDataSizeLimit ??
       (version === 1 ? MAX_LOADED_ACCOUNTS_DATA_SIZE_BYTES : undefined);
 
-    // Draft message for CU estimation & fee sampling
-    const { value: initialLifetime } = await raw
-      .getLatestBlockhash({ commitment })
-      .send();
-
+    // Draft message for CU estimation & fee sampling; never sent
     const draftMsg = pipe(
       createEmptyTxMessage(version),
       (m) => setTransactionMessageFeePayerSigner(feePayerSigner, m),
-      (m) => setTransactionMessageLifetimeUsingBlockhash(initialLifetime, m),
+      (m) => setTransactionMessageLifetimeUsingBlockhash(DRAFT_LIFETIME, m),
       (m) =>
         setTransactionMessageLoadedAccountsDataSizeLimit(
           resolvedDataSizeLimit,
@@ -152,19 +158,13 @@ export const makeCreateSmartTransaction = ({
     // doomed. Checking now fails before the caller is asked for any signature.
     assertWithinSizeLimit(draftMsg);
 
-    // Estimate compute units with floor + buffer
-    const units = await getComputeUnits(draftMsg, { min: minUnits, bufferPct });
-
     /**
-     * Version 1 is priced by account key rather than by serialized transaction.
-     *
-     * The fee API reads the v0 wire format, so handing it a v1 transaction
-     * risks an unusable estimate — and this call is the only reason a draft
-     * would be signed at all, since compute-unit estimation compiles the
-     * unsigned message itself. Pricing v1 by account key removes both the
-     * dependency and a signature the caller never agreed to.
+     * The fee API reads the v0 wire format, so version 1 is priced by account
+     * key; others send the draft compiled but unsigned (zeroed signatures),
+     * since the API only reads its accounts. The draft is never signed, so a
+     * wallet only prompts for the final transaction.
      */
-    const { priorityFeeEstimate } = await getPriorityFeeEstimate(
+    const feeRequest =
       version === 1
         ? {
             accountKeys: getAccountKeys(draftMsg),
@@ -172,11 +172,30 @@ export const makeCreateSmartTransaction = ({
           }
         : {
             transaction: getBase64EncodedWireTransaction(
-              await signTransactionMessageWithSigners(draftMsg)
+              compileTransaction(draftMsg)
             ),
-            options: { transactionEncoding: "base64", recommended: true },
-          }
-    );
+            options: {
+              transactionEncoding: "base64" as const,
+              recommended: true,
+            },
+          };
+
+    // Simulation, fee estimate, and the final blockhash run concurrently. Each
+    // gets a no-op handler as it starts (errors are rethrown by the awaits
+    // below), so a request that fails while another is still awaited, or a
+    // later call that throws synchronously, can't leave a rejection unhandled.
+    const lifetimeTask = raw.getLatestBlockhash({ commitment }).send();
+    lifetimeTask.catch(ignore);
+    const unitsTask = getComputeUnits(draftMsg, { min: minUnits, bufferPct });
+    unitsTask.catch(ignore);
+    const feeTask = getPriorityFeeEstimate(feeRequest);
+    feeTask.catch(ignore);
+
+    // Awaited in order, so a simulation error surfaces as soon as it happens
+    // and wins over a fee or blockhash error
+    const units = await unitsTask;
+    const { priorityFeeEstimate } = await feeTask;
+    const { value: finalLifetime } = await lifetimeTask;
 
     if (priorityFeeEstimate == null) {
       throw new Error(
@@ -191,11 +210,6 @@ export const makeCreateSmartTransaction = ({
         rateCap: priorityFeeCap,
         lamportsCap: priorityFeeLamportsCap,
       });
-
-    // Refresh blockhash to avoid expiry window
-    const { value: finalLifetime } = await raw
-      .getLatestBlockhash({ commitment })
-      .send();
 
     /**
      * Applies the compute budget in the form the transaction's version expects.

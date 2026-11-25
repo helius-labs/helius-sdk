@@ -3,6 +3,7 @@ import {
   blockhash,
   createKeyPairSignerFromPrivateKeyBytes,
   getBase64Encoder,
+  getCompiledTransactionMessageDecoder,
   getPublicKeyFromAddress,
   getTransactionDecoder,
   verifySignature,
@@ -89,6 +90,8 @@ describe("createSmartTransaction supplied signers", () => {
         instruction.accounts?.every((account) => !("signer" in account))
       ).toBe(true);
       if (version !== 1) {
+        // The fee API gets a well-formed draft with a slot for every required
+        // signer, but no signer is asked to sign it
         const estimateInput = deps.getPriorityFeeEstimate.mock.calls[0][0];
         const draft = getTransactionDecoder().decode(
           getBase64Encoder().encode(estimateInput.transaction)
@@ -96,7 +99,10 @@ describe("createSmartTransaction supplied signers", () => {
         expect(Object.keys(draft.signatures).sort()).toEqual(
           [payer.address, source.address].sort()
         );
-        await expectValidSignatures(draft);
+        expect(Object.values(draft.signatures)).toEqual([null, null]);
+        expect(
+          getCompiledTransactionMessageDecoder().decode(draft.messageBytes)
+        ).toMatchObject({ version });
       }
     }
   );
