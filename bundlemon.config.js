@@ -168,6 +168,13 @@ export default {
       maxSize: '2.5kb',
     },
     {
+      // Opt out of the default 15% growth ratchet: the Jito tip-floor fetch now
+      // has its own timeout (a stalled Jito hung every Sender send) and a short
+      // TTL cache (~0.7KB).
+      path: 'dist/esm/transactions/fetchTipFloor.js',
+      maxSize: '1kb',
+    },
+    {
       // Opt out of the default 15% growth ratchet: this file now builds both
       // the legacy/v0 compute-budget instruction pair and the version 1 header
       // config (SIMD-0385), picks a fee-estimate request shape per version,
