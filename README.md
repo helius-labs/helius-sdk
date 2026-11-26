@@ -141,7 +141,25 @@ const slot = await helius.kitRpc.getSlot().send();
 
 Don't pass `helius` or `helius.raw` to kit helpers: the request is sent immediately, and the helper then fails when it calls `.send()`.
 
-See [`examples/helius/kitRpc.ts`](examples/helius/kitRpc.ts) for a full example.
+Helpers that confirm over WebSocket, such as `sendAndConfirmTransactionFactory`, also need an `RpcSubscriptions`. `await helius.getKitRpcSubscriptions()` returns kit's standard client on your Helius WebSocket endpoint, created on first call and shared with the transaction helpers. Kit opens sockets on demand and closes each once its subscriptions have ended, so there is nothing to close:
+
+```ts
+import { sendAndConfirmTransactionFactory } from "@solana/kit";
+
+const sendAndConfirm = sendAndConfirmTransactionFactory({
+  rpc: helius.kitRpc,
+  rpcSubscriptions: await helius.getKitRpcSubscriptions(),
+});
+```
+
+On devnet, `helius.airdrop` requests SOL and waits for confirmation (it rejects on mainnet without sending):
+
+```ts
+const helius = createHelius({ apiKey, network: "devnet" });
+await helius.airdrop(wallet.address, 1_000_000_000n); // 1 SOL
+```
+
+See [`examples/helius/kitRpc.ts`](examples/helius/kitRpc.ts), [`examples/helius/kitRpcSubscriptions.ts`](examples/helius/kitRpcSubscriptions.ts), and [`examples/helius/airdrop.ts`](examples/helius/airdrop.ts) for full examples.
 
 ### Larger transactions with version 1
 

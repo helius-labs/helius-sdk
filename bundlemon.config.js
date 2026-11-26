@@ -54,10 +54,10 @@ export default {
     },
     {
       // Lazy-loaded HeliusClient entry point: every new defineLazyMethod
-      // adds ~25B gzipped. Last bumped for the historical account methods,
-      // which put the file at 2.6KB.
+      // adds ~25B gzipped. Last bumped for helius.airdrop and
+      // getKitRpcSubscriptions, which put the file at ~2.7KB.
       path: 'dist/esm/rpc/index.js',
-      maxSize: '2.65kb',
+      maxSize: '2.75kb',
     },
     {
       // Opt out of the default 15% growth ratchet: buildRpcUrl moved here from
