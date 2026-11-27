@@ -89,6 +89,34 @@ describe("getTransfersByAddress Tests", () => {
     );
   });
 
+  it("Forwards topLevelInstruction unchanged", async () => {
+    const mockResponse: GetTransfersByAddressResult = {
+      data: [],
+      paginationToken: null,
+    };
+
+    transportMock.mockResolvedValue({
+      jsonrpc: "2.0",
+      id: "1",
+      result: mockResponse,
+    });
+
+    const result = await rpc.getTransfersByAddress([
+      address,
+      { topLevelInstruction: true, limit: 10 },
+    ]);
+
+    expect(result).toEqual(mockResponse);
+    expect(transportMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        payload: expect.objectContaining({
+          method: "getTransfersByAddress",
+          params: [address, { topLevelInstruction: true, limit: 10 }],
+        }),
+      })
+    );
+  });
+
   it("Handles RPC errors", async () => {
     transportMock.mockResolvedValue({
       jsonrpc: "2.0",

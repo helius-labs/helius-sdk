@@ -439,6 +439,12 @@ export type GetTransfersByAddressConfig = {
   mint?: string;
   /** SOL/WSOL display mode. */
   solMode?: "merged" | "separate";
+  /**
+   * Only return transfers made by the transaction's top-level instructions.
+   * Transfers made through CPIs (inner instructions), such as the SOL legs of
+   * a swap, are excluded. Defaults to `false`.
+   */
+  topLevelInstruction?: boolean;
   /** Additional filters for amount, block time, and slot. */
   filters?: {
     /** Filter by raw transfer amount, not UI amount. */
@@ -509,7 +515,10 @@ export type TokenTransfer = {
   transactionIdx: number;
   /** Index of the instruction within the transaction. */
   instructionIdx: number;
-  /** Index within inner instructions. `0` when the transfer is top-level. */
+  /**
+   * Index within inner instructions. `0` when the transfer is top-level;
+   * `1` or more when it was made through a CPI (inner instruction).
+   */
   innerInstructionIdx: number;
 };
 
