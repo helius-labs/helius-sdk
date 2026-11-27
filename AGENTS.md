@@ -78,7 +78,9 @@ const helius = createHelius({
 | Wallet API | `helius.wallet.*` | Balances, history, identity lookups |
 | Standard RPC | `helius.getBalance()`, `helius.getSlot()`, etc. | All standard Solana RPC methods via proxy |
 | Kit RPC | `helius.kitRpc` | The standard @solana/kit `Rpc` client, for kit helpers and third-party libraries (see below) |
+| Kit subscriptions | `await helius.getKitRpcSubscriptions()` | The standard @solana/kit `RpcSubscriptions` client, for kit helpers such as `sendAndConfirmTransactionFactory` (see below) |
 | Raw RPC | `helius.raw` | Auto-sending standard RPC methods, same as the proxy; not a kit `Rpc` (see below) |
+| Devnet airdrop | `helius.airdrop(address, lamports)` | Request devnet SOL and wait for confirmation; rejects on mainnet |
 | Auth | `helius.auth.*` | Agent signup, keypair gen, project/API key management |
 
 ### `helius.kitRpc` and `helius.raw` — @solana/kit RPC Access
@@ -98,6 +100,18 @@ const { value: kitBalance } = await helius.kitRpc.getBalance(address).send();
 
 // Pass helius.kitRpc to kit helpers and other libraries
 const account = await fetchEncodedAccount(helius.kitRpc, address);
+```
+
+Kit helpers that confirm over WebSocket (`sendAndConfirmTransactionFactory`, `airdropFactory`) also take an `RpcSubscriptions`. Use `await helius.getKitRpcSubscriptions()`: kit's standard client on the Helius WebSocket URL with the API key, created on first call and reused. Don't build the `wss://` URL by hand. Kit pools subscriptions over sockets it opens on demand and closes a socket once every subscription on it has ended (its `abortSignal` fired), so there is nothing to close.
+
+```typescript
+const sendAndConfirm = sendAndConfirmTransactionFactory({
+  rpc: helius.kitRpc,
+  rpcSubscriptions: await helius.getKitRpcSubscriptions(),
+});
+
+// Devnet only: request SOL and wait for confirmation
+await helius.airdrop(wallet.address, 1_000_000_000n);
 ```
 
 Never pass `helius.raw` (or `helius` itself) to anything that expects a kit `Rpc`. Each call sends its request immediately and returns a Promise, so the helper's request (including a `sendTransaction`) has already gone out by the time its `.send()` call fails. Don't treat that error as "not sent".

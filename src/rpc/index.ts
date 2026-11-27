@@ -48,6 +48,8 @@ import type { ParsedEventsClient } from "../parsedEvents/client.js";
 import type { AdminClient } from "../admin/client.js";
 import type { AuthClient } from "../auth/types.js";
 import type { HeliusRpcAccess, HeliusRpcOptions } from "./types.js";
+import type { AirdropFn } from "./methods/airdrop.js";
+import type { RpcSubscriptions, SolanaRpcSubscriptionsApi } from "@solana/kit";
 import {
   buildRpcUrl,
   resolveTransport,
@@ -75,6 +77,44 @@ export { HeliusRpcError } from "./caller.js";
  */
 export type HeliusClient = ResolvedHeliusRpcApi &
   HeliusRpcAccess & {
+    /**
+     * The standard `@solana/kit` `RpcSubscriptions` client on this client's
+     * Helius WebSocket endpoint (API key included), for kit helpers that need
+     * one, such as `sendAndConfirmTransactionFactory`. Created on first call,
+     * then the same client every time; the transaction helpers share it.
+     *
+     * Kit pools subscriptions over WebSockets it opens on demand and closes a
+     * socket once every subscription on it has ended (its `abortSignal`
+     * fired), so there is nothing to close.
+     *
+     * @example
+     * ```ts
+     * const sendAndConfirm = sendAndConfirmTransactionFactory({
+     *   rpc: helius.kitRpc,
+     *   rpcSubscriptions: await helius.getKitRpcSubscriptions(),
+     * });
+     * ```
+     */
+    getKitRpcSubscriptions(): Promise<
+      RpcSubscriptions<SolanaRpcSubscriptionsApi>
+    >;
+
+    /**
+     * Request a devnet SOL airdrop and wait until it reaches `commitment`
+     * (default `"confirmed"`). Resolves with the airdrop's signature.
+     *
+     * Rejects without sending anything when the client is on mainnet
+     * (`network: "mainnet"`, or a `mainnet.helius-rpc.com` `baseUrl`). The
+     * devnet faucet is rate-limited.
+     *
+     * @example
+     * ```ts
+     * const helius = createHelius({ apiKey, network: "devnet" });
+     * await helius.airdrop(wallet.address, 1_000_000_000n); // 1 SOL
+     * ```
+     */
+    airdrop: AirdropFn;
+
     // ── DAS (Digital Asset Standard) ──────────────────────────────────
 
     /** Fetch a single asset by its ID (mint address). */
@@ -269,23 +309,36 @@ export const createHelius = ({
     enhancedWsUrl = `wss://atlas-${net}.helius-rpc.com/?api-key=${apiKey}`;
   }
 
-  // Lazily create when/if transaction helpers need it
-  let rpcSubscriptionsPromise:
-    | ReturnType<typeof import("@solana/kit").createSolanaRpcSubscriptions>
+  // One shared client, created on first use; a failure is retried
+  let rpcSubscriptions:
+    | Promise<RpcSubscriptions<SolanaRpcSubscriptionsApi>>
     | undefined;
-
-  const getRpcSubscriptions = async () => {
-    if (rpcSubscriptionsPromise) return rpcSubscriptionsPromise;
-    const { createSolanaRpcSubscriptions } = await import("@solana/kit");
-    rpcSubscriptionsPromise = createSolanaRpcSubscriptions(wsUrl.toString());
-    return rpcSubscriptionsPromise;
-  };
+  const getRpcSubscriptions = () =>
+    (rpcSubscriptions ??= import("@solana/kit")
+      .then((kit) => kit.createSolanaRpcSubscriptions(wsUrl.toString()))
+      .catch((err) => {
+        rpcSubscriptions = undefined;
+        throw err;
+      }));
 
   // Lightweight, no-PendingRpcRequest caller for custom DAS/webhook methods
   const call = makeRpcCaller(transport);
 
   // The object we’ll populate lazily
-  const client: any = { kitRpc: baseRpc, raw };
+  const client: any = {
+    kitRpc: baseRpc,
+    raw,
+    getKitRpcSubscriptions: getRpcSubscriptions,
+  };
+
+  defineLazyMethod<HeliusClient, AirdropFn>(client, "airdrop", async () => {
+    const { makeAirdrop } = await import("./methods/airdrop.js");
+    return makeAirdrop(
+      baseRpc,
+      getRpcSubscriptions,
+      resolvedNetwork === "mainnet"
+    );
+  });
 
   defineLazyNamespace<HeliusClient, WsAsync>(client, "ws", async () => {
     // Promisified facade; individual methods return Promise<...>

@@ -88,7 +88,7 @@ Namespaced functionality lives in sub-clients accessed via the main `HeliusClien
 
 Standard Solana RPC methods (getBalance, getSlot, etc.) are available directly on `helius.*` via a Proxy to the underlying @solana/kit RPC client. DAS API methods are also available directly on `helius.*`.
 
-`helius.kitRpc` is the unwrapped @solana/kit `Rpc` (methods return pending requests; call `.send()`), for passing to kit helpers and third-party libraries. `helius.raw` is the auto-send wrapper (`wrapAutoSend`) and is not a kit `Rpc`. Don't add a `helius.rpc` property: v1 exposed its whole API there, and kit's `Rpc` proxy would turn v1-style `helius.rpc.<method>` calls into silent no-ops.
+`helius.kitRpc` is the unwrapped @solana/kit `Rpc` (methods return pending requests; call `.send()`), for passing to kit helpers and third-party libraries. `await helius.getKitRpcSubscriptions()` is its WebSocket counterpart (async so kit's subscriptions stack stays lazy; one shared instance, also used by `helius.tx`). `helius.raw` is the auto-send wrapper (`wrapAutoSend`) and is not a kit `Rpc`. Don't add a `helius.rpc` property: v1 exposed its whole API there, and kit's `Rpc` proxy would turn v1-style `helius.rpc.<method>` calls into silent no-ops.
 
 ### Dual ESM/CJS
 
