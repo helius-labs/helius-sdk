@@ -79,6 +79,20 @@ import { createHelius } from "helius-sdk";
 
       console.log(`Page 2: ${page2.data.length} transfers`);
     }
+
+    console.log("\nExample 5: Top-Level Transfers Only");
+    // Leave out transfers made through CPIs, such as the SOL legs of a swap
+    const topLevel = await helius.getTransfersByAddress([
+      address,
+      { topLevelInstruction: true, limit: 10 },
+    ]);
+
+    topLevel.data.forEach((transfer, i) => {
+      // innerInstructionIdx is 0 for top-level transfers, 1+ for CPI transfers
+      console.log(
+        `${i + 1}. ${transfer.uiAmount} of ${transfer.mint} (innerInstructionIdx: ${transfer.innerInstructionIdx})`
+      );
+    });
   } catch (error) {
     console.error("Error running examples:", error);
   }
